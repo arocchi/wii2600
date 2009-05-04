@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Switches.cxx,v 1.11 2009-01-01 18:13:37 stephena Exp $
+// $Id: Switches.cxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 //============================================================================
 
 #include "Event.hxx"
@@ -22,10 +22,10 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 Switches::Switches(const Event& event, const Properties& properties)
-  : myEvent(event),
-    mySwitches(0xFF)
+    : myEvent(event),
+      mySwitches(0xFF)
 {
-  if(properties.get(Console_RightDifficulty) == "B")
+  if(properties.get("Console.RightDifficulty") == "B")
   {
     mySwitches &= ~0x80;
   }
@@ -34,7 +34,7 @@ Switches::Switches(const Event& event, const Properties& properties)
     mySwitches |= 0x80;
   }
 
-  if(properties.get(Console_LeftDifficulty) == "B")
+  if(properties.get("Console.LeftDifficulty") == "B")
   {
     mySwitches &= ~0x40;
   }
@@ -43,7 +43,7 @@ Switches::Switches(const Event& event, const Properties& properties)
     mySwitches |= 0x40;
   }
 
-  if(properties.get(Console_TelevisionType) == "COLOR")
+  if(properties.get("Console.TelevisionType") == "Color")
   {
     mySwitches |= 0x08;
   }
@@ -59,7 +59,7 @@ Switches::~Switches()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-void Switches::update()
+uInt8 Switches::read()
 {
   if(myEvent.get(Event::ConsoleColor) != 0)
   {
@@ -72,20 +72,20 @@ void Switches::update()
 
   if(myEvent.get(Event::ConsoleRightDifficultyA) != 0)
   {
-    mySwitches |= 0x80;
+    mySwitches &= ~0x80;
   }
   else if(myEvent.get(Event::ConsoleRightDifficultyB) != 0) 
   {
-    mySwitches &= ~0x80;
+    mySwitches |= 0x80;
   }
 
   if(myEvent.get(Event::ConsoleLeftDifficultyA) != 0)
   {
-    mySwitches |= 0x40;
+    mySwitches &= ~0x40;
   }
   else if(myEvent.get(Event::ConsoleLeftDifficultyB) != 0)
   {
-    mySwitches &= ~0x40;
+    mySwitches |= 0x40;
   }
 
   if(myEvent.get(Event::ConsoleSelect) != 0)
@@ -105,34 +105,7 @@ void Switches::update()
   {
     mySwitches |= 0x01;
   }
+
+  return mySwitches;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-bool Switches::save(Serializer& out) const
-{
-  try
-  {
-    out.putByte((char)mySwitches);
-  }
-  catch(...)
-  {
-    cerr << "ERROR: Switches::save() exception\n";
-    return false;
-  }
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-bool Switches::load(Deserializer& in)
-{
-  try
-  {
-    mySwitches = (uInt8) in.getByte();
-  }
-  catch(...)
-  {
-    cerr << "ERROR: Switches::load() exception\n";
-    return false;
-  }
-  return true;
-}

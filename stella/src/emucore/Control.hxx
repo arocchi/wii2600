@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Control.hxx,v 1.19 2009-03-16 00:23:42 stephena Exp $
+// $Id: Control.hxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 //============================================================================
 
 #ifndef CONTROLLER_HXX
@@ -21,9 +21,7 @@
 
 class Controller;
 class Event;
-class System;
 
-#include "Serializable.hxx"
 #include "bspf.hxx"
 
 /**
@@ -53,19 +51,14 @@ class System;
   a capacitor.  A potentiometer is sometimes connected to these
   pins for analog input.
 
-  This is a base class for all controllers.  It provides a view
-  of the controller from the perspective of the controller's jack.
+  This is a base class for all controllers.  It provides a view 
+  of the controller from the prespective of the controller's jack.  
 
   @author  Bradford W. Mott
-  @version $Id: Control.hxx,v 1.19 2009-03-16 00:23:42 stephena Exp $
+  @version $Id: Control.hxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 */
-class Controller : public Serializable
+class Controller
 {
-  /**
-    Riot debug class needs special access to the underlying controller state
-  */
-  friend class RiotDebug;
-
   public:
     /**
       Enumeration of the controller jacks
@@ -75,37 +68,19 @@ class Controller : public Serializable
       Left, Right
     };
 
-    /**
-      Enumeration of the controller types
-    */
-    enum Type
-    {
-      BoosterGrip, Driving, Keyboard, Paddles, Joystick,
-      TrackBall22, TrackBall80, AmigaMouse, AtariVox, SaveKey,
-      KidVid
-    };
-
   public:
     /**
       Create a new controller plugged into the specified jack
 
-      @param jack   The jack the controller is plugged into
-      @param event  The event object to use for events
-      @param type   The type for this controller
-      @param system The system using this controller
+      @param jack The jack the controller is plugged into
+      @param event The event object to use for events
     */
-    Controller(Jack jack, const Event& event, const System& system,
-               Type type);
+    Controller(Jack jack, const Event& event);
  
     /**
       Destructor
     */
     virtual ~Controller();
-
-    /**
-      Returns the type of this controller.
-    */
-    const Type type() const;
 
   public:
     /**
@@ -131,7 +106,7 @@ class Controller : public Serializable
       @param pin The pin of the controller jack to read
       @return The state of the pin
     */
-    virtual bool read(DigitalPin pin);
+    virtual bool read(DigitalPin pin) = 0;
 
     /**
       Read the resistance at the specified analog pin for this controller.  
@@ -140,7 +115,7 @@ class Controller : public Serializable
       @param pin The pin of the controller jack to read
       @return The resistance at the specified pin
     */
-    virtual Int32 read(AnalogPin pin);
+    virtual Int32 read(AnalogPin pin) = 0;
 
     /**
       Write the given value to the specified digital pin for this 
@@ -150,46 +125,7 @@ class Controller : public Serializable
       @param pin The pin of the controller jack to write to
       @param value The value to write to the pin
     */
-    virtual void write(DigitalPin pin, bool value) { };
-
-    /**
-      Update the entire digital and analog pin state according to the
-      events currently set.
-    */
-    virtual void update() = 0;
-
-    /**
-      Notification method invoked by the system right before the
-      system resets its cycle counter to zero.  It may be necessary 
-      to override this method for devices that remember cycle counts.
-    */
-    virtual void systemCyclesReset() { };
-
-    /**
-      Saves the current state of this controller to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    virtual bool save(Serializer& out) const;
-
-    /**
-      Loads the current state of this controller from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    virtual bool load(Deserializer& in);
-
-    /**
-      Returns the name of this controller.
-    */
-    virtual string name() const;
-
-    /**
-      Returns more detailed information about this controller.
-    */
-    virtual string about() const;
+    virtual void write(DigitalPin pin, bool value) = 0;
 
   public:
     /// Constant which represents maximum resistance for analog pins
@@ -205,21 +141,6 @@ class Controller : public Serializable
     /// Reference to the event object this controller uses
     const Event& myEvent;
 
-    /// Pointer to the System object (used for timing purposes)
-    const System& mySystem;
-
-    /// Specifies which type of controller this is (defined by child classes)
-    const Type myType;
-
-    /// Specifies the name of this controller based on type
-    string myName;
-
-    /// The boolean value on each digital pin
-    bool myDigitalPinState[5];
-
-    /// The analog value on each analog pin
-    Int32 myAnalogPinValue[2];
-
   protected:
     // Copy constructor isn't supported by controllers so make it private
     Controller(const Controller&);
@@ -227,5 +148,5 @@ class Controller : public Serializable
     // Assignment operator isn't supported by controllers so make it private
     Controller& operator = (const Controller&);
 };
-
 #endif
+

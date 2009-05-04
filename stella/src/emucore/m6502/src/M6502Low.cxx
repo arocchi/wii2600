@@ -8,21 +8,15 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502Low.cxx,v 1.17 2009-01-13 14:45:34 stephena Exp $
+// $Id: M6502Low.cxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 //============================================================================
 
 #include "M6502Low.hxx"
-#include "Serializer.hxx"
-#include "Deserializer.hxx"
-
-#ifdef DEBUGGER_SUPPORT
-  #include "Debugger.hxx"
-#endif
 
 #define debugStream cout
 
@@ -30,9 +24,6 @@
 M6502Low::M6502Low(uInt32 systemCyclesPerProcessorCycle)
     : M6502(systemCyclesPerProcessorCycle)
 {
-#ifdef DEBUGGER_SUPPORT
-  myJustHitTrapFlag = false;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -43,34 +34,13 @@ M6502Low::~M6502Low()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 inline uInt8 M6502Low::peek(uInt16 address)
 {
-#ifdef DEBUGGER_SUPPORT
-  if(myReadTraps != NULL && myReadTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "RTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
-  uInt8 result = mySystem->peek(address);
-  myLastAccessWasRead = true;
-  return result;
+  return mySystem->peek(address);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 inline void M6502Low::poke(uInt16 address, uInt8 value)
 {
-#ifdef DEBUGGER_SUPPORT
-  if(myWriteTraps != NULL && myWriteTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "WTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
   mySystem->poke(address, value);
-  myLastAccessWasRead = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,34 +56,6 @@ bool M6502Low::execute(uInt32 number)
     {
       uInt16 operandAddress = 0;
       uInt8 operand = 0;
-
-#ifdef DEBUGGER_SUPPORT
-      if(myJustHitTrapFlag)
-      {
-        if(myDebugger->start(myHitTrapInfo.message, myHitTrapInfo.address))
-        {
-          myJustHitTrapFlag = false;
-          return true;
-        }
-      }
-
-      if(myBreakPoints != NULL)
-      {
-        if(myBreakPoints->isSet(PC))
-        {
-          if(myDebugger->start("BP: ", PC))
-            return true;
-        }
-      }
-
-      int cond = evalCondBreaks();
-      if(cond > -1)
-      {
-        string buf = "CBP: " + myBreakCondNames[cond];
-        if(myDebugger->start(buf))
-          return true;
-      }
-#endif
 
 #ifdef DEBUG
       debugStream << "PC=" << hex << setw(4) << PC << " ";
@@ -141,8 +83,6 @@ bool M6502Low::execute(uInt32 number)
           myExecutionStatus |= FatalErrorBit;
           cerr << "Illegal Instruction! " << hex << (int) IR << endl;
       }
-
-      myTotalInstructionCount++;
 
 #ifdef DEBUG
       debugStream << hex << setw(4) << operandAddress << " ";
@@ -217,89 +157,3 @@ void M6502Low::interruptHandler()
   myExecutionStatus &= ~(MaskableInterruptBit | NonmaskableInterruptBit);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502Low::save(Serializer& out)
-{
-  string CPU = name();
-
-  try
-  {
-    out.putString(CPU);
-
-    out.putByte((char)A);  // Accumulator
-    out.putByte((char)X);  // X index register
-    out.putByte((char)Y);  // Y index register
-    out.putByte((char)SP); // Stack Pointer
-    out.putByte((char)IR); // Instruction register
-    out.putInt(PC);        // Program Counter
-
-    out.putBool(N);     // N flag for processor status register
-    out.putBool(V);     // V flag for processor status register
-    out.putBool(B);     // B flag for processor status register
-    out.putBool(D);     // D flag for processor status register
-    out.putBool(I);     // I flag for processor status register
-    out.putBool(notZ);  // Z flag complement for processor status register
-    out.putBool(C);     // C flag for processor status register
-
-    out.putByte((char)myExecutionStatus);
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502Low::load(Deserializer& in)
-{
-  string CPU = name();
-
-  try
-  {
-    if(in.getString() != CPU)
-      return false;
-
-    A = (uInt8) in.getByte();   // Accumulator
-    X = (uInt8) in.getByte();   // X index register
-    Y = (uInt8) in.getByte();   // Y index register
-    SP = (uInt8) in.getByte();  // Stack Pointer
-    IR = (uInt8) in.getByte();  // Instruction register
-    PC = (uInt16) in.getInt();  // Program Counter
-
-    N = in.getBool();     // N flag for processor status register
-    V = in.getBool();     // V flag for processor status register
-    B = in.getBool();     // B flag for processor status register
-    D = in.getBool();     // D flag for processor status register
-    I = in.getBool();     // I flag for processor status register
-    notZ = in.getBool();  // Z flag complement for processor status register
-    C = in.getBool();     // C flag for processor status register
-
-    myExecutionStatus = (uInt8) in.getByte();
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const char* M6502Low::name() const
-{
-  return "M6502Low";
-}

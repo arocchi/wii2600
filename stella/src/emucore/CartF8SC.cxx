@@ -8,26 +8,34 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: CartF8SC.cxx,v 1.20 2009-05-01 11:25:07 stephena Exp $
+// $Id: CartF8SC.cxx,v 1.1.1.1 2001-12-27 19:54:20 bwmott Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
+#include <assert.h>
+#include "CartF8SC.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartF8SC.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeF8SC::CartridgeF8SC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
+
+  // Initialize RAM with random values
+  Random random;
+  for(uInt32 i = 0; i < 128; ++i)
+  {
+    myRAM[i] = random.next();
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -36,13 +44,14 @@ CartridgeF8SC::~CartridgeF8SC()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeF8SC::name() const
+{
+  return "CartridgeF8SC";
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF8SC::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 128; ++i)
-    myRAM[i] = random.next();
-
   // Upon reset we switch to bank 1
   bank(1);
 }
@@ -92,7 +101,7 @@ void CartridgeF8SC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeF8SC::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -101,12 +110,12 @@ uInt8 CartridgeF8SC::peek(uInt16 address)
       // Set the current bank to the lower 4k bank
       bank(0);
       break;
-  
+
     case 0x0FF9:
       // Set the current bank to the upper 4k bank
       bank(1);
       break;
-  
+
     default:
       break;
   }
@@ -120,7 +129,7 @@ uInt8 CartridgeF8SC::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF8SC::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -129,12 +138,12 @@ void CartridgeF8SC::poke(uInt16 address, uInt8)
       // Set the current bank to the lower 4k bank
       bank(0);
       break;
-  
+
     case 0x0FF9:
       // Set the current bank to the upper 4k bank
       bank(1);
       break;
-  
+
     default:
       break;
   }
@@ -147,8 +156,6 @@ void CartridgeF8SC::poke(uInt16 address, uInt8)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF8SC::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
-
   // Remember what bank we're in
   myCurrentBank = bank;
   uInt16 offset = myCurrentBank << 12;
@@ -169,92 +176,3 @@ void CartridgeF8SC::bank(uInt16 bank)
   }
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF8SC::bank()
-{
-  return myCurrentBank;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF8SC::bankCount()
-{
-  return 2;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF8SC::patch(uInt16 address, uInt8 value)
-{
-  address = address & 0x0FFF;
-  myImage[myCurrentBank * 4096 + address] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeF8SC::getImage(int& size)
-{
-  size = 8192;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF8SC::save(Serializer& out) const
-{
-  string cart = name();
-
-  try
-  {
-    out.putString(cart);
-
-    out.putInt(myCurrentBank);
-
-    // The 128 bytes of RAM
-    out.putInt(128);
-    for(uInt32 i = 0; i < 128; ++i)
-      out.putByte((char)myRAM[i]);
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << cart << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF8SC::load(Deserializer& in)
-{
-  string cart = name();
-
-  try
-  {
-    if(in.getString() != cart)
-      return false;
-
-    myCurrentBank = (uInt16) in.getInt();
-
-    uInt32 limit = (uInt32) in.getInt();
-    for(uInt32 i = 0; i < limit; ++i)
-      myRAM[i] = (uInt8) in.getByte();
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << cart << endl;
-    return false;
-  }
-
-  // Remember what bank we were in
-  bank(myCurrentBank);
-
-  return true;
-}

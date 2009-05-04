@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: System.hxx,v 1.20 2009-01-01 18:13:38 stephena Exp $
+// $Id: System.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 //============================================================================
 
 #ifndef SYSTEM_HXX
@@ -21,14 +21,11 @@
 
 class Device;
 class M6502;
-class M6532;
-class TIA;
 class NullDevice;
 
 #include "bspf.hxx"
 #include "Device.hxx"
 #include "NullDev.hxx"
-#include "Serializable.hxx"
 
 /**
   This class represents a system consisting of a 6502 microprocessor
@@ -47,9 +44,9 @@ class NullDevice;
         dynamic code for that page of memory.
 
   @author  Bradford W. Mott
-  @version $Id: System.hxx,v 1.20 2009-01-01 18:13:38 stephena Exp $
+  @version $Id: System.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 */
-class System : public Serializable
+class System
 {
   public:
     /**
@@ -73,6 +70,7 @@ class System : public Serializable
     */
     void reset();
 
+  public:
     /**
       Attach the specified device and claim ownership of it.  The device 
       will be asked to install itself.
@@ -89,22 +87,6 @@ class System : public Serializable
     */
     void attach(M6502* m6502);
 
-    /**
-      Attach the specified processor and claim ownership of it.  The
-      processor will be asked to install itself.
-
-      @param m6532 The 6532 microprocessor to attach to the system
-    */
-    void attach(M6532* m6532);
-
-    /**
-      Attach the specified TIA device and claim ownership of it.  The device 
-      will be asked to install itself.
-
-      @param tia The TIA device to attach to the system
-    */
-    void attach(TIA* tia);
-
   public:
     /**
       Answer the 6502 microprocessor attached to the system.  If a
@@ -115,27 +97,6 @@ class System : public Serializable
     M6502& m6502()
     {
       return *myM6502;
-    }
-
-    /**
-      Answer the 6532 processor attached to the system.  If a
-      processor has not been attached calling this function will fail.
-
-      @return The attached 6532 microprocessor
-    */
-    M6532& m6532()
-    {
-      return *myM6532;
-    }
-
-    /**
-      Answer the TIA device attached to the system.
-
-      @return The attached TIA device
-    */
-    TIA& tia()
-    {
-      return *myTIA;
     }
 
     /**
@@ -211,18 +172,7 @@ class System : public Serializable
     void resetCycles();
 
   public:
-    /**
-      Get the current state of the data bus in the system.  The current
-      state is the last data that was accessed by the system.
-
-      @return the data bus state
-    */  
-    inline uInt8 getDataBusState() const
-    {
-      return myDataBusState;
-    }
-
-    /**
+    /*
       Get the byte at the specified address.  No masking of the
       address occurs before it's sent to the device mapped at
       the address.
@@ -240,18 +190,6 @@ class System : public Serializable
       @param value The value to be stored at the address
     */
     void poke(uInt16 address, uInt8 value);
-
-    /**
-      Lock/unlock the data bus. When the bus is locked, peek() and
-      poke() don't update the bus state. The bus should be unlocked
-      while the CPU is running (normal emulation, or when the debugger
-      is stepping/advancing). It should be locked while the debugger
-      is active but not running the CPU. This is so the debugger can
-      use System.peek() to examine memory/registers without changing
-      the state of the system.
-    */
-    void lockDataBus();
-    void unlockDataBus();
 
   public:
     /**
@@ -298,29 +236,6 @@ class System : public Serializable
     */
     const PageAccess& getPageAccess(uInt16 page);
  
-    /**
-      Save the current state of this system to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this system from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "System"; }
-
   private:
     // Mask to apply to an address before accessing memory
     const uInt16 myAddressMask;
@@ -346,25 +261,11 @@ class System : public Serializable
     // 6502 processor attached to the system or the null pointer
     M6502* myM6502;
 
-    // 6532 processor attached to the system or the null pointer
-    M6532* myM6532;
-
-    // TIA device attached to the system or the null pointer
-    TIA* myTIA;
-
     // Number of system cycles executed since the last reset
     uInt32 myCycles;
 
     // Null device to use for page which are not installed
     NullDevice myNullDevice; 
-
-    // The current state of the Data Bus
-    uInt8 myDataBusState;
-
-    // Whether or not peek() updates the data bus state. This
-    // is true during normal emulation, and false when the
-    // debugger is active.
-    bool myDataBusLocked;
 
   private:
     // Copy constructor isn't supported by this class so make it private
@@ -374,4 +275,36 @@ class System : public Serializable
     System& operator = (const System&);
 };
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline uInt8 System::peek(uInt16 addr)
+{
+  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
+ 
+  // See if this page uses direct accessing or not 
+  if(access.directPeekBase != 0)
+  {
+    return *(access.directPeekBase + (addr & myPageMask));
+  }
+  else
+  {
+    return access.device->peek(addr);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline void System::poke(uInt16 addr, uInt8 value)
+{
+  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
+  
+  // See if this page uses direct accessing or not 
+  if(access.directPokeBase != 0)
+  {
+    *(access.directPokeBase + (addr & myPageMask)) = value;
+  }
+  else
+  {
+    access.device->poke(addr, value);
+  }
+}
 #endif
+ 

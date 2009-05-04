@@ -8,26 +8,28 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Driving.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
+// $Id: Driving.hxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 //============================================================================
 
 #ifndef DRIVING_HXX
 #define DRIVING_HXX
 
+class Driving;
+class System;
+
 #include "bspf.hxx"
 #include "Control.hxx"
-#include "Event.hxx"
 
 /**
   The standard Atari 2600 Indy 500 driving controller.
 
   @author  Bradford W. Mott
-  @version $Id: Driving.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
+  @version $Id: Driving.hxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 */
 class Driving : public Controller
 {
@@ -36,11 +38,10 @@ class Driving : public Controller
       Create a new Indy 500 driving controller plugged into 
       the specified jack
 
-      @param jack   The jack the controller is plugged into
-      @param event  The event object to use for events
-      @param system The system using this controller
+      @param jack The jack the controller is plugged into
+      @param event The event object to use for events
     */
-    Driving(Jack jack, const Event& event, const System& system);
+    Driving(Jack jack, const Event& event);
 
     /**
       Destructor
@@ -49,25 +50,35 @@ class Driving : public Controller
 
   public:
     /**
-      Update the entire digital and analog pin state according to the
-      events currently set.
+      Read the value of the specified digital pin for this controller.
+
+      @param pin The pin of the controller jack to read
+      @return The state of the pin
     */
-    virtual void update();
+    virtual bool read(DigitalPin pin);
+
+    /**
+      Read the resistance at the specified analog pin for this controller.
+      The returned value is the resistance measured in ohms.
+
+      @param pin The pin of the controller jack to read
+      @return The resistance at the specified pin
+    */
+    virtual Int32 read(AnalogPin pin);
+
+    /**
+      Write the given value to the specified digital pin for this
+      controller.  Writing is only allowed to the pins associated
+      with the PIA.  Therefore you cannot write to pin six.
+
+      @param pin The pin of the controller jack to write to
+      @param value The value to write to the pin
+    */
+    virtual void write(DigitalPin pin, bool value);
 
   private:
     // Counter to iterate through the gray codes
     uInt32 myCounter;
-
-    // Index into the gray code table
-    uInt32 myGrayIndex;
-
-    // Y axis value from last yaxis event that was used to generate a new
-    // gray code
-    int myLastYaxis;
-
-    // Pre-compute the events we care about based on given port
-    // This will eliminate test for left or right port in update()
-    Event::Type myCWEvent, myCCWEvent, myFireEvent, myXAxisValue, myYAxisValue;
 };
-
 #endif
+

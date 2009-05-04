@@ -8,22 +8,19 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.m4,v 1.8 2009-04-20 15:03:13 stephena Exp $
+// $Id: M6502.m4,v 1.1.1.1 2001-12-27 19:54:30 bwmott Exp $
 //============================================================================
 
 /** 
   Code and cases to emulate each of the 6502 instruction 
 
-  Recompile with the following:
-    'm4 M6502[Hi|Low].m4 M6502.m4 > M6502[Hi|Low].ins'
-
   @author  Bradford W. Mott
-  @version $Id: M6502.m4,v 1.8 2009-04-20 15:03:13 stephena Exp $
+  @version $Id: M6502.m4,v 1.1.1.1 2001-12-27 19:54:30 bwmott Exp $
 */
 
 #ifndef NOTSAMEPAGE
@@ -31,97 +28,35 @@
 #endif
 
 define(M6502_ADC, `{
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-}')
-
-define(M6502_ANC, `{
-  A &= operand;
-  notZ = A;
-  N = A & 0x80;
-  C = N;
 }')
 
 define(M6502_AND, `{
   A &= operand;
   notZ = A;
   N = A & 0x80;
-}')
-
-define(M6502_ANE, `{
-  // NOTE: The implementation of this instruction is based on
-  // information from the 64doc.txt file.  This instruction is
-  // reported to be unstable!
-  A = (A | 0xee) & X & operand;
-  notZ = A;
-  N = A & 0x80;
-}')
-
-define(M6502_ARR, `{
-  // NOTE: The implementation of this instruction is based on
-  // information from the 64doc.txt file.  There are mixed
-  // reports on its operation!
-  if(!D)
-  {
-    A &= operand;
-    A = ((A >> 1) & 0x7f) | (C ? 0x80 : 0x00);
-
-    C = A & 0x40;
-    V = (A & 0x40) ^ ((A & 0x20) << 1);
-
-    notZ = A;
-    N = A & 0x80;
-  }
-  else
-  {
-    uInt8 value = A & operand;
-
-    A = ((value >> 1) & 0x7f) | (C ? 0x80 : 0x00);
-    N = C;
-    notZ = A;
-    V = (value ^ A) & 0x40;
-
-    if(((value & 0x0f) + (value & 0x01)) > 0x05)
-    {
-      A = (A & 0xf0) | ((A + 0x06) & 0x0f);
-    }
-    
-    if(((value & 0xf0) + (value & 0x10)) > 0x50) 
-    {
-      A = (A + 0x60) & 0xff;
-      C = 1;
-    }
-    else
-    {
-      C = 0;
-    }
-  }
 }')
 
 define(M6502_ASL, `{
@@ -145,17 +80,22 @@ define(M6502_ASLA, `{
   N = A & 0x80;
 }')
 
-define(M6502_ASR, `{
-  A &= operand;
+define(M6502_ASO, `{
+  // Set carry flag according to the left-most bit in value
+  C = operand & 0x80;
 
-  // Set carry flag according to the right-most bit
-  C = A & 0x01;
+  operand <<= 1;
+  poke(operandAddress, operand);
 
-  A = (A >> 1) & 0x7f;
-
+  A |= operand;
   notZ = A;
   N = A & 0x80;
 }')
+
+define(M6502_AXS, `{
+  poke(operandAddress, A & X);
+}')
+
 
 define(M6502_BIT, `{
   notZ = (A & operand);
@@ -165,13 +105,11 @@ define(M6502_BIT, `{
 
 define(M6502_BRK, `{
   peek(PC++);
-
-  B = true;
-
   poke(0x0100 + SP--, PC >> 8);
   poke(0x0100 + SP--, PC & 0x00ff);
   poke(0x0100 + SP--, PS());
 
+  B = true;
   I = true;
 
   PC = peek(0xfffe);
@@ -218,16 +156,6 @@ define(M6502_CPY, `{
   C = !(value & 0x0100);
 }')
 
-define(M6502_DCP, `{
-  uInt8 value = operand - 1;
-  poke(operandAddress, value);
-
-  uInt16 value2 = (uInt16)A - (uInt16)value;
-  notZ = value2;
-  N = value2 & 0x0080;
-  C = !(value2 & 0x0100);
-}')
-
 define(M6502_DEC, `{
   uInt8 value = operand - 1;
   poke(operandAddress, value);
@@ -235,6 +163,7 @@ define(M6502_DEC, `{
   notZ = value;
   N = value & 0x80;
 }')
+
 
 define(M6502_DEX, `{
   X--;
@@ -277,37 +206,6 @@ define(M6502_INY, `{
   N = Y & 0x80;
 }')
 
-define(M6502_ISB, `{
-  operand = operand + 1;
-  poke(operandAddress, operand);
-
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
-
-  if(!D)
-  {
-    A = (uInt8) sum;
-  }
-  else
-  {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
-
-    A = (lo & 0x0f) | (hi & 0xf0);
-  }
-  C = (sum & 0xff00) == 0;
-}')
-
 define(M6502_JMP, `{
   PC = operandAddress;
 }')
@@ -323,19 +221,6 @@ define(M6502_JSR, `{
   poke(0x0100 + SP--, PC & 0xff);
 
   PC = low | ((uInt16)peek(PC++) << 8); 
-}')
-
-define(M6502_LAS, `{
-  A = X = SP = SP & operand;
-  notZ = A;
-  N = A & 0x80;
-}')
-
-define(M6502_LAX, `{
-  A = operand;
-  X = operand;
-  notZ = A;
-  N = A & 0x80;
 }')
 
 define(M6502_LDA, `{
@@ -373,15 +258,6 @@ define(M6502_LSRA, `{
 
   A = (A >> 1) & 0x7f;
 
-  notZ = A;
-  N = A & 0x80;
-}')
-
-define(M6502_LXA, `{
-  // NOTE: The implementation of this instruction is based on
-  // information from the 64doc.txt file.  This instruction is
-  // reported to be very unstable!
-  A = X = (A | 0xee) & operand;
   notZ = A;
   N = A & 0x80;
 }')
@@ -475,44 +351,6 @@ define(M6502_RORA, `{
   N = A & 0x80;
 }')
 
-define(M6502_RRA, `{
-  bool oldC = C;
-
-  // Set carry flag according to the right-most bit
-  C = operand & 0x01;
-
-  operand = ((operand >> 1) & 0x7f) | (oldC ? 0x80 : 0x00);
-  poke(operandAddress, operand);
-
-  if(!D)
-  {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
-
-    A = (uInt8) sum;
-  }
-  else
-  {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
-
-    A = (lo & 0x0f) + (hi & 0xf0);
-  }
-}')
 
 define(M6502_RTI, `{
   peek(0x0100 + SP++);
@@ -528,45 +366,36 @@ define(M6502_RTS, `{
   peek(PC++);
 }')
 
-define(M6502_SAX, `{
-  poke(operandAddress, A & X);
-}')
-
 define(M6502_SBC, `{
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
-}')
-
-define(M6502_SBX, `{
-  uInt16 value = (uInt16)(X & A) - (uInt16)operand;
-  X = (value & 0xff);
-
-  notZ = X;
-  N = X & 0x80;
-  C = !(value & 0x0100);
 }')
 
 define(M6502_SEC, `{
@@ -579,55 +408,6 @@ define(M6502_SED, `{
 
 define(M6502_SEI, `{
   I = true;
-}')
-
-define(M6502_SHA, `{
-  // NOTE: There are mixed reports on the actual operation
-  // of this instruction!
-  poke(operandAddress, A & X & (((operandAddress >> 8) & 0xff) + 1)); 
-}')
-
-define(M6502_SHS, `{
-  // NOTE: There are mixed reports on the actual operation
-  // of this instruction!
-  SP = A & X;
-  poke(operandAddress, A & X & (((operandAddress >> 8) & 0xff) + 1)); 
-}')
-
-define(M6502_SHX, `{
-  // NOTE: There are mixed reports on the actual operation
-  // of this instruction!
-  poke(operandAddress, X & (((operandAddress >> 8) & 0xff) + 1)); 
-}')
-
-define(M6502_SHY, `{
-  // NOTE: There are mixed reports on the actual operation
-  // of this instruction!
-  poke(operandAddress, Y & (((operandAddress >> 8) & 0xff) + 1)); 
-}')
-
-define(M6502_SLO, `{
-  // Set carry flag according to the left-most bit in value
-  C = operand & 0x80;
-
-  operand <<= 1;
-  poke(operandAddress, operand);
-
-  A |= operand;
-  notZ = A;
-  N = A & 0x80;
-}')
-
-define(M6502_SRE, `{
-  // Set carry flag according to the right-most bit in value
-  C = operand & 0x01;
-
-  operand = (operand >> 1) & 0x7f;
-  poke(operandAddress, operand);
-
-  A ^= operand;
-  notZ = A;
-  N = A & 0x80;
 }')
 
 define(M6502_STA, `{
@@ -692,12 +472,12 @@ M6502_ZEROX_READ
 M6502_ADC
 break;
 
-case 0x6d:
+case 0x6D:
 M6502_ABSOLUTE_READ
 M6502_ADC
 break;
 
-case 0x7d:
+case 0x7D:
 M6502_ABSOLUTEX_READ
 M6502_ADC
 break;
@@ -718,18 +498,6 @@ M6502_ADC
 break;
 
 
-case 0x4b:
-M6502_IMMEDIATE_READ
-M6502_ASR
-break;
-
-
-case 0x0b:
-case 0x2b:
-M6502_IMMEDIATE_READ
-M6502_ANC
-break;
-
 
 case 0x29:
 M6502_IMMEDIATE_READ
@@ -746,12 +514,12 @@ M6502_ZEROX_READ
 M6502_AND
 break;
 
-case 0x2d:
+case 0x2D:
 M6502_ABSOLUTE_READ
 M6502_AND
 break;
 
-case 0x3d:
+case 0x3D:
 M6502_ABSOLUTEX_READ
 M6502_AND
 break;
@@ -769,18 +537,6 @@ break;
 case 0x31:
 M6502_INDIRECTY_READ
 M6502_AND
-break;
-
-
-case 0x8b:
-M6502_IMMEDIATE_READ
-M6502_ANE
-break;
-
-
-case 0x6b:
-M6502_IMMEDIATE_READ
-M6502_ARR
 break;
 
 
@@ -807,6 +563,63 @@ break;
 case 0x1e:
 M6502_ABSOLUTEX_READMODIFYWRITE
 M6502_ASL
+break;
+
+
+case 0x0f:
+M6502_ABSOLUTE_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x1f:
+M6502_ABSOLUTEX_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x1b:
+M6502_ABSOLUTEY_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x07:
+M6502_ZERO_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x17:
+M6502_ZEROX_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x03:
+M6502_INDIRECTX_READMODIFYWRITE
+M6502_ASO
+break;
+
+case 0x13:
+M6502_INDIRECTY_READMODIFYWRITE
+M6502_ASO
+break;
+
+
+case 0x8f:
+M6502_ABSOLUTE_WRITE
+M6502_AXS
+break;
+
+case 0x87:
+M6502_ZERO_WRITE
+M6502_AXS
+break;
+
+case 0x97:
+M6502_ZEROY_WRITE
+M6502_AXS
+break;
+
+case 0x83:
+M6502_INDIRECTX_WRITE
+M6502_AXS
 break;
 
 
@@ -971,42 +784,6 @@ M6502_CPY
 break;
 
 
-case 0xcf:
-M6502_ABSOLUTE_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xdf:
-M6502_ABSOLUTEX_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xdb:
-M6502_ABSOLUTEY_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xc7:
-M6502_ZERO_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xd7:
-M6502_ZEROX_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xc3:
-M6502_INDIRECTX_READMODIFYWRITE
-M6502_DCP
-break;
-
-case 0xd3:
-M6502_INDIRECTY_READMODIFYWRITE
-M6502_DCP
-break;
-
-
 case 0xc6:
 M6502_ZERO_READMODIFYWRITE
 M6502_DEC
@@ -1114,42 +891,6 @@ M6502_INY
 break;
 
 
-case 0xef:
-M6502_ABSOLUTE_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xff:
-M6502_ABSOLUTEX_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xfb:
-M6502_ABSOLUTEY_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xe7:
-M6502_ZERO_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xf7:
-M6502_ZEROX_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xe3:
-M6502_INDIRECTX_READMODIFYWRITE
-M6502_ISB
-break;
-
-case 0xf3:
-M6502_INDIRECTY_READMODIFYWRITE
-M6502_ISB
-break;
-
-
 case 0x4c:
 M6502_ABSOLUTE_WRITE
 M6502_JMP
@@ -1163,43 +904,6 @@ break;
 
 case 0x20:
 M6502_JSR
-break;
-
-
-case 0xbb:
-M6502_ABSOLUTEY_READ
-M6502_LAS
-break;
-
-
-case 0xaf:
-M6502_ABSOLUTE_READ
-M6502_LAX
-break;
-
-case 0xbf:
-M6502_ABSOLUTEY_READ
-M6502_LAX
-break;
-
-case 0xa7:
-M6502_ZERO_READ
-M6502_LAX
-break;
-
-case 0xb7:
-M6502_ZEROY_READ
-M6502_LAX
-break;
-
-case 0xa3:
-M6502_INDIRECTX_READ
-M6502_LAX
-break;
-
-case 0xb3:
-M6502_INDIRECTY_READ
-M6502_LAX
 break;
 
 
@@ -1323,26 +1027,19 @@ M6502_LSR
 break;
 
 
-case 0xab:
-M6502_IMMEDIATE_READ
-M6502_LXA
-break;
-
-
 case 0x1a:
 case 0x3a:
 case 0x5a:
 case 0x7a:
 case 0xda:
-case 0xea:
 case 0xfa:
+case 0xea:
 M6502_IMPLIED
 M6502_NOP
 break;
 
 case 0x80:
 case 0x82:
-case 0x89:
 case 0xc2:
 case 0xe2:
 M6502_IMMEDIATE_READ
@@ -1397,12 +1094,12 @@ M6502_ZEROX_READ
 M6502_ORA
 break;
 
-case 0x0d:
+case 0x0D:
 M6502_ABSOLUTE_READ
 M6502_ORA
 break;
 
-case 0x1d:
+case 0x1D:
 M6502_ABSOLUTEX_READ
 M6502_ORA
 break;
@@ -1536,42 +1233,6 @@ M6502_ROR
 break;
 
 
-case 0x6f:
-M6502_ABSOLUTE_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x7f:
-M6502_ABSOLUTEX_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x7b:
-M6502_ABSOLUTEY_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x67:
-M6502_ZERO_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x77:
-M6502_ZEROX_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x63:
-M6502_INDIRECTX_READMODIFYWRITE
-M6502_RRA
-break;
-
-case 0x73:
-M6502_INDIRECTY_READMODIFYWRITE
-M6502_RRA
-break;
-
-
 case 0x40:
 M6502_IMPLIED
 M6502_RTI
@@ -1584,29 +1245,7 @@ M6502_RTS
 break;
 
 
-case 0x8f:
-M6502_ABSOLUTE_WRITE
-M6502_SAX
-break;
-
-case 0x87:
-M6502_ZERO_WRITE
-M6502_SAX
-break;
-
-case 0x97:
-M6502_ZEROY_WRITE
-M6502_SAX
-break;
-
-case 0x83:
-M6502_INDIRECTX_WRITE
-M6502_SAX
-break;
-
-
 case 0xe9:
-case 0xeb:
 M6502_IMMEDIATE_READ
 M6502_SBC
 break;
@@ -1647,12 +1286,6 @@ M6502_SBC
 break;
 
 
-case 0xcb:
-M6502_IMMEDIATE_READ
-M6502_SBX
-break;
-
-
 case 0x38:
 M6502_IMPLIED
 M6502_SEC
@@ -1668,107 +1301,6 @@ break;
 case 0x78:
 M6502_IMPLIED
 M6502_SEI
-break;
-
-
-case 0x9f:
-M6502_ABSOLUTEY_WRITE
-M6502_SHA
-break;
-
-case 0x93:
-M6502_INDIRECTY_WRITE
-M6502_SHA
-break;
-
-
-case 0x9b:
-M6502_ABSOLUTEY_WRITE
-M6502_SHS
-break;
-
-
-case 0x9e:
-M6502_ABSOLUTEY_WRITE
-M6502_SHX
-break;
-
-
-case 0x9c:
-M6502_ABSOLUTEX_WRITE
-M6502_SHY
-break;
-
-
-case 0x0f:
-M6502_ABSOLUTE_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x1f:
-M6502_ABSOLUTEX_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x1b:
-M6502_ABSOLUTEY_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x07:
-M6502_ZERO_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x17:
-M6502_ZEROX_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x03:
-M6502_INDIRECTX_READMODIFYWRITE
-M6502_SLO
-break;
-
-case 0x13:
-M6502_INDIRECTY_READMODIFYWRITE
-M6502_SLO
-break;
-
-
-case 0x4f:
-M6502_ABSOLUTE_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x5f:
-M6502_ABSOLUTEX_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x5b:
-M6502_ABSOLUTEY_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x47:
-M6502_ZERO_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x57:
-M6502_ZEROX_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x43:
-M6502_INDIRECTX_READMODIFYWRITE
-M6502_SRE
-break;
-
-case 0x53:
-M6502_INDIRECTY_READMODIFYWRITE
-M6502_SRE
 break;
 
 

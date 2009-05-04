@@ -8,37 +8,33 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.cxx,v 1.25 2009-04-20 15:03:13 stephena Exp $
+// $Id: M6502.cxx,v 1.1.1.1 2001-12-27 19:54:30 bwmott Exp $
 //============================================================================
 
 #include "M6502.hxx"
 
-#ifdef DEBUGGER_SUPPORT
-  #include "Expression.hxx"
-#endif
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::M6502(uInt32 systemCyclesPerProcessorCycle)
-  : myExecutionStatus(0),
-    mySystem(0),
-    mySystemCyclesPerProcessorCycle(systemCyclesPerProcessorCycle),
-    myLastAccessWasRead(true),
-    myTotalInstructionCount(0)
+    : myExecutionStatus(0),
+      mySystem(0),
+      mySystemCyclesPerProcessorCycle(systemCyclesPerProcessorCycle)
 {
-#ifdef DEBUGGER_SUPPORT
-  myDebugger    = NULL;
-  myBreakPoints = NULL;
-  myReadTraps   = NULL;
-  myWriteTraps  = NULL;
-#endif
+  uInt16 t;
+
+  // Compute the BCD lookup table
+  for(t = 0; t < 256; ++t)
+  {
+    ourBCDTable[0][t] = ((t >> 4) * 10) + (t & 0x0f);
+    ourBCDTable[1][t] = (((t % 100) / 10) << 4) | (t % 10);
+  }
 
   // Compute the System Cycle table
-  for(uInt32 t = 0; t < 256; ++t)
+  for(t = 0; t < 256; ++t)
   {
     myInstructionSystemCycleTable[t] = ourInstructionProcessorCycleTable[t] *
         mySystemCyclesPerProcessorCycle;
@@ -48,10 +44,6 @@ M6502::M6502(uInt32 systemCyclesPerProcessorCycle)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::~M6502()
 {
-#ifdef DEBUGGER_SUPPORT
-  myBreakConds.clear();
-  myBreakCondNames.clear();
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -72,13 +64,8 @@ void M6502::reset()
   SP = 0xff;
   PS(0x20);
 
-  // Reset access flag
-  myLastAccessWasRead = true;
-
   // Load PC from the reset vector
   PC = (uInt16)mySystem->peek(0xfffc) | ((uInt16)mySystem->peek(0xfffd) << 8);
-
-  myTotalInstructionCount = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -97,6 +84,12 @@ void M6502::nmi()
 void M6502::stop()
 {
   myExecutionStatus |= StopExecutionBit;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+M6502::AddressingMode M6502::addressingMode(uInt8 opcode) const
+{
+  return ourAddressingModeTable[opcode];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -127,7 +120,7 @@ void M6502::PS(uInt8 ps)
 {
   N = ps & 0x80;
   V = ps & 0x40;
-  B = true;        // B = ps & 0x10;  The 6507's B flag always true
+  B = ps & 0x10;
   D = ps & 0x08;
   I = ps & 0x04;
   notZ = !(ps & 0x02);
@@ -183,170 +176,90 @@ ostream& operator<<(ostream& out, const M6502::AddressingMode& mode)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-M6502::AddressingMode M6502::ourAddressingModeTable[256] = {
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x0?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x1?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Absolute,   IndirectX, Invalid,   IndirectX,    // 0x2?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x3?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x4?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x5?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x6?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Indirect,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x7?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0x8?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x9?
-  ZeroX,      ZeroX,     ZeroY,     ZeroY,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xA?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xB?
-  ZeroX,      ZeroX,     ZeroY,     ZeroY,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xC?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xD?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xE?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xF?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX
-};
+uInt8 M6502::ourBCDTable[2][256];
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-M6502::AccessMode M6502::ourAccessModeTable[256] = {
-  None,   Read,   None,   Write,    // 0x0?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  None,   Read,   Write,  Write,
+M6502::AddressingMode M6502::ourAddressingModeTable[256] = {
+    Implied,    IndirectX, Invalid,   IndirectX,  // 0x0?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0x1?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,  // 0x1?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0x2?
-  Read,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Absolute,   IndirectX, Invalid,   IndirectX,  // 0x2?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0x3?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
-  
-  None,   Read,   None,   Write,    // 0x4?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,  // 0x3?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0x5?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Implied,    IndirectX, Invalid,   Invalid,    // 0x4?
+    Zero,       Zero,      Zero,      Invalid,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Invalid,
 
-  None,   Read,   None,   Write,    // 0x6?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   Invalid,    // 0x5?
+    ZeroX,      ZeroX,     ZeroX,     Invalid,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    AbsoluteX,  AbsoluteX, AbsoluteX, Invalid,
 
-  Read,   Read,   None,   Write,    // 0x7?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Implied,    IndirectX, Invalid,   Invalid,    // 0x6?
+    Zero,       Zero,      Zero,      Invalid,
+    Implied,    Immediate, Implied,   Invalid,
+    Indirect,   Absolute,  Absolute,  Invalid,
 
-  None,   Write,  None,   Write,    // 0x8?
-  Write,  Write,  Write,  Write,
-  None,   None,   None,   Read,
-  Write,  Write,  Write,  Write,
+    Relative,   IndirectY, Invalid,   Invalid,    // 0x7?
+    ZeroX,      ZeroX,     ZeroX,     Invalid,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    AbsoluteX,  AbsoluteX, AbsoluteX, Invalid,
 
-  Read,   Write,  None,   Write,    // 0x9?
-  Write,  Write,  Write,  Write,
-  None,   Write,  None,   Write,
-  Write,  Write,  Write,  Write,
+    Immediate,  IndirectX, Immediate, IndirectX,  // 0x8?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Invalid,   Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   Read,   Read,     // 0xA?
-  Read,   Read,   Read,   Read,
-  None,   Read,   None,   Read,
-  Read,   Read,   Read,   Read,
+    Relative,   IndirectY, Invalid,   Invalid,    // 0x9?
+    ZeroX,      ZeroX,     ZeroY,     ZeroY,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    Invalid,    AbsoluteX, Invalid,   Invalid,
 
-  Read,   Read,   None,   Read,     // 0xB?
-  Read,   Read,   Read,   Read,
-  None,   Read,   None,   Read,
-  Read,   Read,   Read,   Read,
+    Immediate,  IndirectX, Immediate, Invalid,    // 0xA?
+    Zero,       Zero,      Zero,      Invalid,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Invalid,
 
-  Read,   Read,   None,   Write,    // 0xC?
-  Read,   Read,   Write,  Write,
-  None,   Read,   None,   Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   Invalid,    // 0xB?
+    ZeroX,      ZeroX,     ZeroY,     Invalid,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    AbsoluteX,  AbsoluteX, AbsoluteY, Invalid,
 
-  Read,   Read,   None,   Write,    // 0xD?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Immediate,  IndirectX, Immediate, Invalid,    // 0xC?
+    Zero,       Zero,      Zero,      Invalid,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Invalid,
 
-  Read,   Read,   None,   Write,    // 0xE?
-  Read,   Read,   Write,  Write,
-  None,   Read,   None,   Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   Invalid,    // 0xD?
+    ZeroX,      ZeroX,     ZeroX,     Invalid,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    AbsoluteX,  AbsoluteX, AbsoluteX, Invalid,
 
-  Read,   Read,   None,   Write,    // 0xF?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write
-};
+    Immediate,  IndirectX, Immediate, Invalid,    // 0xE?
+    Zero,       Zero,      Zero,      Invalid,
+    Implied,    Immediate, Implied,   Invalid,
+    Absolute,   Absolute,  Absolute,  Invalid,
+
+    Relative,   IndirectY, Invalid,   Invalid,    // 0xF?
+    ZeroX,      ZeroX,     ZeroX,     Invalid,
+    Implied,    AbsoluteY, Implied,   Invalid,
+    AbsoluteX,  AbsoluteX, AbsoluteX, Invalid
+  };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt32 M6502::ourInstructionProcessorCycleTable[256] = {
@@ -355,135 +268,68 @@ uInt32 M6502::ourInstructionProcessorCycleTable[256] = {
     2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 1
     6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,  // 2
     2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 3
-    6, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6,  // 4
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 5
-    6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 5, 4, 6, 6,  // 6
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 7
+    6, 6, 2, 2, 3, 3, 5, 2, 3, 2, 2, 2, 3, 4, 6, 2,  // 4
+    2, 5, 2, 2, 4, 4, 6, 2, 2, 4, 2, 2, 4, 4, 7, 2,  // 5
+    6, 6, 2, 2, 3, 3, 5, 2, 4, 2, 2, 2, 5, 4, 6, 2,  // 6
+    2, 5, 2, 2, 4, 4, 6, 2, 2, 4, 2, 2, 4, 4, 7, 2,  // 7
     2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,  // 8
-    2, 6, 2, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5,  // 9
-    2, 6, 2, 6, 3, 3, 3, 4, 2, 2, 2, 2, 4, 4, 4, 4,  // a
-    2, 5, 2, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4,  // b
-    2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,  // c
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // d
-    2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,  // e
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7   // f
+    2, 6, 2, 2, 4, 4, 4, 4, 2, 5, 2, 2, 2, 5, 2, 2,  // 9
+    2, 6, 2, 2, 3, 3, 3, 2, 2, 2, 2, 2, 4, 4, 4, 2,  // a
+    2, 5, 2, 2, 4, 4, 4, 2, 2, 4, 2, 2, 4, 4, 4, 2,  // b
+    2, 6, 2, 2, 3, 3, 5, 2, 2, 2, 2, 2, 4, 4, 6, 2,  // c
+    2, 5, 2, 2, 4, 4, 6, 2, 2, 4, 2, 2, 4, 4, 7, 2,  // d
+    2, 6, 2, 2, 3, 3, 5, 2, 2, 2, 2, 2, 4, 4, 6, 2,  // e
+    2, 5, 2, 2, 4, 4, 6, 2, 2, 4, 2, 2, 4, 4, 7, 2   // f
   };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 const char* M6502::ourInstructionMnemonicTable[256] = {
-  "BRK",  "ORA",  "n/a",  "slo",  "nop",  "ORA",  "ASL",  "slo",    // 0x0?
-  "PHP",  "ORA",  "ASLA", "anc",  "nop",  "ORA",  "ASL",  "slo",
+  "BRK",  "ORA",  "n/a",  "aso",  "nop",  "ORA",  "ASL",  "aso",    // 0x0?
+  "PHP",  "ORA",  "ASLA", "n/a",  "nop",  "ORA",  "ASL",  "aso",
 
-  "BPL",  "ORA",  "n/a",  "slo",  "nop",  "ORA",  "ASL",  "slo",    // 0x1?
-  "CLC",  "ORA",  "nop",  "slo",  "nop",  "ORA",  "ASL",  "slo",
+  "BPL",  "ORA",  "n/a",  "aso",  "nop",  "ORA",  "ASL",  "aso",    // 0x1?
+  "CLC",  "ORA",  "nop",  "aso",  "nop",  "ORA",  "ASL",  "aso",
 
   "JSR",  "AND",  "n/a",  "rla",  "BIT",  "AND",  "ROL",  "rla",    // 0x2?
-  "PLP",  "AND",  "ROLA", "anc",  "BIT",  "AND",  "ROL",  "rla",
+  "PLP",  "AND",  "ROLA", "n/a",  "BIT",  "AND",  "ROL",  "rla",
 
-  "BMI",  "AND",  "n/a",  "rla",  "nop",  "AND",  "ROL",  "rla",    // 0x3?
+  "BMI",  "AND",  "rla",  "n/a",  "nop",  "AND",  "ROL",  "rla",    // 0x3?
   "SEC",  "AND",  "nop",  "rla",  "nop",  "AND",  "ROL",  "rla",
   
-  "RTI",  "EOR",  "n/a",  "sre",  "nop",  "EOR",  "LSR",  "sre",    // 0x4?
-  "PHA",  "EOR",  "LSRA", "asr",  "JMP",  "EOR",  "LSR",  "sre",
+  "RTI",  "EOR",  "n/a",  "n/a",  "nop",  "EOR",  "LSR",  "n/a",    // 0x4?
+  "PHA",  "EOR",  "LSRA", "n/a",  "JMP",  "EOR",  "LSR",  "n/a",
 
-  "BVC",  "EOR",  "n/a",  "sre",  "nop",  "EOR",  "LSR",  "sre",    // 0x5?
-  "CLI",  "EOR",  "nop",  "sre",  "nop",  "EOR",  "LSR",  "sre",
+  "BVC",  "EOR",  "n/a",  "n/a",  "nop",  "EOR",  "LSR",  "n/a",    // 0x5?
+  "CLI",  "EOR",  "nop",  "n/a",  "nop",  "EOR",  "LSR",  "n/a",
 
-  "RTS",  "ADC",  "n/a",  "rra",  "nop",  "ADC",  "ROR",  "rra",    // 0x6?
-  "PLA",  "ADC",  "RORA", "arr",  "JMP",  "ADC",  "ROR",  "rra",
+  "RTS",  "ADC",  "n/a",  "n/a",  "nop",  "ADC",  "ROR",  "n/a",    // 0x6?
+  "PLA",  "ADC",  "RORA", "n/a",  "JMP",  "ADC",  "ROR",  "n/a",
 
-  "BVS",  "ADC",  "n/a",  "rra",  "nop",  "ADC",  "ROR",  "rra",    // 0x7?
-  "SEI",  "ADC",  "nop",  "rra",  "nop",  "ADC",  "ROR",  "rra",
+  "BVS",  "ADC",  "n/a",  "n/a",  "nop",  "ADC",  "ROR",  "n/a",    // 0x7?
+  "SEI",  "ADC",  "nop",  "n/a",  "nop",  "ADC",  "ROR",  "n/a",
 
-  "nop",  "STA",  "nop",  "sax",  "STY",  "STA",  "STX",  "sax",    // 0x8?
-  "DEY",  "nop",  "TXA",  "ane",  "STY",  "STA",  "STX",  "sax",
+  "nop",  "STA",  "nop",  "axs",  "STY",  "STA",  "STX",  "axs",    // 0x8?
+  "DEY",  "n/a",  "TXA",  "n/a",  "STY",  "STA",  "STX",  "axs",
 
-  "BCC",  "STA",  "n/a",  "sha",  "STY",  "STA",  "STX",  "sax",    // 0x9?
-  "TYA",  "STA",  "TXS",  "shs",  "shy",  "STA",  "shx",  "sha",
+  "BCC",  "STA",  "n/a",  "n/a",  "STY",  "STA",  "STX",  "axs",    // 0x9?
+  "TYA",  "STA",  "TXS",  "n/a",  "n/a",  "STA",  "n/a",  "n/a",
 
-  "LDY",  "LDA",  "LDX",  "lax",  "LDY",  "LDA",  "LDX",  "lax",    // 0xA?
-  "TAY",  "LDA",  "TAX",  "lxa",  "LDY",  "LDA",  "LDX",  "lax",
+  "LDY",  "LDA",  "LDX",  "n/a",  "LDY",  "LDA",  "LDX",  "n/a",    // 0xA?
+  "TAY",  "LDA",  "TAX",  "n/a",  "LDY",  "LDA",  "LDX",  "n/a",
 
-  "BCS",  "LDA",  "n/a",  "lax",  "LDY",  "LDA",  "LDX",  "lax",    // 0xB?
-  "CLV",  "LDA",  "TSX",  "las",  "LDY",  "LDA",  "LDX",  "lax",
+  "BCS",  "LDA",  "n/a",  "n/a",  "LDY",  "LDA",  "LDX",  "n/a",    // 0xB?
+  "CLV",  "LDA",  "TSX",  "n/a",  "LDY",  "LDA",  "LDX",  "n/a",
 
-  "CPY",  "CMP",  "nop",  "dcp",  "CPY",  "CMP",  "DEC",  "dcp",    // 0xC?
-  "INY",  "CMP",  "DEX",  "sbx",  "CPY",  "CMP",  "DEC",  "dcp",
+  "CPY",  "CMP",  "nop",  "n/a",  "CPY",  "CMP",  "DEC",  "n/a",    // 0xC?
+  "INY",  "CMP",  "DEX",  "n/a",  "CPY",  "CMP",  "DEC",  "n/a",
 
-  "BNE",  "CMP",  "n/a",  "dcp",  "nop",  "CMP",  "DEC",  "dcp",    // 0xD?
-  "CLD",  "CMP",  "nop",  "dcp",  "nop",  "CMP",  "DEC",  "dcp",
+  "BNE",  "CMP",  "n/a",  "n/a",  "nop",  "CMP",  "DEC",  "n/a",    // 0xD?
+  "CLD",  "CMP",  "nop",  "n/a",  "nop",  "CMP",  "DEC",  "n/a",
 
-  "CPX",  "SBC",  "nop",  "isb",  "CPX",  "SBC",  "INC",  "isb",    // 0xE?
-  "INX",  "SBC",  "NOP",  "sbc",  "CPX",  "SBC",  "INC",  "isb",
+  "CPX",  "SBC",  "nop",  "n/a",  "CPX",  "SBC",  "INC",  "n/a",    // 0xE?
+  "INX",  "SBC",  "NOP",  "n/a",  "CPX",  "SBC",  "INC",  "n/a",
 
-  "BEQ",  "SBC",  "n/a",  "isb",  "nop",  "SBC",  "INC",  "isb",    // 0xF?
-  "SED",  "SBC",  "nop",  "isb",  "nop",  "SBC",  "INC",  "isb"
+  "BEQ",  "SBC",  "n/a",  "n/a",  "nop",  "SBC",  "INC",  "n/a",    // 0xF?
+  "SED",  "SBC",  "nop",  "n/a",  "nop",  "SBC",  "INC",  "n/a"
 };
 
-#ifdef DEBUGGER_SUPPORT
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::attach(Debugger& debugger)
-{
-  // Remember the debugger for this microprocessor
-  myDebugger = &debugger;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-unsigned int M6502::addCondBreak(Expression *e, const string& name)
-{
-  myBreakConds.push_back(e);
-  myBreakCondNames.push_back(name);
-  return myBreakConds.size() - 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::delCondBreak(unsigned int brk)
-{
-  if(brk < myBreakConds.size())
-  {
-    delete myBreakConds[brk];
-    myBreakConds.remove_at(brk);
-    myBreakCondNames.remove_at(brk);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::clearCondBreaks()
-{
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
-    delete myBreakConds[i];
-
-  myBreakConds.clear();
-  myBreakCondNames.clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const StringList& M6502::getCondBreakNames() const
-{
-  return myBreakCondNames;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int M6502::evalCondBreaks()
-{
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
-    if(myBreakConds[i]->evaluate())
-      return i;
-
-  return -1; // no break hit
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::setBreakPoints(PackedBitArray *bp)
-{
-  myBreakPoints = bp;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::setTraps(PackedBitArray *read, PackedBitArray *write)
-{
-  myReadTraps = read;
-  myWriteTraps = write;
-}
-
-#endif

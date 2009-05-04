@@ -8,25 +8,25 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Event.cxx,v 1.16 2009-01-01 18:13:35 stephena Exp $
+// $Id: Event.cxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 //============================================================================
-
-#include "OSystem.hxx"
-#include "Console.hxx"
-#include "Control.hxx"
 
 #include "Event.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Event::Event()
-  : myNumberOfTypes(Event::LastType)
+    : myNumberOfTypes(Event::LastType)
 {
-  clear();
+  // Set all of the events to 0 / false to start with
+  for(int i = 0; i < myNumberOfTypes; ++i)
+  {
+    myValues[i] = 0;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,9 +46,3 @@ void Event::set(Type type, Int32 value)
   myValues[type] = value;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Event::clear()
-{
-  for(int i = 0; i < myNumberOfTypes; ++i)
-    myValues[i] = 0;
-}

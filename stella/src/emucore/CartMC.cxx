@@ -8,47 +8,70 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: CartMC.cxx,v 1.18 2009-05-01 11:25:07 stephena Exp $
+// $Id: CartMC.cxx,v 1.1.1.1 2001-12-27 19:54:21 bwmott Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
+#include <assert.h>
+#include "CartMC.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartMC.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeMC::CartridgeMC(const uInt8* image, uInt32 size)
-  : mySlot3Locked(false)
+    : mySlot3Locked(false)
 {
+  uInt32 i;
+
   // Make sure size is reasonable
-  assert(size <= 131072);
+  assert(size <= 128 * 1024);
+
+  // Allocate array for the cart's RAM
+  myRAM = new uInt8[32 * 1024];
+
+  // Initialize RAM with random values
+  Random random;
+  for(i = 0; i < 32 * 1024; ++i)
+  {
+    myRAM[i] = random.next();
+  }
+
+  // Allocate array for the ROM image
+  myImage = new uInt8[128 * 1024];
 
   // Set the contents of the entire ROM to 0
-  memset(myImage, 0, 131072);
+  for(i = 0; i < 128 * 1024; ++i)
+  {
+    myImage[i] = 0;
+  }
 
   // Copy the ROM image to the end of the ROM buffer
-  memcpy(myImage + 131072 - size, image, size);
+  for(i = 0; i < size; ++i)
+  {
+    myImage[128 * 1024 - size + i] = image[i];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeMC::~CartridgeMC()
 {
+  delete[] myRAM;
+  delete[] myImage;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeMC::name() const
+{
+  return "CartridgeMC";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 32768; ++i)
-    myRAM[i] = random.next();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -91,7 +114,7 @@ void CartridgeMC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeMC::peek(uInt16 address)
 {
-  address &= 0x1FFF;
+  address = address & 0x1FFF;
 
   // Accessing the RESET vector so lets handle the powerup special case
   if((address == 0x1FFC) || (address == 0x1FFD))
@@ -151,7 +174,7 @@ uInt8 CartridgeMC::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x1FFF;
+  address = address & 0x1FFF;
 
   // Accessing the RESET vector so lets handle the powerup special case
   if((address == 0x1FFC) || (address == 0x1FFD))
@@ -193,107 +216,3 @@ void CartridgeMC::poke(uInt16 address, uInt8 value)
   }  
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeMC::bank(uInt16 b)
-{
-  // TODO: add support for debugger
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeMC::bank()
-{
-  // TODO: add support for debugger
-  return 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeMC::bankCount()
-{
-  // TODO: add support for debugger
-  return 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMC::patch(uInt16 address, uInt8 value)
-{
-  // TODO: implement
-  return false;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeMC::getImage(int& size)
-{
-  size = 128 * 1024; // FIXME: keep track of original size
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMC::save(Serializer& out) const
-{
-  uInt32 i;
-  string cart = name();
-
-  try
-  {
-    out.putString(cart);
-
-    // The currentBlock array
-    out.putInt(4);
-    for(i = 0; i < 4; ++i)
-      out.putByte((char)myCurrentBlock[i]);
-
-    // The 32K of RAM
-    out.putInt(32 * 1024);
-    for(i = 0; i < 32 * 1024; ++i)
-      out.putByte((char)myRAM[i]);
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << cart << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMC::load(Deserializer& in)
-{
-  uInt32 i;
-  string cart = name();
-
-  try
-  {
-    uInt32 limit;
-
-    if(in.getString() != cart)
-      return false;
-
-    // The currentBlock array
-    limit = (uInt32) in.getInt();
-    for(i = 0; i < limit; ++i)
-      myCurrentBlock[i] = (uInt8) in.getByte();
-
-    // The 32K of RAM
-    limit = (uInt32) in.getInt();
-    for(i = 0; i < limit; ++i)
-      myRAM[i] = (uInt8) in.getByte();
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << cart << endl;
-    return false;
-  }
-
-  return true;
-}

@@ -8,57 +8,174 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Keyboard.cxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
+// $Id: Keyboard.cxx,v 1.1.1.1 2001-12-27 19:54:22 bwmott Exp $
 //============================================================================
 
 #include "Event.hxx"
 #include "Keyboard.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Keyboard::Keyboard(Jack jack, const Event& event, const System& system)
-  : Controller(jack, event, system, Controller::Keyboard),
-    myPinState(0)
+Keyboard::Keyboard(Jack jack, const Event& event)
+    : Controller(jack, event),
+      myPinState(0)
 {
-  if(myJack == Left)
-  {
-    myOneEvent   = Event::KeyboardZero1;
-    myTwoEvent   = Event::KeyboardZero2;
-    myThreeEvent = Event::KeyboardZero3;
-    myFourEvent  = Event::KeyboardZero4;
-    myFiveEvent  = Event::KeyboardZero5;
-    mySixEvent   = Event::KeyboardZero6;
-    mySevenEvent = Event::KeyboardZero7;
-    myEightEvent = Event::KeyboardZero8;
-    myNineEvent  = Event::KeyboardZero9;
-    myStarEvent  = Event::KeyboardZeroStar;
-    myZeroEvent  = Event::KeyboardZero0;
-    myPoundEvent = Event::KeyboardZeroPound;
-  }
-  else
-  {
-    myOneEvent   = Event::KeyboardOne1;
-    myTwoEvent   = Event::KeyboardOne2;
-    myThreeEvent = Event::KeyboardOne3;
-    myFourEvent  = Event::KeyboardOne4;
-    myFiveEvent  = Event::KeyboardOne5;
-    mySixEvent   = Event::KeyboardOne6;
-    mySevenEvent = Event::KeyboardOne7;
-    myEightEvent = Event::KeyboardOne8;
-    myNineEvent  = Event::KeyboardOne9;
-    myStarEvent  = Event::KeyboardOneStar;
-    myZeroEvent  = Event::KeyboardOne0;
-    myPoundEvent = Event::KeyboardOnePound;
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Keyboard::~Keyboard()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool Keyboard::read(DigitalPin pin)
+{
+  if(pin == Six)
+  {
+    if((myPinState & 0x01) == 0)
+    {
+      return (myJack == Left) ? (myEvent.get(Event::KeyboardZero3) == 0) :
+          (myEvent.get(Event::KeyboardOne3) == 0);
+    }
+    else if((myPinState & 0x02) == 0)
+    {
+      return (myJack == Left) ? (myEvent.get(Event::KeyboardZero6) == 0) :
+          (myEvent.get(Event::KeyboardOne6) == 0);
+    }
+    else if((myPinState & 0x04) == 0)
+    {
+      return (myJack == Left) ? (myEvent.get(Event::KeyboardZero9) == 0) :
+          (myEvent.get(Event::KeyboardOne9) == 0);
+    }
+    else if((myPinState & 0x08) == 0)
+    {
+      return (myJack == Left) ? (myEvent.get(Event::KeyboardZeroPound) == 0) :
+          (myEvent.get(Event::KeyboardOnePound) == 0);
+    }
+  }
+
+  return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Int32 Keyboard::read(AnalogPin pin)
+{
+  if(pin == Nine)
+  {
+    if((myPinState & 0x01) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero1) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne1) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x02) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero4) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne4) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x04) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero7) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne7) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x08) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZeroStar) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOneStar) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+  }
+  else
+  {
+    if((myPinState & 0x01) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero2) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne2) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x02) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero5) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne5) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x04) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero8) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne8) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+    else if((myPinState & 0x08) == 0)
+    {
+      if(myJack == Left)
+      {
+        return (myEvent.get(Event::KeyboardZero0) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+      else
+      {
+        return (myEvent.get(Event::KeyboardOne0) != 0) ? 
+            maximumResistance : minimumResistance;
+      }
+    }
+  }
+
+  return maximumResistance;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,47 +203,5 @@ void Keyboard::write(DigitalPin pin, bool value)
     default:
       break;
   } 
-
-  // State has probably changed, so recalculate it
-  update();
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Keyboard::update()
-{
-  myDigitalPinState[One]   = (myPinState & 0x01);
-  myDigitalPinState[Two]   = (myPinState & 0x02);
-  myDigitalPinState[Three] = (myPinState & 0x04);
-  myDigitalPinState[Four]  = (myPinState & 0x08);
-
-  // Set defaults
-  myDigitalPinState[Six] = true;
-  myAnalogPinValue[Five] = minimumResistance;
-  myAnalogPinValue[Nine] = minimumResistance;
-
-  // Now scan the rows and columns
-  if(!(myPinState & 0x08))
-  {
-    myDigitalPinState[Six] = (myEvent.get(myPoundEvent) == 0);
-    if(myEvent.get(myZeroEvent) != 0) myAnalogPinValue[Five] = maximumResistance;
-    if(myEvent.get(myStarEvent) != 0) myAnalogPinValue[Nine] = maximumResistance;
-  }
-  if(!(myPinState & 0x04))
-  {
-    myDigitalPinState[Six] = (myEvent.get(myNineEvent) == 0);
-    if(myEvent.get(myEightEvent) != 0) myAnalogPinValue[Five] = maximumResistance;
-    if(myEvent.get(mySevenEvent) != 0) myAnalogPinValue[Nine] = maximumResistance;
-  }
-  if(!(myPinState & 0x02))
-  {
-    myDigitalPinState[Six] = (myEvent.get(mySixEvent) == 0);
-    if(myEvent.get(myFiveEvent) != 0) myAnalogPinValue[Five] = maximumResistance;
-    if(myEvent.get(myFourEvent) != 0) myAnalogPinValue[Nine] = maximumResistance;
-  }
-  if(!(myPinState & 0x01))
-  {
-    myDigitalPinState[Six] = (myEvent.get(myThreeEvent) == 0);
-    if(myEvent.get(myTwoEvent) != 0) myAnalogPinValue[Five] = maximumResistance;
-    if(myEvent.get(myOneEvent) != 0) myAnalogPinValue[Nine] = maximumResistance;
-  }
-}

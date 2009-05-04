@@ -8,23 +8,21 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Cart3F.cxx,v 1.20 2009-05-01 11:25:07 stephena Exp $
+// $Id: Cart3F.cxx,v 1.1.1.1 2001-12-27 19:54:18 bwmott Exp $
 //============================================================================
 
-#include <cassert>
-
-#include "System.hxx"
-#include "TIA.hxx"
+#include <assert.h>
 #include "Cart3F.hxx"
+#include "System.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Cartridge3F::Cartridge3F(const uInt8* image, uInt32 size)
-  : mySize(size)
+    : mySize(size)
 {
   // Allocate array for the ROM image
   myImage = new uInt8[mySize];
@@ -40,6 +38,12 @@ Cartridge3F::Cartridge3F(const uInt8* image, uInt32 size)
 Cartridge3F::~Cartridge3F()
 {
   delete[] myImage;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* Cartridge3F::name() const
+{
+  return "Cartridge3F";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -60,9 +64,8 @@ void Cartridge3F::install(System& system)
   assert((0x1800 & mask) == 0);
 
   // Set the page accessing methods for the hot spots (for 100% emulation
-  // we need to chain any accesses below 0x40 to the TIA. Our poke() method
-  // does this via mySystem->tiaPoke(...), at least until we come up with a
-  // cleaner way to do it.)
+  // I would need to chain any accesses below 0x40 to the TIA but for
+  // now I'll just forget about them)
   System::PageAccess access;
   for(uInt32 i = 0x00; i < 0x40; i += (1 << shift))
   {
@@ -88,7 +91,7 @@ void Cartridge3F::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 Cartridge3F::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   if(address < 0x0800)
   {
@@ -103,22 +106,18 @@ uInt8 Cartridge3F::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3F::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if(address <= 0x003F)
   {
     bank(value);
   }
-
-  mySystem->tia().poke(address, value);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3F::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
-
   // Make sure the bank they're asking for is reasonable
   if((uInt32)bank * 2048 < mySize)
   {
@@ -147,89 +146,3 @@ void Cartridge3F::bank(uInt16 bank)
   }
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge3F::bank()
-{
-  return myCurrentBank;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge3F::bankCount()
-{
-  return mySize / 2048;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge3F::patch(uInt16 address, uInt8 value)
-{
-  address = address & 0x0FFF;
-  if(address < 0x0800)
-  {
-    myImage[(address & 0x07FF) + myCurrentBank * 2048] = value;
-  }
-  else
-  {
-    myImage[(address & 0x07FF) + mySize - 2048] = value;
-  }
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* Cartridge3F::getImage(int& size)
-{
-  size = mySize;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge3F::save(Serializer& out) const
-{
-  string cart = name();
-
-  try
-  {
-    out.putString(cart);
-    out.putInt(myCurrentBank);
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << cart << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge3F::load(Deserializer& in)
-{
-  string cart = name();
-
-  try
-  {
-    if(in.getString() != cart)
-      return false;
-
-    myCurrentBank = (uInt16) in.getInt();
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << cart << endl;
-    return false;
-  }
-
-  // Now, go to the current bank
-  bank(myCurrentBank);
-
-  return true;
-}

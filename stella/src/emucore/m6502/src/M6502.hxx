@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.hxx,v 1.24 2009-04-20 15:03:13 stephena Exp $
+// $Id: M6502.hxx,v 1.1.1.1 2001-12-27 19:54:30 bwmott Exp $
 //============================================================================
 
 #ifndef M6502_HXX
@@ -21,19 +21,9 @@
 
 class D6502;
 class M6502;
-class Serializer;
-class Deserializer;
-class Debugger;
-class CpuDebug;
-class Expression;
-class PackedBitArray;
 
 #include "bspf.hxx"
 #include "System.hxx"
-#include "Array.hxx"
-#include "StringList.hxx"
-
-typedef Common::Array<Expression*> ExpressionList;
 
 /**
   This is an abstract base class for classes that emulate the
@@ -41,7 +31,7 @@ typedef Common::Array<Expression*> ExpressionList;
   has a 64K addressing space.
 
   @author  Bradford W. Mott
-  @version $Id: M6502.hxx,v 1.24 2009-04-20 15:03:13 stephena Exp $ 
+  @version $Id: M6502.hxx,v 1.1.1.1 2001-12-27 19:54:30 bwmott Exp $ 
 */
 class M6502
 {
@@ -49,25 +39,17 @@ class M6502
     /**
       The 6502 debugger class is a friend who needs special access
     */
-    friend class CpuDebug;
+    friend class D6502;
 
   public:
     /**
       Enumeration of the 6502 addressing modes
     */
-    enum AddressingMode
+    enum AddressingMode 
     {
       Absolute, AbsoluteX, AbsoluteY, Immediate, Implied,
       Indirect, IndirectX, IndirectY, Invalid, Relative,
       Zero, ZeroX, ZeroY
-    };
-
-    /**
-      Enumeration of the 6502 access modes
-    */
-    enum AccessMode
-    {
-      Read, Write, None
     };
 
   public:
@@ -94,6 +76,7 @@ class M6502
     */
     virtual void install(System& system);
 
+  public:
     /**
       Reset the processor to its power-on state.  This method should not 
       be invoked until the entire 6502 system is constructed and installed
@@ -111,29 +94,6 @@ class M6502
     */
     virtual void nmi();
 
-    /**
-      Saves the current state of this device to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    virtual bool save(Serializer& out) = 0;
-
-    /**
-      Loads the current state of this device from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    virtual bool load(Deserializer& in) = 0;
-
-    /**
-      Get a null terminated string which is the processor's name (i.e. "M6532")
-
-      @return The name of the device
-    */
-    virtual const char* name() const = 0;
-
   public:
     /**
       Get the addressing mode of the specified instruction
@@ -141,17 +101,7 @@ class M6502
       @param opcode The opcode of the instruction
       @return The addressing mode of the instruction
     */
-    AddressingMode addressingMode(uInt8 opcode) const
-      { return ourAddressingModeTable[opcode]; }
-
-    /**
-      Get the access mode of the specified instruction
-
-      @param opcode The opcode of the instruction
-      @return The access mode of the instruction
-    */
-    AccessMode accessMode(uInt8 opcode) const
-      { return ourAccessModeTable[opcode]; }
+    AddressingMode addressingMode(uInt8 opcode) const;
 
   public:
     /**
@@ -182,27 +132,6 @@ class M6502
       return myExecutionStatus & FatalErrorBit;
     }
   
-    /**
-      Get the 16-bit value of the Program Counter register.
-
-      @return The program counter register
-    */
-    uInt16 getPC() const { return PC; }
-
-    /**
-      Answer true iff the last memory access was a read.
-
-      @return true iff last access was a read
-    */ 
-    bool lastAccessWasRead() const { return myLastAccessWasRead; }
-
-    /**
-      Get the total number of instructions executed so far.
-
-      @return The number of executed instructions
-    */
-    int totalInstructionCount() const { return myTotalInstructionCount; }
-
   public:
     /**
       Overload the ostream output operator for addressing modes.
@@ -211,26 +140,6 @@ class M6502
       @param mode The addressing mode to output
     */
     friend ostream& operator<<(ostream& out, const AddressingMode& mode);
-
-  public:
-#ifdef DEBUGGER_SUPPORT
-    /**
-      Attach the specified debugger.
-
-      @param debugger The debugger to attach to the microprocessor.
-    */
-    void attach(Debugger& debugger);
-
-    // TODO - document these methods
-    void setBreakPoints(PackedBitArray *bp);
-    void setTraps(PackedBitArray *read, PackedBitArray *write);
-
-    unsigned int addCondBreak(Expression *e, const string& name);
-    void delCondBreak(unsigned int brk);
-    void clearCondBreaks();
-    const StringList& getCondBreakNames() const;
-    int evalCondBreaks();
-#endif
 
   protected:
     /**
@@ -290,40 +199,12 @@ class M6502
     /// Table of system cycles for each instruction
     uInt32 myInstructionSystemCycleTable[256]; 
 
-    /// Indicates if the last memory access was a read or not
-    bool myLastAccessWasRead;
-
-    /// The total number of instructions executed so far
-    int myTotalInstructionCount;
-
-#ifdef DEBUGGER_SUPPORT
-    /// Pointer to the debugger for this processor or the null pointer
-    Debugger* myDebugger;
-
-    PackedBitArray* myBreakPoints;
-    PackedBitArray* myReadTraps;
-    PackedBitArray* myWriteTraps;
-
-    // Did we just now hit a trap?
-    bool myJustHitTrapFlag;
-    struct HitTrapInfo {
-      string message;
-      int address;
-    };
-    HitTrapInfo myHitTrapInfo;
-
-    StringList myBreakCondNames;
-    ExpressionList myBreakConds;
-#endif
-
   protected:
     /// Addressing mode for each of the 256 opcodes
-    /// This specifies how the opcode argument is addressed
     static AddressingMode ourAddressingModeTable[256];
 
-    /// Access mode for each of the 256 opcodes
-    /// This specifies how the opcode will access its argument
-    static AccessMode ourAccessModeTable[256];
+    /// Lookup table used for binary-code-decimal math
+    static uInt8 ourBCDTable[2][256];
 
     /**
       Table of instruction processor cycle times.  In some cases additional 
@@ -334,5 +215,5 @@ class M6502
     /// Table of instruction mnemonics
     static const char* ourInstructionMnemonicTable[256];
 };
-
 #endif
+

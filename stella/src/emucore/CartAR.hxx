@@ -8,19 +8,19 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1999 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: CartAR.hxx,v 1.15 2009-01-01 18:13:35 stephena Exp $
+// $Id: CartAR.hxx,v 1.1.1.1 2001-12-27 19:54:19 bwmott Exp $
 //============================================================================
 
 #ifndef CARTRIDGEAR_HXX
 #define CARTRIDGEAR_HXX
 
+class CartridgeAR;
 class M6502High;
-class System;
 
 #include "bspf.hxx"
 #include "Cart.hxx"
@@ -28,14 +28,13 @@ class System;
 /**
   This is the cartridge class for Arcadia (aka Starpath) Supercharger 
   games.  Christopher Salomon provided most of the technical details 
-  used in creating this class.  A good description of the Supercharger
-  is provided in the Cuttle Cart's manual.
+  used in creating this class.
 
   The Supercharger has four 2K banks.  There are three banks of RAM 
   and one bank of ROM.  All 6K of the RAM can be read and written.
 
   @author  Bradford W. Mott
-  @version $Id: CartAR.hxx,v 1.15 2009-01-01 18:13:35 stephena Exp $
+  @version $Id: CartAR.hxx,v 1.1.1.1 2001-12-27 19:54:19 bwmott Exp $
 */
 class CartridgeAR : public Cartridge
 {
@@ -43,11 +42,10 @@ class CartridgeAR : public Cartridge
     /**
       Create a new cartridge using the specified image and size
 
-      @param image     Pointer to the ROM image
-      @param size      The size of the ROM image
-      @param fastbios  Whether or not to quickly execute the BIOS code
+      @param image Pointer to the ROM image
+      @param size The size of the ROM image
     */
-    CartridgeAR(const uInt8* image, uInt32 size, bool fastbios);
+    CartridgeAR(const uInt8* image, uInt32 size);
 
     /**
       Destructor
@@ -55,6 +53,13 @@ class CartridgeAR : public Cartridge
     virtual ~CartridgeAR();
 
   public:
+    /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const;
+
     /**
       Reset device to its power-on state
     */
@@ -74,65 +79,6 @@ class CartridgeAR : public Cartridge
       @param system The system the device should install itself in
     */
     virtual void install(System& system);
-
-    /**
-      Install pages for the specified bank in the system.
-
-      @param bank The bank that should be installed in the system
-    */
-    virtual void bank(uInt16 bank);
-
-    /**
-      Get the current bank.
-
-      @return  The current bank, or -1 if bankswitching not supported
-    */
-    virtual int bank();
-
-    /**
-      Query the number of banks supported by the cartridge.
-    */
-    virtual int bankCount();
-
-    /**
-      Patch the cartridge ROM.
-
-      @param address  The ROM address to patch
-      @param value    The value to place into the address
-      @return    Success or failure of the patch operation
-    */
-    virtual bool patch(uInt16 address, uInt8 value);
-
-    /**
-      Access the internal ROM image for this cartridge.
-
-      @param size  Set to the size of the internal ROM image data
-      @return  A pointer to the internal ROM image data
-    */
-    virtual uInt8* getImage(int& size);
-
-    /**
-      Save the current state of this cart to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this cart from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "CartridgeAR"; }
 
   public:
     /**
@@ -160,8 +106,8 @@ class CartridgeAR : public Cartridge
     // Load the specified load into SC RAM
     void loadIntoRAM(uInt8 load);
 
-    // Sets up a "dummy" BIOS ROM in the ROM bank of the cartridge
-    void initializeROM(bool fastbios);
+    // Sets up a "dummy" bootstrap ROM in the ROM bank of the cartridge
+    void setupROM();
 
   private:
     // Pointer to the 6502 processor in the system
@@ -191,16 +137,14 @@ class CartridgeAR : public Cartridge
     // Indicates when the power was last turned on
     Int32 myPowerRomCycle;
 
-    // Data hold register used for writing
-    uInt8 myDataHoldRegister;
+    // Indicates the "value" address which was accessed
+    uInt16 myLastAccess;
 
-    // Indicates number of distinct accesses when data hold register was set
+    // Indicates the number of distinct accesses when "value" was set
     uInt32 myNumberOfDistinctAccesses;
 
     // Indicates if a write is pending or not
     bool myWritePending;
-
-    uInt16 myCurrentBank;
 };
-
 #endif
+

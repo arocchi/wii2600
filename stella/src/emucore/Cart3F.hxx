@@ -8,18 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Cart3F.hxx,v 1.14 2009-01-01 18:13:35 stephena Exp $
+// $Id: Cart3F.hxx,v 1.1.1.1 2001-12-27 19:54:18 bwmott Exp $
 //============================================================================
 
 #ifndef CARTRIDGE3F_HXX
 #define CARTRIDGE3F_HXX
 
-class System;
+class Cartridge3F;
 
 #include "bspf.hxx"
 #include "Cart.hxx"
@@ -35,7 +35,7 @@ class System;
   only used 8K this bankswitching scheme supports up to 512K.
    
   @author  Bradford W. Mott
-  @version $Id: Cart3F.hxx,v 1.14 2009-01-01 18:13:35 stephena Exp $
+  @version $Id: Cart3F.hxx,v 1.1.1.1 2001-12-27 19:54:18 bwmott Exp $
 */
 class Cartridge3F : public Cartridge
 {
@@ -44,7 +44,7 @@ class Cartridge3F : public Cartridge
       Create a new cartridge using the specified image and size
 
       @param image Pointer to the ROM image
-      @param size  The size of the ROM image
+      @param size The size of the ROM image
     */
     Cartridge3F(const uInt8* image, uInt32 size);
  
@@ -54,6 +54,13 @@ class Cartridge3F : public Cartridge
     virtual ~Cartridge3F();
 
   public:
+    /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const;
+
     /**
       Reset device to its power-on state
     */
@@ -66,65 +73,6 @@ class Cartridge3F : public Cartridge
       @param system The system the device should install itself in
     */
     virtual void install(System& system);
-
-    /**
-      Install pages for the specified bank in the system.
-
-      @param bank The bank that should be installed in the system
-    */
-    virtual void bank(uInt16 bank);
-
-    /**
-      Get the current bank.
-
-      @return  The current bank, or -1 if bankswitching not supported
-    */
-    virtual int bank();
-
-    /**
-      Query the number of banks supported by the cartridge.
-    */
-    virtual int bankCount();
-
-    /**
-      Patch the cartridge ROM.
-
-      @param address  The ROM address to patch
-      @param value    The value to place into the address
-      @return    Success or failure of the patch operation
-    */
-    virtual bool patch(uInt16 address, uInt8 value);
-
-    /**
-      Access the internal ROM image for this cartridge.
-
-      @param size  Set to the size of the internal ROM image data
-      @return  A pointer to the internal ROM image data
-    */
-    virtual uInt8* getImage(int& size);
-
-    /**
-      Save the current state of this cart to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this cart from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "Cartridge3F"; }
 
   public:
     /**
@@ -143,6 +91,14 @@ class Cartridge3F : public Cartridge
     virtual void poke(uInt16 address, uInt8 value);
 
   private:
+    /** 
+      Map the specified bank into the first segment
+
+      @param bank The bank that should be mapped
+    */
+    void bank(uInt16 bank);
+
+  private:
     // Indicates which bank is currently active for the first segment
     uInt16 myCurrentBank;
 
@@ -152,5 +108,5 @@ class Cartridge3F : public Cartridge
     // Size of the ROM image
     uInt32 mySize;
 };
-
 #endif
+

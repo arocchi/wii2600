@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Joystick.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
+// $Id: Joystick.hxx,v 1.1.1.1 2001-12-27 19:54:22 bwmott Exp $
 //============================================================================
 
 #ifndef JOYSTICK_HXX
@@ -21,13 +21,12 @@
 
 #include "bspf.hxx"
 #include "Control.hxx"
-#include "Event.hxx"
 
 /**
   The standard Atari 2600 joystick controller.
 
   @author  Bradford W. Mott
-  @version $Id: Joystick.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
+  @version $Id: Joystick.hxx,v 1.1.1.1 2001-12-27 19:54:22 bwmott Exp $
 */
 class Joystick : public Controller
 {
@@ -35,11 +34,10 @@ class Joystick : public Controller
     /**
       Create a new joystick controller plugged into the specified jack
 
-      @param jack   The jack the controller is plugged into
-      @param event  The event object to use for events
-      @param system The system using this controller
+      @param jack The jack the controller is plugged into
+      @param event The event object to use for events
     */
-    Joystick(Jack jack, const Event& event, const System& system);
+    Joystick(Jack jack, const Event& event);
 
     /**
       Destructor
@@ -48,27 +46,31 @@ class Joystick : public Controller
 
   public:
     /**
-      Update the entire digital and analog pin state according to the
-      events currently set.
+      Read the value of the specified digital pin for this controller.
+
+      @param pin The pin of the controller jack to read
+      @return The state of the pin
     */
-    virtual void update();
+    virtual bool read(DigitalPin pin);
 
     /**
-      Sets the deadzone amount for real analog joysticks.
-      Technically, this isn't really used by the Joystick class at all,
-      but it seemed like the best place to put it.
+      Read the resistance at the specified analog pin for this controller.
+      The returned value is the resistance measured in ohms.
+
+      @param pin The pin of the controller jack to read
+      @return The resistance at the specified pin
     */
-    static void setDeadZone(int deadzone);
-    inline static int deadzone() { return _DEAD_ZONE;  }
+    virtual Int32 read(AnalogPin pin);
 
-  private:
-    // Pre-compute the events we care about based on given port
-    // This will eliminate test for left or right port in update()
-    Event::Type myUpEvent, myDownEvent, myLeftEvent, myRightEvent,
-                myXAxisValue, myYAxisValue, myFireEvent;
+    /**
+      Write the given value to the specified digital pin for this
+      controller.  Writing is only allowed to the pins associated
+      with the PIA.  Therefore you cannot write to pin six.
 
-
-    static int _DEAD_ZONE;
+      @param pin The pin of the controller jack to write to
+      @param value The value to write to the pin
+    */
+    virtual void write(DigitalPin pin, bool value);
 };
-
 #endif
+

@@ -8,246 +8,105 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: PropsSet.cxx,v 1.38 2009-01-01 18:13:36 stephena Exp $
+// $Id: PropsSet.cxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 //============================================================================
 
-#include <sstream>
-
-#include "bspf.hxx"
-
-#include "DefProps.hxx"
-#include "OSystem.hxx"
+#include <assert.h>
 #include "Props.hxx"
-#include "Settings.hxx"
-
 #include "PropsSet.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PropertiesSet::PropertiesSet(OSystem* osystem)
-  : myOSystem(osystem),
-    myRoot(NULL),
-    mySize(0)
+PropertiesSet::PropertiesSet(const string& key)
+    : myKey(key)
 {
-  const string& props = myOSystem->propertiesFile();
-  load(props, true);    // do save these properties
+  myCapacity = 16;
+  myProperties = new Properties[myCapacity];
+  mySize = 0;
+}
 
-  if(myOSystem->settings().getBool("showinfo"))
-    cout << "User game properties: \'" << props << "\'\n";
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PropertiesSet::PropertiesSet(const PropertiesSet& p)
+    : myKey(p.myKey)
+{
+  myCapacity = p.myCapacity;
+  myProperties = new Properties[myCapacity];
+  mySize = p.mySize;
+
+  // Copy the properties from the other set
+  for(uInt32 i = 0; i < mySize; ++i)
+  {
+    myProperties[i] = p.myProperties[i];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 PropertiesSet::~PropertiesSet()
 {
-  deleteNode(myRoot);
+  delete[] myProperties;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::getMD5(const string& md5, Properties& properties,
-                           bool useDefaults) const
+const Properties& PropertiesSet::get(uInt32 i)
 {
-  properties.setDefaults();
-  bool found = false;
+  // Make sure index is within range
+  assert(i < mySize);
 
-  // First check our dynamic BST for the object
-  if(!useDefaults && myRoot != 0)
+  return myProperties[i]; 
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::insert(const Properties& properties)
+{
+  uInt32 i;
+  uInt32 j;
+
+  // Get the key of the properties
+  string name = properties.get(myKey);
+
+  // See if the key already exists (we could use a binary search here...)
+  for(i = 0; i < mySize; ++i)
   {
-    TreeNode* current = myRoot;
-    while(current)
+    if(name == myProperties[i].get(myKey))
     {
-      const string& currentMd5 = current->props->get(Cartridge_MD5);
-      if(currentMd5 == md5)
-      {
-        // We only report a node as found if it's been marked as valid.
-        // Invalid nodes are those that should be removed, and are
-        // essentially treated as if they're not present.
-        found = current->valid;
-        break;
-      }
-      else if(md5 < currentMd5)
-        current = current->left;
-      else 
-        current = current->right;
-    }
-
-    if(found)
-      properties = *(current->props);
-  }
-
-  // Otherwise, search the internal database using binary search
-  if(!found)
-  {
-    int low = 0, high = DEF_PROPS_SIZE - 1;
-    while(low <= high)
-    {
-      int i = (low + high) / 2;
-      int cmp = strncmp(md5.c_str(), DefProps[i][Cartridge_MD5], 32);
-
-      if(cmp == 0)  // found it
-      {
-        for(int p = 0; p < LastPropType; ++p)
-          if(DefProps[i][p][0] != 0)
-            properties.set((PropertyType)p, DefProps[i][p]);
-
-        found = true;
-        break;
-      }
-      else if(cmp < 0)
-        high = i - 1; // look at lower range
-      else
-        low = i + 1;  // look at upper range
+      // Copy the properties which are being inserted
+      myProperties[i] = properties;
+      return;
     }
   }
-}
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::insert(const Properties& properties, bool save)
-{
-  // Since the PropSet is keyed by md5, we can't insert without a valid one
-  if(properties.get(Cartridge_MD5) == "")
-    return;
-
-  insertNode(myRoot, properties, save);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::removeMD5(const string& md5)
-{
-  // We only remove from the dynamic BST
-  if(myRoot != 0)
+  // See if the properties array needs to be resized
+  if(mySize == myCapacity)
   {
-    TreeNode* current = myRoot;
-    while(current)
+    Properties* newProperties = new Properties[myCapacity *= 2];
+
+    for(i = 0; i < mySize; ++i)
     {
-      const string& currentMd5 = current->props->get(Cartridge_MD5);
-      if(currentMd5 == md5)
-      {
-        current->valid = false;  // Essentially, this node doesn't exist
-        break;
-      }
-      else if(md5 < currentMd5)
-        current = current->left;
-      else 
-        current = current->right;
+      newProperties[i] = myProperties[i];
     }
-  }
-}
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::insertNode(TreeNode* &t, const Properties& properties,
-                               bool save)
-{
-  if(t)
+    delete[] myProperties;
+
+    myProperties = newProperties;
+  }
+
+  // Find the correct place to insert the properties at
+  for(i = 0; (i < mySize) && (myProperties[i].get(myKey) < name); ++i);
+
+  // Okay, make room for the properties
+  for(j = mySize; j > i; --j)
   {
-    string md5 = properties.get(Cartridge_MD5);
-    string currentMd5 = t->props->get(Cartridge_MD5);
-
-    if(md5 < currentMd5)
-      insertNode(t->left, properties, save);
-    else if(md5 > currentMd5)
-      insertNode(t->right, properties, save);
-    else
-    {
-      delete t->props;
-      t->props = new Properties(properties);
-      t->save = save;
-      t->valid = true;
-    }
+    myProperties[j] = myProperties[j - 1];
   }
-  else
-  {
-    t = new TreeNode;
-    t->props = new Properties(properties);
-    t->left = 0;
-    t->right = 0;
-    t->save = save;
-    t->valid = true;
+ 
+  // Now, put the properties in the array
+  myProperties[i] = properties;
 
-    ++mySize;
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::deleteNode(TreeNode *node)
-{
-  if(node)
-  {
-    deleteNode(node->left);
-    deleteNode(node->right);
-    delete node->props;
-    delete node;
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::load(const string& filename, bool save)
-{
-  ifstream in(filename.c_str(), ios::in);
-
-  // Loop reading properties
-  for(;;)
-  {
-    // Make sure the stream is still good or we're done 
-    if(!in)
-      break;
-
-    // Get the property list associated with this profile
-    Properties prop;
-    prop.load(in);
-
-    // If the stream is still good then insert the properties
-    if(in)
-      insert(prop, save);
-  }
-  if(in)
-    in.close();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool PropertiesSet::save(const string& filename) const
-{
-  ofstream out(filename.c_str(), ios::out);
-  if(!out)
-    return false;
-
-  saveNode(out, myRoot);
-  out.close();
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::print() const
-{
-  cout << size() << endl;
-  printNode(myRoot);  // FIXME - print out internal properties as well
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::saveNode(ostream& out, TreeNode *node) const
-{
-  if(node)
-  {
-    if(node->valid && node->save)
-      node->props->save(out);
-    saveNode(out, node->left);
-    saveNode(out, node->right);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::printNode(TreeNode *node) const
-{
-  if(node)
-  {
-    if(node->valid && node->save)
-      node->props->print();
-    printNode(node->left);
-    printNode(node->right);
-  }
+  ++mySize;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -255,3 +114,93 @@ uInt32 PropertiesSet::size() const
 {
   return mySize;
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::erase(uInt32 i)
+{
+  // Make sure index is within range
+  assert(i < mySize);
+
+  for(uInt32 j = i + 1; j < mySize; ++j)
+  {
+    myProperties[j - 1] = myProperties[j];
+  }
+
+  --mySize;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::load(istream& in, const Properties* defaults)
+{
+  // Empty my properties array
+  mySize = 0;
+
+  // Loop reading properties
+  for(;;)
+  {
+    // Read char's until we see a quote as the next char or EOF is reached
+    while(in && (in.peek() != '"'))
+    {
+      char c;
+      in.get(c);
+
+      // If we see the comment character then ignore the line
+      if(c == ';')
+      {
+        while(in && (c != '\n'))
+        {
+          in.get(c);
+        }
+      }
+    }
+   
+    // Make sure the stream is still good or we're done 
+    if(!in)
+    {
+      break;
+    }
+
+    // Get the property list associated with this profile
+    Properties properties(defaults);
+    properties.load(in);
+
+    // If the stream is still good then insert the properties
+    if(in)
+    {
+      insert(properties);
+    }
+  }
+}
+ 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::save(ostream& out)
+{
+  // Write each of the properties out
+  for(uInt32 i = 0; i < mySize; ++i)
+  {
+    myProperties[i].save(out);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PropertiesSet& PropertiesSet::operator = (const PropertiesSet& p)
+{
+  if(this != &p)
+  {
+    delete[] myProperties;
+
+    myKey = p.myKey;
+    myCapacity = p.myCapacity;
+    myProperties = new Properties[myCapacity];
+    mySize = p.mySize;
+
+    // Copy the properties from the other set
+    for(uInt32 i = 0; i < mySize; ++i)
+    {
+      myProperties[i] = p.myProperties[i];
+    }
+  }
+
+  return *this;
+}
+

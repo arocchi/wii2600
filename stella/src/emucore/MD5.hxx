@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: MD5.hxx,v 1.7 2009-01-01 18:13:36 stephena Exp $
+// $Id: MD5.hxx,v 1.1.1.1 2001-12-27 19:54:22 bwmott Exp $
 //============================================================================
 
 #ifndef MD5_HXX
@@ -32,3 +32,4 @@
 string MD5(const uInt8* buffer, uInt32 length);
 
 #endif
+

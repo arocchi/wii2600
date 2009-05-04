@@ -8,20 +8,18 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502Low.hxx,v 1.9 2009-01-01 18:13:38 stephena Exp $
+// $Id: M6502Low.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 //============================================================================
 
-#ifndef M6502LOW_HXX
-#define M6502LOW_HXX
+#ifndef M6507LOW_HXX
+#define M6507LOW_HXX
 
-class M6502Low;
-class Serializer;
-class Deserializer;
+class M6507Low;
 
 #include "bspf.hxx"
 #include "M6502.hxx"
@@ -41,7 +39,7 @@ class Deserializer;
   better compatibility is neccessary use one of the other 6502 classes.
   
   @author  Bradford W. Mott
-  @version $Id: M6502Low.hxx,v 1.9 2009-01-01 18:13:38 stephena Exp $
+  @version $Id: M6502Low.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 */
 class M6502Low : public M6502
 {
@@ -69,29 +67,6 @@ class M6502Low : public M6502
       @return true iff execution stops normally
     */
     virtual bool execute(uInt32 number);
-
-    /**
-      Saves the current state of this device to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    virtual bool save(Serializer& out);
-
-    /**
-      Loads the current state of this device from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    virtual bool load(Deserializer& in);
-
-    /**
-      Get a null terminated string which is the processors's name (i.e. "M6532")
-
-      @return The name of the device
-    */
-    virtual const char* name() const;
 
   protected:
     /**

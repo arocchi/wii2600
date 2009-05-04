@@ -8,152 +8,64 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Sound.hxx,v 1.27 2009-01-22 00:49:32 stephena Exp $
+// $Id: Sound.hxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 //============================================================================
 
 #ifndef SOUND_HXX
 #define SOUND_HXX
 
-class OSystem;
-class Serializer;
-class Deserializer;
-
 #include "bspf.hxx"
 
 /**
-  This class is an abstract base class for the various sound objects.
-  It has no functionality whatsoever.
+  Base class that defines the standard API for sound classes.  You
+  should derive a new class from this one to create a new sound system 
+  for a specific operating system.
 
-  @author Stephen Anthony
-  @version $Id: Sound.hxx,v 1.27 2009-01-22 00:49:32 stephena Exp $
+  @author  Bradford W. Mott
+  @version $Id: Sound.hxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 */
 class Sound
 {
   public:
     /**
-      Create a new sound object.  The init method must be invoked before
-      using the object.
+      Enumeration of the TIA sound registers
     */
-    Sound(OSystem* osystem) { myOSystem = osystem; }
-
-    /**
-      Destructor
-    */
-    virtual ~Sound() { };
-
-  public: 
-    /**
-      Enables/disables the sound subsystem.
-
-      @param enable  Either true or false, to enable or disable the sound system
-    */
-    virtual void setEnabled(bool enable) = 0;
-
-    /**
-      The system cycle counter is being adjusting by the specified amount.  Any
-      members using the system cycle counter should be adjusted as needed.
-
-      @param amount The amount the cycle counter is being adjusted by
-    */
-    virtual void adjustCycleCounter(Int32 amount) = 0;
-
-    /**
-      Sets the number of channels (mono or stereo sound).
-
-      @param channels The number of channels
-    */
-    virtual void setChannels(uInt32 channels) = 0;
-
-    /**
-      Sets the display framerate.  Sound generation for NTSC and PAL games
-      depends on the framerate, so we need to set it here.
-
-      @param framerate The base framerate depending on NTSC or PAL ROM
-    */
-    virtual void setFrameRate(float framerate) = 0;
-
-    /**
-      Start the sound system, initializing it if necessary.  This must be
-      called before any calls are made to derived methods.
-    */
-    virtual void open() = 0;
-
-    /**
-      Should be called to stop the sound system.  Once called the sound
-      device can be started again using the ::open() method.
-    */
-    virtual void close() = 0;
-
-    /**
-      Return true iff the sound device was successfully initialized.
-
-      @return true iff the sound device was successfully initialized.
-    */
-    virtual bool isSuccessfullyInitialized() const = 0;
-
-    /**
-      Set the mute state of the sound object.  While muted no sound is played.
-
-      @param state Mutes sound if true, unmute if false
-    */
-    virtual void mute(bool state) = 0;
-
-    /**
-      Reset the sound device.
-    */
-    virtual void reset() = 0;
-
-    /**
-      Sets the sound register to a given value.
-
-      @param addr  The register address
-      @param value The value to save into the register
-      @param cycle The system cycle at which the register is being updated
-    */
-    virtual void set(uInt16 addr, uInt8 value, Int32 cycle) = 0;
-
-    /**
-      Sets the volume of the sound device to the specified level.  The
-      volume is given as a percentage from 0 to 100.  Values outside
-      this range indicate that the volume shouldn't be changed at all.
-
-      @param percent The new volume percentage level for the sound device
-    */
-    virtual void setVolume(Int32 percent) = 0;
-
-    /**
-      Adjusts the volume of the sound device based on the given direction.
-
-      @param direction  Increase or decrease the current volume by a predefined
-                        amount based on the direction (1 = increase, -1 =decrease)
-    */
-    virtual void adjustVolume(Int8 direction) = 0;
+    enum Register 
+    { 
+      AUDF0, AUDF1, AUDC0, AUDC1, AUDV0, AUDV1 
+    };
 
   public:
     /**
-      Loads the current state of this device from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
+      Create a new sound object
     */
-    virtual bool load(Deserializer& in) = 0;
+    Sound();
+ 
+    /**
+      Destructor
+    */
+    virtual ~Sound();
+
+  public: 
+    /**
+      Set the value of the specified sound register
+
+      @param reg The sound register to set
+      @param val The new value for the sound register
+    */
+    virtual void set(Sound::Register reg, uInt8 val);
 
     /**
-      Saves the current state of this device to the given Serializer.
+      Set the mute state of the sound object
 
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
+      @param state Mutes sound iff true
     */
-    virtual bool save(Serializer& out) = 0;
-
-  protected:
-    // The OSystem for this sound object
-    OSystem* myOSystem;
+    virtual void mute(bool state);
 };
-
 #endif
+

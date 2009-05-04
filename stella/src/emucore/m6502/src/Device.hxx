@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Device.hxx,v 1.9 2009-01-01 18:13:38 stephena Exp $
+// $Id: Device.hxx,v 1.1.1.1 2001-12-27 19:54:29 bwmott Exp $
 //============================================================================
 
 #ifndef DEVICE_HXX
@@ -21,7 +21,6 @@
 
 class System;
 
-#include "Serializable.hxx"
 #include "bspf.hxx"
 
 /**
@@ -29,9 +28,9 @@ class System;
   based system.
 
   @author  Bradford W. Mott
-  @version $Id: Device.hxx,v 1.9 2009-01-01 18:13:38 stephena Exp $
+  @version $Id: Device.hxx,v 1.1.1.1 2001-12-27 19:54:29 bwmott Exp $
 */
-class Device : public Serializable
+class Device
 {
   public:
     /**
@@ -45,6 +44,13 @@ class Device : public Serializable
     virtual ~Device();
 
   public:
+    /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const = 0;
+
     /**
       Reset device to its power-on state
     */
@@ -64,29 +70,6 @@ class Device : public Serializable
       @param system The system the device should install itself in
     */
     virtual void install(System& system) = 0;
-
-    /**
-      Save the current state of this device to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool save(Serializer& out) const = 0;
-
-    /**
-      Load the current state of this device from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool load(Deserializer& in) = 0;
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const = 0;
 
   public:
     /**
@@ -108,5 +91,5 @@ class Device : public Serializable
     /// Pointer to the system the device is installed in or the null pointer
     System* mySystem;
 };
-
 #endif
+ 
