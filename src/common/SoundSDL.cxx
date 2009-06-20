@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.cxx,v 1.38 2007-07-27 13:49:16 stephena Exp $
 //============================================================================
 
 #ifdef SOUND_SUPPORT
@@ -31,12 +31,6 @@
 #include "System.hxx"
 #include "OSystem.hxx"
 
-#include "Console.hxx"
-#include "AtariVox.hxx"
-#ifdef SPEAKJET_EMULATION
-  #include "SpeakJet.hxx"
-#endif
-
 #include "SoundSDL.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,7 +39,7 @@ SoundSDL::SoundSDL(OSystem* osystem)
     myIsEnabled(osystem->settings().getBool("sound")),
     myIsInitializedFlag(false),
     myLastRegisterSetCycle(0),
-    myDisplayFrameRate(60.0),
+    myDisplayFrameRate(60),
     myNumChannels(1),
     myFragmentSizeLogBase2(0),
     myIsMuted(false),
@@ -68,7 +62,7 @@ void SoundSDL::setEnabled(bool state)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::open()
+void SoundSDL::initialize()
 {
   // Check whether to start the sound subsystem
   if(!myIsEnabled)
@@ -83,7 +77,7 @@ void SoundSDL::open()
   myRegWriteQueue.clear();
   myTIASound.reset();
 
-  if(SDL_WasInit(SDL_INIT_AUDIO) == 0)
+  if(!((SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO) > 0))
   {
     myIsInitializedFlag = false;
     myIsMuted = false;
@@ -281,10 +275,11 @@ void SoundSDL::setChannels(uInt32 channels)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::setFrameRate(float framerate)
+void SoundSDL::setFrameRate(uInt32 framerate)
 {
-  // FIXME - should we clear out the queue or adjust the values in it?
+  // FIXME, we should clear out the queue or adjust the values in it
   myDisplayFrameRate = framerate;
+  myLastRegisterSetCycle = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -301,8 +296,7 @@ void SoundSDL::set(uInt16 addr, uInt8 value, Int32 cycle)
   // the sound to "scale" correctly, we have to know the games real frame 
   // rate (e.g., 50 or 60) and the currently emulated frame rate. We use these
   // values to "scale" the time before the register change occurs.
-// FIXME - this always results in 1.0, so we don't really need it
-//  delta = delta * (myDisplayFrameRate / myOSystem->frameRate());
+  delta = delta * (myDisplayFrameRate / (double)myOSystem->frameRate());
   RegWrite info;
   info.addr = addr;
   info.value = value;
@@ -411,9 +405,8 @@ void SoundSDL::callback(void* udata, uInt8* stream, int len)
 {
   SoundSDL* sound = (SoundSDL*)udata;
   sound->processFragment(stream, (Int32)len);
-
-#ifdef SPEAKJET_EMULATION
-//  cerr << "SoundSDL::callback(): len==" << len << endl;
+#ifdef ATARIVOX_SUPPORT
+  cerr << "SoundSDL::callback(): len==" << len << endl;
 
   // See if we need sound from the AtariVox
   AtariVox *vox = sound->myOSystem->console().atariVox();
@@ -445,12 +438,12 @@ bool SoundSDL::load(Deserializer& in)
       return false;
 
     uInt8 reg1 = 0, reg2 = 0, reg3 = 0, reg4 = 0, reg5 = 0, reg6 = 0;
-    reg1 = (uInt8) in.getByte();
-    reg2 = (uInt8) in.getByte();
-    reg3 = (uInt8) in.getByte();
-    reg4 = (uInt8) in.getByte();
-    reg5 = (uInt8) in.getByte();
-    reg6 = (uInt8) in.getByte();
+    reg1 = (uInt8) in.getInt();
+    reg2 = (uInt8) in.getInt();
+    reg3 = (uInt8) in.getInt();
+    reg4 = (uInt8) in.getInt();
+    reg5 = (uInt8) in.getInt();
+    reg6 = (uInt8) in.getInt();
 
     myLastRegisterSetCycle = (Int32) in.getInt();
 
@@ -505,12 +498,12 @@ bool SoundSDL::save(Serializer& out)
       reg6 = myTIASound.get(0x1a);
     }
 
-    out.putByte((char)reg1);
-    out.putByte((char)reg2);
-    out.putByte((char)reg3);
-    out.putByte((char)reg4);
-    out.putByte((char)reg5);
-    out.putByte((char)reg6);
+    out.putInt(reg1);
+    out.putInt(reg2);
+    out.putInt(reg3);
+    out.putInt(reg4);
+    out.putInt(reg5);
+    out.putInt(reg6);
 
     out.putInt(myLastRegisterSetCycle);
   }

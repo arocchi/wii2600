@@ -8,30 +8,40 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartE0.cxx,v 1.13 2007-01-14 16:17:53 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
 #include "CartE0.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeE0::CartridgeE0(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeE0::~CartridgeE0()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeE0::name() const
+{
+  return "CartridgeE0";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -83,20 +93,22 @@ void CartridgeE0::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeE0::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
-  // Switch banks if necessary
-  if((address >= 0x0FE0) && (address <= 0x0FE7))
-  {
-    segmentZero(address & 0x0007);
-  }
-  else if((address >= 0x0FE8) && (address <= 0x0FEF))
-  {
-    segmentOne(address & 0x0007);
-  }
-  else if((address >= 0x0FF0) && (address <= 0x0FF7))
-  {
-    segmentTwo(address & 0x0007);
+  if(!bankLocked) {
+    // Switch banks if necessary
+    if((address >= 0x0FE0) && (address <= 0x0FE7))
+    {
+      segmentZero(address & 0x0007);
+    }
+    else if((address >= 0x0FE8) && (address <= 0x0FEF))
+    {
+      segmentOne(address & 0x0007);
+    }
+    else if((address >= 0x0FF0) && (address <= 0x0FF7))
+    {
+      segmentTwo(address & 0x0007);
+    }
   }
 
   return myImage[(myCurrentSlice[address >> 10] << 10) + (address & 0x03FF)];
@@ -105,28 +117,28 @@ uInt8 CartridgeE0::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeE0::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
-  // Switch banks if necessary
-  if((address >= 0x0FE0) && (address <= 0x0FE7))
-  {
-    segmentZero(address & 0x0007);
-  }
-  else if((address >= 0x0FE8) && (address <= 0x0FEF))
-  {
-    segmentOne(address & 0x0007);
-  }
-  else if((address >= 0x0FF0) && (address <= 0x0FF7))
-  {
-    segmentTwo(address & 0x0007);
+  if(!bankLocked) {
+    // Switch banks if necessary
+    if((address >= 0x0FE0) && (address <= 0x0FE7))
+    {
+      segmentZero(address & 0x0007);
+    }
+    else if((address >= 0x0FE8) && (address <= 0x0FEF))
+    {
+      segmentOne(address & 0x0007);
+    }
+    else if((address >= 0x0FF0) && (address <= 0x0FF7))
+    {
+      segmentTwo(address & 0x0007);
+    }
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeE0::segmentZero(uInt16 slice)
 { 
-  if(myBankLocked) return;
-
   // Remember the new slice
   myCurrentSlice[0] = slice;
   uInt16 offset = slice << 10;
@@ -147,8 +159,6 @@ void CartridgeE0::segmentZero(uInt16 slice)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeE0::segmentOne(uInt16 slice)
 { 
-  if(myBankLocked) return;
-
   // Remember the new slice
   myCurrentSlice[1] = slice;
   uInt16 offset = slice << 10;
@@ -169,8 +179,6 @@ void CartridgeE0::segmentOne(uInt16 slice)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeE0::segmentTwo(uInt16 slice)
 { 
-  if(myBankLocked) return;
-
   // Remember the new slice
   myCurrentSlice[2] = slice;
   uInt16 offset = slice << 10;
@@ -189,45 +197,7 @@ void CartridgeE0::segmentTwo(uInt16 slice)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeE0::bank(uInt16)
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeE0::bank()
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeE0::bankCount()
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeE0::patch(uInt16 address, uInt8 value)
-{
-  address &= 0x0FFF;
-  myImage[(myCurrentSlice[address >> 10] << 10) + (address & 0x03FF)] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeE0::getImage(int& size)
-{
-  size = 8192;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeE0::save(Serializer& out) const
+bool CartridgeE0::save(Serializer& out)
 {
   string cart = name();
 
@@ -279,4 +249,39 @@ bool CartridgeE0::load(Deserializer& in)
   }
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void CartridgeE0::bank(uInt16 bank)
+{
+  // FIXME - get this working, so we can debug E0 carts
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int CartridgeE0::bank()
+{
+  // FIXME - get this working, so we can debug E0 carts
+  return 0;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int CartridgeE0::bankCount()
+{
+  // FIXME - get this working, so we can debug E0 carts
+  return 1;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool CartridgeE0::patch(uInt16 address, uInt8 value)
+{
+  address = address & 0x0FFF;
+  myImage[(myCurrentSlice[address >> 10] << 10) + (address & 0x03FF)] = value;
+  return true;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* CartridgeE0::getImage(int& size)
+{
+  size = 8192;
+  return &myImage[0];
 }

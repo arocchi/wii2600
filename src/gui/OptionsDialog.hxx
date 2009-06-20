@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OptionsDialog.hxx,v 1.25 2007-08-10 18:27:12 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -30,7 +30,6 @@ class AudioDialog;
 class InputDialog;
 class UIDialog;
 class FileSnapDialog;
-class RomAuditDialog;
 class GameInfoDialog;
 class CheatCodeDialog;
 class HelpDialog;
@@ -48,7 +47,6 @@ class OptionsDialog : public Dialog
     virtual ~OptionsDialog();
 
   private:
-    void loadConfig();
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
     void checkBounds(int width, int height, int* x, int* y, int* w, int* h);
 
@@ -58,7 +56,6 @@ class OptionsDialog : public Dialog
     InputDialog*     myInputDialog;
     UIDialog*        myUIDialog;
     FileSnapDialog*  myFileSnapDialog;
-    RomAuditDialog*  myRomAuditDialog;
     GameInfoDialog*  myGameInfoDialog;
     CheatCodeDialog* myCheatCodeDialog;
     HelpDialog*      myHelpDialog;
@@ -68,7 +65,6 @@ class OptionsDialog : public Dialog
     ButtonWidget* myAudioSettingsButton;
     ButtonWidget* myUIButton;
     ButtonWidget* myFileSnapButton;
-    ButtonWidget* myRomAuditButton;
     ButtonWidget* myGameInfoButton;
     ButtonWidget* myCheatCodeButton;
     ButtonWidget* myHelpButton;
@@ -83,12 +79,18 @@ class OptionsDialog : public Dialog
       kInptCmd     = 'INPT',
       kUsrIfaceCmd = 'URIF',
       kFileSnapCmd = 'FLSN',
-      kAuditCmd    = 'RAUD',
       kInfoCmd     = 'INFO',
       kCheatCmd    = 'CHET',
       kHelpCmd     = 'HELP',
       kAboutCmd    = 'ABOU',
       kExitCmd     = 'EXIM'
+    };
+
+    enum {
+      kRowHeight      = 22,
+      kBigButtonWidth = 90,
+      kMainMenuWidth  = (2*kBigButtonWidth + 30),
+      kMainMenuHeight = 5*kRowHeight + 15
     };
 };
 
