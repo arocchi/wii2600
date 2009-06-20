@@ -8,65 +8,75 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartCV.cxx,v 1.11 2006-12-08 16:49:21 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
+#include <assert.h>
+#include "CartCV.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartCV.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeCV::CartridgeCV(const uInt8* image, uInt32 size)
-  : myROM(0),
-    mySize(size)
 {
-  myROM = new uInt8[mySize];
-  memcpy(myROM, image, mySize);
+  uInt32 addr;
+  if(size == 2048)
+  {
+    // Copy the ROM image into my buffer
+    for(uInt32 addr = 0; addr < 2048; ++addr)
+    {
+      myImage[addr] = image[addr];
+    }
 
-  reset();
+    // Initialize RAM with random values
+    class Random random;
+    for(uInt32 i = 0; i < 1024; ++i)
+    {
+      myRAM[i] = random.next();
+    }
+  }
+  else if(size == 4096)
+  {
+    // The game has something saved in the RAM
+    // Usefull for MagiCard program listings
 
-  // This cart contains 1024 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 1024, 0x00, 0x400);
+    // Copy the ROM image into my buffer
+    for(addr = 0; addr < 2048; ++addr)
+    {
+      myImage[addr] = image[addr + 2048];
+    }
+
+    // Copy the RAM image into my buffer
+    for(addr = 0; addr < 1024; ++addr)
+    {
+      myRAM[addr] = image[addr];
+    }
+
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeCV::~CartridgeCV()
 {
-  delete[] myROM;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeCV::name() const
+{
+  return "CartridgeCV";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeCV::reset()
 {
-  if(mySize == 2048)
-  {
-    // Copy the ROM data into my buffer
-    memcpy(myImage, myROM, 2048);
-
-    // Initialize RAM with random values
-    class Random random;
-    for(uInt32 i = 0; i < 1024; ++i)
-      myRAM[i] = random.next();
-  }
-  else if(mySize == 4096)
-  {
-    // The game has something saved in the RAM
-    // Useful for MagiCard program listings
-
-    // Copy the ROM data into my buffer
-    memcpy(myImage, myROM + 2048, 2048);
-
-    // Copy the RAM image into my buffer
-    memcpy(myRAM, myROM, 1024);
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -80,13 +90,13 @@ void CartridgeCV::install(System& system)
   assert((0x1800 & mask) == 0);
 
   System::PageAccess access;
+  access.directPokeBase = 0;
+  access.device = this;
 
   // Map ROM image into the system
   for(uInt32 address = 0x1800; address < 0x2000; address += (1 << shift))
   {
-    access.device = this;
     access.directPeekBase = &myImage[address & 0x07FF];
-    access.directPokeBase = 0;
     mySystem->setPageAccess(address >> mySystem->pageShift(), access);
   }
 
@@ -112,18 +122,7 @@ void CartridgeCV::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeCV::peek(uInt16 address)
 {
-  // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
-  // Thanks to Kroko of AtariAge for this advice and code idea
-  if((address & 0x0FFF) < 0x0800)  // Write port is at 0xF400 - 0xF800 (1024 bytes)
-  {                                // Read port is handled in ::install()
-    if(myBankLocked) return 0;
-    else return myRAM[address & 0x03FF] = 0;
-  }  
-  else
-  {
-    return myImage[address & 0x07FF];
-  }  
+  return myImage[address & 0x07FF];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -133,40 +132,14 @@ void CartridgeCV::poke(uInt16, uInt8)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeCV::bank(uInt16 bank)
-{
-  // Doesn't support bankswitching
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeCV::bank()
-{
-  // Doesn't support bankswitching
-  return 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeCV::bankCount()
-{
-  return 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeCV::patch(uInt16 address, uInt8 value)
 {
-  myImage[address & 0x07FF] = value;
-  return true;
+	myImage[address & 0x07FF] = value;
+	return true;
 } 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeCV::getImage(int& size)
-{
-  size = 2048;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeCV::save(Serializer& out) const
+bool CartridgeCV::save(Serializer& out)
 {
   string cart = name();
 
@@ -177,9 +150,9 @@ bool CartridgeCV::save(Serializer& out) const
     // Output RAM
     out.putInt(1024);
     for(uInt32 addr = 0; addr < 1024; ++addr)
-      out.putByte((char)myRAM[addr]);
+      out.putInt(myRAM[addr]);
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -206,9 +179,9 @@ bool CartridgeCV::load(Deserializer& in)
     // Input RAM
     uInt32 limit = (uInt32) in.getInt();
     for(uInt32 addr = 0; addr < limit; ++addr)
-      myRAM[addr] = (uInt8) in.getByte();
+      myRAM[addr] = (uInt8) in.getInt();
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -220,4 +193,10 @@ bool CartridgeCV::load(Deserializer& in)
   }
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* CartridgeCV::getImage(int& size) {
+  size = 2048;
+  return &myImage[0];
 }

@@ -8,19 +8,19 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.cxx,v 1.17 2006-12-09 00:25:20 stephena Exp $
 //============================================================================
 
 #include <cctype>
 #include <algorithm>
 #include <sstream>
 
-#include "bspf.hxx"
+#include "GuiUtils.hxx"
 #include "Props.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -69,6 +69,7 @@ void Properties::set(PropertyType key, const string& value)
       case Controller_SwapPaddles:
       case Display_Format:
       case Display_Phosphor:
+      case Emulation_HmoveBlanks:
       {
         transform(myProperties[key].begin(), myProperties[key].end(),
                   myProperties[key].begin(), (int(*)(int)) toupper);
@@ -293,11 +294,14 @@ const char* Properties::ourDefaultProperties[LastPropType] = {
   "JOYSTICK",    // Controller.Left
   "JOYSTICK",    // Controller.Right
   "NO",          // Controller.SwapPaddles
-  "AUTO-DETECT", // Display.Format
+  "NTSC",        // Display.Format
+  "0",           // Display.XStart
+  "160",         // Display.Width
   "34",          // Display.YStart
   "210",         // Display.Height
   "NO",          // Display.Phosphor
-  "77"           // Display.PPBlend
+  "77",          // Display.PPBlend
+  "YES"          // Emulation.HmoveBlanks
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -318,8 +322,11 @@ const char* Properties::ourPropertyNames[LastPropType] = {
   "Controller.Right",
   "Controller.SwapPaddles",
   "Display.Format",
+  "Display.XStart",
+  "Display.Width",
   "Display.YStart",
   "Display.Height",
   "Display.Phosphor",
-  "Display.PPBlend"
+  "Display.PPBlend",
+  "Emulation.HmoveBlanks"
 };

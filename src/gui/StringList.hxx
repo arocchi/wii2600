@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: StringList.hxx,v 1.6 2006-12-08 16:49:36 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -59,16 +59,6 @@ class StringList : public Common::Array<string>
         if(!match) tmp += str[i];
       }
       return tmp;
-    }
-};
-
-class StringMap : public Common::Array< pair<string,string> >
-{
-  public:
-    void push_back(const string& name, const string& tag)
-    {
-      ensureCapacity(_size + 1);
-      _data[_size++] = make_pair(name, tag);
     }
 };
 

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CommandMenu.hxx,v 1.2 2006-12-08 16:49:32 stephena Exp $
 //============================================================================
 
 #ifndef COMMAND_MENU_HXX
@@ -28,7 +28,7 @@ class OSystem;
   The base dialog for common commands in Stella.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: CommandMenu.hxx,v 1.2 2006-12-08 16:49:32 stephena Exp $
 */
 class CommandMenu : public DialogContainer
 {
@@ -42,6 +42,12 @@ class CommandMenu : public DialogContainer
       Destructor
     */
     virtual ~CommandMenu();
+
+  public:
+    /**
+      Updates the basedialog to be of the type defined for this derived class.
+    */
+    void initialize();
 };
 
 #endif

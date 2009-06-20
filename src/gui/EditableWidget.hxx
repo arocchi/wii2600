@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EditableWidget.hxx,v 1.11 2006-12-08 16:49:34 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -68,15 +68,10 @@ class EditableWidget : public Widget, public CommandSender
 
   private:
     // Line editing
-    bool specialKeys(int ascii, int keycode);
+    bool specialKeys(int keycode);
     bool killChar(int direction);
     bool killLine(int direction);
     bool killLastWord();
-    bool moveWord(int direction);
-
-    // Clipboard
-    void copySelectedText();
-    void pasteSelectedText();
 
   protected:
     bool   _editable;
@@ -89,8 +84,6 @@ class EditableWidget : public Widget, public CommandSender
     bool  _caretInverse;
 
     int   _editScrollOffset;
-
-    static string _clippedText;
 };
 
 #endif

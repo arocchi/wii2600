@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Settings.hxx,v 1.30 2006-12-15 20:22:29 stephena Exp $
 //============================================================================
 
 #ifndef SETTINGS_HXX
@@ -28,7 +28,7 @@ class OSystem;
   This class provides an interface for accessing frontend specific settings.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Settings.hxx,v 1.30 2006-12-15 20:22:29 stephena Exp $
 */
 class Settings
 {
@@ -57,9 +57,9 @@ class Settings
     /**
       This method should be called to load the arguments from the commandline.
 
-      @return Name of the ROM to load, otherwise empty string
+      @return False on any errors, otherwise true
     */
-    string loadCommandLine(int argc, char** argv);
+    bool loadCommandLine(int argc, char** argv);
 
     /**
       This method should be called *after* settings have been read,
@@ -74,7 +74,7 @@ class Settings
 
     /**
       Get the value assigned to the specified key.  If the key does
-      not exist then -1 is returned.
+      not exist then 0 is returned.
 
       @param key The key of the setting to lookup
       @return The integer value of the setting
@@ -109,15 +109,6 @@ class Settings
     const string& getString(const string& key) const;
 
     /**
-      Get the x*y size assigned to the specified key.  If the key does
-      not exist (or is invalid) then results are -1 for each item.
-
-      @param key The key of the setting to lookup
-      @return The x and y values encoded in the key
-    */
-    void getSize(const string& key, int& x, int& y) const;
-
-    /**
       Set the value associated with key to the given value.
 
       @param key   The key of the setting
@@ -148,14 +139,6 @@ class Settings
       @param value The value to assign to the setting
     */
     void setString(const string& key, const string& value);
-
-    /**
-      Set the value associated with key to the given value.
-
-      @param key   The key of the setting
-      @param value The value to assign to the setting
-    */
-    void setSize(const string& key, const int value1, const int value2);
 
   private:
     // Copy constructor isn't supported by this class so make it private

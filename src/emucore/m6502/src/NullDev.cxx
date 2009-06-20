@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: NullDev.cxx,v 1.4 2006-12-08 16:49:30 stephena Exp $
 //============================================================================
 
 #include "NullDev.hxx"
@@ -28,6 +28,12 @@ NullDevice::NullDevice()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 NullDevice::~NullDevice()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* NullDevice::name() const
+{
+  return "NULL";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -55,7 +61,7 @@ void NullDevice::poke(uInt16 address, uInt8 value)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool NullDevice::save(Serializer& out) const
+bool NullDevice::save(Serializer& out)
 {
   return true;
 }

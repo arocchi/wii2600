@@ -8,30 +8,40 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart4K.cxx,v 1.8 2006-12-08 16:49:21 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
-#include "System.hxx"
+#include <assert.h>
 #include "Cart4K.hxx"
+#include "System.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Cartridge4K::Cartridge4K(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 4096);
+  for(uInt32 addr = 0; addr < 4096; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Cartridge4K::~Cartridge4K()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* Cartridge4K::name() const
+{
+  return "Cartridge4K";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,40 +84,14 @@ void Cartridge4K::poke(uInt16, uInt8)
 } 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Cartridge4K::bank(uInt16)
-{
-  // Doesn't support bankswitching
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge4K::bank()
-{
-  // Doesn't support bankswitching
-  return 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge4K::bankCount()
-{
-  return 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge4K::patch(uInt16 address, uInt8 value)
 {
-  myImage[address & 0x0FFF] = value;
-  return true;
+	myImage[address & 0x0FFF] = value;
+	return true;
 } 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* Cartridge4K::getImage(int& size)
-{
-  size = 4096;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge4K::save(Serializer& out) const
+bool Cartridge4K::save(Serializer& out)
 {
   string cart = name();
 
@@ -115,7 +99,7 @@ bool Cartridge4K::save(Serializer& out) const
   {
     out.putString(cart);
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -139,7 +123,7 @@ bool Cartridge4K::load(Deserializer& in)
     if(in.getString() != cart)
       return false;
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -151,4 +135,10 @@ bool Cartridge4K::load(Deserializer& in)
   }
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* Cartridge4K::getImage(int& size) {
+  size = 4096;
+  return &myImage[0];
 }

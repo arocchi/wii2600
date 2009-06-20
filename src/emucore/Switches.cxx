@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Switches.cxx,v 1.6 2006-12-08 16:49:28 stephena Exp $
 //============================================================================
 
 #include "Event.hxx"
@@ -22,8 +22,8 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 Switches::Switches(const Event& event, const Properties& properties)
-  : myEvent(event),
-    mySwitches(0xFF)
+    : myEvent(event),
+      mySwitches(0xFF)
 {
   if(properties.get(Console_RightDifficulty) == "B")
   {
@@ -59,7 +59,7 @@ Switches::~Switches()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-void Switches::update()
+uInt8 Switches::read()
 {
   if(myEvent.get(Event::ConsoleColor) != 0)
   {
@@ -105,34 +105,7 @@ void Switches::update()
   {
     mySwitches |= 0x01;
   }
+
+  return mySwitches;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-bool Switches::save(Serializer& out) const
-{
-  try
-  {
-    out.putByte((char)mySwitches);
-  }
-  catch(...)
-  {
-    cerr << "ERROR: Switches::save() exception\n";
-    return false;
-  }
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-bool Switches::load(Deserializer& in)
-{
-  try
-  {
-    mySwitches = (uInt8) in.getByte();
-  }
-  catch(...)
-  {
-    cerr << "ERROR: Switches::load() exception\n";
-    return false;
-  }
-  return true;
-}

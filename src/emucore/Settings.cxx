@@ -8,24 +8,21 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Settings.cxx,v 1.105 2006-12-20 12:42:55 stephena Exp $
 //============================================================================
 
 #include <cassert>
 #include <sstream>
 #include <fstream>
-#include <algorithm>
-
-#include "bspf.hxx"
 
 #include "OSystem.hxx"
 #include "Version.hxx"
-
+#include "bspf.hxx"
 #include "Settings.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,35 +34,21 @@ Settings::Settings(OSystem* osystem)
 
   // Add options that are common to all versions of Stella
   setInternal("video", "soft");
+  setInternal("dirtyrects", "false"); // This only becomes useful at high resolutions
 
-  // OpenGL specific options
   setInternal("gl_filter", "nearest");
-  setInternal("gl_aspectn", "100");
-  setInternal("gl_aspectp", "100");
-  setInternal("gl_fsmax", "false");
-  setInternal("gl_lib", "libGL.so");
+  setInternal("gl_aspect", "2.0");
+  setInternal("gl_fsmax", "true");
+  setInternal("gl_lib", "");
   setInternal("gl_vsync", "false");
-  setInternal("gl_texrect", "false");
-//  setInternal("gl_accel", "true");
 
-  // Framebuffer-related options
-  setInternal("tia_filter", "zoom2x");
+  setInternal("scale_ui", "zoom2x");
+  setInternal("scale_tia", "zoom2x");
   setInternal("fullscreen", "false");
-  setInternal("fullres", "auto");
   setInternal("center", "true");
   setInternal("grabmouse", "false");
   setInternal("palette", "standard");
-  setInternal("colorloss", "false");
-  setInternal("timing", "sleep");
 
-  // TV filter options
-  setInternal("tv_tex", "off");
-  setInternal("tv_bleed", "off");
-  setInternal("tv_noise", "off");
-//  setInternal("tv_curve", "false");  // not yet implemented
-  setInternal("tv_phos", "false");
-
-  // Sound options
   setInternal("sound", "true");
   setInternal("fragsize", "512");
   setInternal("freq", "31400");
@@ -73,52 +56,33 @@ Settings::Settings(OSystem* osystem)
   setInternal("volume", "100");
   setInternal("clipvol", "true");
 
-  // Input event options
   setInternal("keymap", "");
   setInternal("joymap", "");
   setInternal("joyaxismap", "");
   setInternal("joyhatmap", "");
-  setInternal("joydeadzone", "0");
-  setInternal("pspeed", "6");
+  setInternal("paddle", "0");
   setInternal("sa1", "left");
   setInternal("sa2", "right");
+  setInternal("p0speed", "50");
+  setInternal("p1speed", "50");
+  setInternal("p2speed", "50");
+  setInternal("p3speed", "50");
+  setInternal("pthresh", "600");
 
-  // Snapshot options
-  setInternal("ssdir", "");
-  setInternal("sssingle", "false");
-  setInternal("ss1x", "false");
-
-  // Config files and paths
-  setInternal("romdir", "~");
-  setInternal("statedir", "");
-  setInternal("cheatfile", "");
-  setInternal("palettefile", "");
-  setInternal("propsfile", "");
-  setInternal("eepromdir", "");
-
-  // ROM browser options
-  setInternal("uselauncher", "true");
-  setInternal("launcherres", "640x480");
-  setInternal("launcherfont", "medium");
-  setInternal("launcherexts", "allfiles");
-  setInternal("romviewer", "0");
-  setInternal("lastrom", "");
-
-  // UI-related options
-  setInternal("debuggerres", "1030x690");
-  setInternal("uipalette", "0");
-  setInternal("listdelay", "300");
-  setInternal("mwheel", "4");
-
-  // Misc options
-  setInternal("autoslot", "false");
   setInternal("showinfo", "false");
-  setInternal("tiafloat", "true");
-  setInternal("avoxport", "");
-  setInternal("stats", "false");
-  setInternal("audiofirst", "true");
-  setInternal("fastscbios", "false");
-  setExternal("romloadcount", "0");
+
+  setInternal("ssdir", string(".") + BSPF_PATH_SEPARATOR);
+  setInternal("sssingle", "false");
+
+  setInternal("romdir", "");
+  setInternal("rombrowse", "false");
+  setInternal("lastrom", "");
+  setInternal("modtime", "");
+  setInternal("debugheight", "0");
+
+  setInternal("tiadefaults", "true");
+  setInternal("autoslot", "false");
+  setInternal("fastscbios", "true");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -137,8 +101,23 @@ void Settings::loadConfig()
   ifstream in(myOSystem->configFile().c_str());
   if(!in || !in.is_open())
   {
-    cout << "ERROR: Couldn't load settings file\n";
+    cout << "Error: Couldn't load settings file\n";
     return;
+  }
+
+  // Get the first line, and parse the version string (if it exists)
+  // If we don't have the minimum settings version, then ignore
+  // this settings file.
+  if(getline(in, line))
+  {
+    string minVersion = ";  Version ";
+    minVersion += STELLA_SETTINGS_VERSION;
+    if(line.find(";  Version") != 0 || line < minVersion)
+    {
+      cout << "Error: Settings file too old, using internal defaults\n";
+      in.close();
+      return;
+    }
   }
 
   while(getline(in, line))
@@ -174,51 +153,66 @@ void Settings::loadConfig()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string Settings::loadCommandLine(int argc, char** argv)
+bool Settings::loadCommandLine(int argc, char** argv)
 {
   for(int i = 1; i < argc; ++i)
   {
     // strip off the '-' character
     string key = argv[i];
-    if(key[0] == '-')
+    if(key[0] != '-')
+      return true;     // stop processing here, ignore the remaining items
+
+    key = key.substr(1, key.length());
+
+    // Take care of the arguments which are meant to be executed immediately
+    // (and then Stella should exit)
+    if(key == "help")
     {
-      key = key.substr(1, key.length());
-
-      // Take care of the arguments which are meant to be executed immediately
-      // (and then Stella should exit)
-      if(key == "help" || key == "listrominfo")
-      {
-        setExternal(key, "true");
-        return "";
-      }
-
-      // Take care of arguments without an option
-      if(key == "rominfo" || key == "debug" || key == "holdreset" ||
-         key == "holdselect" || key == "holdbutton0" || key == "takesnapshot")
-      {
-        setExternal(key, "true");
-        continue;
-      }
-
-      if(++i >= argc)
-      {
-        cerr << "Missing argument for '" << key << "'" << endl;
-        return "";
-      }
-      string value = argv[i];
-
-      // Settings read from the commandline must not be saved to 
-      // the rc-file, unless they were previously set
-      if(int idx = getInternalPos(key) != -1)
-        setInternal(key, value, idx);   // don't set initialValue here
-      else
-        setExternal(key, value);
+      usage();
+      return false;
     }
+    else if(key == "listrominfo")
+    {
+      setExternal(key, "true");
+      return true;
+    }
+    else if(key == "debug") // this doesn't make Stella exit
+    {
+      setExternal(key, "true");
+      return true;
+    }
+    else if(key == "holdreset") // this doesn't make Stella exit
+    {
+      setExternal(key, "true");
+      return true;
+    }
+    else if(key == "holdselect") // this doesn't make Stella exit
+    {
+      setExternal(key, "true");
+      return true;
+    }
+    else if(key == "holdbutton0") // this doesn't make Stella exit
+    {
+      setExternal(key, "true");
+      return true;
+    }
+
+    if(++i >= argc)
+    {
+      cerr << "Missing argument for '" << key << "'" << endl;
+      return false;
+    }
+    string value = argv[i];
+
+    // Settings read from the commandline must not be saved to 
+    // the rc-file, unless they were previously set
+    if(int idx = getInternalPos(key) != -1)
+      setInternal(key, value, idx);   // don't set initialValue here
     else
-      return key;
+      setExternal(key, value);
   }
 
-  return "";
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -228,61 +222,62 @@ void Settings::validate()
   int i;
 
   s = getString("video");
-  if(s != "soft" && s != "gl")  setInternal("video", "soft");
-
-  s = getString("timing");
-  if(s != "sleep" && s != "busy")  setInternal("timing", "sleep");
+  if(s != "soft" && s != "gl")
+    setInternal("video", "soft");
 
 #ifdef DISPLAY_OPENGL
   s = getString("gl_filter");
-  if(s != "linear" && s != "nearest")  setInternal("gl_filter", "nearest");
+  if(s != "linear" && s != "nearest")
+    setInternal("gl_filter", "nearest");
 
-  i = getInt("gl_aspectn");
-  if(i < 80 || i > 120)  setInternal("gl_aspectn", "100");
-  i = getInt("gl_aspectp");
-  if(i < 80 || i > 120)  setInternal("gl_aspectp", "100");
+  float f = getFloat("gl_aspect");
+  if(f < 1.1 || f > 2.0)
+    setInternal("gl_aspect", "2.0");
 #endif
 
 #ifdef SOUND_SUPPORT
+  i = getInt("fragsize");
+  if(i != 256 && i != 512 && i != 1024 && i != 2048 && i != 4096)
+  #ifdef WIN32
+    setInternal("fragsize", "2048");
+  #else
+    setInternal("fragsize", "512");
+  #endif
+
   i = getInt("volume");
-  if(i < 0 || i > 100)    setInternal("volume", "100");
+  if(i < 0 || i > 100)
+    setInternal("volume", "100");
   i = getInt("freq");
-  if(i < 0 || i > 48000)  setInternal("freq", "31400");
+  if(i < 0 || i > 48000)
+    setInternal("freq", "31400");
   i = getInt("tiafreq");
-  if(i < 0 || i > 48000)  setInternal("tiafreq", "31400");
+  if(i < 0 || i > 48000)
+    setInternal("tiafreq", "31400");
 #endif
 
-  i = getInt("joydeadzone");
-  if(i < 0)        setInternal("joydeadzone", "0");
-  else if(i > 29)  setInternal("joydeadzone", "29");
+  s = getString("scale_ui");
+  if(s != "zoom1x" && s != "zoom2x" && s != "zoom3x" &&
+     s != "zoom4x" && s != "zoom5x" && s != "zoom6x")
+    setInternal("scale_ui", "zoom1x");
 
-  i = getInt("pspeed");
-  if(i < 1)        setInternal("pspeed", "1");
-  else if(i > 15)  setInternal("pspeed", "15");
+  s = getString("scale_tia");
+  if(s != "zoom1x" && s != "zoom2x" && s != "zoom3x" &&
+     s != "zoom4x" && s != "zoom5x" && s != "zoom6x")
+    setInternal("scale_tia", "zoom1x");
+
+  i = getInt("paddle");
+  if(i < 0 || i > 3)
+    setInternal("paddle", "0");
+
+  i = getInt("pthresh");
+  if(i < 400)
+    setInternal("pthresh", "400");
+  else if(i > 800)
+    setInternal("pthresh", "800");
 
   s = getString("palette");
-  if(s != "standard" && s != "z26" && s != "user")
+  if(s != "standard" && s != "original" && s != "z26" && s != "user")
     setInternal("palette", "standard");
-
-  s = getString("launcherfont");
-  if(s != "small" && s != "medium" && s != "large")
-    setInternal("launcherfont", "medium");
-
-  i = getInt("romviewer");
-  if(i < 0)       setInternal("romviewer", "0");
-  else if(i > 2)  setInternal("romviewer", "2");
-
-  s = getString("tv_tex");
-  if(s != "normal" && s != "stag")
-    setInternal("tv_tex", "off");
-
-  s = getString("tv_bleed");
-  if(s != "low" && s != "medium" && s != "high")
-    setInternal("tv_bleed", "off");
-
-  s = getString("tv_noise");
-  if(s != "low" && s != "medium" && s != "high")
-    setInternal("tv_noise", "off");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -294,7 +289,6 @@ void Settings::usage()
     << endl
     << "Usage: stella [options ...] romfile" << endl
     << "       Run without any options or romfile to use the ROM launcher" << endl
-    << "       Consult the manual for more in-depth information" << endl
     << endl
     << "Valid options are:" << endl
     << endl
@@ -307,40 +301,25 @@ void Settings::usage()
     << "  -gl_filter    <type>         Type is one of the following:\n"
     << "                 nearest         Normal scaling (GL_NEAREST)\n"
     << "                 linear          Blurred scaling (GL_LINEAR)\n"
-    << "  -gl_aspectn   <number>       Scale the TIA width by the given percentage in NTSC mode\n"
-    << "  -gl_aspectp   <number>       Scale the TIA width by the given percentage in PAL mode\n"
-    << "  -gl_fsmax     <1|0>          Stretch GL image in fullscreen emulation mode\n"
+    << "  -gl_aspect    <number>       Scale the width by the given amount\n"
+    << "  -gl_fsmax     <1|0>          Use the largest available screenmode in fullscreen OpenGL\n"
     << "  -gl_vsync     <1|0>          Enable synchronize to vertical blank interrupt\n"
-    << "  -gl_texrect   <1|0>          Enable GL_TEXTURE_RECTANGLE extension\n"
-//    << "  -gl_accel     <1|0>          Enable SDL_GL_ACCELERATED_VISUAL\n"
-    << "  -tv_tex       <off|type>     OpenGL TV texturing, type is one of the following:\n"
-    << "                 normal         Aligned in a grid\n"
-    << "                 stag           Aligned in a staggered grid\n"
-    << "  -tv_bleed     <off|type>     OpenGL TV color bleed, type is one of the following:\n"
-    << "                 low            \n"
-    << "                 medium         \n"
-    << "                 high           \n"
-    << "  -tv_noise     <off|type>     OpenGL TV RF noise emulation, type is one of the following:\n"
-    << "                 low            \n"
-    << "                 medium         \n"
-    << "                 high           \n"
-    << "  -tv_phos      <1|0>          OpenGL TV phosphor burn-off\n"
     << endl
   #endif
-    << "  -tia_filter   <filter>       Use the specified filter in emulation mode\n"
+    << "  -scale_tia    <scaler>       Use the specified scaler in emulation mode\n"
+    << "  -scale_ui     <scaler>       Use the specified scaler in non-emulation mode (ROM browser/debugger)\n"
     << "  -fullscreen   <1|0>          Play the game in fullscreen mode\n"
-    << "  -fullres      <auto|WxH>     The resolution to use in fullscreen mode\n"
     << "  -center       <1|0>          Centers game window (if possible)\n"
     << "  -grabmouse    <1|0>          Keeps the mouse in the game window\n"
-    << "  -palette      <standard|     Use the specified color palette\n"
+    << "  -palette      <original|     Use the specified color palette\n"
+    << "                 standard|\n"
     << "                 z26|\n"
     << "                 user>\n"
-    << "  -colorloss    <1|0>          Enable PAL color-loss effect\n"
-    << "  -framerate    <number>       Display the given number of frames per second (0 to auto-calculate)\n"
-    << "  -timing       <sleep|busy>   Use the given type of wait between frames\n"
+    << "  -framerate    <number>       Display the given number of frames per second\n"
     << endl
   #ifdef SOUND_SUPPORT
     << "  -sound        <1|0>          Enable sound generation\n"
+    << "  -channels     <1|2>          Enable mono or stereo sound\n"
     << "  -fragsize     <number>       The size of sound fragments (must be a power of two)\n"
     << "  -freq         <number>       Set sound sample output frequency (0 - 48000)\n"
     << "  -tiafreq      <number>       Set sound sample generation frequency (0 - 48000)\n"
@@ -349,55 +328,41 @@ void Settings::usage()
     << endl
   #endif
     << "  -cheat        <code>         Use the specified cheatcode (see manual for description)\n"
-    << "  -showinfo     <1|0>          Shows some game info on commandline\n"
-    << "  -joydeadzone  <number>       Sets 'deadzone' area for analog joysticks (0-29)\n"
-    << "  -pspeed       <number>       Speed of digital emulated paddle movement (1-15)\n"
+    << "  -showinfo     <1|0>          Shows some game info\n"
+    << "  -paddle       <0|1|2|3>      Indicates which paddle the mouse should emulate\n"
     << "  -sa1          <left|right>   Stelladaptor 1 emulates specified joystick port\n"
     << "  -sa2          <left|right>   Stelladaptor 2 emulates specified joystick port\n"
+    << "  -p0speed      <number>       Speed of emulated mouse movement for paddle 0 (0-100)\n"
+    << "  -p1speed      <number>       Speed of emulated mouse movement for paddle 1 (0-100)\n"
+    << "  -p2speed      <number>       Speed of emulated mouse movement for paddle 2 (0-100)\n"
+    << "  -p3speed      <number>       Speed of emulated mouse movement for paddle 3 (0-100)\n"
+    << "  -pthresh      <number>       Set threshold for eliminating paddle jitter\n"
+    << "  -tiadefaults  <1|0>          Use TIA positioning defaults instead of enhanced values\n"
+    << "  -rombrowse    <1|0>          Use ROM browser mode (shows files and folders)\n"
     << "  -autoslot     <1|0>          Automatically switch to next save slot when state saving\n"
-    << "  -audiofirst   <1|0>          Initial audio before video (required for some ATI video cards)\n"
-    << "  -fastscbios   <1|0>          Disable Supercharger BIOS progress loading bars\n"
+    << "  -fastscbios   <1|0>          Speed up loading of SuperCharger ROM BIOS\n"
+  #ifdef UNIX
+    << "  -accurate     <1|0>          Accurate game timing (uses more CPU)\n"
+  #endif
     << "  -ssdir        <path>         The directory to save snapshot files to\n"
     << "  -sssingle     <1|0>          Generate single snapshot instead of many\n"
-    << "  -ss1x         <1|0>          Generate TIA snapshot in 1x mode (ignore scaling/effects)\n"
     << endl
-    << "  -rominfo      <rom>          Display detailed information for the given ROM\n"
     << "  -listrominfo                 Display contents of stella.pro, one line per ROM entry\n"
-    << "  -uselauncher  <1|0>          Use the built-in ROM launcher\n"
-    << "  -launcherres  <WxH>          The resolution to use in ROM launcher mode\n"
-    << "  -launcherfont <small|medium| Use the specified font in the ROM launcher\n"
-    << "                 large>\n"
-    << "  -launcherexts <allfiles|     Show files with the given extensions in ROM launcher\n"
-    << "                 allroms|        (exts is a ':' separated list of extensions)\n"
-    << "                 exts\n"
-    << "  -romviewer    <0|1|2>        Show ROM info viewer at given zoom level in ROM launcher (0 for off)\n"
-    << "  -uipalette    <1|2>          Used the specified palette for UI elements\n"
-    << "  -listdelay    <delay>        Time to wait between keypresses in list widgets (300-1000)\n"
-    << "  -mwheel       <lines>        Number of lines the mouse wheel will scroll in UI\n"
-    << "  -statedir     <dir>          Directory in which to save state files\n"
-    << "  -cheatfile    <file>         Full pathname of cheatfile database\n"
-    << "  -palettefile  <file>         Full pathname of user-defined palette file\n"
-    << "  -propsfile    <file>         Full pathname of ROM properties file\n"
-    << "  -eepromdir    <dir>          Directory in which to save EEPROM files\n"
-    << "  -avoxport     <name>         The name of the serial port where an AtariVox is connected\n"
     << "  -help                        Show the text you're now reading\n"
   #ifdef DEBUGGER_SUPPORT
     << endl
     << " The following options are meant for developers\n"
     << " Arguments are more fully explained in the manual\n"
     << endl
-    << "   -debuggerres  <WxH>         The resolution to use in debugger mode\n"
     << "   -break        <address>     Set a breakpoint at 'address'\n"
+    << "   -debugheight  <number>      Set height of debugger in lines of text (NOT pixels)\n"
     << "   -debug                      Start in debugger mode\n"
     << "   -holdreset                  Start the emulator with the Game Reset switch held down\n"
     << "   -holdselect                 Start the emulator with the Game Select switch held down\n"
     << "   -holdbutton0                Start the emulator with the left joystick button held down\n"
-    << "   -stats        <1|0>         Overlay console info during emulation\n"
-    << "   -tiafloat     <1|0>         Set unused TIA pins floating on a read/peek\n"
     << endl
-    << "   -bs          <arg>          Sets the 'Cartridge.Type' (bankswitch) property\n"
-    << "   -type        <arg>          Same as using -bs\n"
-    << "   -channels    <arg>          Sets the 'Cartridge.Sound' property\n"
+    << "   -pro         <props file>   Use the given properties file instead of stella.pro\n"
+    << "   -type        <arg>          Sets the 'Cartridge.Type' property\n"
     << "   -ld          <arg>          Sets the 'Console.LeftDifficulty' property\n"
     << "   -rd          <arg>          Sets the 'Console.RightDifficulty' property\n"
     << "   -tv          <arg>          Sets the 'Console.TelevisionType' property\n"
@@ -407,10 +372,13 @@ void Settings::usage()
     << "   -bc          <arg>          Same as using both -lc and -rc\n"
     << "   -cp          <arg>          Sets the 'Controller.SwapPaddles' property\n"
     << "   -format      <arg>          Sets the 'Display.Format' property\n"
+    << "   -xstart      <arg>          Sets the 'Display.XStart' property\n"
     << "   -ystart      <arg>          Sets the 'Display.YStart' property\n"
+    << "   -width       <arg>          Sets the 'Display.Width' property\n"
     << "   -height      <arg>          Sets the 'Display.Height' property\n"
     << "   -pp          <arg>          Sets the 'Display.Phosphor' property\n"
     << "   -ppblend     <arg>          Sets the 'Display.PPBlend' property\n"
+    << "   -hmove       <arg>          Sets the 'Emulation.HmoveBlanks' property\n"
   #endif
     << endl;
 #endif
@@ -437,11 +405,12 @@ void Settings::saveConfig()
   ofstream out(myOSystem->configFile().c_str());
   if(!out || !out.is_open())
   {
-    cout << "ERROR: Couldn't save settings file\n";
+    cout << "Error: Couldn't save settings file\n";
     return;
   }
 
-  out << ";  Stella configuration file" << endl
+  out << ";  Version " << STELLA_VERSION << endl
+      << ";  Stella configuration file" << endl
       << ";" << endl
       << ";  Lines starting with ';' are comments and are ignored." << endl
       << ";  Spaces and tabs are ignored." << endl
@@ -512,17 +481,6 @@ void Settings::setString(const string& key, const string& value)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Settings::getSize(const string& key, int& x, int& y) const
-{
-  char c;
-  string size = getString(key);
-  istringstream buf(size);
-  buf >> x >> c >> y;
-  if(c != 'x')
-    x = y = -1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int Settings::getInt(const string& key) const
 {
   // Try to find the named setting and answer its value
@@ -588,14 +546,6 @@ const string& Settings::getString(const string& key) const
     return myExternalSettings[idx].value;
   else
     return EmptyString;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Settings::setSize(const string& key, const int value1, const int value2)
-{
-  ostringstream buf;
-  buf << value1 << "x" << value2;
-  setString(key, buf.str());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

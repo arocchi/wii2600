@@ -8,44 +8,45 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Widget.hxx,v 1.52 2006-12-08 16:49:37 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include "Dialog.hxx"
-
 #ifndef WIDGET_HXX
 #define WIDGET_HXX
 
+class Dialog;
+
 #include <assert.h>
 
-#include "bspf.hxx"
-
-#include "Array.hxx"
 #include "Event.hxx"
-#include "Font.hxx"
+#include "OSystem.hxx"
 #include "FrameBuffer.hxx"
 #include "GuiObject.hxx"
-#include "OSystem.hxx"
+#include "GuiUtils.hxx"
+#include "Array.hxx"
 #include "Rect.hxx"
+#include "Font.hxx"
+#include "bspf.hxx"
 
 enum {
   WIDGET_ENABLED       = 1 << 0,
   WIDGET_INVISIBLE     = 1 << 1,
   WIDGET_HILITED       = 1 << 2,
   WIDGET_BORDER        = 1 << 3,
-  WIDGET_CLEARBG       = 1 << 4,
-  WIDGET_TRACK_MOUSE   = 1 << 5,
-  WIDGET_RETAIN_FOCUS  = 1 << 6,
-  WIDGET_WANTS_TAB     = 1 << 7,
-  WIDGET_WANTS_RAWDATA = 1 << 8
+  WIDGET_INV_BORDER    = 1 << 4,
+  WIDGET_CLEARBG       = 1 << 5,
+  WIDGET_TRACK_MOUSE   = 1 << 6,
+  WIDGET_RETAIN_FOCUS  = 1 << 7,
+  WIDGET_WANTS_TAB     = 1 << 8,
+  WIDGET_WANTS_RAWDATA = 1 << 9
 };
 
 enum {
@@ -67,7 +68,6 @@ enum {
   kDataGridWidget     = 'BGRI',
   kPromptWidget       = 'PROM',
   kRamWidget          = 'RAMW',
-  kRiotWidget         = 'RIOW',
   kRomListWidget      = 'ROML',
   kRomWidget          = 'ROMW',
   kTiaInfoWidget      = 'TIAI',
@@ -79,11 +79,16 @@ enum {
   kToggleWidget       = 'TOGL'
 };
 
+enum {
+  kButtonWidth  = 50,
+  kButtonHeight = 16
+};
+
 /**
   This is the base class for all widgets.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Widget.hxx,v 1.52 2006-12-08 16:49:37 stephena Exp $
 */
 class Widget : public GuiObject
 {
@@ -115,6 +120,8 @@ class Widget : public GuiObject
     void lostFocus();
     void addFocusWidget(Widget* w) { _focusList.push_back(w); }
 
+    virtual GUI::Rect getRect() const;
+
     /** Set/clear WIDGET_ENABLED flag and immediately redraw */
     void setEnabled(bool e);
 
@@ -131,12 +138,8 @@ class Widget : public GuiObject
     void setID(int id)  { _id = id;   }
     int  getID()        { return _id; }
 
+    void setColor(int color)        { _color = color; }
     virtual const GUI::Font* font() { return _font; }
-
-    void setTextColor(uInt32 color)   { _textcolor = color;   }
-    void setTextColorHi(uInt32 color) { _textcolorhi = color; }
-    void setBGColor(uInt32 color)     { _bgcolor = color;     }
-    void setBGColorHi(uInt32 color)   { _bgcolorhi = color;   }
 
     virtual void loadConfig() {}
 
@@ -162,12 +165,9 @@ class Widget : public GuiObject
     int        _id;
     int        _flags;
     bool       _hasFocus;
+    int        _color;
     int        _fontWidth;
     int        _fontHeight;
-    uInt32     _bgcolor;
-    uInt32     _bgcolorhi;
-    uInt32     _textcolor;
-    uInt32     _textcolorhi;
 
   public:
     static Widget* findWidgetInChain(Widget* start, int x, int y);
@@ -231,6 +231,7 @@ class ButtonWidget : public StaticTextWidget, public CommandSender
 
   protected:
     int    _cmd;
+    bool   _editable;
 };
 
 
@@ -260,11 +261,12 @@ class CheckboxWidget : public ButtonWidget
 
   protected:
     bool _state;
+    bool _editable;
     bool _holdFocus;
     bool _fillRect;
     bool _drawBox;
 
-    uInt32 _fillColor;
+    int _fillColor;
 
   private:
     int _boxY;
@@ -283,12 +285,10 @@ class SliderWidget : public ButtonWidget
     void setValue(int value);
     int getValue() const      { return _value; }
 
-    void setMinValue(int value);
-    int  getMinValue() const      { return _valueMin; }
-    void setMaxValue(int value);
-    int  getMaxValue() const      { return _valueMax; }
-    void setStepValue(int value);
-    int  getStepValue() const     { return _stepValue; }
+    void  setMinValue(int value);
+    int getMinValue() const      { return _valueMin; }
+    void  setMaxValue(int value);
+    int getMaxValue() const      { return _valueMax; }
 
     virtual void handleMouseMoved(int x, int y, int button);
     virtual void handleMouseDown(int x, int y, int button, int clickCount);

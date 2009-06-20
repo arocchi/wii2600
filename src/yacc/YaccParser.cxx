@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: YaccParser.cxx,v 1.20 2006-12-08 16:49:42 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -29,7 +29,38 @@
 #include "CpuDebug.hxx"
 #include "TIADebug.hxx"
 
-#include "DebuggerExpressions.hxx"
+#include "BinAndExpression.hxx"
+#include "BinNotExpression.hxx"
+#include "BinOrExpression.hxx"
+#include "BinXorExpression.hxx"
+#include "ByteDerefExpression.hxx"
+#include "ByteDerefOffsetExpression.hxx"
+#include "ConstExpression.hxx"
+#include "CpuMethodExpression.hxx"
+#include "DivExpression.hxx"
+#include "EqualsExpression.hxx"
+#include "EquateExpression.hxx"
+#include "Expression.hxx"
+#include "FunctionExpression.hxx"
+#include "GreaterEqualsExpression.hxx"
+#include "GreaterExpression.hxx"
+#include "HiByteExpression.hxx"
+#include "LessEqualsExpression.hxx"
+#include "LessExpression.hxx"
+#include "LoByteExpression.hxx"
+#include "LogAndExpression.hxx"
+#include "LogNotExpression.hxx"
+#include "LogOrExpression.hxx"
+#include "MinusExpression.hxx"
+#include "ModExpression.hxx"
+#include "MultExpression.hxx"
+#include "NotEqualsExpression.hxx"
+#include "PlusExpression.hxx"
+#include "ShiftLeftExpression.hxx"
+#include "ShiftRightExpression.hxx"
+#include "TiaMethodExpression.hxx"
+#include "UnaryMinusExpression.hxx"
+#include "WordDerefExpression.hxx"
 
 namespace YaccParser {
 #include <stdio.h>
@@ -102,7 +133,7 @@ inline bool is_operator(char x) {
 // responsibility, not the lexer's
 int const_to_int(char *c) {
 	// what base is the input in?
-	BaseFormat base = Debugger::debugger().parser().base();
+	BaseFormat base = Debugger::debugger().parser()->base();
 
 	switch(*c) {
 		case '\\':
@@ -214,18 +245,6 @@ TIADEBUG_INT_METHOD getTiaSpecial(char *c) {
 	if(strcmp(c, "_scan") == 0)
 		return &TIADebug::scanlines;
 
-	if(strcmp(c, "_fcount") == 0)
-		return &TIADebug::frameCount;
-
-	if(strcmp(c, "_cclocks") == 0)
-		return &TIADebug::clocksThisLine;
-
-	if(strcmp(c, "_vsync") == 0)
-		return &TIADebug::vsyncAsInt;
-
-	if(strcmp(c, "_vblank") == 0)
-		return &TIADebug::vblankAsInt;
-
 	return 0;
 }
 
@@ -273,7 +292,7 @@ int yylex() {
 					// happen if the user defines a label that matches one of
 					// the specials. Who would do that, though?
 
-					if(Debugger::debugger().equates().getAddress(idbuf) > -1) {
+					if(Debugger::debugger().equates()->getAddress(idbuf) > -1) {
 						yylval.equate = idbuf;
 						return EQUATE;
 					} else if( (cpuMeth = getCpuSpecial(idbuf)) ) {

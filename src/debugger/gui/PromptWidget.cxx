@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: PromptWidget.cxx,v 1.14 2006-12-18 14:01:58 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -49,14 +49,11 @@ PromptWidget::PromptWidget(GuiObject* boss, const GUI::Font& font,
   : Widget(boss, font, x, y, w - kScrollBarWidth, h),
     CommandSender(boss),
     _makeDirty(false),
-    _firstTime(true),
-    _exitedEarly(false)
+    _firstTime(true)
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS |
            WIDGET_WANTS_TAB | WIDGET_WANTS_RAWDATA;
   _type = kPromptWidget;
-  _textcolor = kTextColor;
-  _bgcolor = kWidColor;
 
   _kConsoleCharWidth  = font.getMaxCharWidth();
   _kConsoleCharHeight = font.getFontHeight();
@@ -78,6 +75,10 @@ PromptWidget::PromptWidget(GuiObject* boss, const GUI::Font& font,
   _scrollBar->setTarget(this);
 
   // Init colors
+  defaultTextColor = kTextColor;
+  defaultBGColor = kBGColor;
+  textColor = defaultTextColor;
+  bgColor = defaultBGColor;
   _inverse = false;
 
   // Init History
@@ -101,9 +102,9 @@ PromptWidget::~PromptWidget()
 void PromptWidget::drawWidget(bool hilite)
 {
 //cerr << "PromptWidget::drawWidget\n";
-  uInt32 fgcolor, bgcolor;
+  int fgcolor, bgcolor;
 
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
   // Draw text
   int start = _scrollLine - _linesPerPage + 1;
@@ -116,13 +117,14 @@ void PromptWidget::drawWidget(bool hilite)
       int c = buffer((start + line) * _lineWidth + column);
 
       if(c & (1 << 17)) { // inverse video flag
-        fgcolor = _bgcolor;
+        fgcolor = bgColor;
         bgcolor = (c & 0x1ffff) >> 8;
-        s.fillRect(x, y, _kConsoleCharWidth, _kConsoleCharHeight, bgcolor);
+        fb.fillRect(x, y, _kConsoleCharWidth, _kConsoleCharHeight, bgcolor);
       } else {
         fgcolor = c >> 8;
+        bgcolor = bgColor;
       }
-      s.drawChar(&instance().consoleFont(), c & 0x7f, x, y, fgcolor);
+      fb.drawChar(&instance()->consoleFont(), c & 0x7f, x, y, fgcolor);
       x += _kConsoleCharWidth;
     }
     y += _kConsoleLineHeight;
@@ -150,7 +152,7 @@ void PromptWidget::handleMouseWheel(int x, int y, int direction)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void PromptWidget::printPrompt()
 {
-  string watches = instance().debugger().showWatches();
+  string watches = instance()->debugger().showWatches();
   if(watches.length() > 0)
     print(watches);
 
@@ -164,7 +166,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   int i;
   bool handled = true;
   bool dirty = false;
-  
+	
   switch(ascii)
   {
     case '\n': // enter/return
@@ -186,19 +188,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
         addToHistory(command.c_str());
 
         // Pass the command to the debugger, and print the result
-        string result = instance().debugger().run(command);
-
-        // This is a bit of a hack
-        // Certain commands remove the debugger dialog from underneath us,
-        // so we shouldn't print any messages
-        // Those commands will return '_EXIT_DEBUGGER' as their result
-        if(result == "_EXIT_DEBUGGER")
-        {
-          _exitedEarly = true;
-          return true;
-        }
-        else
-          print(result + "\n");
+        print( instance()->debugger().run(command) + "\n");
       }
 
       printPrompt();
@@ -212,7 +202,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       // both at once.
 
       if(_currentPos <= _promptStartPos)
-        break;
+    	break;
 
       scrollToCurrent();
       int len = _promptEndPos - _promptStartPos;
@@ -221,14 +211,12 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       char delimiter = '\0';
 
       char *str = new char[len + 1];
-      for (i = 0; i < len; i++)
-      {
-        str[i] = buffer(_promptStartPos + i) & 0x7f;
-        if(strchr("*@<> ", str[i]) != NULL )
-        {
-          lastDelimPos = i;
-          delimiter = str[i];
-        }
+      for (i = 0; i < len; i++) {
+    	str[i] = buffer(_promptStartPos + i) & 0x7f;
+    	if(strchr("*@<> ", str[i]) != NULL ) {
+    	  lastDelimPos = i;
+    	  delimiter = str[i];
+    	}
       }
       str[len] = '\0';
 
@@ -236,67 +224,60 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       const char *prefix;
       int possibilities;
 
-      if(lastDelimPos < 0)
-      {
-        // no delimiters, do command completion:
-        DebuggerParser& parser = instance().debugger().parser();
-        possibilities = parser.countCompletions(str);
+      if(lastDelimPos < 0) {
+    	// no delimiters, do command completion:
+    	DebuggerParser *parser = instance()->debugger().parser();
+    	possibilities = parser->countCompletions(str);
 
-        if(possibilities < 1) {
-          delete[] str;
-          break;
-        }
+    	if(possibilities < 1) {
+    	  delete[] str;
+    	  break;
+    	}
 
-        completionList = parser.getCompletions();
-        prefix = parser.getCompletionPrefix();
-      }
-      else
-      {
-        // we got a delimiter, so this must be a label:
-        EquateList& equates = instance().debugger().equates();
-        possibilities = equates.countCompletions(str + lastDelimPos + 1);
+    	completionList = parser->getCompletions();
+    	prefix = parser->getCompletionPrefix();
+	    } else {
+    	// we got a delimiter, so this must be a label:
+    	EquateList *equates = instance()->debugger().equates();
+    	possibilities = equates->countCompletions(str + lastDelimPos + 1);
 
-        if(possibilities < 1) {
-          delete[] str;
-          break;
-        }
+    	if(possibilities < 1) {
+    	  delete[] str;
+    	  break;
+    	}
 
-        // TODO - perhaps use strings instead of char pointers
-        completionList = equates.getCompletions().c_str();
-        prefix = equates.getCompletionPrefix().c_str();
-      }
+	    	completionList = equates->getCompletions();
+	    	prefix = equates->getCompletionPrefix();
+	    }
 
-      if(possibilities == 1)
-      {
-        // add to buffer as though user typed it (plus a space)
-        _currentPos = _promptStartPos + lastDelimPos + 1;
-        while(*completionList != '\0')
-          putcharIntern(*completionList++);
+      if(possibilities == 1) {
+    	// add to buffer as though user typed it (plus a space)
+    	_currentPos = _promptStartPos + lastDelimPos + 1;
+    	while(*completionList != '\0') {
+    	  putcharIntern(*completionList++);
+    	}
+    	putcharIntern(' ');
+    	_promptEndPos = _currentPos;
+      } else {
+    	nextLine();
+    	// add to buffer as-is, then add PROMPT plus whatever we have so far
+    	_currentPos = _promptStartPos + lastDelimPos + 1;
 
-        putcharIntern(' ');
-        _promptEndPos = _currentPos;
-      }
-      else
-      {
-        nextLine();
-        // add to buffer as-is, then add PROMPT plus whatever we have so far
-        _currentPos = _promptStartPos + lastDelimPos + 1;
+    	print("\n");
+    	print(completionList);
+    	print("\n");
+    	print(PROMPT);
 
-        print("\n");
-        print(completionList);
-        print("\n");
-        print(PROMPT);
+    	_promptStartPos = _currentPos;
 
-        _promptStartPos = _currentPos;
+    	for(i=0; i<lastDelimPos; i++)
+    	  putcharIntern(str[i]);
 
-        for(i=0; i<lastDelimPos; i++)
-          putcharIntern(str[i]);
+    	if(lastDelimPos > 0)
+    	  putcharIntern(delimiter);
 
-        if(lastDelimPos > 0)
-          putcharIntern(delimiter);
-
-        print(prefix);
-        _promptEndPos = _currentPos;
+    	print(prefix);
+    	_promptEndPos = _currentPos;
       }
       delete[] str;
       dirty = true;
@@ -317,7 +298,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 256 + 24:  // pageup
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         // Don't scroll up when at top of buffer
         if(_scrollLine < _linesPerPage)
@@ -333,7 +314,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 256 + 25:  // pagedown
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         // Don't scroll down when at bottom of buffer
         if(_scrollLine >= _promptEndPos / _lineWidth)
@@ -349,7 +330,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 256 + 22:  // home
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         _scrollLine = _firstLineInBuffer + _linesPerPage - 1;
         updateScrollBuffer();
@@ -361,7 +342,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 256 + 23:  // end
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         _scrollLine = _promptEndPos / _lineWidth;
         if (_scrollLine < _linesPerPage - 1)
@@ -375,7 +356,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 273:  // cursor up
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         if(_scrollLine <= _firstLineInBuffer + _linesPerPage - 1)
           break;
@@ -390,7 +371,7 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     case 274:  // cursor down
-      if (instance().eventHandler().kbdShift(modifiers))
+      if (instance()->eventHandler().kbdShift(modifiers))
       {
         // Don't scroll down when at bottom of buffer
         if(_scrollLine >= _promptEndPos / _lineWidth)
@@ -420,11 +401,11 @@ bool PromptWidget::handleKeyDown(int ascii, int keycode, int modifiers)
       break;
 
     default:
-      if (instance().eventHandler().kbdControl(modifiers))
+      if (instance()->eventHandler().kbdControl(modifiers))
       {
         specialKeys(keycode);
       }
-      else if (instance().eventHandler().kbdAlt(modifiers))
+      else if (instance()->eventHandler().kbdAlt(modifiers))
       {
       }
       else if (isprint(ascii))
@@ -496,6 +477,17 @@ void PromptWidget::handleCommand(CommandSender* sender, int cmd,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+GUI::Rect PromptWidget::getRect() const
+{
+  // Account for attached scrollbar when calculating width
+  int x = getAbsX() - 1,  y = getAbsY() - 1,
+      w = getWidth() + kScrollBarWidth + 2, h = getHeight() + 2;
+
+  GUI::Rect r(x, y, x+w, y+h);
+  return r;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void PromptWidget::loadConfig()
 {
   // See logic at the end of handleKeyDown for an explanation of this
@@ -512,15 +504,9 @@ void PromptWidget::loadConfig()
     _promptStartPos = _promptEndPos = _currentPos;
 
     _firstTime = false;
-    _exitedEarly = false;
 
     // Take care of one-time debugger stuff
-    instance().debugger().autoExec();
-  }
-  else if(_exitedEarly)
-  {
-    printPrompt();
-    _exitedEarly = false;
+    instance()->debugger().autoExec();
   }
 }
 
@@ -653,7 +639,7 @@ void PromptWidget::addToHistory(const char *str)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int PromptWidget::compareHistory(const char *histLine) {
-  return 1;
+	return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -717,8 +703,9 @@ void PromptWidget::historyScroll(int direction)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void PromptWidget::nextLine()
 {
-  // Reset colors every line, so I don't have to remember to do it myself
-  _textcolor = kTextColor;
+  // reset colors every line, so I don't have to remember to do it myself
+  textColor = defaultTextColor;
+  bgColor = defaultBGColor;
   _inverse = false;
 
   int line = _currentPos / _lineWidth;
@@ -735,7 +722,7 @@ void PromptWidget::nextLine()
 // Call this (at least) when the current line changes or when a new line is added
 void PromptWidget::updateScrollBuffer()
 {
-  int lastchar = BSPF_max(_promptEndPos, _currentPos);
+  int lastchar = MAX(_promptEndPos, _currentPos);
   int line = lastchar / _lineWidth;
   int numlines = (line < _linesInBuffer) ? line + 1 : _linesInBuffer;
   int firstline = line - numlines + 1;
@@ -793,17 +780,17 @@ void PromptWidget::putcharIntern(int c)
                       // don't print or advance cursor
                       // there are only 128 TIA colors, but
                       // OverlayColor contains 256 of them
-    _textcolor = (c & 0x7f) << 1;
+    textColor = (c & 0x7f) << 1;
   }
   else if(c < ' ') { // More colors (the regular GUI ones)
-    _textcolor = c + 0x100;
+    textColor = c + 0x100;
   }
   else if(c == 0x7f) { // toggle inverse video (DEL char)
     _inverse = !_inverse;
   }
   else
   {
-    buffer(_currentPos) = c | (_textcolor << 8) | (_inverse << 17);
+    buffer(_currentPos) = c | (textColor << 8) | (_inverse << 17);
     _currentPos++;
     if ((_scrollLine + 1) * _lineWidth == _currentPos)
     {
@@ -825,7 +812,7 @@ void PromptWidget::print(const string& str)
 void PromptWidget::drawCaret()
 {
 //cerr << "PromptWidget::drawCaret()\n";
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
   int line = _currentPos / _lineWidth;
 
@@ -838,8 +825,8 @@ void PromptWidget::drawCaret()
   int y = _y + displayLine * _kConsoleLineHeight;
 
   char c = buffer(_currentPos);
-  s.fillRect(x, y, _kConsoleCharWidth, _kConsoleLineHeight, kTextColor);
-  s.drawChar(&_boss->instance().consoleFont(), c, x, y + 2, kBGColor);
+  fb.fillRect(x, y, _kConsoleCharWidth, _kConsoleLineHeight, kTextColor);
+  fb.drawChar(&_boss->instance()->consoleFont(), c, x, y + 2, kBGColor);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

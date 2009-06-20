@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ToggleBitWidget.cxx,v 1.5 2006-12-08 16:49:18 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -74,17 +74,17 @@ void ToggleBitWidget::setState(const BoolArray& state, const BoolArray& changed)
 void ToggleBitWidget::drawWidget(bool hilite)
 {
 //cerr << "ToggleBitWidget::drawWidget\n";
-  FBSurface& s = dialog().surface();
+  FrameBuffer& fb = instance()->frameBuffer();
   int row, col;
   string buffer;
 
   // Draw the internal grid and labels
   int linewidth = _cols * _colWidth;
   for (row = 0; row <= _rows; row++)
-    s.hLine(_x, _y + (row * _rowHeight), _x + linewidth, kColor);
+    fb.hLine(_x, _y + (row * _rowHeight), _x + linewidth, kColor);
   int lineheight = _rows * _rowHeight;
   for (col = 0; col <= _cols; col++)
-    s.vLine(_x + (col * _colWidth), _y, _y + lineheight, kColor);
+    fb.vLine(_x + (col * _colWidth), _y, _y + lineheight, kColor);
 
   // Draw the list items
   for (row = 0; row < _rows; row++)
@@ -97,7 +97,7 @@ void ToggleBitWidget::drawWidget(bool hilite)
 
       // Draw the selected item inverted, on a highlighted background.
       if (_currentRow == row && _currentCol == col && _hasFocus)
-        s.fillRect(x - 4, y - 2, _colWidth+1, _rowHeight+1, kTextColorHi);
+        fb.fillRect(x - 4, y - 2, _colWidth+1, _rowHeight+1, kTextColorHi);
 
       if(_stateList[pos])
         buffer = _onList[pos];
@@ -107,11 +107,11 @@ void ToggleBitWidget::drawWidget(bool hilite)
       // Highlight changes
       if(_changedList[pos])
       {
-        s.fillRect(x - 3, y - 1, _colWidth-1, _rowHeight-1, kDbgChangedColor);
-        s.drawString(_font, buffer, x, y, _colWidth, kDbgChangedTextColor);
+        fb.fillRect(x - 3, y - 1, _colWidth-1, _rowHeight-1, kTextColorEm);
+        fb.drawString(_font, buffer, x, y, _colWidth, kTextColorHi);
       }
       else
-        s.drawString(_font, buffer, x, y, _colWidth, kTextColor);
+        fb.drawString(_font, buffer, x, y, _colWidth, kTextColor);
     }
   }
 }

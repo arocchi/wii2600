@@ -8,16 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Dialog.cxx,v 1.51 2006-12-08 20:19:58 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
+
+#include <SDL.h>
 
 #include "OSystem.hxx"
 #include "FrameBuffer.hxx"
@@ -36,19 +38,16 @@
  */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Dialog::Dialog(OSystem* instance, DialogContainer* parent,
-               int x, int y, int w, int h, bool isBase)
-  : GuiObject(*instance, *parent, *this, x, y, w, h),
+               int x, int y, int w, int h)
+  : GuiObject(instance, parent, x, y, w, h),
     _mouseWidget(0),
     _focusedWidget(0),
     _dragWidget(0),
     _okWidget(0),
     _cancelWidget(0),
     _visible(true),
-    _isBase(isBase),
     _ourTab(NULL),
-    _surface(NULL),
-    _focusID(0),
-    _surfaceID(-1)
+    _focusID(0)
 {
 }
 
@@ -60,8 +59,6 @@ Dialog::~Dialog()
 
   delete _firstWidget;
   _firstWidget = NULL;
-
-  _ourButtonGroup.clear();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,23 +67,6 @@ void Dialog::open()
   _result = 0;
   _visible = true;
 
-  // Make sure we have a valid surface to draw into
-  // Technically, this shouldn't be needed until drawDialog(), but some
-  // dialogs cause drawing to occur within loadConfig()
-  // Base surfaces are typically large, and will probably cause slow
-  // performance if we update the whole area each frame
-  // Instead, dirty rectangle updates should be performed
-  // However, this policy is left entirely to the framebuffer
-  // We suggest the hint here, but specific framebuffers are free to
-  // ignore it
-  _surface = instance().frameBuffer().surface(_surfaceID);
-  if(_surface == NULL)
-  {
-    _surfaceID = instance().frameBuffer().allocateSurface(_w, _h, _isBase);
-    _surface   = instance().frameBuffer().surface(_surfaceID);
-  }
-
-  center();
   loadConfig();
 
   // (Re)-build the focus list to use for the widgets which are currently
@@ -104,19 +84,7 @@ void Dialog::close()
   }
 
   releaseFocus();
-  parent().removeDialog();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Dialog::center()
-{
-  if(_surface)
-  {
-    const GUI::Rect& screen = instance().frameBuffer().screenRect();
-    uInt32 x = (screen.width() - getWidth()) >> 1;
-    uInt32 y = (screen.height() - getHeight()) >> 1;
-    _surface->setPos(x, y);
-  }
+  parent()->removeDialog();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -209,12 +177,6 @@ void Dialog::buildFocusWidgetList(int id)
     if(_focusID > 0)
       _focusList.push_back(_ourFocusList[_focusID].focusList);
 
-    // Add button group at end of current focus list
-    // We do it this way for TabWidget, so that buttons are scanned
-    // *after* the widgets in the current tab
-    if(_ourButtonGroup.size() > 0)
-      _focusList.push_back(_ourButtonGroup);
-
     // Only update _focusedWidget if it doesn't belong to the main focus list
     // HACK - figure out how to properly deal with only one focus-able widget
     // in a tab -- TabWidget is the spawn of the devil
@@ -245,14 +207,13 @@ void Dialog::drawDialog()
   if(!isVisible())
     return;
 
-  FBSurface& s = surface();
-
   if(_dirty)
   {
-//    cerr << "Dialog::drawDialog(): w = " << _w << ", h = " << _h << " @ " << &s << endl << endl;
+//    cerr << "Dialog::drawDialog()\n";
+    FrameBuffer& fb = instance()->frameBuffer();
 
-    s.fillRect(_x+1, _y+1, _w-2, _h-2, kDlgColor);
-    s.box(_x, _y, _w, _h, kColor, kShadowColor);
+    fb.fillRect(_x+1, _y+1, _w-2, _h-2, kBGColor);
+    fb.box(_x, _y, _w, _h, kColor, kShadowColor);
 
     // Make all child widget dirty
     Widget* w = _firstWidget;
@@ -269,13 +230,11 @@ void Dialog::drawDialog()
     // Draw outlines for focused widgets
     redrawFocus();
 
-    // Tell the surface this area is dirty
-    s.addDirtyRect(_x, _y, _w, _h);
+    // Tell the framebuffer this area is dirty
+    fb.addDirtyRect(_x, _y, _w, _h);
+
     _dirty = false;
   }
-
-  // Commit surface changes to screen
-  s.update();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -340,18 +299,12 @@ void Dialog::handleKeyDown(int ascii, int keycode, int modifiers)
   // Detect selection of previous and next tab headers and objects
   // For some strange reason, 'tab' needs to be interpreted as keycode,
   // not ascii??
-  if(instance().eventHandler().kbdShift(modifiers))
+  if(instance()->eventHandler().kbdShift(modifiers))
   {
-    if(ascii == 256+20 && _ourTab)      // left arrow
-    {
-      _ourTab->cycleTab(-1);
-      return;
-    }
-    else if(ascii == 256+19 && _ourTab) // right arrow
-    {
-      _ourTab->cycleTab(+1);
-      return;
-    }
+    if(ascii == 256+20)       // left arrow
+      e = Event::UITabPrev;
+    else if(ascii == 256+19)  // right arrow
+      e = Event::UITabNext;
     else if(keycode == 9)     // tab
       e = Event::UINavPrev;
   }
@@ -361,7 +314,7 @@ void Dialog::handleKeyDown(int ascii, int keycode, int modifiers)
   // Check the keytable now, since we might get one of the above events,
   // which must always be processed before any widget sees it.
   if(e == Event::NoType)
-    e = instance().eventHandler().eventForKey(keycode, kMenuMode);
+    e = instance()->eventHandler().eventForKey(keycode, kMenuMode);
 
   // Unless a widget has claimed all responsibility for data, we assume
   // that if an event exists for the given data, it should have priority.
@@ -436,7 +389,7 @@ void Dialog::handleMouseMoved(int x, int y, int button)
 void Dialog::handleJoyDown(int stick, int button)
 {
   Event::Type e =
-    instance().eventHandler().eventForJoyButton(stick, button, kMenuMode);
+    instance()->eventHandler().eventForJoyButton(stick, button, kMenuMode);
 
   // Unless a widget has claimed all responsibility for data, we assume
   // that if an event exists for the given data, it should have priority.
@@ -461,7 +414,7 @@ void Dialog::handleJoyUp(int stick, int button)
 void Dialog::handleJoyAxis(int stick, int axis, int value)
 {
   Event::Type e =
-    instance().eventHandler().eventForJoyAxis(stick, axis, value, kMenuMode);
+    instance()->eventHandler().eventForJoyAxis(stick, axis, value, kMenuMode);
 
   // Unless a widget has claimed all responsibility for data, we assume
   // that if an event exists for the given data, it should have priority.
@@ -478,7 +431,7 @@ void Dialog::handleJoyAxis(int stick, int axis, int value)
 bool Dialog::handleJoyHat(int stick, int hat, int value)
 {
   Event::Type e =
-    instance().eventHandler().eventForJoyHat(stick, hat, value, kMenuMode);
+    instance()->eventHandler().eventForJoyHat(stick, hat, value, kMenuMode);
 
   // Unless a widget has claimed all responsibility for data, we assume
   // that if an event exists for the given data, it should have priority.
@@ -497,6 +450,22 @@ bool Dialog::handleNavEvent(Event::Type e)
 {
   switch(e)
   {
+    case Event::UITabPrev:
+      if(_ourTab)
+      {
+        _ourTab->cycleTab(-1);
+        return true;
+      }
+      break;
+
+    case Event::UITabNext:
+      if(_ourTab)
+      {
+        _ourTab->cycleTab(+1);
+        return true;
+      }
+      break;
+
     case Event::UINavPrev:
       if(_focusedWidget && !_focusedWidget->wantsTab())
       {
@@ -566,34 +535,16 @@ Widget* Dialog::findWidget(int x, int y)
   return Widget::findWidgetInChain(_firstWidget, x, y);
 }
 
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Dialog::addOKCancelBGroup(WidgetArray& wid, const GUI::Font& font,
-                               const string& okText, const string& cancelText)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ButtonWidget* Dialog::addButton(const GUI::Font& font, int x, int y,
+                                const string& label, int cmd)
 {
-  int buttonWidth  = font.getStringWidth("Cancel") + 15;
-  int buttonHeight = font.getLineHeight() + 4;
-  ButtonWidget* b;
-#ifndef MAC_OSX
-  b = new ButtonWidget(this, font, _w - 2 * (buttonWidth + 7), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight,
-                       okText == "" ? "OK" : okText, kOKCmd);
-  wid.push_back(b);
-  addOKWidget(b);
-  b = new ButtonWidget(this, font, _w - (buttonWidth + 10), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight,
-                       cancelText == "" ? "Cancel" : cancelText, kCloseCmd);
-  wid.push_back(b);
-  addCancelWidget(b);
+#if 0
+  const int w = 6 * font.getMaxCharWidth(),
+            h = font.getFontHeight() + 6;
+
+  return new ButtonWidget(this, font, x, y, w, h, label, cmd);
 #else
-  b = new ButtonWidget(this, font, _w - 2 * (buttonWidth + 7), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight,
-                       cancelText == "" ? "Cancel" : cancelText, kCloseCmd);
-  wid.push_back(b);
-  addCancelWidget(b);
-  b = new ButtonWidget(this, font, _w - (buttonWidth + 10), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight,
-                       okText == "" ? "OK" : okText, kOKCmd);
-  wid.push_back(b);
-  addOKWidget(b);
+  return new ButtonWidget(this, font, x, y, kButtonWidth, 16, label, cmd);
 #endif
 }

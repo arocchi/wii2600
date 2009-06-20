@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerParser.hxx,v 1.47 2006-12-18 14:01:58 stephena Exp $
 //============================================================================
 
 #ifndef DEBUGGER_PARSER_HXX
@@ -24,7 +24,6 @@ struct Command;
 
 #include "bspf.hxx"
 #include "Array.hxx"
-#include "FrameBuffer.hxx"
 
 typedef enum {
 	kBASE_16,
@@ -64,7 +63,8 @@ class DebuggerParser
 
     static inline string red(const string& msg = "")
     {
-      return char(kDbgChangedColor) + msg;
+      // This is TIA color 0x34. The octal value is 0x80+(0x34>>1).
+      return "\232" + msg;
     }
     static inline string inverse(const string& msg = "")
     {
@@ -81,7 +81,7 @@ class DebuggerParser
 
   private:
     enum {
-      kNumCommands   = 57,
+      kNumCommands   = 59,
       kMAX_ARG_TYPES = 10 // TODO: put in separate header file Command.hxx
     };
 
@@ -156,6 +156,7 @@ class DebuggerParser
     void executeExec();
     void executeFrame();
     void executeFunction();
+    void executeHeight();
     void executeHelp();
     void executeList();
     void executeListbreaks();
@@ -168,6 +169,7 @@ class DebuggerParser
     void executePc();
     void executePrint();
     void executeRam();  // also implements 'poke' command
+    void executeReload();
     void executeReset();
     void executeRiot();
     void executeRom();

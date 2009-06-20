@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.hxx,v 1.13 2006-12-09 00:25:20 stephena Exp $
 //============================================================================
 
 #ifndef PROPERTIES_HXX
@@ -38,10 +38,13 @@ enum PropertyType {
   Controller_Right,
   Controller_SwapPaddles,
   Display_Format,
+  Display_XStart,
+  Display_Width,
   Display_YStart,
   Display_Height,
   Display_Phosphor,
   Display_PPBlend,
+  Emulation_HmoveBlanks,
   LastPropType
 };
 
@@ -54,7 +57,7 @@ enum PropertyType {
   if the property key is not found in the original property list.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Props.hxx,v 1.13 2006-12-09 00:25:20 stephena Exp $
 */
 class Properties
 {

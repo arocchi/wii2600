@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DialogContainer.hxx,v 1.19 2006-12-08 16:49:33 stephena Exp $
 //============================================================================
 
 #ifndef DIALOG_CONTAINER_HXX
@@ -36,7 +36,7 @@ class OSystem;
   a stack, and handles their events.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: DialogContainer.hxx,v 1.19 2006-12-08 16:49:33 stephena Exp $
 */
 class DialogContainer
 {
@@ -119,29 +119,35 @@ class DialogContainer
     void handleJoyHatEvent(int stick, int hat, int value);
 
     /**
-      Draw the stack of menus (full indicates to redraw all items).
+      Draw the stack of menus.
     */
-    void draw(bool full = false);
+    void draw();
 
     /**
-      Add a dialog box to the stack.
+      Add a dialog box to the stack
     */
     void addDialog(Dialog* d);
 
     /**
-      Remove the topmost dialog box from the stack.
+      Remove the topmost dialog box from the stack
     */
     void removeDialog();
 
     /**
-      Reset dialog stack to the main configuration menu.
+      Reset dialog stack to the main configuration menu
     */
     void reStack();
 
     /**
-      Return the bottom-most dialog of this container.
+      Redraw all dialogs on the stack
     */
-    const Dialog* baseDialog() const { return myBaseDialog; }
+    void refresh() { myRefreshFlag = true; }
+
+    /**
+      (Re)initialize the menuing system.  This is necessary if a new Console
+      has been loaded, since in most cases the screen dimensions will have changed.
+    */
+    virtual void initialize() = 0;
 
   private:
     void reset();
@@ -160,6 +166,9 @@ class DialogContainer
 
     // Indicates the most current time (in milliseconds) as set by updateTime()
     int myTime;
+
+    // Indicates a full refresh of all dialogs is required
+    bool myRefreshFlag;
 
     // For continuous 'key down' events
     struct {

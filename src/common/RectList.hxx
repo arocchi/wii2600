@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RectList.hxx,v 1.2 2006-12-08 16:48:56 stephena Exp $
 //============================================================================
 
 #ifndef RECTLIST_HXX
@@ -24,7 +24,7 @@
 class RectList
 {
   public:
-    RectList(Uint32 size = 256);
+    RectList(Uint32 size = 512);
     ~RectList();
 
     void add(SDL_Rect* rect);
@@ -32,7 +32,6 @@ class RectList
     SDL_Rect* rects();
     Uint32 numRects();
     void start();
-    void print(int boundWidth, int boundHeight);
 
   private:
     Uint32 currentSize, currentRect;

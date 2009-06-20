@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.hxx,v 1.17 2006-12-08 16:48:56 stephena Exp $
 //============================================================================
 
 #ifndef SOUND_SDL_HXX
@@ -25,15 +25,16 @@ class OSystem;
 
 #include <SDL.h>
 
-#include "bspf.hxx"
-#include "TIASnd.hxx"
 #include "Sound.hxx"
+#include "bspf.hxx"
+#include "MediaSrc.hxx"
+#include "TIASnd.hxx"
 
 /**
   This class implements the sound API for SDL.
 
   @author Stephen Anthony and Bradford W. Mott
-  @version $Id$
+  @version $Id: SoundSDL.hxx,v 1.17 2006-12-08 16:48:56 stephena Exp $
 */
 class SoundSDL : public Sound
 {
@@ -78,17 +79,17 @@ class SoundSDL : public Sound
 
       @param framerate The base framerate depending on NTSC or PAL ROM
     */
-    void setFrameRate(float framerate);
+    void setFrameRate(uInt32 framerate);
 
     /**
       Initializes the sound device.  This must be called before any
       calls are made to derived methods.
     */
-    void open();
+    void initialize();
 
     /**
       Should be called to close the sound device.  Once called the sound
-      device can be started again using the open method.
+      device can be started again using the initialize method.
     */
     void close();
 
@@ -252,7 +253,7 @@ class SoundSDL : public Sound
     Int32 myLastRegisterSetCycle;
 
     // Indicates the base framerate depending on if the ROM is NTSC or PAL
-    float myDisplayFrameRate;
+    uInt32 myDisplayFrameRate;
 
     // Indicates the number of channels (mono or stereo)
     uInt32 myNumChannels;

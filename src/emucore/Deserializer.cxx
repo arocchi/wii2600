@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Deserializer.cxx,v 1.11 2006-12-08 16:49:24 stephena Exp $
 //============================================================================
 
 #include "Deserializer.hxx"
@@ -52,18 +52,6 @@ bool Deserializer::isOpen(void)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-char Deserializer::getByte(void)
-{
-  if(myStream.eof())
-    throw "Deserializer: end of file";
-
-  char buf[1];
-  myStream.read(buf, 1);
-
-  return buf[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int Deserializer::getInt(void)
 {
   if(myStream.eof())
@@ -97,10 +85,10 @@ bool Deserializer::getBool(void)
 {
   bool result = false;
 
-  char b = getByte();
-  if(b == (char)TruePattern)
+  int b = getInt();
+  if(b == (int)TruePattern)
     result = true;
-  else if(b == (char)FalsePattern)
+  else if(b == (int)FalsePattern)
     result = false;
   else
     throw "Deserializer: data corruption";

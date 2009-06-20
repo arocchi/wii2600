@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameList.cxx,v 1.11 2006-12-08 16:49:34 stephena Exp $
 //
 //   Based on code from KStella - Stella frontend
 //   Copyright (C) 2003-2005 Stephen Anthony
@@ -22,6 +22,7 @@
 #include <cctype>
 #include <algorithm>
 
+#include "GuiUtils.hxx"
 #include "GameList.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,12 +38,12 @@ GameList::~GameList()
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void GameList::appendGame(const string& name, const string& path,
-                          const string& md5, bool isDir)
+                          const string& note, bool isDir)
 {
   Entry g;
   g._name  = name;
   g._path  = path;
-  g._md5   = md5;
+  g._note  = note;
   g._isdir = isDir;
 
   myArray.push_back(g);

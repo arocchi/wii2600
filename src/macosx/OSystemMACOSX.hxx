@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemMACOSX.hxx,v 1.6 2006-12-08 16:49:37 stephena Exp $
 //============================================================================
 
 #ifndef OSYSTEM_MACOSX_HXX
@@ -26,7 +26,7 @@
   This class defines UNIX-like OS's (Linux) system specific settings.
 
   @author  Mark Grebe
-  @version $Id$
+  @version $Id: OSystemMACOSX.hxx,v 1.6 2006-12-08 16:49:37 stephena Exp $
 */
 class OSystemMACOSX : public OSystem
 {
@@ -34,7 +34,7 @@ class OSystemMACOSX : public OSystem
     /**
       Create a new UNIX-specific operating system object
     */
-    OSystemMACOSX();
+    OSystemMACOSX(const string& path);
 
     /**
       Destructor
@@ -43,11 +43,18 @@ class OSystemMACOSX : public OSystem
 
   public:
     /**
+      This method runs the main loop.  Since different platforms
+      may use different timing methods and/or algorithms, this method has
+      been abstracted to each platform.
+    */
+    virtual void mainLoop();
+
+    /**
       This method returns number of ticks in microseconds.
 
       @return Current time in microseconds.
     */
-    virtual uInt32 getTicks() const;
+    virtual uInt32 getTicks();
 	
     /**
       This method queries the dimensions of the screen for this hardware.
@@ -58,6 +65,11 @@ class OSystemMACOSX : public OSystem
       Informs the OSystem of a change in EventHandler state.
     */
     virtual void stateChanged(EventHandler::State state);
+
+    /**
+      Informs the OSystem of a change in pause status.
+    */
+    virtual void pauseChanged(bool status);
 };
 
 #endif

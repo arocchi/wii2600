@@ -8,13 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
 //============================================================================
 
 #include <windows.h>
@@ -25,13 +24,11 @@
 
 #define OPTPIXAVERAGE(pix1,pix2) ( ((((pix1 & optgreenmaskN) + (pix2 & optgreenmaskN)) >> 1) & optgreenmaskN) | ((((pix1 & optgreenmask) + (pix2 & optgreenmask)) >> 1) & optgreenmask) )
 
-FrameBufferWinCE::FrameBufferWinCE(OSystem *osystem): FrameBuffer(osystem), 
-	myDstScreen(NULL), SubsystemInited(false), displacement(0), issquare(false),
-	issmartphone(true), islandscape(false), legacygapi(true), devres(SM_LOW), screenlocked(false)
+FrameBufferWinCE::FrameBufferWinCE(OSystem *osystem)
+: FrameBuffer(osystem), myDstScreen(NULL), SubsystemInited(false), displacement(0),
+issmartphone(true), islandscape(false), displaymode(0), legacygapi(true), devres(SM_LOW)
 {
 	gxdp.cxWidth = gxdp.cyHeight = gxdp.cbxPitch = gxdp.cbyPitch = gxdp.cBPP = gxdp.ffFormat = 0;
-	displaymode = myOSystem->settings().getInt("wince_orientation");
-	if (displaymode > 2) displaymode = 0;
 }
 
 FrameBufferWinCE::~FrameBufferWinCE()
@@ -86,27 +83,18 @@ void FrameBufferWinCE::GetDeviceProperties(void)
 	else if (gxdp.cxWidth == 480 && gxdp.cyHeight == 640)
 		devres = VGA;
 	else
-	{
 		devres = QVGA;
-		// as a special case, qvga landscape devices are represented by the combination of:
-		// devres=QVGA && islandscape=true && displaymode=0
-		if (gxdp.cxWidth > gxdp.cyHeight)
-			islandscape = true;
-		// square QVGA (240x240) devices are portrait, landscape (as above) and square
-		else if (gxdp.cxWidth == gxdp.cyHeight)
-			issquare = islandscape = true;
-
-	}
 }
 
-void FrameBufferWinCE::setTIAPalette(const uInt32* palette)
+void FrameBufferWinCE::setPalette(const uInt32* palette)
 {
+	//setup palette
 	GetDeviceProperties();
 	for (uInt16 i=0; i<256; i++)
 	{
 		uInt8 r = (uInt8) ((palette[i] & 0xFF0000) >> 16);
 		uInt8 g = (uInt8) ((palette[i] & 0x00FF00) >> 8);
-		uInt8 b = (uInt8)  (palette[i] & 0x0000FF);
+		uInt8 b = (uInt8) (palette[i] & 0x0000FF);
 		if(gxdp.ffFormat & kfDirect565)
 			pal[i] = (uInt16) ( ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3) );
 		else if(gxdp.ffFormat & kfDirect555)
@@ -118,44 +106,22 @@ void FrameBufferWinCE::setTIAPalette(const uInt32* palette)
 	SubsystemInited = false;
 }
 
-void FrameBufferWinCE::setUIPalette(const uInt32* palette)
+bool FrameBufferWinCE::initSubsystem()
 {
 	GetDeviceProperties();
 	for (int i=0; i<kNumColors - 256; i++)
 	{
-		uInt8 r = (uInt8) ((palette[i] & 0xFF0000) >> 16);
-		uInt8 g = (uInt8) ((palette[i] & 0x00FF00) >> 8);
-		uInt8 b = (uInt8)  (palette[i] & 0x0000FF);
+		uInt8 r = (ourGUIColors[i][0] & 0xFF);
+		uInt8 g = (ourGUIColors[i][1] & 0xFF);
+		uInt8 b = (ourGUIColors[i][2] & 0xFF);
 		if(gxdp.ffFormat & kfDirect565)
 			pal[i+256] = (uInt16) ( ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3) );
 		else if(gxdp.ffFormat & kfDirect555)
 			pal[i+256] = (uInt16) ( ((r & 0xF8) << 7) | ((g & 0xF8) << 3) | ((b & 0xF8) >> 3) );
 		else
-			return;
+			return false;
 		paldouble[i+256] = pal[i+256] | (pal[i+256] << 16);
 	}
-	SubsystemInited = false;
-}
-
-bool FrameBufferWinCE::initSubsystem()
-{
-	static bool firsttime = true;
-
-	GetDeviceProperties();
-
-	// we need to modify our basedim rect in order to center the ingame menu properly
-	// this is, more or less, a hack
-	if (IsSmartphoneLowRes())
-	{
-		myBaseDim.w = 220;
-		myBaseDim.h = 176;
-	}
-	else if (issquare)
-	{
-		myBaseDim.w = 240;
-		myBaseDim.h = 240;
-	}
-
 	// screen extents
 	if(gxdp.ffFormat & kfDirect565)
 	{
@@ -174,17 +140,12 @@ bool FrameBufferWinCE::initSubsystem()
 	scrlinestep = gxdp.cbyPitch;
 
 	setmode(displaymode);
-	if (!firsttime)
-		wipescreen(true);		// hold the 'initializing' screen on startup
-	firsttime = false;
 	SubsystemInited = false;
 	return true;
 }
 
 void FrameBufferWinCE::setmode(uInt8 mode)
 {
-	bool qvga_l = (displaymode == 0) && islandscape;
-	
 	displaymode = mode % 3;
 	switch (displaymode)
 	{
@@ -192,21 +153,23 @@ void FrameBufferWinCE::setmode(uInt8 mode)
 		case 0:
 			pixelstep = gxdp.cbxPitch;
 			linestep = gxdp.cbyPitch;
+			islandscape = false;
 			break;
 
 		// landscape
 		case 1:
 			pixelstep = - gxdp.cbyPitch;
 			linestep = gxdp.cbxPitch;
+			islandscape = true;
 			break;
 
 		// inverted landscape
 		case 2:
 			pixelstep = gxdp.cbyPitch;
 			linestep = - gxdp.cbxPitch;
+			islandscape = true;
 			break;
 	}
-	islandscape = displaymode || qvga_l;
 
 	pixelstepdouble = pixelstep << 1;
 	linestepdouble = linestep << 1;
@@ -220,14 +183,9 @@ void FrameBufferWinCE::setmode(uInt8 mode)
 
 uInt8 FrameBufferWinCE::rotatedisplay(void)
 {
-	if (!(displaymode == 0 && islandscape))
-	{
-		islandscape = false;
-		displaymode = (displaymode + 1) % 3;
-	}
+	displaymode = (displaymode + 1) % 3;
 	setmode(displaymode);
 	wipescreen();
-	myOSystem->settings().setInt("wince_orientation", displaymode);
 	return displaymode;
 }
 
@@ -245,7 +203,7 @@ void FrameBufferWinCE::lateinit(void)
 		else
 			w = (int) ((float) myWidth * 11.0f / 8.0f + 0.5f);
 	else if (devres == QVGA)
-		if (!islandscape && !issquare)
+		if (!islandscape)
 			w = (int) ((float) myWidth * 3.0f / 2.0f + 0.5f);
 		else
 			w = myWidth * 2;
@@ -322,9 +280,6 @@ void FrameBufferWinCE::preFrameUpdate()
 	static HDC hdc;
 	static RawFrameBufferInfo rfbi;
 
-	if (screenlocked)
-		return;
-
 	if (legacygapi)
 		myDstScreen = (uInt8 *) GXBeginDraw();
 	else
@@ -334,14 +289,12 @@ void FrameBufferWinCE::preFrameUpdate()
 		ReleaseDC(NULL, hdc);
 		myDstScreen = (uInt8 *) rfbi.pFramePointer;
 	}
-
-	screenlocked = true;
 }
 
 void FrameBufferWinCE::drawMediaSource()
 {
 	static uInt8 *sc, *sp, *sc_n, *sp_n;
-	static uInt8 *d, *pl, *nl;
+	static uInt8 *d, *pl, *p, *nl;
 	static uInt16 pix1, pix2, pix3, x, y;
 	uInt32 pix1d, pix2d, pix3d;
 
@@ -358,8 +311,9 @@ void FrameBufferWinCE::drawMediaSource()
 
 	if (theRedrawTIAIndicator)
 	{
-		memset(sp, 0, myWidth*myHeight-1);
-		memset(myDstScreen, 0, scrwidth*scrheight*2);
+		p = sp;
+		for (uInt16 y=0; y<myHeight; y++)
+			for (uInt16 x=0; x<myWidth; x += 4, *p = *p + 1, p += 4);
 		theRedrawTIAIndicator = false;
 	}
 	
@@ -505,7 +459,7 @@ void FrameBufferWinCE::drawMediaSource()
 			pl = d;
 		}
 	}
-	else if (devres == QVGA && (!islandscape || issquare))
+	else if (devres == QVGA && !islandscape)
 	{
 		// 3/2
 		for (y=0; y<minydim; y++)
@@ -651,18 +605,15 @@ void FrameBufferWinCE::drawMediaSource()
 
 }
 
-void FrameBufferWinCE::wipescreen(bool atinit)
+void FrameBufferWinCE::wipescreen(void)
 {
-	if (!atinit)
-	{
-		if (!SubsystemInited)
-			lateinit();
+	if (!SubsystemInited)
+		lateinit();
 
-		uInt8 *s = myOSystem->console().mediaSource().currentFrameBuffer();
-		memset(s, 0, myWidth*myHeight-1);
-		s = myOSystem->console().mediaSource().previousFrameBuffer();
-		memset(s, 0, myWidth*myHeight-1);
-	}
+	uInt8 *s = myOSystem->console().mediaSource().currentFrameBuffer();
+	memset(s, 0, myWidth*myHeight-1);
+	s = myOSystem->console().mediaSource().previousFrameBuffer();
+	memset(s, 0, myWidth*myHeight-1);
 
 	preFrameUpdate();
 	memset(myDstScreen, 0, scrwidth*scrheight*2);
@@ -671,119 +622,159 @@ void FrameBufferWinCE::wipescreen(bool atinit)
 
 void FrameBufferWinCE::postFrameUpdate()
 {
-	if (!screenlocked)	return;
-	if (legacygapi)		GXEndDraw();
+	if (legacygapi) GXEndDraw();
 }
 
 void FrameBufferWinCE::drawChar(const GUI::Font* myfont, uInt8 c, uInt32 x, uInt32 y, int color)
 {
-	const FontDesc& desc = myfont->desc();
+  const FontDesc& desc = myfont->desc();
 
-	if (!myDstScreen) return;
+  if (!myDstScreen) return;
 
-	if (c < desc.firstchar || c >= desc.firstchar + desc.size)
+  if(c < desc.firstchar || c >= desc.firstchar + desc.size)
+  {
+    if (c == ' ')
+      return;
+    c = desc.defaultchar;
+  }
+
+  Int32 w = myfont->getCharWidth(c);
+  const Int32 h = myfont->getFontHeight();
+  c -= desc.firstchar;
+  const uInt16* tmp = desc.bits + (desc.offset ? desc.offset[c] : (c * h));
+
+  if (x<0 || y<0 || (x>>1)+w>scrwidth || y+h>scrheight) return;
+
+  uInt8 *d;
+  uInt32 stride;
+  if (devres == SM_LOW)
+  {
+	  d = myDstScreen + y * scrlinestep + ((x+1) >> 1) * scrpixelstep;
+	  stride = (scrwidth - w) * scrpixelstep;
+  }
+  else if (devres == QVGA)
+  {
+	  if (displaymode != 2)
+		d = myDstScreen + (scrheight-x-1) * scrlinestep + (y-1) * scrpixelstep;
+	  else
+		d = myDstScreen + x * scrlinestep + (scrwidth-y-1) * scrpixelstep;
+  }
+  else
+  {
+	  if (displaymode != 2)
+		d = myDstScreen + ((scrheight>>1)-x-1) * (scrlinestep<<1) + (y-1) * (scrpixelstep << 1);
+	  else
+		d = myDstScreen + x * (scrlinestep<<1) + ((scrwidth>>1)-y-1) * (scrpixelstep<<1);
+  }
+
+  uInt16 col = pal[color];
+  uInt32 cold = paldouble[color];
+
+  for(int y2 = 0; y2 < h; y2++)
+  {
+    const uInt16 buffer = *tmp++;
+	if (devres == SM_LOW)
 	{
-		if (c == ' ')
-			return;
-		c = desc.defaultchar;
+		uInt16 mask = 0xC000;
+		for(int x2 = 0; x2 < w; x2++, mask >>= 2)
+		{
+		  if (buffer & mask)
+			  *((uInt16 *)d) = col;
+		  d += scrpixelstep;
+		}
+		d += stride;
 	}
-
-	Int32 w = myfont->getCharWidth(c);
-	const Int32 h = myfont->getFontHeight();
-	c -= desc.firstchar;
-	const uInt16* tmp = desc.bits + (desc.offset ? desc.offset[c] : (c * h));
-
-	if ((Int32)x<0 || (Int32)y<0 || (x>>1)+w>scrwidth || y+h>scrheight) return;
-
-	uInt8 *d;
-	if (devres != VGA)
+	else if (devres == QVGA)
 	{
-		if (!displaymode && islandscape)
-			d = myDstScreen + y * scrlinestep + x * scrpixelstep;
-		else if (displaymode != 2)
-			d = myDstScreen + (scrheight-x) * scrlinestep + y * scrpixelstep;
+		uInt16 mask = 0x8000;
+		uInt8 *tmp = d;
+		for(int x2 = 0; x2 < w; x2++, mask >>= 1)
+		{
+		  if (buffer & mask)
+			  *((uInt16 *)d) = col;
+		  if (displaymode != 2)
+			d -= scrlinestep;
+		  else
+			d += scrlinestep;
+		}
+		if (displaymode != 2)
+			d = tmp + scrpixelstep;
 		else
-			d = myDstScreen + x * scrlinestep + (scrwidth-y) * scrpixelstep;
+			d = tmp - scrpixelstep;
 	}
 	else
 	{
+		uInt16 mask = 0x8000;
+		uInt8 *tmp = d;
+		for(int x2 = 0; x2 < w; x2++, mask >>= 1)
+		{
+		  if (buffer & mask)
+		  {
+			  *((uInt32 *)d) = cold;
+			  *((uInt32 *)(d+scrlinestep)) = cold;
+		  }
+		  if (displaymode != 2)
+			d -= (scrlinestep<<1);
+		  else
+			d += (scrlinestep<<1);
+		}
 		if (displaymode != 2)
-			d = myDstScreen + ((scrheight>>1)-x-1) * (scrlinestep<<1) + y * (scrpixelstep << 1);
+			d = tmp + (scrpixelstep<<1);
 		else
-			d = myDstScreen + x * (scrlinestep<<1) + ((scrwidth>>1)-y) * (scrpixelstep<<1);
+			d = tmp - (scrpixelstep<<1);
 	}
 
-	uInt16 col = pal[color];
-	uInt32 cold = paldouble[color];
+  }
+}
 
-	for (int y2 = 0; y2 < h; y2++)
-	{
-		const uInt16 buffer = *tmp++;
-		if (devres != VGA)
-		{
-			uInt16 mask = 0x8000;
-			uInt8 *tmp = d;
-			for (int x2 = 0; x2 < w; x2++, mask >>= 1)
-			{
-				if (buffer & mask)
-					*((uInt16 *)d) = col;
-				if (!displaymode && islandscape)
-					d += scrpixelstep;
-				else if (displaymode != 2)
-					d -= scrlinestep;
-				else
-					d += scrlinestep;
-			}
-			if (!displaymode && islandscape)
-				d = tmp + scrlinestep;
-			else if (displaymode != 2)
-				d = tmp + scrpixelstep;
-			else
-				d = tmp - scrpixelstep;
-		}
-		else
-		{
-			uInt16 mask = 0x8000;
-			uInt8 *tmp = d;
-			for (int x2 = 0; x2 < w; x2++, mask >>= 1)
-			{
-				if (buffer & mask)
-				{
-					*((uInt32 *)d) = cold;
-					*((uInt32 *)(d+scrlinestep)) = cold;
-				}
-				if (displaymode != 2)
-					d -= (scrlinestep<<1);
-				else
-					d += (scrlinestep<<1);
-			}
-			if (displaymode != 2)
-				d = tmp + (scrpixelstep<<1);
-			else
-				d = tmp - (scrpixelstep<<1);
-		}
-	}
+void FrameBufferWinCE::scanline(uInt32 row, uInt8* data)
+{
+	return;
+}
+
+void FrameBufferWinCE::setAspectRatio()
+{
+	return;
+}
+
+bool FrameBufferWinCE::createScreen()
+{
+	return true;
+}
+
+void FrameBufferWinCE::toggleFilter()
+{
+	return;
+}
+
+uInt32 FrameBufferWinCE::mapRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	return 0xFFFFFFFF;
 }
 
 void FrameBufferWinCE::hLine(uInt32 x, uInt32 y, uInt32 x2, int color)
 {
-	if (devres != VGA)
-		if (!displaymode && islandscape)
-			PlothLine(x, y, x2, color);
-		else if (displaymode != 2)
-			PlotvLine(y, scrheight-x, scrheight-x2, color);
+	if (devres == SM_LOW)
+	{
+		int kx = x >> 1; int ky = y; int kx2 = x2>> 1;
+		if (kx<0) kx=0; if (ky<0) ky=0; if (ky>scrheight-1) return; if (kx2>scrwidth-1) kx2=scrwidth-1;
+		PlothLine(kx, ky, kx2, color);
+	}
+	else if (devres == QVGA)
+		if (displaymode != 2)
+			PlotvLine(y, scrheight-x, scrheight-x2-1, color);
 		else
-			PlotvLine(scrwidth-y, x, x2, color);
+			PlotvLine(scrwidth-y-1, x, x2+1, color);
 	else
 		if (displaymode != 2)
 		{
-			PlotvLine((y<<1), (((scrheight>>1)-x)<<1)-1, (((scrheight>>1)-x2)<<1)-1, color);
-			PlotvLine((y<<1)+1, (((scrheight>>1)-x)<<1)-1, (((scrheight>>1)-x2)<<1)-1, color);
+			PlotvLine((y<<1), ((scrheight>>1)-x)<<1, ((scrheight>>1)-x2-1)<<1, color);
+			PlotvLine((y<<1)+1, ((scrheight>>1)-x)<<1, ((scrheight>>1)-x2-1)<<1, color);
 		}
 		else
 		{
-			PlotvLine(((scrwidth>>1)-y)<<1, x<<1, x2<<1, color);
-			PlotvLine((((scrwidth>>1)-y)<<1)+1, x<<1, x2<<1, color);
+			PlotvLine(((scrwidth>>1)-y-1)<<1, x<<1, (x2+1)<<1, color);
+			PlotvLine((((scrwidth>>1)-y-1)<<1)+1, x<<1, (x2+1)<<1, color);
 		}
 }
 
@@ -793,23 +784,27 @@ void FrameBufferWinCE::PlothLine(uInt32 x, uInt32 y, uInt32 x2, int color)
 	if (x>x2) { x2 ^= x; x ^= x2; x2 ^= x;} //lazy swap
 	uInt8 *d = myDstScreen + y * scrlinestep + x * scrpixelstep;
 	uInt16 col = pal[color];
-	for (;x <= x2; x++, *((uInt16 *)d) = col, d += scrpixelstep);
+	for (;x < x2; x++, *((uInt16 *)d) = col, d += scrpixelstep);
 }
 
 void FrameBufferWinCE::vLine(uInt32 x, uInt32 y, uInt32 y2, int color)
 {
-	if (devres != VGA)
-		if (!displaymode && islandscape)
-			PlotvLine(x, y, y2, color);
-		else if (displaymode != 2)
-			PlothLine(y, scrheight-x, y2, color);
+	if (devres == SM_LOW)
+	{
+		int kx = x >> 1; int ky = y; int ky2 = y2;
+		if (kx<0) kx=0; if (ky<0) ky=0; if (kx>scrwidth-1) return; if (ky>scrheight-1) ky=scrheight-1; if (ky2>scrheight-1) ky2=scrheight-1;
+		PlotvLine(kx, ky, ky2, color);
+	}
+	else if (devres == QVGA)
+		if (displaymode != 2)
+			PlothLine(y, scrheight-x-1, y2, color);
 		else
 			PlothLine(scrwidth-y, x, scrwidth-y2, color);
 	else
 		if (displaymode != 2)
 		{
-			PlothLine(y<<1, (((scrheight>>1)-x)<<1)-2, y2<<1, color);
-			PlothLine(y<<1, (((scrheight>>1)-x)<<1)-1, y2<<1, color);
+			PlothLine(y<<1, ((scrheight>>1)-x-1)<<1, y2<<1, color);
+			PlothLine(y<<1, (((scrheight>>1)-x-1)<<1)+1, y2<<1, color);
 		}
 		else
 		{
@@ -824,34 +819,37 @@ void FrameBufferWinCE::PlotvLine(uInt32 x, uInt32 y, uInt32 y2, int color)
 	if (!myDstScreen) return;
 	uInt8 *d = myDstScreen + y * scrlinestep + x * scrpixelstep;
 	uInt16 col = pal[color];
-	for (;y <= y2; y++, *((uInt16 *)d) = col, d += scrlinestep);
+	for (;y < y2; y++, *((uInt16 *)d) = col, d += scrlinestep);
 }
 
 void FrameBufferWinCE::fillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, int color)
 {
 	if (w==0 || h==0) return;
-	if (devres != VGA)
+	if (devres == SM_LOW)
 	{
-		if (!displaymode && islandscape)
-		{
-			PlotfillRect(x, y, w, h, color);
-			return;
-		}
+		int kx = x >> 1; int ky = y; int kw = (w >> 1); int kh = h;
+		if (ky>scrheight-1) return; if (kx>scrwidth-1) return;
+		if (kx<0) kx=0; if (ky<0) ky=0;if (kw<0) kw=0; if (kh<0) kh=0;
+		if (kx+kw>scrwidth-1) kw=scrwidth-kx-1; if (ky+kh>scrheight-1) kh=scrheight-ky-1;
+		PlotfillRect(kx, ky, kw, kh, color);
+	}
+	else if (devres == QVGA)
+	{
 		if (x>scrheight) return; if (y>scrwidth) return;
 		if (x+w>scrheight) w=scrheight-x; if (y+h>scrwidth) h=scrwidth-y;
 		if (displaymode != 2)
-			PlotfillRect(y, scrheight-x-w+1, h, w, color);
+			PlotfillRect(y, scrheight-x-w, h-1, w-1, color);
 		else
-			PlotfillRect(scrwidth-y-h+1, x, h, w, color);
+			PlotfillRect(scrwidth-y-h, x, h-1, w-1, color);
 	}
 	else
 	{
 		if ((int)x>(scrheight>>1)) return; if ((int)y>(scrwidth>>1)) return;
 		if ((int)(x+w)>(scrheight>>1)) w=(scrheight>>1)-x; if ((int)(y+h)>(scrwidth>>1)) h=(scrwidth>>1)-y;
 		if (displaymode != 2)
-			PlotfillRect(y<<1, (((scrheight>>1)-x-w+1)<<1)-2, h<<1, w<<1, color);
+			PlotfillRect(y<<1, ((scrheight>>1)-x-w)<<1, (h-1)<<1, (w-1)<<1, color);
 		else
-			PlotfillRect(((scrwidth>>1)-y-h+1)<<1, x<<1, h<<1, w<<1, color);
+			PlotfillRect(((scrwidth>>1)-y-h)<<1, x<<1, (h-1)<<1, (w-1)<<1, color);
 	}
 
 }
@@ -861,108 +859,103 @@ void FrameBufferWinCE::PlotfillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, int 
 	if (!myDstScreen) return;
 	uInt8 *d = myDstScreen + y * scrlinestep + x * scrpixelstep;
 	uInt16 col = pal[color];
-	uInt32 stride = (scrwidth - w) * scrpixelstep;
-	for (;h != 0; h--, d += stride)
-		for (int w2=w; w2>0; w2--, *((uInt16 *)d) = col, d += scrpixelstep);
+	uInt32 stride = (scrwidth - w - 1) * scrpixelstep;
+	for (h++; h != 0; h--, d += stride)
+		for (int w2=w; w2>=0; w2--, *((uInt16 *)d) = col, d += scrpixelstep);
 }
 
 void FrameBufferWinCE::drawBitmap(uInt32* bitmap, Int32 x, Int32 y, int color, Int32 h)
 {
-	uInt8 *d;
-	uInt16 col;
-	uInt32 cold;
+  uInt8 *d;
+  uInt16 col;
+  uInt32 cold;
 
-	if (!myDstScreen) return;
+  if (!myDstScreen) return;
+  if (devres == SM_LOW)
+	  return;
+  else if (devres == QVGA)
+	  if (displaymode != 2)
+		d = myDstScreen + (scrheight-x-1) * scrlinestep + y * scrpixelstep;
+	  else
+		d = myDstScreen + x * scrlinestep + (scrwidth-y-1) * scrpixelstep;
+  else
+	  if (displaymode != 2)
+		d = myDstScreen + ((scrheight>>1)-x-1) * (scrlinestep<<1) + y * (scrpixelstep<<1);
+	  else
+		d = myDstScreen + x * (scrlinestep<<1) + ((scrwidth>>1)-y-1) * (scrpixelstep<<1);
 
-	if (devres != VGA)
-		if (!displaymode && islandscape)
-			d = myDstScreen + y * scrlinestep + x * scrpixelstep;
-		else if (displaymode != 2)
-			d = myDstScreen + (scrheight-x) * scrlinestep + y * scrpixelstep;
+  col = pal[color];
+  cold = paldouble[color];
+  for(int i = 0; i < h; i++)
+  {
+    uInt32 mask = 0xF0000000;
+	uInt8 *tmp = d;
+    for(int j = 0; j < 8; j++, mask >>= 4)
+    {
+      if(bitmap[i] & mask)
+      {
+		  if (devres == QVGA)
+			  *((uInt16 *)d) = col;
+		  else
+		  {
+			  *((uInt32 *)d) = cold;
+			  *((uInt32 *)(d+scrlinestep)) = cold;
+		  }
+      }
+	  if (devres == QVGA)
+	  {
+	    if (displaymode != 2)
+		  d -= scrlinestep;
 		else
-			d = myDstScreen + x * scrlinestep + (scrwidth-y) * scrpixelstep;
-	else
-		if (displaymode != 2)
-			d = myDstScreen + ((scrheight>>1)-x-1) * (scrlinestep<<1) + y * (scrpixelstep<<1);
+		  d += scrlinestep;
+	  }
+	  else
+	  {
+	    if (displaymode != 2)
+		  d -= (scrlinestep<<1);
 		else
-			d = myDstScreen + x * (scrlinestep<<1) + ((scrwidth>>1)-y) * (scrpixelstep<<1);
-
-	col = pal[color];
-	cold = paldouble[color];
-	for (int i = 0; i < h; i++)
+		  d += (scrlinestep<<1);
+	  }
+    }
+    if (devres == QVGA)
 	{
-		uInt32 mask = 0xF0000000;
-		uInt8 *tmp = d;
-		
-		for (int j = 0; j < 8; j++, mask >>= 4)
-		{
-			if(bitmap[i] & mask)
-			{
-				if (devres != VGA)
-					*((uInt16 *)d) = col;
-				else
-				{
-					*((uInt32 *)d) = cold;
-					*((uInt32 *)(d+scrlinestep)) = cold;
-				}
-			}
-			if (devres != VGA)
-			{
-				if (!displaymode && islandscape)
-					d += scrpixelstep;
-				else if (displaymode != 2)
-					d -= scrlinestep;
-				else
-					d += scrlinestep;
-			}
-			else
-			{
-				if (displaymode != 2)
-					d -= (scrlinestep<<1);
-				else
-					d += (scrlinestep<<1);
-			}
-		}
-
-		if (devres != VGA)
-		{
-			if (!displaymode && islandscape)
-				d = tmp + scrlinestep;
-			else if (displaymode != 2)
-				d = tmp + scrpixelstep;
-			else
-				d = tmp - scrpixelstep;
-		}
-		else
-		{
-			if (displaymode != 2)
-				d = tmp + (scrpixelstep<<1);
-			else
-				d = tmp - (scrpixelstep<<1);
-		}
+	  if (displaymode != 2)
+		d = tmp + scrpixelstep;
+	  else
+		d = tmp - scrpixelstep;
 	}
+	else
+	{
+	  if (displaymode != 2)
+		d = tmp + (scrpixelstep<<1);
+	  else
+		d = tmp - (scrpixelstep<<1);
+	}
+  }
 }
 
 void FrameBufferWinCE::translateCoords(Int32* x, Int32* y)
 {
-	if ((displaymode == 1) || (displaymode==0 && !islandscape && myOSystem->eventHandler().state() != EventHandler::S_EMULATE))
+	if (!issmartphone)
 	{
-		Int32 x2 = *x;
-		*x = scrheight - *y;
-		*y = x2;
+		if ((displaymode == 1) || (displaymode==0 && myOSystem->eventHandler().state() != 1))
+		{
+			Int32 x2 = *x;
+			*x = scrheight - *y;
+			*y = x2;
+		}
+		else if (displaymode == 2)
+		{
+			Int32 x2 = *x;
+			*x = *y;
+			*y = scrwidth - x2;
+		}
+		if (devres == VGA)
+		{
+			*x >>= 1;
+			*y >>= 1;
+		}
 	}
-	else if (displaymode == 2)
-	{
-		Int32 x2 = *x;
-		*x = *y;
-		*y = scrwidth - x2;
-	}
-	if (devres == VGA)
-	{
-		*x >>= 1;
-		*y >>= 1;
-	}
-
 	return;
 }
 
@@ -970,20 +963,21 @@ void FrameBufferWinCE::addDirtyRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h)
 {
 	static bool initflag = false;
 
-	if (myOSystem->eventHandler().state() == EventHandler::S_MENU)
+	if (myOSystem->eventHandler().state() == 3)
 		initflag = true;
 
-	if (myOSystem->eventHandler().state() == EventHandler::S_EMULATE && initflag)
-		theRedrawTIAIndicator = true;		// TODO: optimize here
+	if (myOSystem->eventHandler().state()==1 && initflag)
+	{
+		// TODO: optimize here
+		theRedrawTIAIndicator = true;
+	}
 
 	return;
 }
 
-string FrameBufferWinCE::about()
+uInt32 FrameBufferWinCE::lineDim()
 {
-	string id = "Video rendering: ";
-	id += (issmartphone ? "SM " : "PPC ");
-	id += (legacygapi ? "GAPI " : "Direct ");
-	id += (devres == SM_LOW ? "176x220\n" : (devres == QVGA ? "240x320\n" : "480x640\n"));
-	return id;
+	return 1;
 }
+
+

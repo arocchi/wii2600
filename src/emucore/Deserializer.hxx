@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Deserializer.hxx,v 1.10 2006-12-08 16:49:24 stephena Exp $
 //============================================================================
 
 #ifndef DESERIALIZER_HXX
@@ -27,11 +27,11 @@
   deserialized from an input binary file in a system-independent
   way.
 
-  All bytes and ints should be cast to their appropriate data type upon
-  method return.
+  All ints should be cast to their appropriate data type upon method
+  return.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Deserializer.hxx,v 1.10 2006-12-08 16:49:24 stephena Exp $
 */
 class Deserializer
 {
@@ -70,14 +70,7 @@ class Deserializer
     bool isOpen(void);
 
     /**
-      Reads a byte value (8-bit) from the current input stream.
-
-      @result The char value which has been read from the stream.
-    */
-    char getByte(void);
-
-    /**
-      Reads an int value (32-bit) from the current input stream.
+      Reads an int value from the current input stream.
 
       @result The int value which has been read from the stream.
     */
@@ -102,8 +95,8 @@ class Deserializer
     fstream myStream;
 
     enum {
-      TruePattern  = 0xfe,
-      FalsePattern = 0x01
+      TruePattern  = 0xfab1fab2,
+      FalsePattern = 0xbad1bad2
     };
 };
 

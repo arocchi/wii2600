@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsGP2X.cxx,v 1.19 2006-12-11 09:58:50 azaballa Exp $
 // Modified on 2006/02/05 by Alex Zaballa for use on GP2X
 //============================================================================
 
@@ -31,7 +31,7 @@ SettingsGP2X::SettingsGP2X(OSystem* osystem)
   setInternal("volume", "33");
   setInternal("sound", "true");
   setInternal("zoom", "1");
-  setInternal("fragsize", "256");
+  setInternal("fragsize", "512");
   setInternal("freq", "15700");
   setInternal("tiafreq", "15700");
   setInternal("clipvol", "false");
@@ -42,10 +42,7 @@ SettingsGP2X::SettingsGP2X(OSystem* osystem)
   setInternal("p1speed", "15");
   setInternal("p2speed", "15");
   setInternal("p3speed", "15");
-  setInternal("launchersize", "1");
-  setInternal("uipalette", "2");
-  setInternal("tv_scale_width", "1.125");
-  setInternal("tv_scale_height", "1.2");
+  setInternal("tiadefaults", "true");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

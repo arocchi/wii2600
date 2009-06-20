@@ -8,20 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CheatManager.cxx,v 1.11 2006-12-08 16:48:55 stephena Exp $
 //============================================================================
 
 #include <sstream>
 
 #include "OSystem.hxx"
-#include "Console.hxx"
 #include "Cheat.hxx"
-#include "Settings.hxx"
 #include "CheetahCheat.hxx"
 #include "BankRomCheat.hxx"
 #include "RamCheat.hxx"
@@ -232,7 +230,7 @@ void CheatManager::enable(const string& code, bool enable)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CheatManager::loadCheatDatabase()
 {
-  const string& cheatfile = myOSystem->cheatFile();
+  string cheatfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR + "stella.cht";
   ifstream in(cheatfile.c_str(), ios::in);
   if(!in)
     return;
@@ -273,7 +271,7 @@ void CheatManager::saveCheatDatabase()
   if(!myListIsDirty)
     return;
 
-  const string& cheatfile = myOSystem->cheatFile();
+  string cheatfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR + "stella.cht";
   ofstream out(cheatfile.c_str(), ios::out);
   if(!out)
     return;
@@ -341,7 +339,6 @@ void CheatManager::saveCheats(const string& md5sum)
 
   // Update the dirty flag
   myListIsDirty = myListIsDirty || changed;
-  clear();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

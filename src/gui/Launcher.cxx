@@ -8,39 +8,25 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Launcher.cxx,v 1.8 2006-12-08 16:49:35 stephena Exp $
 //============================================================================
 
-#include "LauncherDialog.hxx"
 #include "Version.hxx"
 #include "OSystem.hxx"
-#include "Settings.hxx"
 #include "FrameBuffer.hxx"
+#include "LauncherDialog.hxx"
 #include "bspf.hxx"
-
 #include "Launcher.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Launcher::Launcher(OSystem* osystem)
-  : DialogContainer(osystem)
+    : DialogContainer(osystem)
 {
-  myOSystem->settings().getSize("launcherres", (int&)myWidth, (int&)myHeight);
-
-  // The launcher dialog is resizable, within certain bounds
-  // We check those bounds now
-  myWidth  = BSPF_max(myWidth, osystem->desktopWidth() >= 640 ? 640u : 320u);
-  myHeight = BSPF_max(myHeight, osystem->desktopHeight() >= 480 ? 480u : 240u);
-  myWidth  = BSPF_min(myWidth, osystem->desktopWidth());
-  myHeight = BSPF_min(myHeight, osystem->desktopHeight());
-
-  myOSystem->settings().setSize("launcherres", myWidth, myHeight);
-
-  myBaseDialog = new LauncherDialog(myOSystem, this, 0, 0, myWidth, myHeight);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,14 +35,18 @@ Launcher::~Launcher()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Launcher::initializeVideo()
+void Launcher::initialize()
 {
-  string title = string("Stella ") + STELLA_VERSION;
-  return myOSystem->frameBuffer().initialize(title, myWidth, myHeight);
+  // We only create one instance of this dialog, since each time we do so,
+  // the ROM listing is read from disk.  This can be very expensive.
+  if(myBaseDialog == NULL)
+    myBaseDialog = new LauncherDialog(myOSystem, this,
+                                      0, 0, kLauncherWidth, kLauncherHeight);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string Launcher::selectedRomMD5()
+void Launcher::initializeVideo()
 {
-  return ((LauncherDialog*)myBaseDialog)->selectedRomMD5();
+  string title = string("Stella ") + STELLA_VERSION;
+  myOSystem->frameBuffer().initialize(title, kLauncherWidth, kLauncherHeight, false);
 }

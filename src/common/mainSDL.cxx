@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: mainSDL.cxx,v 1.70 2006-12-15 16:42:53 stephena Exp $
 //============================================================================
 
 #include <SDL.h>
@@ -29,7 +29,6 @@
 #include "Settings.hxx"
 #include "FSNode.hxx"
 #include "OSystem.hxx"
-#include "System.hxx"
 
 #if defined(UNIX)
   #include "SettingsUNIX.hxx"
@@ -46,6 +45,12 @@
 #elif defined(GP2X)
   #include "SettingsGP2X.hxx"
   #include "OSystemGP2X.hxx"
+#elif defined(PSP)
+  #include "SettingsPSP.hxx"
+  #include "OSystemPSP.hxx"
+  extern "C" {
+    int SDL_main(int argc, char* argv[]);
+  }
 #else
   #error Unsupported platform!
 #endif
@@ -62,38 +67,49 @@
 OSystem* theOSystem = (OSystem*) NULL;
 
 // Does general Cleanup in case any operation failed (or at end of program)
-int Cleanup()
+void Cleanup()
 {
   if(theOSystem)
     delete theOSystem;
 
   if(SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
     SDL_Quit();
-
-  return 0;
 }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #if defined(MAC_OSX)
 int stellaMain(int argc, char* argv[])
+#elif defined(PSP)
+int SDL_main(int argc, char* argv[])
 #else
 int main(int argc, char* argv[])
 #endif
 {
+  // Get the base directory for storing all Stella settings/statefiles/etc
+  // This can't be stored in the actual settings file for obvious reasons,
+  // so we get it from an environment var (if it exists)
+  const char* bd_ptr = getenv("STELLA_BASEDIR");
+  const string& basedir = bd_ptr ? string(bd_ptr) : "";
+
   // Create the parent OSystem object and settings
 #if defined(UNIX)
-  theOSystem = new OSystemUNIX();
+  theOSystem = new OSystemUNIX(basedir);
   SettingsUNIX settings(theOSystem);
 #elif defined(WIN32)
-  theOSystem = new OSystemWin32();
+  theOSystem = new OSystemWin32(basedir);
   SettingsWin32 settings(theOSystem);
 #elif defined(MAC_OSX)
-  theOSystem = new OSystemMACOSX();
+  theOSystem = new OSystemMACOSX(basedir);
   SettingsMACOSX settings(theOSystem);
 #elif defined(GP2X)
-  theOSystem = new OSystemGP2X();
+  theOSystem = new OSystemGP2X(basedir);
   SettingsGP2X settings(theOSystem);
+#elif defined(PSP)
+  fprintf(stderr,"---------------- Stderr Begins ----------------\n");
+  fprintf(stdout,"---------------- Stdout Begins ----------------\n");
+  theOSystem = new OSystemPSP(basedir);
+  SettingsPSP settings(theOSystem);
 #else
   #error Unsupported platform!
 #endif
@@ -101,8 +117,11 @@ int main(int argc, char* argv[])
   theOSystem->settings().loadConfig();
 
   // Take care of commandline arguments
-  string romfile = theOSystem->settings().loadCommandLine(argc, argv);
-  FilesystemNode romnode(romfile);
+  if(!theOSystem->settings().loadCommandLine(argc, argv))
+  {
+    Cleanup();
+    return 0;
+  }
 
   // Finally, make sure the settings are valid
   // We do it once here, so the rest of the program can assume valid settings
@@ -110,82 +129,49 @@ int main(int argc, char* argv[])
 
   // Create the full OSystem after the settings, since settings are
   // probably needed for defaults
-  if(!theOSystem->create())
-  {
-    cout << "ERROR: Couldn't create OSystem" << endl;
-    return Cleanup();
-  }
+  theOSystem->create();
 
-  // Check to see if the user requested info about a specific ROM,
-  // or the list of internal ROMs
-  // If so, show the information and immediately exit
+  // Check to see if the 'listroms' argument was given
+  // If so, list the roms and immediately exit
   if(theOSystem->settings().getBool("listrominfo"))
   {
     theOSystem->propSet().print();
-    return Cleanup();
-  }
-  else if(theOSystem->settings().getBool("rominfo"))
-  {
-    if(argc > 1 && romnode.exists())
-      cout << theOSystem->getROMInfo(romfile);
-    else
-      cout << "ERROR: ROM doesn't exist" << endl;
-
-    return Cleanup();
-  }
-  else if(theOSystem->settings().getBool("help"))
-  {
-    theOSystem->settings().usage();
-    return Cleanup();
+    Cleanup();
+    return 0;
   }
 
   // Request that the SDL window be centered, if possible
+  // At some point, this should be properly integrated into the UI
   if(theOSystem->settings().getBool("center"))
-    putenv((char*)"SDL_VIDEO_CENTERED=1");
-
-#ifdef BSPF_UNIX
-  // Nvidia cards under UNIX don't currently support SDL_GL_SWAP_CONTROL
-  // So we need to do it with an Nvidia-specific environment variable
-  // This also means the setting can only be changed by restarting Stella
-  // This functionality should really be integrated into SDL directly
-  if(theOSystem->settings().getBool("gl_vsync"))
-    putenv((char*)"__GL_SYNC_TO_VBLANK=1");
-#endif
+    putenv("SDL_VIDEO_CENTERED=1");
 
   //// Main loop ////
   // First we check if a ROM is specified on the commandline.  If so, and if
   //   the ROM actually exists, use it to create a new console.
   // If not, use the built-in ROM launcher.  In this case, we enter 'launcher'
   //   mode and let the main event loop take care of opening a new console/ROM.
-  if(argc == 1 || romfile == "" || !romnode.exists() || romnode.isDirectory())
-  {
-    if(theOSystem->settings().getBool("uselauncher"))
-    {
-      if(!theOSystem->createLauncher())
-        return Cleanup();
-    }
-    else
-    {
-      theOSystem->settings().usage();
-      return Cleanup();
-    }
-  }
+  string romfile = argv[argc - 1];
+  if(argc == 1 || !FilesystemNode::fileExists(romfile))
+    theOSystem->createLauncher();
   else if(theOSystem->createConsole(romfile))
   {
-    if(theOSystem->settings().getBool("takesnapshot"))
-    {
-      for(int i = 0; i < 30; ++i)  theOSystem->frameBuffer().update();
-      theOSystem->eventHandler().takeSnapshot();
-      return Cleanup();
-    }
+    if(theOSystem->settings().getBool("holdreset"))
+      theOSystem->eventHandler().handleEvent(Event::ConsoleReset, 1);
+
+    if(theOSystem->settings().getBool("holdselect"))
+      theOSystem->eventHandler().handleEvent(Event::ConsoleSelect, 1);
+
+    if(theOSystem->settings().getBool("holdbutton0"))
+      theOSystem->eventHandler().handleEvent(Event::JoystickZeroFire, 1);
 
 #ifdef DEBUGGER_SUPPORT
+    Debugger& dbg = theOSystem->debugger();
+
     // Set up any breakpoint that was on the command line
     // (and remove the key from the settings, so they won't get set again)
     const string& initBreak = theOSystem->settings().getString("break");
     if(initBreak != "")
     {
-      Debugger& dbg = theOSystem->debugger();
       int bp = dbg.stringToValue(initBreak);
       dbg.setBreakPoint(bp, true);
       theOSystem->settings().setString("break", "");
@@ -196,7 +182,10 @@ int main(int argc, char* argv[])
 #endif
   }
   else
-    return Cleanup();
+  {
+    Cleanup();
+    return 0;
+  }
 
   // Swallow any spurious events in the queue
   // These are normally caused by joystick/mouse jitter
@@ -207,5 +196,6 @@ int main(int argc, char* argv[])
   theOSystem->mainLoop();
 
   // Cleanup time ...
-  return Cleanup();
+  Cleanup();
+  return 0;
 }

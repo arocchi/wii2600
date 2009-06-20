@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: bspf.hxx,v 1.15 2006-12-15 16:43:11 stephena Exp $
 //============================================================================
 
 #ifndef BSPF_HXX
@@ -24,7 +24,7 @@
   that need to be defined for different operating systems.
 
   @author Bradford W. Mott
-  @version $Id$
+  @version $Id: bspf.hxx,v 1.15 2006-12-15 16:43:11 stephena Exp $
 */
 
 // Types for 8-bit signed and unsigned integers
@@ -52,8 +52,10 @@ typedef unsigned int uInt32;
   using namespace std;
 #endif
 
-#include <algorithm>
-
+#ifdef PSP
+  #include "pspstdint.h"
+#endif
+	
 #ifdef HAVE_INTTYPES
   #include <inttypes.h>
 #endif
@@ -65,39 +67,26 @@ typedef unsigned int uInt32;
   #define BSPF_PATH_SEPARATOR  "\\"
 #elif defined BSPF_MAC_OSX
   #define BSPF_PATH_SEPARATOR  "/"
+#elif defined BSPF_PSP
+    #define BSPF_PATH_SEPARATOR  "/"
 #elif defined BSPF_GP2X
     #define BSPF_PATH_SEPARATOR  "/"
 #endif
 
 // I wish Windows had a complete POSIX layer
-#if defined BSPF_WIN32 && !defined __GNUG__
+#ifdef BSPF_WIN32
   #define BSPF_strcasecmp stricmp
   #define BSPF_strncasecmp strnicmp
   #define BSPF_isblank(c) ((c == ' ') || (c == '\t'))
   #define BSPF_snprintf _snprintf
   #define BSPF_vsnprintf _vsnprintf
 #else
-  #include <strings.h>
   #define BSPF_strcasecmp strcasecmp
   #define BSPF_strncasecmp strncasecmp
   #define BSPF_isblank(c) isblank(c)
   #define BSPF_snprintf snprintf
   #define BSPF_vsnprintf vsnprintf
 #endif
-
-// Some convenience functions
-template<typename T> inline void BSPF_swap(T &a, T &b) { T tmp = a; a = b; b = tmp; }
-template<typename T> inline T BSPF_abs (T x) { return (x>=0) ? x : -x; }
-template<typename T> inline T BSPF_min (T a, T b) { return (a<b) ? a : b; }
-template<typename T> inline T BSPF_max (T a, T b) { return (a>b) ? a : b; }
-inline string BSPF_tolower(const string& s)
-{
-  string t = s;
-  transform(t.begin(), t.end(), t.begin(), (int(*)(int)) tolower);
-  return t;
-}
-
-static const string EmptyString("");
 
 #ifdef _WIN32_WCE
   #include "missing.h"

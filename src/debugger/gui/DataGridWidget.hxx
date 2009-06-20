@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DataGridWidget.hxx,v 1.3 2006-12-08 16:49:11 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -31,7 +31,6 @@
 #include "Array.hxx"
 #include "Rect.hxx"
 #include "DataGridOpsWidget.hxx"
-#include "ScrollBarWidget.hxx"
 
 // Some special commands
 enum {
@@ -47,24 +46,15 @@ class DataGridWidget : public EditableWidget
   public:
     DataGridWidget(GuiObject* boss, const GUI::Font& font,
                    int x, int y, int cols, int rows,
-                   int colchars, int bits, BaseFormat format = kBASE_DEFAULT,
-                   bool useScrollbar = false);
+                   int colchars, int bits, BaseFormat format = kBASE_DEFAULT);
     virtual ~DataGridWidget();
 
     void setList(const IntArray& alist, const IntArray& vlist,
                  const BoolArray& changed);
-    /** Convenience method for when the datagrid contains only one value */
-    void setList(int a, int v, bool changed);
+    void setList(const int a, const int v, const bool changed);
+    void setHiliteList(const IntArray& hilitelist);
 
-    void setHiliteList(const BoolArray& hilitelist);
-    void setNumRows(int rows);
-
-    /** Set value at current selection point */
     void setSelectedValue(int value);
-    /** Set value at given position */
-    void setValue(int position, int value);
-    /** Set value at given position, manually specifying if the value changed */
-    void setValue(int position, int value, bool changed);
 
     int getSelectedAddr() const   { return _addrList[_selectedItem]; }
     int getSelectedValue() const  { return _valueList[_selectedItem]; }
@@ -73,15 +63,11 @@ class DataGridWidget : public EditableWidget
 
     virtual void handleMouseDown(int x, int y, int button, int clickCount);
     virtual void handleMouseUp(int x, int y, int button, int clickCount);
-    virtual void handleMouseWheel(int x, int y, int direction);
     virtual bool handleKeyDown(int ascii, int keycode, int modifiers);
     virtual bool handleKeyUp(int ascii, int keycode, int modifiers);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
     virtual bool wantsFocus() { return true; }
-
-    // Account for the extra width of embedded scrollbar
-    virtual int getWidth() const { return _w + (_scrollBar ? kScrollBarWidth : 0); }
 
     void startEditMode();
     void endEditMode();
@@ -130,7 +116,6 @@ class DataGridWidget : public EditableWidget
     string  _backupString;
 
     DataGridOpsWidget* _opsWidget;
-    ScrollBarWidget* _scrollBar;
 
   private:
     /** Common operations on the currently selected cell */

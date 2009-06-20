@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ScrollBarWidget.hxx,v 1.7 2006-12-08 16:49:36 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -27,13 +27,18 @@
 #include "Command.hxx"
 #include "bspf.hxx"
 
-enum {
-  kScrollBarWidth = 12
-};
 
 class ScrollBarWidget : public Widget, public CommandSender
 {
   protected:
+    typedef enum {
+      kNoPart,
+      kUpArrowPart,
+      kDownArrowPart,
+      kSliderPart,
+      kPageUpPart,
+      kPageDownPart
+    } Part;
 
   public:
     ScrollBarWidget(GuiObject* boss, const GUI::Font& font,
@@ -51,35 +56,21 @@ class ScrollBarWidget : public Widget, public CommandSender
     // should these accessors force a redraw?
     void recalc();
 
-    static void setWheelLines(int lines) { _WHEEL_LINES = lines; }
-
-  private:
-    void drawWidget(bool hilite);
-    void checkBounds(int old_pos);
-
   public:
     int _numEntries;
     int _entriesPerPage;
     int _currentPos;
-    int _wheel_lines;
 
-  private:
-    typedef enum {
-      kNoPart,
-      kUpArrowPart,
-      kDownArrowPart,
-      kSliderPart,
-      kPageUpPart,
-      kPageDownPart
-    } Part;
+  protected:
+    void drawWidget(bool hilite);
+    void checkBounds(int old_pos);
 
-    Part _part;
-    Part _draggingPart;
+  protected:
+    Part  _part;
     int _sliderHeight;
     int _sliderPos;
+    Part  _draggingPart;
     int _sliderDeltaMouseDownPos;
-
-    static int _WHEEL_LINES;
 };
 
 #endif

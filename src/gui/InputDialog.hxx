@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputDialog.hxx,v 1.12 2006-12-09 00:25:20 stephena Exp $
 //============================================================================
 
 #ifndef INPUT_DIALOG_HXX
@@ -24,7 +24,6 @@ class GuiObject;
 class TabWidget;
 class EventMappingWidget;
 class CheckBoxWidget;
-class EditTextWidget;
 class PopUpWidget;
 class SliderWidget;
 class StaticTextWidget;
@@ -36,7 +35,7 @@ class InputDialog : public Dialog
 {
   public:
     InputDialog(OSystem* osystem, DialogContainer* parent,
-                const GUI::Font& font);
+                const GUI::Font& font, int x, int y, int w, int h);
     ~InputDialog();
 
   protected:
@@ -54,11 +53,12 @@ class InputDialog : public Dialog
 
   private:
     enum {
-      kLeftChanged     = 'LCch',
-      kRightChanged    = 'RCch',
-      kDeadzoneChanged = 'DZch',
-      kPaddleChanged   = 'PDch',
-      kPSpeedChanged   = 'PSch'
+      kPaddleChanged       = 'PDch',
+      kPaddleThreshChanged = 'PDth',
+      kP0SpeedID = 100,
+      kP1SpeedID = 101,
+      kP2SpeedID = 102,
+      kP3SpeedID = 103
     };
 
     TabWidget* myTab;
@@ -69,13 +69,12 @@ class InputDialog : public Dialog
     PopUpWidget* myLeftPort;
     PopUpWidget* myRightPort;
 
-    SliderWidget*     myDeadzone;
-    StaticTextWidget* myDeadzoneLabel;
     SliderWidget*     myPaddleMode;
     StaticTextWidget* myPaddleModeLabel;
-    SliderWidget*     myPaddleSpeed;
-    StaticTextWidget* myPaddleLabel;
-    EditTextWidget*   myAVoxPort;
+    SliderWidget*     myPaddleThreshold;
+    StaticTextWidget* myPaddleThresholdLabel;
+    SliderWidget*     myPaddleSpeed[4];
+    StaticTextWidget* myPaddleLabel[4];
 };
 
 #endif

@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2006 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: NullDev.hxx,v 1.4 2006-12-08 16:49:30 stephena Exp $
 //============================================================================
 
 #ifndef NULLDEVICE_HXX
@@ -32,7 +32,7 @@ class Deserializer;
   holes in the address space (i.e. no real device attached). 
  
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: NullDev.hxx,v 1.4 2006-12-08 16:49:30 stephena Exp $
 */
 class NullDevice : public Device
 {
@@ -49,6 +49,13 @@ class NullDevice : public Device
 
   public:
     /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const;
+
+    /**
       Reset device to its power-on state
     */
     virtual void reset();
@@ -62,27 +69,20 @@ class NullDevice : public Device
     virtual void install(System& system);
 
     /**
-      Save the current state of this device to the given Serializer.
+      Saves the current state of this device to the given Serializer.
 
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
     */
-    bool save(Serializer& out) const;
+    virtual bool save(Serializer& out);
 
     /**
-      Load the current state of this device from the given Deserializer.
+      Loads the current state of this device from the given Deserializer.
 
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
     */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "NullDevice"; }
+    virtual bool load(Deserializer& in);
 
   public:
     /**
