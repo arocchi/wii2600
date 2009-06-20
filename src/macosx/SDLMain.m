@@ -4,7 +4,7 @@
 
     Feel free to customize this file to suit your needs
 */
-/* $Id: SDLMain.m,v 1.6 2008-12-21 00:12:15 stephena Exp $ */
+/* $Id: SDLMain.m,v 1.1.1.1 2004-06-16 02:30:30 markgrebe Exp $ */
 
 #import "SDL.h"
 #import "SDLMain.h"
@@ -13,26 +13,13 @@
 #import <unistd.h>
 
 extern int stellaMain(int argc, char* argv[]);
-void macOpenConsole(char *romname);
 
 static int    gArgc;
 static char  **gArgv;
-BOOL   gFinderLaunch;
+static BOOL   gFinderLaunch;
 static BOOL   started=NO;
 static char   startupFile[FILENAME_MAX];
 int fileToLoad = FALSE;
-char parentdir[MAXPATHLEN];
-
-unsigned short macOSXDisplayWidth(void)
-{
-	return(CGDisplayPixelsWide(kCGDirectMainDisplay));
-}
-
-unsigned short macOSXDisplayHeight(void)
-{
-	return(CGDisplayPixelsHigh(kCGDirectMainDisplay));
-}
-
 
 /* A helper category for NSString */
 @interface NSString (ReplaceSubString)
@@ -61,6 +48,30 @@ static SDLMain *sharedInstance = nil;
 
 + (SDLMain *)sharedInstance {
     return sharedInstance;
+}
+
+/* Set the working directory to the .app's parent directory */
+- (void) setupWorkingDirectory:(BOOL)shouldChdir
+{
+    char parentdir[MAXPATHLEN];
+    char *c;
+    
+    strncpy ( parentdir, gArgv[0], sizeof(parentdir) );
+    c = (char*) parentdir;
+
+    while (*c != '\0')     /* go to end */
+        c++;
+    
+    while (*c != '/')      /* back up to parent */
+        c--;
+    
+    *c++ = '\0';             /* cut off last part (binary name) */
+  
+    if (shouldChdir)
+    {
+      assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
+      assert ( chdir ("../../../") == 0 ); /* chdir to the .app's parent */
+    }
 }
 
 /* Fix menu to contain the real app name instead of "SDL App" */
@@ -97,20 +108,19 @@ char fileName[FILENAME_MAX];
     
 	started = YES;
     
+    /* Set the working directory to the .app's parent directory */
+    [self setupWorkingDirectory:gFinderLaunch];
+
     /* Set the main menu to contain the real app name instead of "SDL App" */
     [self fixMenu:[NSApp mainMenu] withAppName:[[NSProcessInfo processInfo] processName]];
 
     /* Hand off to main application code */
 	args[0] = appName;
 	if (fileToLoad)
-		{
 	    args[1] = startupFile;
-		status = stellaMain(2,args);
-		}
 	else
-		{
-		status = stellaMain(1,args);
-		}
+		args[1] = NULL;
+    status = stellaMain(2,args);
 
     /* We're done, thank you for playing */
     exit(status);
@@ -121,6 +131,7 @@ char fileName[FILENAME_MAX];
 *-----------------------------------------------------------------------------*/
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
+	SDL_Event event;
 	char *cFilename;
 
     if (started) {
@@ -128,7 +139,11 @@ char fileName[FILENAME_MAX];
 		if (cFilename)
 		  {
 		  [filename getCString:cFilename];
-		  macOpenConsole(cFilename);
+		  event.type = SDL_USEREVENT;
+		  event.user.code = 1;
+		  event.user.data1 = cFilename;
+		  event.user.data2 = 0;
+		  SDL_PushEvent(&event);
 		  }
 	  }
     else {
@@ -187,23 +202,6 @@ char fileName[FILENAME_MAX];
 #  undef main
 #endif
 
-void setupParentDirectory(void)
-{
-    char *c;
-    
-    strncpy ( parentdir, gArgv[0], sizeof(parentdir) );
-    c = (char*) parentdir;
-
-    while (*c != '\0')     /* go to end */
-        c++;
-    
-    while (*c != '/')      /* back up to parent */
-        c--;
-    
-    *c++ = '\0';             /* cut off last part (binary name) */
-
-}
-
 /* Main entry point to executable - should *not* be SDL_main! */
 int main (int argc, char **argv)
 {
@@ -226,11 +224,9 @@ int main (int argc, char **argv)
     gArgv[i] = NULL;
 
     myPrefs = [Preferences sharedInstance];
-
-    setupParentDirectory();
-
+	
     [SDLApplication poseAsClass:[NSApplication class]];
-    NSApplicationMain (argc, (const char **)argv);
+    NSApplicationMain (argc, argv);
     return 0;
 }
 

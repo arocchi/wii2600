@@ -8,67 +8,42 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6502.cxx,v 1.2 2001-12-29 17:55:59 bwmott Exp $
 //============================================================================
-
-//#define DEBUG_OUTPUT
-#define debugStream cout
-
-#include "Serializer.hxx"
-#include "Deserializer.hxx"
-
-#ifdef DEBUGGER_SUPPORT
-  #include "Debugger.hxx"
-  #include "Expression.hxx"
-#endif
 
 #include "M6502.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::M6502(uInt32 systemCyclesPerProcessorCycle)
-  : myExecutionStatus(0),
-    mySystem(0),
-    mySystemCyclesPerProcessorCycle(systemCyclesPerProcessorCycle),
-    myLastAccessWasRead(true),
-    myTotalInstructionCount(0),
-    myNumberOfDistinctAccesses(0),
-    myLastAddress(0)
+    : myExecutionStatus(0),
+      mySystem(0),
+      mySystemCyclesPerProcessorCycle(systemCyclesPerProcessorCycle)
 {
-#ifdef DEBUGGER_SUPPORT
-  myDebugger    = NULL;
-  myBreakPoints = NULL;
-  myReadTraps   = NULL;
-  myWriteTraps  = NULL;
+  uInt16 t;
 
-  myJustHitTrapFlag = false;
-#endif
+  // Compute the BCD lookup table
+  for(t = 0; t < 256; ++t)
+  {
+    ourBCDTable[0][t] = ((t >> 4) * 10) + (t & 0x0f);
+    ourBCDTable[1][t] = (((t % 100) / 10) << 4) | (t % 10);
+  }
 
   // Compute the System Cycle table
-  for(uInt32 t = 0; t < 256; ++t)
+  for(t = 0; t < 256; ++t)
   {
     myInstructionSystemCycleTable[t] = ourInstructionProcessorCycleTable[t] *
         mySystemCyclesPerProcessorCycle;
   }
-
-#ifdef DEBUG_OUTPUT
-debugStream << "( Fm  Ln Cyc Clk) ( P0  P1  M0  M1  BL)  "
-            << "flags   A  X  Y SP  Code           Disasm" << endl
-            << endl;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::~M6502()
 {
-#ifdef DEBUGGER_SUPPORT
-  myBreakConds.clear();
-  myBreakCondNames.clear();
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -89,13 +64,8 @@ void M6502::reset()
   SP = 0xff;
   PS(0x20);
 
-  // Reset access flag
-  myLastAccessWasRead = true;
-
   // Load PC from the reset vector
   PC = (uInt16)mySystem->peek(0xfffc) | ((uInt16)mySystem->peek(0xfffd) << 8);
-
-  myTotalInstructionCount = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -114,6 +84,12 @@ void M6502::nmi()
 void M6502::stop()
 {
   myExecutionStatus |= StopExecutionBit;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+M6502::AddressingMode M6502::addressingMode(uInt8 opcode) const
+{
+  return ourAddressingModeTable[opcode];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -144,285 +120,11 @@ void M6502::PS(uInt8 ps)
 {
   N = ps & 0x80;
   V = ps & 0x40;
-  B = true;        // B = ps & 0x10;  The 6507's B flag always true
+  B = ps & 0x10;
   D = ps & 0x08;
   I = ps & 0x04;
   notZ = !(ps & 0x02);
   C = ps & 0x01;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline uInt8 M6502::peek(uInt16 address)
-{
-  if(address != myLastAddress)
-  {
-    myNumberOfDistinctAccesses++;
-    myLastAddress = address;
-  }
-  mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
-
-#ifdef DEBUGGER_SUPPORT
-  if(myReadTraps != NULL && myReadTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "RTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
-  uInt8 result = mySystem->peek(address);
-  myLastAccessWasRead = true;
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void M6502::poke(uInt16 address, uInt8 value)
-{
-  if(address != myLastAddress)
-  {
-    myNumberOfDistinctAccesses++;
-    myLastAddress = address;
-  }
-  mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
-
-#ifdef DEBUGGER_SUPPORT
-  if(myWriteTraps != NULL && myWriteTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "WTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
-  mySystem->poke(address, value);
-  myLastAccessWasRead = false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::execute(uInt32 number)
-{
-  // Clear all of the execution status bits except for the fatal error bit
-  myExecutionStatus &= FatalErrorBit;
-
-  // Loop until execution is stopped or a fatal error occurs
-  for(;;)
-  {
-    for(; !myExecutionStatus && (number != 0); --number)
-    {
-      uInt16 operandAddress = 0;
-      uInt8 operand = 0;
-
-#ifdef DEBUGGER_SUPPORT
-      if(myJustHitTrapFlag)
-      {
-        if(myDebugger->start(myHitTrapInfo.message, myHitTrapInfo.address))
-        {
-          myJustHitTrapFlag = false;
-          return true;
-        }
-      }
-
-      if(myBreakPoints != NULL)
-      {
-        if(myBreakPoints->isSet(PC))
-        {
-          if(myDebugger->start("BP: ", PC))
-            return true;
-        }
-      }
-
-      int cond = evalCondBreaks();
-      if(cond > -1)
-      {
-        string buf = "CBP: " + myBreakCondNames[cond];
-        if(myDebugger->start(buf))
-          return true;
-      }
-#endif
-
-      // Fetch instruction at the program counter
-      IR = peek(PC++);
-
-#ifdef DEBUG_OUTPUT
-      debugStream << ::hex << setw(2) << (int)A << " "
-                  << ::hex << setw(2) << (int)X << " "
-                  << ::hex << setw(2) << (int)Y << " "
-                  << ::hex << setw(2) << (int)SP << "  "
-                  << setw(4) << (PC-1) << ": "
-                  << setw(2) << (int)IR << "       "
-//      << "<" << ourAddressingModeTable[IR] << " ";
-//      debugStream << hex << setw(4) << operandAddress << " ";
-                  << setw(3) << ourInstructionMnemonicTable[IR]
-
-//      debugStream << "PS=" << ::hex << setw(2) << (int)PS() << " ";
-
-//      debugStream << "Cyc=" << dec << mySystem->cycles();
-                  << endl;
-#endif
-
-      // Call code to execute the instruction
-      switch(IR)
-      {
-        // 6502 instruction emulation is generated by an M4 macro file
-        #include "M6502.ins"
-
-        default:
-          // Oops, illegal instruction executed so set fatal error flag
-          myExecutionStatus |= FatalErrorBit;
-      }
-
-      myTotalInstructionCount++;
-    }
-
-    // See if we need to handle an interrupt
-    if((myExecutionStatus & MaskableInterruptBit) || 
-        (myExecutionStatus & NonmaskableInterruptBit))
-    {
-      // Yes, so handle the interrupt
-      interruptHandler();
-    }
-
-    // See if execution has been stopped
-    if(myExecutionStatus & StopExecutionBit)
-    {
-      // Yes, so answer that everything finished fine
-      return true;
-    }
-
-    // See if a fatal error has occured
-    if(myExecutionStatus & FatalErrorBit)
-    {
-      // Yes, so answer that something when wrong
-      return false;
-    }
-
-    // See if we've executed the specified number of instructions
-    if(number == 0)
-    {
-      // Yes, so answer that everything finished fine
-      return true;
-    }
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::interruptHandler()
-{
-  // Handle the interrupt
-  if((myExecutionStatus & MaskableInterruptBit) && !I)
-  {
-    mySystem->incrementCycles(7 * mySystemCyclesPerProcessorCycle);
-    mySystem->poke(0x0100 + SP--, (PC - 1) >> 8);
-    mySystem->poke(0x0100 + SP--, (PC - 1) & 0x00ff);
-    mySystem->poke(0x0100 + SP--, PS() & (~0x10));
-    D = false;
-    I = true;
-    PC = (uInt16)mySystem->peek(0xFFFE) | ((uInt16)mySystem->peek(0xFFFF) << 8);
-  }
-  else if(myExecutionStatus & NonmaskableInterruptBit)
-  {
-    mySystem->incrementCycles(7 * mySystemCyclesPerProcessorCycle);
-    mySystem->poke(0x0100 + SP--, (PC - 1) >> 8);
-    mySystem->poke(0x0100 + SP--, (PC - 1) & 0x00ff);
-    mySystem->poke(0x0100 + SP--, PS() & (~0x10));
-    D = false;
-    PC = (uInt16)mySystem->peek(0xFFFA) | ((uInt16)mySystem->peek(0xFFFB) << 8);
-  }
-
-  // Clear the interrupt bits in myExecutionStatus
-  myExecutionStatus &= ~(MaskableInterruptBit | NonmaskableInterruptBit);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::save(Serializer& out)
-{
-  string CPU = name();
-
-  try
-  {
-    out.putString(CPU);
-
-    out.putByte((char)A);   // Accumulator
-    out.putByte((char)X);   // X index register
-    out.putByte((char)Y);   // Y index register
-    out.putByte((char)SP);  // Stack Pointer
-    out.putByte((char)IR);  // Instruction register
-    out.putInt(PC);         // Program Counter
-
-    out.putBool(N);     // N flag for processor status register
-    out.putBool(V);     // V flag for processor status register
-    out.putBool(B);     // B flag for processor status register
-    out.putBool(D);     // D flag for processor status register
-    out.putBool(I);     // I flag for processor status register
-    out.putBool(notZ);  // Z flag complement for processor status register
-    out.putBool(C);     // C flag for processor status register
-
-    out.putByte((char)myExecutionStatus);
-
-    // Indicates the number of distinct memory accesses
-    out.putInt(myNumberOfDistinctAccesses);
-    // Indicates the last address which was accessed
-    out.putInt(myLastAddress);
-
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::load(Deserializer& in)
-{
-  string CPU = name();
-
-  try
-  {
-    if(in.getString() != CPU)
-      return false;
-
-    A = (uInt8) in.getByte();    // Accumulator
-    X = (uInt8) in.getByte();    // X index register
-    Y = (uInt8) in.getByte();    // Y index register
-    SP = (uInt8) in.getByte();   // Stack Pointer
-    IR = (uInt8) in.getByte();   // Instruction register
-    PC = (uInt16) in.getInt();  // Program Counter
-
-    N = in.getBool();     // N flag for processor status register
-    V = in.getBool();     // V flag for processor status register
-    B = in.getBool();     // B flag for processor status register
-    D = in.getBool();     // D flag for processor status register
-    I = in.getBool();     // I flag for processor status register
-    notZ = in.getBool();  // Z flag complement for processor status register
-    C = in.getBool();     // C flag for processor status register
-
-    myExecutionStatus = (uInt8) in.getByte();
-
-    // Indicates the number of distinct memory accesses
-    myNumberOfDistinctAccesses = (uInt32) in.getInt();
-    // Indicates the last address which was accessed
-    myLastAddress = (uInt16) in.getInt();
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -474,170 +176,90 @@ ostream& operator<<(ostream& out, const M6502::AddressingMode& mode)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-M6502::AddressingMode M6502::ourAddressingModeTable[256] = {
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x0?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x1?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Absolute,   IndirectX, Invalid,   IndirectX,    // 0x2?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x3?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x4?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x5?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Implied,    IndirectX, Invalid,   IndirectX,    // 0x6?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Indirect,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x7?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0x8?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0x9?
-  ZeroX,      ZeroX,     ZeroY,     ZeroY,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xA?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xB?
-  ZeroX,      ZeroX,     ZeroY,     ZeroY,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xC?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xD?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
-
-  Immediate,  IndirectX, Immediate, IndirectX,    // 0xE?
-  Zero,       Zero,      Zero,      Zero,
-  Implied,    Immediate, Implied,   Immediate,
-  Absolute,   Absolute,  Absolute,  Absolute,
-
-  Relative,   IndirectY, Invalid,   IndirectY,    // 0xF?
-  ZeroX,      ZeroX,     ZeroX,     ZeroX,
-  Implied,    AbsoluteY, Implied,   AbsoluteY,
-  AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX
-};
+uInt8 M6502::ourBCDTable[2][256];
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-M6502::AccessMode M6502::ourAccessModeTable[256] = {
-  None,   Read,   None,   Write,    // 0x0?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  None,   Read,   Write,  Write,
+M6502::AddressingMode M6502::ourAddressingModeTable[256] = {
+    Implied,    IndirectX, Invalid,   IndirectX,    // 0x0?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0x1?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0x1?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0x2?
-  Read,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Absolute,   IndirectX, Invalid,   IndirectX,    // 0x2?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0x3?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
-  
-  None,   Read,   None,   Write,    // 0x4?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0x3?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0x5?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Implied,    IndirectX, Invalid,   IndirectX,    // 0x4?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  None,   Read,   None,   Write,    // 0x6?
-  None,   Read,   Write,  Write,
-  None,   Read,   Write,  Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0x5?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0x7?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Implied,    IndirectX, Invalid,   IndirectX,    // 0x6?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Indirect,   Absolute,  Absolute,  Absolute,
 
-  None,   Write,  None,   Write,    // 0x8?
-  Write,  Write,  Write,  Write,
-  None,   None,   None,   Read,
-  Write,  Write,  Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0x7?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Write,  None,   Write,    // 0x9?
-  Write,  Write,  Write,  Write,
-  None,   Write,  None,   Write,
-  Write,  Write,  Write,  Write,
+    Immediate,  IndirectX, Immediate, IndirectX,    // 0x8?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   Read,   Read,     // 0xA?
-  Read,   Read,   Read,   Read,
-  None,   Read,   None,   Read,
-  Read,   Read,   Read,   Read,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0x9?
+    ZeroX,      ZeroX,     ZeroY,     ZeroY,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
 
-  Read,   Read,   None,   Read,     // 0xB?
-  Read,   Read,   Read,   Read,
-  None,   Read,   None,   Read,
-  Read,   Read,   Read,   Read,
+    Immediate,  IndirectX, Immediate, IndirectX,    // 0xA?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0xC?
-  Read,   Read,   Write,  Write,
-  None,   Read,   None,   Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0xB?
+    ZeroX,      ZeroX,     ZeroY,     ZeroY,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteY, AbsoluteY,
 
-  Read,   Read,   None,   Write,    // 0xD?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write,
+    Immediate,  IndirectX, Immediate, IndirectX,    // 0xC?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
 
-  Read,   Read,   None,   Write,    // 0xE?
-  Read,   Read,   Write,  Write,
-  None,   Read,   None,   Read,
-  Read,   Read,   Write,  Write,
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0xD?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX,
 
-  Read,   Read,   None,   Write,    // 0xF?
-  None,   Read,   Write,  Write,
-  None,   Read,   None,   Write,
-  None,   Read,   Write,  Write
-};
+    Immediate,  IndirectX, Immediate, IndirectX,    // 0xE?
+    Zero,       Zero,      Zero,      Zero,
+    Implied,    Immediate, Implied,   Immediate,
+    Absolute,   Absolute,  Absolute,  Absolute,
+
+    Relative,   IndirectY, Invalid,   IndirectY,    // 0xF?
+    ZeroX,      ZeroX,     ZeroX,     ZeroX,
+    Implied,    AbsoluteY, Implied,   AbsoluteY,
+    AbsoluteX,  AbsoluteX, AbsoluteX, AbsoluteX
+  };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt32 M6502::ourInstructionProcessorCycleTable[256] = {
@@ -711,70 +333,3 @@ const char* M6502::ourInstructionMnemonicTable[256] = {
   "SED",  "SBC",  "nop",  "isb",  "nop",  "SBC",  "INC",  "isb"
 };
 
-#ifdef DEBUGGER_SUPPORT
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::attach(Debugger& debugger)
-{
-  // Remember the debugger for this microprocessor
-  myDebugger = &debugger;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-unsigned int M6502::addCondBreak(Expression *e, const string& name)
-{
-  myBreakConds.push_back(e);
-  myBreakCondNames.push_back(name);
-  return myBreakConds.size() - 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::delCondBreak(unsigned int brk)
-{
-  if(brk < myBreakConds.size())
-  {
-    delete myBreakConds[brk];
-    myBreakConds.remove_at(brk);
-    myBreakCondNames.remove_at(brk);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::clearCondBreaks()
-{
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
-    delete myBreakConds[i];
-
-  myBreakConds.clear();
-  myBreakCondNames.clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const StringList& M6502::getCondBreakNames() const
-{
-  return myBreakCondNames;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int M6502::evalCondBreaks()
-{
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
-    if(myBreakConds[i]->evaluate())
-      return i;
-
-  return -1; // no break hit
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::setBreakPoints(PackedBitArray *bp)
-{
-  myBreakPoints = bp;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::setTraps(PackedBitArray *read, PackedBitArray *write)
-{
-  myReadTraps = read;
-  myWriteTraps = write;
-}
-
-#endif

@@ -8,216 +8,289 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: PropsSet.cxx,v 1.8 2004-07-10 13:20:35 stephena Exp $
 //============================================================================
 
-#include <sstream>
-#include <map>
+#include <assert.h>
 
-#include "bspf.hxx"
-
-#include "DefProps.hxx"
-#include "OSystem.hxx"
 #include "Props.hxx"
-#include "Settings.hxx"
-
 #include "PropsSet.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PropertiesSet::PropertiesSet(OSystem* osystem)
-  : myOSystem(osystem),
-    mySize(0)
+PropertiesSet::PropertiesSet()
+   : myRoot(0), 
+     mySize(0),
+     myUseMemList(true),
+     myPropertiesFilename(""),
+     mySaveOnExit(false)
 {
-  const string& props = myOSystem->propertiesFile();
-  load(props);
+  myDefaultProperties = &defaultProperties();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 PropertiesSet::~PropertiesSet()
 {
-  myExternalProps.clear();
-  myTempProps.clear();
-}
+  if(myPropertiesStream.is_open())
+    myPropertiesStream.close();
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::load(const string& filename)
-{
-  if(myOSystem->settings().getBool("showinfo"))
-    cout << "User game properties: \'" << filename << "\'\n";
-
-  ifstream in(filename.c_str(), ios::in);
-
-  // Loop reading properties
-  for(;;)
+  if(myUseMemList && mySaveOnExit && (myPropertiesFilename != ""))
   {
-    // Make sure the stream is still good or we're done 
-    if(!in)
-      break;
-
-    // Get the property list associated with this profile
-    Properties prop;
-    prop.load(in);
-
-    // If the stream is still good then insert the properties
-    if(in)
-      insert(prop);
+    ofstream out(myPropertiesFilename.c_str());
+    if(out.is_open())
+    {
+      save(out);
+      out.close();
+    }
   }
-  if(in)
-    in.close();
+
+  deleteNode(myRoot);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool PropertiesSet::save(const string& filename) const
+void PropertiesSet::getMD5(string md5, Properties &properties)
 {
-  ofstream out(filename.c_str(), ios::out);
-  if(!out)
+  bool found = false;
+
+  if(myUseMemList)
+  {
+    // Make sure tree isn't empty
+    if(myRoot == 0)
+    {
+      properties = myDefaultProperties;
+      return;
+    }
+
+    // Else, do a BST search for the node with the given md5
+    TreeNode *current = myRoot;
+
+    while(current)
+    {
+      string currentMd5 = current->props->get("Cartridge.MD5");
+
+      if(currentMd5 == md5)
+      {
+        found = true;
+        break;
+      }
+      else
+      {
+        if(md5 < currentMd5)
+          current = current->left;
+        else 
+           current = current->right;
+      }
+    }
+
+    if(found)
+      properties = *(current->props);
+    else
+      properties = myDefaultProperties;
+  }
+  else
+  {
+    // Loop reading properties until required properties found
+    for(;;)
+    {
+      // Make sure the stream is still good or we're done 
+      if(!myPropertiesStream)
+      {
+        break;
+      }
+
+      // Get the property list associated with this profile
+      Properties currentProperties(myDefaultProperties);
+      currentProperties.load(myPropertiesStream);
+
+      // If the stream is still good then insert the properties
+      if(myPropertiesStream)
+      {
+        string currentMd5 = currentProperties.get("Cartridge.MD5");
+
+        if(currentMd5 == md5)
+        {
+          properties = currentProperties;
+          return;
+        }
+      }
+    }
+
+    properties = myDefaultProperties;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::insert(const Properties& properties)
+{
+	insertNode(myRoot, properties);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::insertNode(TreeNode* &t, const Properties& properties)
+{
+  if(t)
+  {
+    string md5 = properties.get("Cartridge.MD5");
+    string currentMd5 = t->props->get("Cartridge.MD5");
+
+    if(md5 < currentMd5)
+      insertNode(t->left, properties);
+    else if(md5 > currentMd5)
+      insertNode(t->right, properties);
+    else
+    {
+      delete t->props;
+      t->props = new Properties(properties);
+    }
+  }
+  else
+  {
+    t = new TreeNode;
+    t->props = new Properties(properties);
+    t->left = 0;
+    t->right = 0;
+
+    ++mySize;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::deleteNode(TreeNode *node)
+{
+  if(node)
+  {
+    deleteNode(node->left);
+    deleteNode(node->right);
+    delete node->props;
+    delete node;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::load(string filename, bool useList)
+{
+    myUseMemList = useList;
+
+    if(filename == "")
+      return;
+
+    myPropertiesStream.open(filename.c_str(), ios::in);
+
+    if(myUseMemList)
+    {
+      // Loop reading properties
+      for(;;)
+      {
+        // Make sure the stream is still good or we're done 
+        if(!myPropertiesStream)
+        {
+          break;
+        }
+
+        // Get the property list associated with this profile
+        Properties properties(myDefaultProperties);
+        properties.load(myPropertiesStream);
+
+        // If the stream is still good then insert the properties
+        if(myPropertiesStream)
+        {
+          insert(properties);
+        }
+      }
+    }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::save(ostream& out)
+{
+  saveNode(out, myRoot);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::print()
+{
+  cout << size() << endl;
+  printNode(myRoot);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::saveNode(ostream& out, TreeNode *node)
+{
+  if(node)
+  {
+    node->props->save(out);
+    saveNode(out, node->left);
+    saveNode(out, node->right);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void PropertiesSet::printNode(TreeNode *node)
+{
+  if(node)
+  {
+    node->props->print();
+    printNode(node->left);
+    printNode(node->right);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 PropertiesSet::size() const
+{
+  return mySize;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool PropertiesSet::merge(Properties& properties, string& filename, bool saveOnExit)
+{
+  myPropertiesFilename = filename;
+  mySaveOnExit = saveOnExit;
+
+  // Can't merge the properties if the PropertiesSet isn't in memory
+  if(!myUseMemList)
     return false;
 
-  // Only save those entries in the external list
-  for(PropsList::const_iterator i = myExternalProps.begin();
-      i != myExternalProps.end(); ++i)
-    i->second.save(out);
+  insert(properties);
 
   return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool PropertiesSet::getMD5(const string& md5, Properties& properties,
-                           bool useDefaults) const
+const Properties& PropertiesSet::defaultProperties()
 {
-  properties.setDefaults();
-  bool found = false;
+  // Make sure the <key,value> pairs are in the default properties object
+  ourDefaultProperties.set("Cartridge.Filename", "");
+  ourDefaultProperties.set("Cartridge.MD5", "");
+  ourDefaultProperties.set("Cartridge.Manufacturer", "");
+  ourDefaultProperties.set("Cartridge.ModelNo", "");
+  ourDefaultProperties.set("Cartridge.Name", "Untitled");
+  ourDefaultProperties.set("Cartridge.Note", "");
+  ourDefaultProperties.set("Cartridge.Rarity", "");
+  ourDefaultProperties.set("Cartridge.Type", "Auto-detect");
 
-  // There are three lists to search when looking for a properties entry,
-  // which must be done in the following order
-  // If 'useDefaults' is specified, only use the built-in list
-  //
-  //  'save': entries previously inserted that are saved on program exit
-  //  'temp': entries previously inserted that are discarded
-  //  'builtin': the defaults compiled into the program
+  ourDefaultProperties.set("Console.LeftDifficulty", "B");
+  ourDefaultProperties.set("Console.RightDifficulty", "B");
+  ourDefaultProperties.set("Console.TelevisionType", "Color");
 
-  // First check properties from external file
-  if(!useDefaults)
-  {
-    // Check external list
-    PropsList::const_iterator iter = myExternalProps.find(md5);
-    if(iter != myExternalProps.end())
-    {
-      properties = iter->second;
-      found = true;
-    }
-    else  // Search temp list
-    {
-      iter = myTempProps.find(md5);
-      if(iter != myTempProps.end())
-      {
-        properties = iter->second;
-        found = true;
-      }
-    }
-  }
+  ourDefaultProperties.set("Controller.Left", "Joystick");
+  ourDefaultProperties.set("Controller.Right", "Joystick");
 
-  // Otherwise, search the internal database using binary search
-  if(!found)
-  {
-    int low = 0, high = DEF_PROPS_SIZE - 1;
-    while(low <= high)
-    {
-      int i = (low + high) / 2;
-      int cmp = strncmp(md5.c_str(), DefProps[i][Cartridge_MD5], 32);
+  ourDefaultProperties.set("Display.Format", "NTSC");
+  ourDefaultProperties.set("Display.XStart", "0");
+  ourDefaultProperties.set("Display.Width", "160");
+  ourDefaultProperties.set("Display.YStart", "34");
+  ourDefaultProperties.set("Display.Height", "210");
 
-      if(cmp == 0)  // found it
-      {
-        for(int p = 0; p < LastPropType; ++p)
-          if(DefProps[i][p][0] != 0)
-            properties.set((PropertyType)p, DefProps[i][p]);
+  ourDefaultProperties.set("Emulation.CPU", "Auto-detect");
+  ourDefaultProperties.set("Emulation.HmoveBlanks", "Yes");
 
-        found = true;
-        break;
-      }
-      else if(cmp < 0)
-        high = i - 1; // look at lower range
-      else
-        low = i + 1;  // look at upper range
-    }
-  }
-
-  return found;
+  return ourDefaultProperties;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::insert(const Properties& properties, bool save)
-{
-  // Note that the following code is optimized for insertion when an item
-  // doesn't already exist, and when the external properties file is
-  // relatively small (which is the case with current versions of Stella,
-  // as the properties are built-in)
-  // If an item does exist, it will be removed and insertion done again
-  // This shouldn't be a speed issue, as insertions will only fail with
-  // duplicates when you're changing the current ROM properties, which
-  // most people tend not to do
-
-  // Since the PropSet is keyed by md5, we can't insert without a valid one
-  const string& md5 = properties.get(Cartridge_MD5);
-  if(md5 == "")
-    return;
-
-  // The status of 'save' determines which list to save to
-  PropsList& list = save ? myExternalProps : myTempProps;
-
-  pair<PropsList::iterator,bool> ret;
-  ret = list.insert(make_pair(md5, properties));
-  if(ret.second == false)
-  {
-    // Remove old item and insert again
-    list.erase(ret.first);
-    list.insert(make_pair(md5, properties));
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::removeMD5(const string& md5)
-{
-  // We only remove from the external list
-  myExternalProps.erase(md5);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void PropertiesSet::print() const
-{
-  // We only look at the external properties and the built-in ones;
-  // the temp properties are ignored
-  // Also, any properties entries in the external file override the built-in
-  // ones
-  // The easiest way to merge the lists is to create another temporary one
-  // This isn't fast, but I suspect this method isn't used too often (or at all)
-
-  PropsList list;
-
-  // First insert all external props
-  list = myExternalProps;
-
-  // Now insert all the built-in ones
-  // Note that if we try to insert a duplicate, the insertion will fail
-  // This is fine, since a duplicate in the built-in list means it should
-  // be overrided anyway (and insertion shouldn't be done)
-  Properties properties;
-  for(int i = 0; i < DEF_PROPS_SIZE; ++i)
-  {
-    properties.setDefaults();
-    for(int p = 0; p < LastPropType; ++p)
-      if(DefProps[i][p][0] != 0)
-        properties.set((PropertyType)p, DefProps[i][p]);
-
-    list.insert(make_pair(DefProps[i][Cartridge_MD5], properties));
-  }
-
-  // Now, print the resulting list
-  for(PropsList::const_iterator i = list.begin(); i != list.end(); ++i)
-    i->second.print();
-}
+Properties PropertiesSet::ourDefaultProperties;

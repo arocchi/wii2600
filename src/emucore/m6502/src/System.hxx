@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2002 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.hxx,v 1.3 2002-05-13 19:10:25 stephena Exp $
 //============================================================================
 
 #ifndef SYSTEM_HXX
@@ -21,14 +21,13 @@
 
 class Device;
 class M6502;
-class M6532;
-class TIA;
 class NullDevice;
+class Serializer;
+class Deserializer;
 
 #include "bspf.hxx"
 #include "Device.hxx"
 #include "NullDev.hxx"
-#include "Serializable.hxx"
 
 /**
   This class represents a system consisting of a 6502 microprocessor
@@ -47,9 +46,9 @@ class NullDevice;
         dynamic code for that page of memory.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: System.hxx,v 1.3 2002-05-13 19:10:25 stephena Exp $
 */
-class System : public Serializable
+class System
 {
   public:
     /**
@@ -74,6 +73,23 @@ class System : public Serializable
     void reset();
 
     /**
+      Saves the current state of this system class to the given Serializer.
+
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
+    */
+    bool save(Serializer& out);
+
+    /**
+      Loads the current state of this system class from the given Deserializer.
+
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
+    */
+    bool load(Deserializer& in);
+
+  public:
+    /**
       Attach the specified device and claim ownership of it.  The device 
       will be asked to install itself.
 
@@ -90,20 +106,28 @@ class System : public Serializable
     void attach(M6502* m6502);
 
     /**
-      Attach the specified processor and claim ownership of it.  The
-      processor will be asked to install itself.
+      Saves the current state of Stella to the given file.  Calls
+      save on every device and CPU attached to this system.
 
-      @param m6532 The 6532 microprocessor to attach to the system
+      @param out The serializer device to save to.
+      @return The result of the save.  Error codes as follows:
+              1  success
+              2  file could not be opened for read/write
+              3  invalid state file
     */
-    void attach(M6532* m6532);
+    int saveState(string& fileName, string& md5sum);
 
     /**
-      Attach the specified TIA device and claim ownership of it.  The device 
-      will be asked to install itself.
+      Loads the current state of Stella from the given file.  Calls
+      load on every device and CPU attached to this system.
 
-      @param tia The TIA device to attach to the system
+      @param in The deserializer device to load from.
+      @return The result of the load.  Error codes as follows:
+              1  success
+              2  file could not be opened for read/write
+              3  invalid state file
     */
-    void attach(TIA* tia);
+    int loadState(string& fileName, string& md5sum);
 
   public:
     /**
@@ -115,27 +139,6 @@ class System : public Serializable
     M6502& m6502()
     {
       return *myM6502;
-    }
-
-    /**
-      Answer the 6532 processor attached to the system.  If a
-      processor has not been attached calling this function will fail.
-
-      @return The attached 6532 microprocessor
-    */
-    M6532& m6532()
-    {
-      return *myM6532;
-    }
-
-    /**
-      Answer the TIA device attached to the system.
-
-      @return The attached TIA device
-    */
-    TIA& tia()
-    {
-      return *myTIA;
     }
 
     /**
@@ -217,10 +220,7 @@ class System : public Serializable
 
       @return the data bus state
     */  
-    inline uInt8 getDataBusState() const
-    {
-      return myDataBusState;
-    }
+    uInt8 getDataBusState() const;
 
     /**
       Get the byte at the specified address.  No masking of the
@@ -240,18 +240,6 @@ class System : public Serializable
       @param value The value to be stored at the address
     */
     void poke(uInt16 address, uInt8 value);
-
-    /**
-      Lock/unlock the data bus. When the bus is locked, peek() and
-      poke() don't update the bus state. The bus should be unlocked
-      while the CPU is running (normal emulation, or when the debugger
-      is stepping/advancing). It should be locked while the debugger
-      is active but not running the CPU. This is so the debugger can
-      use System.peek() to examine memory/registers without changing
-      the state of the system.
-    */
-    void lockDataBus();
-    void unlockDataBus();
 
   public:
     /**
@@ -298,29 +286,6 @@ class System : public Serializable
     */
     const PageAccess& getPageAccess(uInt16 page);
  
-    /**
-      Save the current state of this system to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this system from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "System"; }
-
   private:
     // Mask to apply to an address before accessing memory
     const uInt16 myAddressMask;
@@ -346,12 +311,6 @@ class System : public Serializable
     // 6502 processor attached to the system or the null pointer
     M6502* myM6502;
 
-    // 6532 processor attached to the system or the null pointer
-    M6532* myM6532;
-
-    // TIA device attached to the system or the null pointer
-    TIA* myTIA;
-
     // Number of system cycles executed since the last reset
     uInt32 myCycles;
 
@@ -361,10 +320,11 @@ class System : public Serializable
     // The current state of the Data Bus
     uInt8 myDataBusState;
 
-    // Whether or not peek() updates the data bus state. This
-    // is true during normal emulation, and false when the
-    // debugger is active.
-    bool myDataBusLocked;
+    // The serializer for the system.  Used to save state.
+    Serializer* serializer;
+
+    // The deserializer for the system.  Used to load state.
+    Deserializer* deserializer;
 
   private:
     // Copy constructor isn't supported by this class so make it private
@@ -374,4 +334,49 @@ class System : public Serializable
     System& operator = (const System&);
 };
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline uInt8 System::getDataBusState() const
+{
+  return myDataBusState;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline uInt8 System::peek(uInt16 addr)
+{
+  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
+
+  uInt8 result;
+ 
+  // See if this page uses direct accessing or not 
+  if(access.directPeekBase != 0)
+  {
+    result = *(access.directPeekBase + (addr & myPageMask));
+  }
+  else
+  {
+    result = access.device->peek(addr);
+  }
+
+  myDataBusState = result;
+
+  return result;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline void System::poke(uInt16 addr, uInt8 value)
+{
+  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
+  
+  // See if this page uses direct accessing or not 
+  if(access.directPokeBase != 0)
+  {
+    *(access.directPokeBase + (addr & myPageMask)) = value;
+  }
+  else
+  {
+    access.device->poke(addr, value);
+  }
+
+  myDataBusState = value;
+}
 #endif

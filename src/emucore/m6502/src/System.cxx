@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2002 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.cxx,v 1.4 2002-08-11 17:48:13 stephena Exp $
 //============================================================================
 
 #include <assert.h>
@@ -21,22 +21,20 @@
 
 #include "Device.hxx"
 #include "M6502.hxx"
-#include "M6532.hxx"
-#include "TIA.hxx"
 #include "System.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 System::System(uInt16 n, uInt16 m)
-  : myAddressMask((1 << n) - 1),
-    myPageShift(m),
-    myPageMask((1 << m) - 1),
-    myNumberOfPages(1 << (n - m)),
-    myNumberOfDevices(0),
-    myM6502(0),
-    myTIA(0),
-    myCycles(0),
-    myDataBusState(0),
-    myDataBusLocked(false)
+    : myAddressMask((1 << n) - 1),
+      myPageShift(m),
+      myPageMask((1 << m) - 1),
+      myNumberOfPages(1 << (n - m)),
+      myNumberOfDevices(0),
+      myM6502(0),
+      myCycles(0),
+      myDataBusState(0)
 {
   // Make sure the arguments are reasonable
   assert((1 <= m) && (m <= n) && (n <= 16));
@@ -54,8 +52,9 @@ System::System(uInt16 n, uInt16 m)
     setPageAccess(page, access);
   }
 
-  // Bus starts out unlocked (in other words, peek() changes myDataBusState)
-  myDataBusLocked = false;
+  // Set up (de)serializer in case we are asked to save/load state
+  serializer = new Serializer();
+  deserializer = new Deserializer();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -72,6 +71,12 @@ System::~System()
 
   // Free my page access table
   delete[] myPageAccessTable;
+
+  // Free the serializer stuff
+  if(serializer)
+    delete serializer;
+  if(deserializer)
+    delete deserializer;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -116,20 +121,53 @@ void System::attach(M6502* m6502)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::attach(M6532* m6532)
+bool System::save(Serializer& out)
 {
-  // Remember the processor
-  myM6532 = m6532;
+  string name = "System";
 
-  // Attach it as a normal device
-  attach((Device*) m6532);
+  try
+  {
+    out.putString(name);
+    out.putLong(myCycles);
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in save state for " << name << endl;
+    return false;
+  }
+
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::attach(TIA* tia)
+bool System::load(Deserializer& in)
 {
-  myTIA = tia;
-  attach((Device*) tia);
+  string name = "System";
+
+  try
+  {
+    if(in.getString() != name)
+      return false;
+
+    myCycles = (uInt32) in.getLong();
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in load state for " << name << endl;
+    return false;
+  }
+
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -167,11 +205,99 @@ const System::PageAccess& System::getPageAccess(uInt16 page)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int System::saveState(string &fileName, string& md5sum)
+{
+  // Open the file as a new Serializer
+  if(!serializer->open(fileName))
+  {
+    serializer->close();
+    return 2;
+  }
+
+  // Prepend the state file with the md5sum of this cartridge
+  // This is the first defensive check for an invalid state file
+  serializer->putString(md5sum);
+
+  // First save state for this system
+  if(!save(*serializer))
+  {
+    serializer->close();
+    return 3;
+  }
+
+  // Next, save state for the CPU
+  if(!myM6502->save(*serializer))
+  {
+    serializer->close();
+    return 3;
+  }
+
+  // Now save the state of each device
+  for(uInt32 i = 0; i < myNumberOfDevices; ++i)
+  {
+    if(!myDevices[i]->save(*serializer))
+    {
+      serializer->close();
+      return 3;
+    }
+  }
+
+  serializer->close();
+  return 1;  // success
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int System::loadState(string &fileName, string& md5sum)
+{
+  // Open the file as a new Deserializer
+  if(!deserializer->open(fileName))
+  {
+    deserializer->close();
+    return 2;
+  }
+
+  // Look at the beginning of the state file.  It should contain the md5sum
+  // of the current cartridge.  If it doesn't, this state file is invalid.
+  if(deserializer->getString() != md5sum)
+  {
+    deserializer->close();
+    return 3;
+  }
+
+  // First load state for this system
+  if(!load(*deserializer))
+  {
+    deserializer->close();
+    return 3;
+  }
+
+  // Next, load state for the CPU
+  if(!myM6502->load(*deserializer))
+  {
+    deserializer->close();
+    return 3;
+  }
+
+  // Now load the state of each device
+  for(uInt32 i = 0; i < myNumberOfDevices; ++i)
+  {
+    if(!myDevices[i]->load(*deserializer))
+    {
+      deserializer->close();
+      return 3;
+    }
+  }
+
+  deserializer->close();
+  return 1;  // success
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 System::System(const System& s)
-  : myAddressMask(s.myAddressMask),
-    myPageShift(s.myPageShift),
-    myPageMask(s.myPageMask),
-    myNumberOfPages(s.myNumberOfPages)
+    : myAddressMask(s.myAddressMask),
+      myPageShift(s.myPageShift),
+      myPageMask(s.myPageMask),
+     myNumberOfPages(s.myNumberOfPages)
 {
   assert(false);
 }
@@ -182,127 +308,4 @@ System& System::operator = (const System&)
   assert(false);
 
   return *this;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8 System::peek(uInt16 addr)
-{
-  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
-
-  uInt8 result;
- 
-  // See if this page uses direct accessing or not 
-  if(access.directPeekBase != 0)
-  {
-    result = *(access.directPeekBase + (addr & myPageMask));
-  }
-  else
-  {
-    result = access.device->peek(addr);
-  }
-
-#ifdef DEBUGGER_SUPPORT
-  if(!myDataBusLocked)
-#endif
-    myDataBusState = result;
-
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::poke(uInt16 addr, uInt8 value)
-{
-  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
-  
-  // See if this page uses direct accessing or not 
-  if(access.directPokeBase != 0)
-  {
-    *(access.directPokeBase + (addr & myPageMask)) = value;
-  }
-  else
-  {
-    access.device->poke(addr, value);
-  }
-
-#ifdef DEBUGGER_SUPPORT
-  if(!myDataBusLocked)
-#endif
-    myDataBusState = value;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::lockDataBus()
-{
-  myDataBusLocked = true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::unlockDataBus()
-{
-  myDataBusLocked = false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::save(Serializer& out) const
-{
-  const string& device = name();
-  try
-  {
-    out.putString(device);
-    out.putInt(myCycles);
-
-    if(!myM6502->save(out))
-      return false;
-
-    // Now save the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->save(out))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << device << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::load(Deserializer& in)
-{
-  const string& device = name();
-  try
-  {
-    if(in.getString() != device)
-      return false;
-
-    myCycles = (uInt32) in.getInt();
-
-    // Next, load state for the CPU
-    if(!myM6502->load(in))
-      return false;
-
-    // Now load the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->load(in))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << device << endl;
-    return false;
-  }
-
-  return true;
 }

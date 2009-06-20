@@ -8,42 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.hxx,v 1.4 2004-07-05 00:53:48 stephena Exp $
 //============================================================================
 
 #ifndef PROPERTIES_HXX
 #define PROPERTIES_HXX
 
 #include "bspf.hxx"
-
-enum PropertyType {
-  Cartridge_MD5,
-  Cartridge_Manufacturer,
-  Cartridge_ModelNo,
-  Cartridge_Name,
-  Cartridge_Note,
-  Cartridge_Rarity,
-  Cartridge_Sound,
-  Cartridge_Type,
-  Console_LeftDifficulty,
-  Console_RightDifficulty,
-  Console_TelevisionType,
-  Console_SwapPorts,
-  Controller_Left,
-  Controller_Right,
-  Controller_SwapPaddles,
-  Display_Format,
-  Display_YStart,
-  Display_Height,
-  Display_Phosphor,
-  Display_PPBlend,
-  LastPropType
-};
 
 /**
   This class represents objects which maintain a collection of 
@@ -54,18 +30,18 @@ enum PropertyType {
   if the property key is not found in the original property list.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Props.hxx,v 1.4 2004-07-05 00:53:48 stephena Exp $
 */
 class Properties
 {
-  friend class PropertiesSet;
-
   public:
     /**
       Creates an empty properties object with the specified defaults.  The 
       new properties object does not claim ownership of the defaults.
+
+      @param defaults The defaults
     */
-    Properties();
+    Properties(const Properties* defaults = 0);
 
     /**
       Creates a properties list by copying another one
@@ -84,19 +60,20 @@ class Properties
       Get the value assigned to the specified key.  If the key does
       not exist then the empty string is returned.
 
-      @param key  The key of the property to lookup
-      @return     The value of the property 
+      @param key The key of the property to lookup
+      @return The value of the property 
     */
-    const string& get(PropertyType key) const;
+    string get(const string& key) const;
 
     /**
       Set the value associated with key to the given value.
 
-      @param key      The key of the property to set
-      @param value    The value to assign to the property
+      @param key The key of the property to set
+      @param value The value to assign to the property
     */
-    void set(PropertyType key, const string& value);
+    void set(const string& key, const string& value);
 
+  public:
     /**
       Load properties from the specified input stream
 
@@ -109,17 +86,38 @@ class Properties
 
       @param out The output stream to use
     */
-    void save(ostream& out) const;
+    void save(ostream& out);
+
+    /**
+      Merge the given properties into this properties object
+
+      @param properties The properties object to merge
+    */
+    void merge(const Properties& properties);
 
     /**
       Print the attributes of this properties object
     */
-    void print() const;
+    void print();
 
+  public:
     /**
-      Resets all properties to their defaults
-    */
-    void setDefaults();
+      Read the next quoted string from the specified input stream
+      and returns it.
+
+      @param in The input stream to use
+      @return The string inside the quotes
+    */ 
+    static string readQuotedString(istream& in);
+     
+    /**
+      Write the specified string to the given output stream as a 
+      quoted string.
+
+      @param out The output stream to use
+      @param s The string to output
+    */ 
+    static void writeQuotedString(ostream& out, const string& s);
 
   public:
     /**
@@ -140,40 +138,24 @@ class Properties
     */
     void copy(const Properties& properties);
 
-    /**
-      Read the next quoted string from the specified input stream
-      and returns it.
-
-      @param in The input stream to use
-      @return The string inside the quotes
-    */ 
-    static string readQuotedString(istream& in);
-     
-    /**
-      Write the specified string to the given output stream as a 
-      quoted string.
-
-      @param out The output stream to use
-      @param s The string to output
-    */ 
-    static void writeQuotedString(ostream& out, const string& s);
-
-    /**
-      Get the property type associated with the named property
-
-      @param name  The PropertyType key associated with the given string
-    */ 
-    static PropertyType getPropertyType(const string& name);
-
   private:
-    // The array of properties
-    string myProperties[LastPropType];
+    // Structure used for storing properties
+    struct Property 
+    {
+      string key;
+      string value;
+    };
 
-    // List of default properties to use when none have been provided
-    static const char* ourDefaultProperties[LastPropType];
+    // Pointer to properties object to use for defaults or the null pointer
+    const Properties* myDefaults;
 
-    // The text strings associated with each property type
-    static const char* ourPropertyNames[LastPropType];
+    // Pointer to a dynamically allocated array of properties
+    Property* myProperties;
+
+    // Current capacity of the properties array
+    unsigned int myCapacity;
+
+    // Size of the properties array (i.e. the number of <key,value> pairs)
+    unsigned int mySize;
 };
-
 #endif

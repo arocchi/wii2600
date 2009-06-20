@@ -8,32 +8,28 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2004 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.hxx,v 1.5 2004-06-20 00:52:37 stephena Exp $
 //============================================================================
 
-#ifndef SOUND_SDL_HXX
-#define SOUND_SDL_HXX
-
-#ifdef SOUND_SUPPORT
-
-class OSystem;
+#ifndef SOUNDSDL_HXX
+#define SOUNDSDL_HXX
 
 #include <SDL.h>
 
-#include "bspf.hxx"
-#include "TIASnd.hxx"
 #include "Sound.hxx"
+#include "bspf.hxx"
+#include "MediaSrc.hxx"
 
 /**
   This class implements the sound API for SDL.
 
   @author Stephen Anthony and Bradford W. Mott
-  @version $Id$
+  @version $Id: SoundSDL.hxx,v 1.5 2004-06-20 00:52:37 stephena Exp $
 */
 class SoundSDL : public Sound
 {
@@ -42,7 +38,7 @@ class SoundSDL : public Sound
       Create a new sound object.  The init method must be invoked before
       using the object.
     */
-    SoundSDL(OSystem* osystem);
+    SoundSDL(uInt32 fragsize);
  
     /**
       Destructor
@@ -51,74 +47,32 @@ class SoundSDL : public Sound
 
   public:
     /**
-      Enables/disables the sound subsystem.
-
-      @param state True or false, to enable or disable the sound system
-    */
-    void setEnabled(bool state);
-
-    /**
-      The system cycle counter is being adjusting by the specified amount. Any
-      members using the system cycle counter should be adjusted as needed.
-
-      @param amount The amount the cycle counter is being adjusted by
-    */
-    void adjustCycleCounter(Int32 amount);
-
-    /**
-      Sets the number of channels (mono or stereo sound).
-
-      @param channels The number of channels
-    */
-    void setChannels(uInt32 channels);
-
-    /**
-      Sets the display framerate.  Sound generation for NTSC and PAL games
-      depends on the framerate, so we need to set it here.
-
-      @param framerate The base framerate depending on NTSC or PAL ROM
-    */
-    void setFrameRate(float framerate);
-
-    /**
-      Initializes the sound device.  This must be called before any
-      calls are made to derived methods.
-    */
-    void open();
-
-    /**
-      Should be called to close the sound device.  Once called the sound
-      device can be started again using the open method.
-    */
-    void close();
-
-    /**
       Return true iff the sound device was successfully initialized.
 
-      @return true iff the sound device was successfully initialized.
+      @return true iff the sound device was successfully initialized
     */
-    bool isSuccessfullyInitialized() const;
+    virtual bool isSuccessfullyInitialized() const;
 
     /**
       Set the mute state of the sound object.  While muted no sound is played.
 
       @param state Mutes sound if true, unmute if false
     */
-    void mute(bool state);
+    virtual void mute(bool state);
 
     /**
-      Reset the sound device.
+      Resets the sound device.
     */
-    void reset();
+    virtual void reset();
 
     /**
       Sets the sound register to a given value.
 
-      @param addr  The register address
+      @param addr The register address
       @param value The value to save into the register
-      @param cycle The system cycle at which the register is being updated
+      @param cycle The CPU cycle at which the register is being updated
     */
-    void set(uInt16 addr, uInt8 value, Int32 cycle);
+    virtual void set(uInt16 addr, uInt8 value, Int32 cycle);
 
     /**
       Sets the volume of the sound device to the specified level.  The
@@ -127,15 +81,7 @@ class SoundSDL : public Sound
 
       @param percent The new volume percentage level for the sound device
     */
-    void setVolume(Int32 percent);
-
-    /**
-      Adjusts the volume of the sound device based on the given direction.
-
-      @param direction Increase or decrease the current volume by a predefined
-          amount based on the direction (1 = increase, -1 = decrease)
-    */
-    void adjustVolume(Int8 direction);
+    virtual void setVolume(Int32 percent);
 
   public:
     /**
@@ -239,23 +185,11 @@ class SoundSDL : public Sound
     };
 
   private:
-    // TIASound emulation object
-    TIASound myTIASound;
-
-    // Indicates if the sound subsystem is to be initialized
-    bool myIsEnabled;
-
+    // Audio specification structure
+    SDL_AudioSpec myHardwareSpec;
+    
     // Indicates if the sound device was successfully initialized
     bool myIsInitializedFlag;
-
-    // Indicates the cycle when a sound register was last set
-    Int32 myLastRegisterSetCycle;
-
-    // Indicates the base framerate depending on if the ROM is NTSC or PAL
-    float myDisplayFrameRate;
-
-    // Indicates the number of channels (mono or stereo)
-    uInt32 myNumChannels;
 
     // Log base 2 of the selected fragment size
     double myFragmentSizeLogBase2;
@@ -266,9 +200,6 @@ class SoundSDL : public Sound
     // Current volume as a percentage (0 - 100)
     uInt32 myVolume;
 
-    // Audio specification structure
-    SDL_AudioSpec myHardwareSpec;
-
     // Queue of TIA register writes
     RegWriteQueue myRegWriteQueue;
 
@@ -277,5 +208,4 @@ class SoundSDL : public Sound
     static void callback(void* udata, uInt8* stream, int len);
 };
 
-#endif  // SOUND_SUPPORT
 #endif

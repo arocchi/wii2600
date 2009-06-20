@@ -8,19 +8,27 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Deserializer.cxx,v 1.2 2002-08-11 17:48:13 stephena Exp $
 //============================================================================
+
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "Deserializer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Deserializer::Deserializer(void)
 {
+  TruePattern = 0xfab1fab2;
+  FalsePattern = 0xbad1bad2;
+
+  myStream = (ifstream*) 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,63 +38,50 @@ Deserializer::~Deserializer(void)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Deserializer::open(const string& fileName)
+bool Deserializer::open(string& fileName)
 {
   close();
-  myStream.open(fileName.c_str(), ios::in | ios::binary);
+  myStream = new ifstream(fileName.c_str(), ios::in | ios::binary);
 
-  return isOpen();
+  return (myStream && myStream->is_open());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Deserializer::close(void)
 {
-  myStream.close();
-  myStream.clear();
+  if(myStream)
+  {
+    if(myStream->is_open())
+      myStream->close();
+
+    delete myStream;
+    myStream = (ifstream*) 0;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Deserializer::isOpen(void)
+long Deserializer::getLong(void)
 {
-  return myStream.is_open();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-char Deserializer::getByte(void)
-{
-  if(myStream.eof())
+  if(myStream->eof())
     throw "Deserializer: end of file";
 
-  char buf[1];
-  myStream.read(buf, 1);
+  long l;
+  myStream->read(reinterpret_cast<char *> (&l), sizeof (long));
+  if(myStream->bad())
+    throw "Deserializer: file read failed";
 
-  return buf[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Deserializer::getInt(void)
-{
-  if(myStream.eof())
-    throw "Deserializer: end of file";
-
-  int val = 0;
-  unsigned char buf[4];
-  myStream.read((char*)buf, 4);
-  for(int i = 0; i < 4; ++i)
-    val += (int)(buf[i]) << (i<<3);
-
-  return val;
+  return l;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 string Deserializer::getString(void)
 {
-  int len = getInt();
+  long len = getLong();
   string str;
-  str.resize((string::size_type)len);
-  myStream.read(&str[0], (streamsize)len);
+  str.resize(len);
+  myStream->read(&str[0], len);
 
-  if(myStream.bad())
+  if(myStream->bad())
     throw "Deserializer: file read failed";
 
   return str;
@@ -97,10 +92,13 @@ bool Deserializer::getBool(void)
 {
   bool result = false;
 
-  char b = getByte();
-  if(b == (char)TruePattern)
+  long b = getLong();
+  if(myStream->bad())
+    throw "Deserializer: file read failed";
+
+  if(b == TruePattern)
     result = true;
-  else if(b == (char)FalsePattern)
+  else if(b == FalsePattern)
     result = false;
   else
     throw "Deserializer: data corruption";

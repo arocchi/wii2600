@@ -9,98 +9,53 @@
      SSSS     ttt  eeeee llll llll  aaaaa
 
 ===============================================================================
-                         To Do List - June 2009
+                         To Do List - August 15, 2004
 ===============================================================================
 
 If you would like to contribute to Stella's development then find something
 on the list below and send email to Bradford Mott at bwmott@acm.org or
 Stephen Anthony at stephena@users.sourceforge.net.
 
-  * Add new TIA infrastructure with improved HMOVE emulation, including
-    fixes for (possibly) incorrect VSYNC handling in Q-Bert.
+For all ports:
 
-  * Add better support for 'floating' TIA reads as described here:
-    http://www.atariage.com/forums/index.php?s=&showtopic=143363&view=findpost&p=1762433
+  * Provide suggestions for improving Stella
 
-  * Look into adding Blargg NTSC filtering (perhaps as a GLSL program).
+  * Provide suggestions for improving the Stella User's Manual
 
-  * Either Support Distella as frontend or integrate a 6507 Disassembler
+  * Port Stella to other operating systems:
+     
+    - Atari ST/TT/Falcon
+    - Mac (680x0, PowerPC)
+    - Others...
 
-  * Step-debug through disassembled zero-page code (get clarification on this)
+  * Find people to actually do the above ports, and try to more actively
+    recruit people into the Stella project
 
-  * Improve debugger support for remaining cartridges with dedicated RAM,
-    and add source-level debugging
+  * Add a debugger to Stella for game developers or create an external
+    debugger to be used by Stella and z26 (and add hooks into Stella for it)
 
-  * Make the prompt tab in the debugger accept case-insensitive commands.
+  * Further optimize the software mode, especially on Win32.  The software
+    renderer in Linux takes 4% CPU (it's actually faster than OpenGL); the same
+    code on a faster computer running Windows XP takes 60-70%!  I knew SDL
+    wasn't as optimized for Windows, but I didn't think it was that bad ...
 
-  * Fix bank going over 255 (when accessing RAM) for 3E in the debugger
-    RomWidget view.
+For the Windows GUI frontend (StellaX)
 
-  * Fix patching of ROM in disassembler so that if patching fails, the view
-    is properly updated.
+  * Make all dialog boxes resizable for any size text
 
-  * 'Fixed Debug Colours' option as explained in the 'Stella 2.6.1 released'
-    thread, post #40 on AtariAge.  Basically emulates no$2k6 behaviour.
+  * The following features depend on developer availability
 
-  * Research lockups in Stay Frosty ROM.  Test out sample state file in
-    AtariAge email.
-
-  * Research starting bank for 8K/F8 ROMs.  Probably default should be 0
-    instead of 1.
-
-  * Add commandline argument to randomly generate startup bank for all ROMs
-    bigger than 4K.  Shouldn't make a difference for all 'well-designed' ROMS,
-    but will pick up on errors when a ROM doesn't start from every bank.
-
-  * Make font size be selectable for the stats info area (in TIA) and
-    in-game UI.
-
-  * More work to the ROM launcher, including at least the following:
-     (1) Shortcut key where selecting the first few letters jumps to a
-         directory named that way.  Basically the same as is currently
-         done for ROMs.
-
-     (2) Fix aliases not being followed correctly in the OSX port
-         (although I suspect this isn't just an OSX issue).
-
-     (3) Add 'simpleUI/kiosk' mode to RMB context menu, which disables
-         all but the most basic functionality.
-
-     (4) Add tabs to snapshot view; add cartridge snapshots as well.
-
-  * More support for copy and paste.
-
-  * Add support for uncommon controllers (KidVid, Lightgun, etc)
-
-  * Fix "Tron Man Picture Cart" (32K Tigervision bankswitching) issue
-
-  * Possible 'trace mode' in debugger (generate a file containing all
-    internal state)
-
-  * Automatic statesave at beginning of each frame (including state of
-    controllers and console switches), with the ability to 'roll back' to
-    a previous state/frame
-
-  * RewindManager to set up how often to save a state, and for how long
-    (debugger would be once per frame, normal probably once per second)
-
-  * Extra SECAM 'quirks' (see Stella 2.4.1 release thread on AtariAge)
-
-  * Improve speed of Pitfall2 emulation
-
-  * Add auto-detection for all remaining bankswitch types
-
-  * Either Support DASM as frontend or integrate a 6507 Assembler
-
-  * Add a Sprite/Animation Editor 
-
-  * AVI/MPEG export
-
-  * Add a PF Editor
-
-  * Client/Server networked play for up to 4 Computers via LAN/Internet
-
-  * Tracking Hiscores
-
-  * Find people to handle new ports, and try to more actively recruit people
-    into the Stella project
+    - Add a Sprite/Animation Editor 
+    - Add a PF Editor
+    - Add a Sourcecode Editor
+    - Either Support DASM as frontend or integrate a 6507 Assembler
+    - Either Support Distella as frontend or integrate a 6507 Disassembler
+    - AVI/MPEG export
+    - WAV/MP3 export
+    - Client/Server networked play for up to 4 Computers via LAN/Internet
+    - Tracking Hiscores
+    - Record and Playback games - not as real movie, but by logging
+      Input/RAM/processor states in given intervals.
+    - Cheatcodes
+    - Improve frontend by adding snapshots, labels, manuals, etc.
+      Like KStella for Linux. (Suggestion from Brian Luttrull)
