@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SaveKey.hxx,v 1.1 2008-04-29 15:49:34 stephena Exp $
 //============================================================================
 
 #ifndef SAVEKEY_HXX
@@ -31,13 +31,13 @@ class MT24LC256;
   driver code.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: SaveKey.hxx,v 1.1 2008-04-29 15:49:34 stephena Exp $
 */
 class SaveKey : public Controller
 {
   public:
     /**
-      Create a new SaveKey controller plugged into the specified jack
+      Create a new AtariVox controller plugged into the specified jack
 
       @param jack       The jack the controller is plugged into
       @param event      The event object to use for events
@@ -76,13 +76,6 @@ class SaveKey : public Controller
       events currently set.
     */
     virtual void update() { }
-
-    /**
-      Notification method invoked by the system right before the
-      system resets its cycle counter to zero.  It may be necessary 
-      to override this method for devices that remember cycle counts.
-    */
-    virtual void systemCyclesReset();
 
   private:
     // The EEPROM used in the SaveKey

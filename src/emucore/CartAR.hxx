@@ -8,23 +8,22 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartAR.hxx,v 1.14 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEAR_HXX
 #define CARTRIDGEAR_HXX
 
-class M6502;
+class M6502High;
 class System;
 
 #include "bspf.hxx"
 #include "Cart.hxx"
-#include "Settings.hxx"
 
 /**
   This is the cartridge class for Arcadia (aka Starpath) Supercharger 
@@ -36,7 +35,7 @@ class System;
   and one bank of ROM.  All 6K of the RAM can be read and written.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: CartAR.hxx,v 1.14 2008-02-06 13:45:21 stephena Exp $
 */
 class CartridgeAR : public Cartridge
 {
@@ -46,9 +45,9 @@ class CartridgeAR : public Cartridge
 
       @param image     Pointer to the ROM image
       @param size      The size of the ROM image
-      @param settings  Used to query 'fastscbios' option
+      @param fastbios  Whether or not to quickly execute the BIOS code
     */
-    CartridgeAR(const uInt8* image, uInt32 size, const Settings& settings);
+    CartridgeAR(const uInt8* image, uInt32 size, bool fastbios);
 
     /**
       Destructor
@@ -162,14 +161,11 @@ class CartridgeAR : public Cartridge
     void loadIntoRAM(uInt8 load);
 
     // Sets up a "dummy" BIOS ROM in the ROM bank of the cartridge
-    void initializeROM();
+    void initializeROM(bool fastbios);
 
   private:
     // Pointer to the 6502 processor in the system
-    M6502* my6502;
-
-    // Reference to the settings object (needed for 'fastscbios'
-    const Settings& mySettings;
+    M6502High* my6502;
 
     // Indicates the offest within the image for the corresponding bank
     uInt32 myImageOffset[2];

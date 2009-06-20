@@ -8,17 +8,16 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: MT24LC256.cxx,v 1.11 2008-05-15 19:05:09 stephena Exp $
 //============================================================================
 
 #include <cassert>
 #include <cstdio>
-#include <cstring>
 #include <fstream>
 
 #include "System.hxx"
@@ -140,22 +139,11 @@ void MT24LC256::update()
   {
 #if DEBUG_EEPROM
     cerr << endl << "  I2C_PIN_WRITE(SCL = " << mySCL
-         << ", SDA = " << mySDA << ")" << " @ " << mySystem.cycles() << endl;
+         << ", SDA = " << mySDA << ")" << endl;
 #endif
     jpee_clock(mySCL);
     jpee_data(mySDA);
   }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MT24LC256::systemCyclesReset()
-{
-  // System cycles are being reset to zero so we need to adjust
-  // the cycle counts we remembered
-  uInt32 cycles = mySystem.cycles();
-  myCyclesWhenSDASet -= cycles;
-  myCyclesWhenSCLSet -= cycles;
-  myCyclesWhenTimerSet -= cycles;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -169,7 +157,9 @@ void MT24LC256::jpee_init()
   jpee_smallmode = 0;
   jpee_logmode = -1;
   if(!myDataFileExists)
-    memset(myData, 0xff, 32768);
+    for(int i = 0; i < 256; i++)
+      for(int j = 0; j < 128; j++)
+        myData[i + j*256] = (i+1)*(j+1);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

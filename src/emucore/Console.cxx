@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.cxx,v 1.142 2008-05-16 12:04:34 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -31,9 +31,10 @@
 #include "EventHandler.hxx"
 #include "Joystick.hxx"
 #include "Keyboard.hxx"
-#include "KidVid.hxx"
-#include "M6502.hxx"
+#include "M6502Hi.hxx"
+#include "M6502Low.hxx"
 #include "M6532.hxx"
+#include "MediaSrc.hxx"
 #include "Paddles.hxx"
 #include "Props.hxx"
 #include "PropsSet.hxx"
@@ -63,13 +64,14 @@
 Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   : myOSystem(osystem),
     myProperties(props),
+    myAVox(0),
     myDisplayFormat("NTSC"),
-    myFramerate(60.0),
+    myFramerate(60),
     myUserPaletteDefined(false)
 {
   myControllers[0] = 0;
   myControllers[1] = 0;
-  myTIA = 0;
+  myMediaSource = 0;
   mySwitches = 0;
   mySystem = 0;
   myEvent = 0;
@@ -86,100 +88,105 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   // Construct the system and components
   mySystem = new System(13, 6);
 
-  // The real controllers for this console will be added later
-  // For now, we just add dummy joystick controllers, since autodetection
-  // runs the emulation for a while, and this may interfere with 'smart'
-  // controllers such as the AVox and SaveKey
-  // Note that the controllers must be added directly after the system
-  // has been created, and before any other device is added
-  // (particularly the M6532)
-  myControllers[0] = new Joystick(Controller::Left, *myEvent, *mySystem);
-  myControllers[1] = new Joystick(Controller::Right, *myEvent, *mySystem);
-
-  M6502* m6502 = new M6502(1);
+  M6502* m6502;
+  if(myOSystem->settings().getString("cpu") == "low")
+    m6502 = new M6502Low(1);
+  else
+    m6502 = new M6502High(1);
 #ifdef DEBUGGER_SUPPORT
   m6502->attach(myOSystem->debugger());
 #endif
 
-  myCart = cart;
-  myRiot = new M6532(*this);
-  myTIA  = new TIA(*this, myOSystem->sound(), myOSystem->settings());
+  M6532* m6532 = new M6532(*this);
+  TIA *tia = new TIA(*this, myOSystem->settings());
+  tia->setSound(myOSystem->sound());
 
   mySystem->attach(m6502);
-  mySystem->attach(myRiot);
-  mySystem->attach(myTIA);
-  mySystem->attach(myCart);
+  mySystem->attach(m6532);
+  mySystem->attach(tia);
+  mySystem->attach(cart);
+
+  // Remember what my media source is
+  myMediaSource = tia;
+  myCart = cart;
+  myRiot = m6532;
+
+  // The real controllers for this console will be added later
+  // For now, we just add dummy joystick controllers, since autodetection
+  // runs the emulation for a while, and this may interfere with 'smart'
+  // controllers such as the AVox and SaveKey
+  myControllers[0] = new Joystick(Controller::Left, *myEvent, *mySystem);
+  myControllers[1] = new Joystick(Controller::Right, *myEvent, *mySystem);
+
+  // Query some info about this console
+  ostringstream about, vidinfo;
 
   // Auto-detect NTSC/PAL mode if it's requested
-  string autodetected = "";
   myDisplayFormat = myProperties.get(Display_Format);
+  vidinfo << "  Display Format:  " << myDisplayFormat;
   if(myDisplayFormat == "AUTO-DETECT" ||
      myOSystem->settings().getBool("rominfo"))
   {
     // Run the system for 60 frames, looking for PAL scanline patterns
-    // We turn off the SuperCharger progress bars, otherwise the SC BIOS
-    // will take over 250 frames!
-    // The 'fastscbios' option must be changed before the system is reset
-    bool fastscbios = myOSystem->settings().getBool("fastscbios");
-    myOSystem->settings().setBool("fastscbios", true);
+    // We assume the first 30 frames are garbage, and only consider
+    // the second 30 (useful to get past SuperCharger BIOS)
+    // Unfortunately, this means we have to always enable 'fastscbios',
+    // since otherwise the BIOS loading will take over 250 frames!
     mySystem->reset();
     int palCount = 0;
     for(int i = 0; i < 60; ++i)
     {
-      myTIA->update();
-      if(myTIA->scanlines() > 285)
+      myMediaSource->update();
+      if(i >= 30 && myMediaSource->scanlines() > 285)
         ++palCount;
     }
-    myDisplayFormat = (palCount >= 20) ? "PAL" : "NTSC";
-    if(myProperties.get(Display_Format) == "AUTO-DETECT")
-      autodetected = "*";
 
-    // Don't forget to reset the SC progress bars again
-    myOSystem->settings().setBool("fastscbios", fastscbios);
+    myDisplayFormat = (palCount >= 15) ? "PAL" : "NTSC";
+    if(myProperties.get(Display_Format) == "AUTO-DETECT")
+      vidinfo << " ==> " << myDisplayFormat;
   }
-  myConsoleInfo.DisplayFormat = myDisplayFormat + autodetected;
 
   // Set up the correct properties used when toggling format
   // Note that this can be overridden if a format is forced
   //   For example, if a PAL ROM is forced to be NTSC, it will use NTSC-like
   //   properties (60Hz, 262 scanlines, etc) and cycle between NTSC-like modes
-  // The TIA will self-adjust the framerate if necessary
   if(myDisplayFormat == "NTSC" || myDisplayFormat == "PAL60" ||
      myDisplayFormat == "SECAM60")
   {
     // Assume we've got ~262 scanlines (NTSC-like format)
-    myFramerate = 60.0;
-    myConsoleInfo.InitialFrameRate = "60";
+    myFramerate = 60;
   }
   else
   {
     // Assume we've got ~312 scanlines (PAL-like format)
-    myFramerate = 50.0;
-    myConsoleInfo.InitialFrameRate = "50";
+    myFramerate = 50;
 
     if(myProperties.get(Display_Height) == "210")
       myProperties.set(Display_Height, "250");
   }
 
-  const string& md5 = myProperties.get(Cartridge_MD5);
-
   // Add the real controllers for this system
-  setControllers(md5);
+  setControllers();
 
   // Bumper Bash requires all 4 directions
+  const string& md5 = myProperties.get(Cartridge_MD5);
   bool allow = (md5 == "aa1c41f86ec44c0a44eb64c332ce08af" ||
                 md5 == "1bf503c724001b09be79c515ecfcbd03");
   myOSystem->eventHandler().allowAllDirections(allow);
 
   // Reset the system to its power-on state
+  // TODO - a reset still isn't completely working with Boulderdash
   mySystem->reset();
 
-  // Finally, add remaining info about the console
-  myConsoleInfo.CartName   = myProperties.get(Cartridge_Name);
-  myConsoleInfo.CartMD5    = myProperties.get(Cartridge_MD5);
-  myConsoleInfo.Control0   = myControllers[0]->about();
-  myConsoleInfo.Control1   = myControllers[1]->about();
-  myConsoleInfo.BankSwitch = cart->about();
+  // Finally, show some info about the console
+  about << "  Cart Name:       " << myProperties.get(Cartridge_Name) << endl
+        << "  Cart MD5:        " << myProperties.get(Cartridge_MD5) << endl
+        << "  Controller 0:    " << myControllers[0]->about() << endl
+        << "  Controller 1:    " << myControllers[1]->about() << endl
+        << vidinfo.str() << endl
+        << cart->about();
+
+  myAboutString = about.str();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -252,7 +259,7 @@ void Console::toggleFormat()
 
   if(myDisplayFormat.compare(0, 4, "NTSC") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "PAL60";
       message = "PAL palette (PAL60)";
@@ -265,7 +272,7 @@ void Console::toggleFormat()
   }
   else if(myDisplayFormat.compare(0, 3, "PAL") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "SECAM";
       message = "SECAM palette (SECAM60)";
@@ -278,7 +285,7 @@ void Console::toggleFormat()
   }
   else if(myDisplayFormat.compare(0, 5, "SECAM") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "NTSC";
       message = "NTSC palette (NTSC)";
@@ -416,18 +423,15 @@ void Console::setProperties(const Properties& props)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Console::initializeVideo(bool full)
+void Console::initializeVideo(bool full)
 {
   if(full)
   {
     string title = string("Stella ") + STELLA_VERSION +
                    ": \"" + myProperties.get(Cartridge_Name) + "\"";
-    if(!myOSystem->frameBuffer().initialize(title,
-          myTIA->width() << 1, myTIA->height()))
-      return false;
-
-    myOSystem->frameBuffer().showFrameStats(
-      myOSystem->settings().getBool("stats"));
+    myOSystem->frameBuffer().initialize(title,
+                                        myMediaSource->width() << 1,
+                                        myMediaSource->height());
   }
 
   bool enable = myProperties.get(Display_Phosphor) == "YES";
@@ -436,18 +440,7 @@ bool Console::initializeVideo(bool full)
   setColorLossPalette(myOSystem->settings().getBool("colorloss"));
   setPalette(myOSystem->settings().getString("palette"));
 
-  // Set the correct framerate based on the format of the ROM
-  // This can be overridden by changing the framerate in the
-  // VideoDialog box or on the commandline, but it can't be saved
-  // (ie, framerate is now determined based on number of scanlines).
-  int framerate = myOSystem->settings().getInt("framerate");
-  if(framerate > 0) myFramerate = float(framerate);
-  myOSystem->setFramerate(myFramerate);
-
-  // Make sure auto-frame calculation is only enabled when necessary
-  myTIA->enableAutoFrame(framerate <= 0);
-
-  return true;
+  myOSystem->setFramerate(getFramerate());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -456,18 +449,13 @@ void Console::initializeAudio()
   // Initialize the sound interface.
   // The # of channels can be overridden in the AudioDialog box or on
   // the commandline, but it can't be saved.
-  int framerate = myOSystem->settings().getInt("framerate");
-  if(framerate > 0) myFramerate = float(framerate);
   const string& sound = myProperties.get(Cartridge_Sound);
   uInt32 channels = (sound == "STEREO" ? 2 : 1);
 
   myOSystem->sound().close();
   myOSystem->sound().setChannels(channels);
-  myOSystem->sound().setFrameRate(myFramerate);
-  myOSystem->sound().open();
-
-  // Make sure auto-frame calculation is only enabled when necessary
-  myTIA->enableAutoFrame(framerate <= 0);
+  myOSystem->sound().setFrameRate(getFramerate());
+  myOSystem->sound().initialize();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -526,7 +514,7 @@ void Console::changeYStart(int direction)
 
   strval << ystart;
   myProperties.set(Display_YStart, strval.str());
-  myTIA->frameReset();
+  ((TIA*)myMediaSource)->frameReset();
   myOSystem->frameBuffer().refresh();
 
   message = "YStart ";
@@ -564,7 +552,7 @@ void Console::changeHeight(int direction)
 
   strval << height;
   myProperties.set(Display_Height, strval.str());
-  myTIA->frameReset();
+  ((TIA*)myMediaSource)->frameReset();
   initializeVideo();  // takes care of refreshing the screen
 
   message = "Height ";
@@ -573,7 +561,7 @@ void Console::changeHeight(int direction)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setControllers(const string& rommd5)
+void Console::setControllers()
 {
   delete myControllers[0];
   delete myControllers[1];
@@ -668,22 +656,18 @@ void Console::setControllers(const string& rommd5)
   }
   else if(right == "ATARIVOX")
   {
-    const string& eepromfile = myOSystem->eepromDir() + BSPF_PATH_SEPARATOR +
-                               "atarivox_eeprom.dat";
-    myControllers[rightPort] = new AtariVox(Controller::Right, *myEvent,
-                   *mySystem, myOSystem->serialPort(),
+    string eepromfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR +
+                        "atarivox_eeprom.dat";
+    myControllers[rightPort] = myAVox =
+      new AtariVox(Controller::Right, *myEvent, *mySystem, myOSystem->serialPort(),
                    myOSystem->settings().getString("avoxport"), eepromfile);
   }
   else if(right == "SAVEKEY")
   {
-    const string& eepromfile = myOSystem->eepromDir() + BSPF_PATH_SEPARATOR +
+    string eepromfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR +
                         "savekey_eeprom.dat";
     myControllers[rightPort] = new SaveKey(Controller::Right, *myEvent, *mySystem,
                                            eepromfile);
-  }
-  else if(right == "KIDVID")
-  {
-    myControllers[rightPort] = new KidVid(Controller::Right, *myEvent, *mySystem, rommd5);
   }
   else
   {
@@ -694,7 +678,7 @@ void Console::setControllers(const string& rommd5)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Console::toggleTIABit(TIA::TIABit bit, const string& bitname, bool show) const
 {
-  bool result = myTIA->toggleBit(bit);
+  bool result = ((TIA*)myMediaSource)->toggleBit(bit);
   string message = bitname + (result ? " enabled" : " disabled");
   myOSystem->frameBuffer().showMessage(message);
 }
@@ -702,7 +686,7 @@ void Console::toggleTIABit(TIA::TIABit bit, const string& bitname, bool show) co
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Console::enableBits(bool enable) const
 {
-  myTIA->enableBits(enable);
+  ((TIA*)myMediaSource)->enableBits(enable);
   string message = string("TIA bits") + (enable ? " enabled" : " disabled");
   myOSystem->frameBuffer().showMessage(message);
 }
@@ -808,11 +792,14 @@ void Console::setColorLossPalette(bool loss)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setFramerate(float framerate)
+uInt32 Console::getFramerate() const
 {
-  myFramerate = framerate;
-  myOSystem->setFramerate(framerate);
-  myOSystem->sound().setFrameRate(framerate);
+  // Set the correct framerate based on the format of the ROM
+  // This can be overridden by changing the framerate in the
+  // VideoDialog box or on the commandline, but it can't be saved
+  // (ie, framerate is now solely determined based on ROM format).
+  int framerate = myOSystem->settings().getInt("framerate");
+  return framerate == -1 ? myFramerate : framerate;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

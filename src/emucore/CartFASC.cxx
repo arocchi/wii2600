@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartFASC.cxx,v 1.16 2008-03-28 23:29:13 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "Random.hxx"
 #include "System.hxx"
@@ -27,10 +26,17 @@
 CartridgeFASC::CartridgeFASC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 12288);
+  for(uInt32 addr = 0; addr < 12288; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 
-  // This cart contains 256 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 256, 0x100, 0x00);
+  // Initialize RAM with random values
+  class Random random;
+  for(uInt32 i = 0; i < 256; ++i)
+  {
+    myRAM[i] = random.next();
+  }
 }
  
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -41,11 +47,6 @@ CartridgeFASC::~CartridgeFASC()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeFASC::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 256; ++i)
-    myRAM[i] = random.next();
-
   // Upon reset we switch to bank 2
   bank(2);
 }
@@ -95,7 +96,7 @@ void CartridgeFASC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeFASC::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -120,23 +121,21 @@ uInt8 CartridgeFASC::peek(uInt16 address)
   }
 
   // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
   // Thanks to Kroko of AtariAge for this advice and code idea
   if(address < 0x0100)  // Write port is at 0xF000 - 0xF100 (256 bytes)
   {
-    if(myBankLocked) return 0;
-    else return myRAM[address] = 0;
+    return myRAM[address & 0x00FF] = 0;
   }  
   else
   {
-    return myImage[(myCurrentBank << 12) + address];
+    return myImage[myCurrentBank * 4096 + address];
   }  
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeFASC::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -172,7 +171,7 @@ void CartridgeFASC::bank(uInt16 bank)
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -205,7 +204,8 @@ int CartridgeFASC::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeFASC::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

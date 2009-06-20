@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartE0.cxx,v 1.16 2008-03-28 23:29:13 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "CartE0.hxx"
@@ -26,7 +25,10 @@
 CartridgeE0::CartridgeE0(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -83,7 +85,7 @@ void CartridgeE0::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeE0::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if((address >= 0x0FE0) && (address <= 0x0FE7))
@@ -105,7 +107,7 @@ uInt8 CartridgeE0::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeE0::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if((address >= 0x0FE0) && (address <= 0x0FE7))
@@ -192,14 +194,12 @@ void CartridgeE0::segmentTwo(uInt16 slice)
 void CartridgeE0::bank(uInt16)
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeE0::bank()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 0;
 }
 
@@ -207,14 +207,13 @@ int CartridgeE0::bank()
 int CartridgeE0::bankCount()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeE0::patch(uInt16 address, uInt8 value)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
   myImage[(myCurrentSlice[address >> 10] << 10) + (address & 0x03FF)] = value;
   return true;
 } 

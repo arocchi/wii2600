@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Control.hxx,v 1.16 2008-05-15 15:07:29 stephena Exp $
 //============================================================================
 
 #ifndef CONTROLLER_HXX
@@ -57,7 +57,7 @@ class System;
   of the controller from the perspective of the controller's jack.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Control.hxx,v 1.16 2008-05-15 15:07:29 stephena Exp $
 */
 class Controller : public Serializable
 {
@@ -81,8 +81,7 @@ class Controller : public Serializable
     enum Type
     {
       BoosterGrip, Driving, Keyboard, Paddles, Joystick,
-      TrackBall22, TrackBall80, AmigaMouse, AtariVox, SaveKey,
-      KidVid
+      TrackBall22, TrackBall80, AmigaMouse, AtariVox, SaveKey
     };
 
   public:
@@ -157,13 +156,6 @@ class Controller : public Serializable
       events currently set.
     */
     virtual void update() = 0;
-
-    /**
-      Notification method invoked by the system right before the
-      system resets its cycle counter to zero.  It may be necessary 
-      to override this method for devices that remember cycle counts.
-    */
-    virtual void systemCyclesReset() { };
 
     /**
       Saves the current state of this controller to the given Serializer.

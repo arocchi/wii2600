@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartMC.cxx,v 1.14 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "Random.hxx"
 #include "System.hxx"
@@ -27,28 +26,47 @@
 CartridgeMC::CartridgeMC(const uInt8* image, uInt32 size)
   : mySlot3Locked(false)
 {
+  uInt32 i;
+
   // Make sure size is reasonable
-  assert(size <= 131072);
+  assert(size <= 128 * 1024);
+
+  // Allocate array for the cart's RAM
+  myRAM = new uInt8[32 * 1024];
+
+  // Initialize RAM with random values
+  class Random random;
+  for(i = 0; i < 32 * 1024; ++i)
+  {
+    myRAM[i] = random.next();
+  }
+
+  // Allocate array for the ROM image
+  myImage = new uInt8[128 * 1024];
 
   // Set the contents of the entire ROM to 0
-  memset(myImage, 0, 131072);
+  for(i = 0; i < 128 * 1024; ++i)
+  {
+    myImage[i] = 0;
+  }
 
   // Copy the ROM image to the end of the ROM buffer
-  memcpy(myImage + 131072 - size, image, size);
+  for(i = 0; i < size; ++i)
+  {
+    myImage[128 * 1024 - size + i] = image[i];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeMC::~CartridgeMC()
 {
+  delete[] myRAM;
+  delete[] myImage;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 32768; ++i)
-    myRAM[i] = random.next();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -91,7 +109,7 @@ void CartridgeMC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeMC::peek(uInt16 address)
 {
-  address &= 0x1FFF;
+  address = address & 0x1FFF;
 
   // Accessing the RESET vector so lets handle the powerup special case
   if((address == 0x1FFC) || (address == 0x1FFD))
@@ -128,7 +146,7 @@ uInt8 CartridgeMC::peek(uInt16 address)
     if(block & 0x80)
     {
       // ROM access
-      return myImage[(uInt32)((block & 0x7F) << 10) + (address & 0x03FF)];
+      return myImage[(uInt32)(block & 0x7F) * 1024 + (address & 0x03FF)];
     }
     else
     {
@@ -136,12 +154,12 @@ uInt8 CartridgeMC::peek(uInt16 address)
       if(address & 0x0200)
       {
         // Reading from the read port of the RAM block
-        return myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)];
+        return myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)];
       }
       else
       {
         // Oops, reading from the write port of the RAM block!
-        myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)] = 0;
+        myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)] = 0;
         return 0;
       }
     }
@@ -151,7 +169,7 @@ uInt8 CartridgeMC::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x1FFF;
+  address = address & 0x1FFF;
 
   // Accessing the RESET vector so lets handle the powerup special case
   if((address == 0x1FFC) || (address == 0x1FFD))
@@ -188,7 +206,7 @@ void CartridgeMC::poke(uInt16 address, uInt8 value)
     if(!(block & 0x80) && !(address & 0x0200))
     {
       // Handle the write to RAM
-      myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)] = value;
+      myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)] = value;
     }
   }  
 }
@@ -196,27 +214,27 @@ void CartridgeMC::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::bank(uInt16 b)
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeMC::bank()
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
   return 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeMC::bankCount()
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
   return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeMC::patch(uInt16 address, uInt8 value)
 {
-  // TODO - add support for debugger
+  // TODO: implement
   return false;
 } 
 

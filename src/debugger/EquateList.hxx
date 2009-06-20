@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EquateList.hxx,v 1.21 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
 #ifndef EQUATELIST_HXX
@@ -32,7 +32,7 @@ class EquateList
     /**
       Add an equate consisting of the given label and address
     */
-    void addEquate(const string& label, uInt16 address);
+    void addEquate(const string& label, int address);
 
     /**
       Remove the equate with the given label
@@ -46,10 +46,9 @@ class EquateList
       address can have different labels depending on its context, and
       whether its being read or written; if isRead is true, the context
       is a read, else it's a write
-      If places is not -1 and a label hasn't been defined, return a
-      formatted hexidecimal address
     */
-    const string& getLabel(uInt16 addr, bool isRead, int places = -1);
+    const string& getLabel(int addr, bool isRead) const;
+    string getFormatted(int addr, int places, bool isRead) const;
     int getAddress(const string& label) const;
 
     /**
@@ -75,19 +74,14 @@ class EquateList
       EQF_WRITE = 1 << 1,               // address can be written to
       EQF_RW    = EQF_READ | EQF_WRITE  // address can be both read and written
     };
-    enum address_t {
-      ADDR_TIA  = 1 << 0,
-      ADDR_RAM  = 1 << 1,
-      ADDR_RIOT = 1 << 2,
-      ADDR_ROM  = 1 << 3
-    };
+
     struct Equate {
       string label;
-      uInt16 address;
+      int address;
       equate_t flags;
     };
 
-    typedef map<uInt16, Equate> AddrToLabel;
+    typedef map<int, Equate> AddrToLabel;
     typedef map<string, Equate> LabelToAddr;
 
   private:
@@ -97,9 +91,6 @@ class EquateList
 
     // Count completions for the given mapping
     int countCompletions(const char *in, LabelToAddr& addresses);
-
-    // Determine what type address we're dealing with
-    inline void addressType(uInt16 addr);
 
   private:
     enum { kSystemEquateSize = 158 };
@@ -114,9 +105,6 @@ class EquateList
 
     LabelToAddr myUserAddresses;
     AddrToLabel myUserLabels;
-
-    address_t myAddressType;
-    string myCurrentLabel;
 };
 
 #endif

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartCV.hxx,v 1.11 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGECV_HXX
@@ -32,7 +32,7 @@ class System;
   $F800-$FFFF ROM
 
   @author  Eckhard Stolberg
-  @version $Id$
+  @version $Id: CartCV.hxx,v 1.11 2008-02-06 13:45:21 stephena Exp $
 */
 class CartridgeCV : public Cartridge
 {
@@ -139,12 +139,6 @@ class CartridgeCV : public Cartridge
     virtual void poke(uInt16 address, uInt8 value);
 
   private:
-    // Pointer to the initial cart data
-    uInt8* myROM;
-
-    // Initial size of the cart data
-    uInt32 mySize;
-
     // The 2k ROM image for the cartridge
     uInt8 myImage[2048];
 

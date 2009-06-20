@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerParser.cxx,v 1.107 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
 #include <fstream>
@@ -30,7 +30,6 @@
 #include "YaccParser.hxx"
 #include "M6502.hxx"
 #include "Expression.hxx"
-#include "FSNode.hxx"
 #include "RomWidget.hxx"
 
 #ifdef CHEATCODE_SUPPORT
@@ -126,14 +125,16 @@ string DebuggerParser::run(const string& command)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 string DebuggerParser::exec(const string& file, bool verbose)
 {
-  string ret;
+  string ret, path = file;
   int count = 0;
   char buffer[256]; // FIXME: static buffers suck
 
-  FilesystemNode node(file);
-  ifstream in(node.getPath().c_str());
+  if( file.find_last_of('.') == string::npos )
+    path += ".stella";
+
+  ifstream in(path.c_str());
   if(!in.is_open())
-    return red("file \'" + file + "\' not found.");
+    return red("file \"" + path + "\" not found.");
 
   while( !in.eof() ) {
     if(!in.getline(buffer, 255))
@@ -151,7 +152,7 @@ string DebuggerParser::exec(const string& file, bool verbose)
   ret += "Executed ";
   ret += debugger->valueToString(count);
   ret += " commands from \"";
-  ret += file;
+  ret += path;
   ret += "\"\n";
   return ret;
 }
@@ -930,13 +931,6 @@ void DebuggerParser::executeHelp()
   }
   commandResult += "\nBuilt-in functions:\n";
   commandResult += debugger->builtinHelp();
-  commandResult += "\nPseudo-registers:\n";
-  commandResult += "_scan     Current scanline count\n";
-  commandResult += "_bank     Currently selected bank\n";
-  commandResult += "_fcount   Number of frames since emulation started\n";
-  commandResult += "_cclocks  Color clocks on current scanline\n";
-  commandResult += "_vsync    Whether vertical sync is enabled (1 or 0)\n";
-  commandResult += "_vblank   Whether vertical blank is enabled (1 or 0)\n";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -992,7 +986,7 @@ void DebuggerParser::executeListbreaks()
   {
     if(debugger->breakpoints().isSet(i))
     {
-      buf << debugger->equates().getLabel(i, true, 4) << " ";
+      buf << debugger->equates().getFormatted(i, 4, true) << " ";
       if(! (++count % 8) ) buf << "\n";
     }
   }

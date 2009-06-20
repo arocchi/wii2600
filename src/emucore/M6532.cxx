@@ -8,30 +8,37 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6532.cxx,v 1.24 2008-05-06 16:39:11 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <iostream>
-
+#include <assert.h>
 #include "Console.hxx"
+#include "M6532.hxx"
 #include "Random.hxx"
 #include "Switches.hxx"
 #include "System.hxx"
 #include "Serializer.hxx"
 #include "Deserializer.hxx"
-
-#include "M6532.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6532::M6532(const Console& console)
   : myConsole(console)
 {
+  // Randomize the 128 bytes of memory
+  class Random random;
+
+  for(uInt32 t = 0; t < 128; ++t)
+  {
+    myRAM[t] = random.next();
+  }
+
+  // Initialize other data members
   reset();
 }
  
@@ -45,14 +52,8 @@ void M6532::reset()
 {
   class Random random;
 
-  // Randomize the 128 bytes of memory
-  for(uInt32 t = 0; t < 128; ++t)
-    myRAM[t] = random.next();
-
-  // The timer absolutely cannot be initialized to zero; some games will
-  // loop or hang (notably Solaris and H.E.R.O.)
-  myTimer = (0xff - (random.next() % 0xfe)) << 10;
-  myIntervalShift = 10;
+  myTimer = 25 + (random.next() % 75);
+  myIntervalShift = 6;
   myCyclesWhenTimerSet = 0;
   myInterruptEnabled = false;
   myInterruptTriggered = false;
@@ -70,10 +71,6 @@ void M6532::systemCyclesReset()
   // System cycles are being reset to zero so we need to adjust
   // the cycle count we remembered when the timer was last set
   myCyclesWhenTimerSet -= mySystem->cycles();
-
-  // We should also inform any 'smart' controllers as well
-  myConsole.controller(Controller::Left).systemCyclesReset();
-  myConsole.controller(Controller::Right).systemCyclesReset();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -168,14 +165,9 @@ uInt8 M6532::peek(uInt16 addr)
       myInterruptTriggered = false;
       Int32 timer = timerClocks();
 
-      // See if the timer has expired yet?
-      // Note that this constant comes from z26, and corresponds to
-      // 256 intervals of T1024T (ie, the maximum that the timer should hold)
-      // I'm not sure why this is required, but quite a few PAL ROMs fail
-      // if we just check >= 0.
-      if(!(timer & 0x40000))
+      if(timer >= 0)
       {
-        return (timer >> myIntervalShift) & 0xff;
+        return (uInt8)(timer >> myIntervalShift);
       }
       else
       {
@@ -184,16 +176,23 @@ uInt8 M6532::peek(uInt16 addr)
 
         // According to the M6532 documentation, the timer continues to count
         // down to -255 timer clocks after wraparound.  However, it isn't
-        // entirely clear what happens *after* if reaches -255.
-        // For now, we'll let it continuously wrap around.
-        return timer & 0xff;
+        // entirely clear what happens *after* if reaches -255.  If we go
+        // to zero at that time, Solaris fails to load correctly.
+        // However, if the count goes on forever, HERO fails to load
+        // correctly.
+        // So we use the approach of z26, and let the counter continue
+        // downward (after wraparound) for the maximum number of clocks
+        // (256 * 1024) = 0x40000.  I suspect this is a hack that works
+        // for all the ROMs we've tested; it would be nice to determine
+        // what really happens in hardware.
+        return (uInt8)(timer >= -0x40000 ? timer : 0);
       }
     }
 
     case 0x05:    // Interrupt Flag
     case 0x07:
     {
-      if((timerClocks() >= 0) || (myInterruptEnabled && myInterruptTriggered))
+      if((timerClocks() >= 0) || myInterruptEnabled && myInterruptTriggered)
         return 0x00;
       else
         return 0x80;
@@ -238,14 +237,14 @@ void M6532::poke(uInt16 addr, uInt8 value)
       case 0:     // Port A I/O Register (Joystick)
       {
         myOutA = value;
-        setPinState();
+        setOutputState();
         break;
       }
 
       case 1:     // Port A Data Direction Register 
       {
         myDDRA = value;
-        setPinState();
+        setOutputState();
         break;
       }
 
@@ -268,14 +267,14 @@ void M6532::setTimerRegister(uInt8 value, uInt8 interval)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6532::setPinState()
+void M6532::setOutputState()
 {
   /*
     When a bit in the DDR is set as input, +5V is placed on its output
     pin.  When it's set as output, either +5V or 0V (depending on the
     contents of SWCHA) will be placed on the output pin.
-    The standard macros for the AtariVox and SaveKey use this fact to
-    send data to the port.  This is represented by the following algorithm:
+    The standard macros for the AtariVox use this fact to send data
+    to the port.  This is represented by the following algorithm:
 
       if(DDR bit is input)       set output as 1
       else if(DDR bit is output) set output as bit in ORA

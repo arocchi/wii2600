@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherDialog.hxx,v 1.34 2008-03-14 19:34:56 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -26,29 +26,25 @@
 
 class ButtonWidget;
 class CommandSender;
-class ContextMenu;
 class DialogContainer;
 class GameList;
 class OptionsDialog;
-class GlobalPropsDialog;
-class LauncherFilterDialog;
 class OSystem;
+class ProgressDialog;
 class Properties;
-class EditTextWidget;
 class RomInfoWidget;
 class StaticTextWidget;
 class StringListWidget;
 
 #include "Dialog.hxx"
 #include "FSNode.hxx"
-#include "StringList.hxx"
 
-// These must be accessible from dialogs created by this class
+
+// These must be accessible from LauncherOptionsDialog
 enum {
   kRomDirChosenCmd  = 'romc',  // rom chosen
   kSnapDirChosenCmd = 'snpc',  // snap chosen
-  kReloadRomDirCmd  = 'rdrl',  // reload the current listing
-  kReloadFiltersCmd = 'rlfl'   // reload filtering options and current listing
+  kReloadRomDirCmd  = 'rdrl'   // reload the current listing
 };
 
 class LauncherDialog : public Dialog
@@ -66,22 +62,12 @@ class LauncherDialog : public Dialog
     string selectedRomMD5();
 
   protected:
-    virtual void handleKeyDown(int ascii, int keycode, int modifiers);
-    virtual void handleMouseDown(int x, int y, int button, int clickCount);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
+    void updateListing(bool fullReload = false);
     void loadConfig();
-    void updateListing();
 
-  private:
-    void enableButtons(bool enable);
-    void loadDirListing();
-    void loadRomInfo();
-    void handleContextMenu();
-    void setListFilters();
-    bool matchPattern(const string& s, const string& pattern);
-
-  private:
+  protected:
     ButtonWidget* myStartButton;
     ButtonWidget* myPrevDirButton;
     ButtonWidget* myOptionsButton;
@@ -91,22 +77,22 @@ class LauncherDialog : public Dialog
     StaticTextWidget* myDirLabel;
     StaticTextWidget* myDir;
     StaticTextWidget* myRomCount;
-    EditTextWidget*   myPattern;
     GameList*         myGameList;
 
     OptionsDialog*    myOptions;
+    ProgressDialog*   myProgressBar;
+
     RomInfoWidget*    myRomInfoWidget;
 
-    ContextMenu*          myMenu;
-    GlobalPropsDialog*    myGlobalProps;
-    LauncherFilterDialog* myFilters;
+  private:
+    void enableButtons(bool enable);
+    void loadDirListing();
+    void loadRomInfo();
 
+  private:
     int mySelectedItem;
-    int myRomInfoSize;
+    bool myRomInfoFlag;
     FilesystemNode myCurrentNode;
-
-    bool myShowDirs;
-    StringList myRomExts;
 
     enum {
       kStartCmd   = 'STRT',

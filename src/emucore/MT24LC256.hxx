@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: MT24LC256.hxx,v 1.5 2008-05-11 21:18:35 stephena Exp $
 //============================================================================
 
 #ifndef MT24LC256_HXX
@@ -30,7 +30,7 @@ class System;
   (aka Supercat) for the bulk of this code.
 
   @author  Stephen Anthony & J. Payson
-  @version $Id$
+  @version $Id: MT24LC256.hxx,v 1.5 2008-05-11 21:18:35 stephena Exp $
 */
 class MT24LC256
 {
@@ -55,13 +55,6 @@ class MT24LC256
     /** Write boolean data to the SDA and SCL lines */
     void writeSDA(bool state);
     void writeSCL(bool state);
-
-    /**
-      Notification method invoked by the system right before the
-      system resets its cycle counter to zero.  It may be necessary 
-      to override this method for devices that remember cycle counts.
-    */
-    void systemCyclesReset();
 
   private:
     // I2C access code provided by Supercat
@@ -116,5 +109,5 @@ class MT24LC256
     // Assignment operator isn't supported by this class so make it private
     MT24LC256& operator = (const MT24LC256&);
 };
-
 #endif
+

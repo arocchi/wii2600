@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPortUNIX.cxx,v 1.4 2008-04-11 17:56:34 stephena Exp $
 //============================================================================
 
 #include <sys/types.h>
@@ -23,7 +23,6 @@
 #include <sys/termios.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <cstring>
 
 #include "SerialPortUNIX.hxx"
 
@@ -37,7 +36,6 @@ SerialPortUNIX::SerialPortUNIX()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SerialPortUNIX::~SerialPortUNIX()
 {
-  closePort();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -63,10 +61,7 @@ bool SerialPortUNIX::openPort(const string& device)
 void SerialPortUNIX::closePort()
 {
   if(myHandle)
-  {
     close(myHandle);
-    myHandle = 0;
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

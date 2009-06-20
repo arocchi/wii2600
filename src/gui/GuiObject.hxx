@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GuiObject.hxx,v 1.24 2008-02-06 13:45:23 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,7 +22,6 @@
 #ifndef GUI_OBJECT_HXX
 #define GUI_OBJECT_HXX
 
-class Dialog;
 class DialogContainer;
 class Widget;
 
@@ -43,14 +42,19 @@ enum {
   kSetPositionCmd  = 'SETP',
   kTabChangedCmd   = 'TBCH',
   kCheckActionCmd  = 'CBAC',
-  kRefreshAllCmd   = 'REFA'
+  kRefreshAllCmd   = 'REFA',
+  kResizeCmd       = 'RESZ'
+};
+
+enum {
+  kScrollBarWidth = 9
 };
 
 /**
   This is the base class for all GUI objects/widgets.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: GuiObject.hxx,v 1.24 2008-02-06 13:45:23 stephena Exp $
 */
 class GuiObject : public CommandReceiver
 {
@@ -58,11 +62,9 @@ class GuiObject : public CommandReceiver
   friend class DialogContainer;
 
   public:
-    GuiObject(OSystem& osystem, DialogContainer& parent, Dialog& dialog,
-              int x, int y, int w, int h)
+    GuiObject(OSystem* osystem, DialogContainer* parent, int x, int y, int w, int h)
       : myOSystem(osystem),
         myParent(parent),
-        myDialog(dialog),
         _x(x),
         _y(y),
         _w(w),
@@ -72,9 +74,8 @@ class GuiObject : public CommandReceiver
 
     virtual ~GuiObject() {}
 
-    OSystem& instance()       { return myOSystem; }
-    DialogContainer& parent() { return myParent;  }
-    Dialog& dialog()          { return myDialog;  }
+    OSystem* instance() { return myOSystem; }
+    DialogContainer* parent() { return myParent; }
 
     virtual int getAbsX() const     { return _x; }
     virtual int getAbsY() const     { return _y; }
@@ -83,10 +84,11 @@ class GuiObject : public CommandReceiver
     virtual int getWidth() const    { return _w; }
     virtual int getHeight() const   { return _h; }
 
-    virtual void setWidth(int w)    { _w = w; }
-    virtual void setHeight(int h)   { _h = h; }
+    virtual void setPos(int x, int y) { _x = x; _y = y; }
+    virtual void setWidth(int w)      { _w = w; }
+    virtual void setHeight(int h)     { _h = h; }
 
-    virtual void setDirty() { _dirty = true; }
+    virtual void setDirty()         { _dirty = true; }
 
     virtual bool isVisible() const = 0;
     virtual void draw() = 0;
@@ -103,12 +105,10 @@ class GuiObject : public CommandReceiver
   protected:
     virtual void releaseFocus() = 0;
 
-  private:
-    OSystem&         myOSystem;
-    DialogContainer& myParent;
-    Dialog&          myDialog;
-
   protected:
+    OSystem*         myOSystem;
+    DialogContainer* myParent;
+
     int _x, _y;
     int _w, _h;
     bool _dirty;

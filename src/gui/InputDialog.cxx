@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputDialog.cxx,v 1.32 2008-05-11 21:18:35 stephena Exp $
 //============================================================================
 
 #include "bspf.hxx"
@@ -23,7 +23,6 @@
 #include "Joystick.hxx"
 #include "Paddles.hxx"
 #include "Settings.hxx"
-#include "StringList.hxx"
 #include "EventMappingWidget.hxx"
 #include "EditTextWidget.hxx"
 #include "PopUpWidget.hxx"
@@ -35,19 +34,17 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
-                         const GUI::Font& font)
-  : Dialog(osystem, parent, 0, 0, 0, 0)
+                         const GUI::Font& font, int x, int y, int w, int h)
+  : Dialog(osystem, parent, x, y, w, h)
 {
-  const int lineHeight   = font.getLineHeight(),
-            fontWidth    = font.getMaxCharWidth(),
-            buttonHeight = font.getLineHeight() + 4;
+  const int buttonHeight = font.getLineHeight() + 4;
   const int vBorder = 4;
   int xpos, ypos, tabID;
   WidgetArray wid;
 
   // Set real dimensions
-  _w = 42 * fontWidth + 10;
-  _h = 12 * (lineHeight + 4) + 10;
+//  _w = 42 * fontWidth + 10;
+//  _h = 12 * (lineHeight + 4) + 10;
 
   // The tab widget
   xpos = 2; ypos = vBorder;
@@ -58,7 +55,7 @@ InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
 
   // 1) Event mapper for emulation actions
   tabID = myTab->addTab("Emul. Events");
-  const StringList& eactions = instance().eventHandler().getActionList(kEmulationMode);
+  const StringList& eactions = instance()->eventHandler().getActionList(kEmulationMode);
   myEmulEventMapper = new EventMappingWidget(myTab, font, 2, 2,
                                              myTab->getWidth(),
                                              myTab->getHeight() - ypos,
@@ -68,7 +65,7 @@ InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
 
   // 2) Event mapper for UI actions
   tabID = myTab->addTab("UI Events");
-  const StringList& mactions = instance().eventHandler().getActionList(kMenuMode);
+  const StringList& mactions = instance()->eventHandler().getActionList(kMenuMode);
   myMenuEventMapper = new EventMappingWidget(myTab, font, 2, 2,
                                              myTab->getWidth(),
                                              myTab->getHeight() - ypos,
@@ -101,7 +98,6 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
             fontHeight = font.getFontHeight();
   int xpos, ypos, lwidth, pwidth, tabID;
   WidgetArray wid;
-  StringMap items;
 
   // Virtual device/ports
   tabID = myTab->addTab("Virtual Devs");
@@ -111,21 +107,21 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
   lwidth = font.getStringWidth("Stelladaptor 2 is: ");
   pwidth = font.getStringWidth("right virtual port");
 
-  items.clear();
-  items.push_back("left virtual port", "left");
-  items.push_back("right virtual port", "right");
-  myLeftPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight, items,
+  myLeftPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
                                "Stelladaptor 1 is: ", lwidth, kLeftChanged);
+  myLeftPort->appendEntry("left virtual port", 1);
+  myLeftPort->appendEntry("right virtual port", 2);
   wid.push_back(myLeftPort);
 
   ypos += lineHeight + 5;
-  // ... use items from above
-  myRightPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight, items,
+  myRightPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
                                 "Stelladaptor 2 is: ", lwidth, kRightChanged);
+  myRightPort->appendEntry("left virtual port", 1);
+  myRightPort->appendEntry("right virtual port", 2);
   wid.push_back(myRightPort);
 
   lwidth = font.getStringWidth("Paddle threshold: ");
-  pwidth = font.getMaxCharWidth() * 8;
+  pwidth = font.getMaxCharWidth() * 5;
 
   // Add joystick deadzone setting
   ypos += 2*lineHeight;
@@ -178,27 +174,27 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
 void InputDialog::loadConfig()
 {
   // Left & right ports
-  const string& sa1 = instance().settings().getString("sa1");
-  int lport = sa1 == "right" ? 1 : 0;
-  myLeftPort->setSelected(lport);
-  const string& sa2 = instance().settings().getString("sa2");
-  int rport = sa2 == "right" ? 1 : 0;
-  myRightPort->setSelected(rport);
+  const string& sa1 = instance()->settings().getString("sa1");
+  int lport = sa1 == "right" ? 2 : 1;
+  myLeftPort->setSelectedTag(lport);
+  const string& sa2 = instance()->settings().getString("sa2");
+  int rport = sa2 == "right" ? 2 : 1;
+  myRightPort->setSelectedTag(rport);
 
   // Joystick deadzone
-  myDeadzone->setValue(instance().settings().getInt("joydeadzone"));
-  myDeadzoneLabel->setLabel(instance().settings().getString("joydeadzone"));
+  myDeadzone->setValue(instance()->settings().getInt("joydeadzone"));
+  myDeadzoneLabel->setLabel(instance()->settings().getString("joydeadzone"));
 
   // Paddle mode
   myPaddleMode->setValue(0);
   myPaddleModeLabel->setLabel("0");
 
   // Paddle speed
-  myPaddleSpeed->setValue(instance().settings().getInt("pspeed"));
-  myPaddleLabel->setLabel(instance().settings().getString("pspeed"));
+  myPaddleSpeed->setValue(instance()->settings().getInt("pspeed"));
+  myPaddleLabel->setLabel(instance()->settings().getString("pspeed"));
 
   // AtariVox serial port
-  myAVoxPort->setEditString(instance().settings().getString("avoxport"));
+  myAVoxPort->setEditString(instance()->settings().getString("avoxport"));
 
   myTab->loadConfig();
 }
@@ -207,13 +203,13 @@ void InputDialog::loadConfig()
 void InputDialog::saveConfig()
 {
   // Left & right ports
-  const string& sa1 = myLeftPort->getSelectedTag();
-  const string& sa2 = myRightPort->getSelectedTag();
-  instance().eventHandler().mapStelladaptors(sa1, sa2);
+  const string& sa1 = myLeftPort->getSelectedTag() == 2 ? "right" : "left";
+  const string& sa2 = myRightPort->getSelectedTag() == 2 ? "right" : "left";
+  instance()->eventHandler().mapStelladaptors(sa1, sa2);
 
   // Joystick deadzone
   int deadzone = myDeadzone->getValue();
-  instance().settings().setInt("joydeadzone", deadzone);
+  instance()->settings().setInt("joydeadzone", deadzone);
   Joystick::setDeadZone(deadzone);
 
   // Paddle mode
@@ -221,11 +217,11 @@ void InputDialog::saveConfig()
 
   // Paddle speed
   int speed = myPaddleSpeed->getValue();
-  instance().settings().setInt("pspeed", speed);
+  instance()->settings().setInt("pspeed", speed);
   Paddles::setDigitalSpeed(speed);
 
   // AtariVox serial port
-  instance().settings().setString("avoxport", myAVoxPort->getEditString());
+  instance()->settings().setString("avoxport", myAVoxPort->getEditString());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -293,13 +289,13 @@ void InputDialog::handleCommand(CommandSender* sender, int cmd,
       break;
 
     case kLeftChanged:
-      myRightPort->setSelected(
-        myLeftPort->getSelected() == 1 ? 0 : 1);
+      myRightPort->setSelectedTag(
+        myLeftPort->getSelectedTag() == 2 ? 1 : 2);
       break;
 
     case kRightChanged:
-      myLeftPort->setSelected(
-        myRightPort->getSelected() == 1 ? 0 : 1);
+      myLeftPort->setSelectedTag(
+        myRightPort->getSelectedTag() == 2 ? 1 : 2);
       break;
 
     case kDeadzoneChanged:

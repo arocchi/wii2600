@@ -8,15 +8,13 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TrackBall.cxx,v 1.1 2008-05-12 22:40:25 stephena Exp $
 //============================================================================
-
-#include <cstdlib>
 
 #include "Event.hxx"
 #include "System.hxx"
@@ -155,13 +153,6 @@ void TrackBall::update()
   // Get mouse button state
   myDigitalPinState[Six] = (myEvent.get(Event::MouseButtonValue) == 0);
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void TrackBall::systemCyclesReset()
-{
-  myCyclesWhenSWCHARead -= mySystem.cycles();
-}
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 const uInt32 TrackBall::ourTrakBallTableTB_H[2][2] = {

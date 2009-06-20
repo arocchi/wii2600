@@ -462,14 +462,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\CartEF.cxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEFSC.cxx"
-					>
-				</File>
-				<File
 					RelativePath="..\emucore\CartF4.cxx"
 					>
 				</File>
@@ -566,11 +558,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\KidVid.cxx"
+					RelativePath="..\emucore\m6502\src\M6502.cxx"
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\m6502\src\M6502.cxx"
+					RelativePath="..\emucore\m6502\src\M6502Hi.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Low.cxx"
 					>
 				</File>
 				<File
@@ -583,6 +579,10 @@
 				</File>
 				<File
 					RelativePath="..\emucore\MediaFactory.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\MediaSrc.cxx"
 					>
 				</File>
 				<File
@@ -646,10 +646,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\TIATables.cxx"
-					>
-				</File>
-				<File
 					RelativePath="..\emucore\TrackBall.cxx"
 					>
 				</File>
@@ -691,6 +687,10 @@
 				</File>
 				<File
 					RelativePath="..\debugger\gui\ColorWidget.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\debugger\gui\ContextMenu.cxx"
 					>
 				</File>
 				<File
@@ -826,10 +826,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\gui\ContextMenu.cxx"
-					>
-				</File>
-				<File
 					RelativePath="..\gui\Dialog.cxx"
 					>
 				</File>
@@ -866,10 +862,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\gui\GlobalPropsDialog.cxx"
-					>
-				</File>
-				<File
 					RelativePath="..\gui\HelpDialog.cxx"
 					>
 				</File>
@@ -887,10 +879,6 @@
 				</File>
 				<File
 					RelativePath="..\gui\LauncherDialog.cxx"
-					>
-				</File>
-				<File
-					RelativePath="..\gui\LauncherFilterDialog.cxx"
 					>
 				</File>
 				<File
@@ -969,14 +957,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\GLShaderProgs.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\HomeFinder.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\win32\OSystemWin32.hxx"
 				>
 			</File>
@@ -990,10 +970,6 @@
 			</File>
 			<File
 				RelativePath="..\win32\SettingsWin32.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\common\SharedPtr.hxx"
 				>
 			</File>
 			<File
@@ -1077,14 +1053,6 @@
 				</File>
 				<File
 					RelativePath="..\emucore\CartE7.hxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEF.hxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEFSC.hxx"
 					>
 				</File>
 				<File
@@ -1188,11 +1156,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\KidVid.hxx"
+					RelativePath="..\emucore\m6502\src\M6502.hxx"
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\m6502\src\M6502.hxx"
+					RelativePath="..\emucore\m6502\src\M6502Hi.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Low.hxx"
 					>
 				</File>
 				<File
@@ -1205,6 +1177,10 @@
 				</File>
 				<File
 					RelativePath="..\emucore\MediaFactory.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\MediaSrc.hxx"
 					>
 				</File>
 				<File
@@ -1276,10 +1252,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\TIATables.hxx"
-					>
-				</File>
-				<File
 					RelativePath="..\emucore\TrackBall.hxx"
 					>
 				</File>
@@ -1297,6 +1269,10 @@
 				</File>
 				<File
 					RelativePath="..\debugger\gui\ColorWidget.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\debugger\gui\ContextMenu.hxx"
 					>
 				</File>
 				<File
@@ -1480,10 +1456,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\gui\ContextMenu.hxx"
-					>
-				</File>
-				<File
 					RelativePath="..\gui\Dialog.hxx"
 					>
 				</File>
@@ -1520,10 +1492,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\gui\GlobalPropsDialog.hxx"
-					>
-				</File>
-				<File
 					RelativePath="..\gui\GuiObject.hxx"
 					>
 				</File>
@@ -1545,10 +1513,6 @@
 				</File>
 				<File
 					RelativePath="..\gui\LauncherDialog.hxx"
-					>
-				</File>
-				<File
-					RelativePath="..\gui\LauncherFilterDialog.hxx"
 					>
 				</File>
 				<File

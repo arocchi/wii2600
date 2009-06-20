@@ -8,26 +8,19 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6502.cxx,v 1.23 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
-//#define DEBUG_OUTPUT
-#define debugStream cout
-
-#include "Serializer.hxx"
-#include "Deserializer.hxx"
+#include "M6502.hxx"
 
 #ifdef DEBUGGER_SUPPORT
-  #include "Debugger.hxx"
   #include "Expression.hxx"
 #endif
-
-#include "M6502.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::M6502(uInt32 systemCyclesPerProcessorCycle)
@@ -35,31 +28,29 @@ M6502::M6502(uInt32 systemCyclesPerProcessorCycle)
     mySystem(0),
     mySystemCyclesPerProcessorCycle(systemCyclesPerProcessorCycle),
     myLastAccessWasRead(true),
-    myTotalInstructionCount(0),
-    myNumberOfDistinctAccesses(0),
-    myLastAddress(0)
+    myTotalInstructionCount(0)
 {
 #ifdef DEBUGGER_SUPPORT
   myDebugger    = NULL;
   myBreakPoints = NULL;
   myReadTraps   = NULL;
   myWriteTraps  = NULL;
-
-  myJustHitTrapFlag = false;
 #endif
 
+  // Compute the BCD lookup table
+  uInt16 t;
+  for(t = 0; t < 256; ++t)
+  {
+    ourBCDTable[0][t] = ((t >> 4) * 10) + (t & 0x0f);
+    ourBCDTable[1][t] = (((t % 100) / 10) << 4) | (t % 10);
+  }
+
   // Compute the System Cycle table
-  for(uInt32 t = 0; t < 256; ++t)
+  for(t = 0; t < 256; ++t)
   {
     myInstructionSystemCycleTable[t] = ourInstructionProcessorCycleTable[t] *
         mySystemCyclesPerProcessorCycle;
   }
-
-#ifdef DEBUG_OUTPUT
-debugStream << "( Fm  Ln Cyc Clk) ( P0  P1  M0  M1  BL)  "
-            << "flags   A  X  Y SP  Code           Disasm" << endl
-            << endl;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -152,280 +143,6 @@ void M6502::PS(uInt8 ps)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline uInt8 M6502::peek(uInt16 address)
-{
-  if(address != myLastAddress)
-  {
-    myNumberOfDistinctAccesses++;
-    myLastAddress = address;
-  }
-  mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
-
-#ifdef DEBUGGER_SUPPORT
-  if(myReadTraps != NULL && myReadTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "RTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
-  uInt8 result = mySystem->peek(address);
-  myLastAccessWasRead = true;
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void M6502::poke(uInt16 address, uInt8 value)
-{
-  if(address != myLastAddress)
-  {
-    myNumberOfDistinctAccesses++;
-    myLastAddress = address;
-  }
-  mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
-
-#ifdef DEBUGGER_SUPPORT
-  if(myWriteTraps != NULL && myWriteTraps->isSet(address))
-  {
-    myJustHitTrapFlag = true;
-    myHitTrapInfo.message = "WTrap: ";
-    myHitTrapInfo.address = address;
-  }
-#endif
-
-  mySystem->poke(address, value);
-  myLastAccessWasRead = false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::execute(uInt32 number)
-{
-  // Clear all of the execution status bits except for the fatal error bit
-  myExecutionStatus &= FatalErrorBit;
-
-  // Loop until execution is stopped or a fatal error occurs
-  for(;;)
-  {
-    for(; !myExecutionStatus && (number != 0); --number)
-    {
-      uInt16 operandAddress = 0;
-      uInt8 operand = 0;
-
-#ifdef DEBUGGER_SUPPORT
-      if(myJustHitTrapFlag)
-      {
-        if(myDebugger->start(myHitTrapInfo.message, myHitTrapInfo.address))
-        {
-          myJustHitTrapFlag = false;
-          return true;
-        }
-      }
-
-      if(myBreakPoints != NULL)
-      {
-        if(myBreakPoints->isSet(PC))
-        {
-          if(myDebugger->start("BP: ", PC))
-            return true;
-        }
-      }
-
-      int cond = evalCondBreaks();
-      if(cond > -1)
-      {
-        string buf = "CBP: " + myBreakCondNames[cond];
-        if(myDebugger->start(buf))
-          return true;
-      }
-#endif
-
-      // Fetch instruction at the program counter
-      IR = peek(PC++);
-
-#ifdef DEBUG_OUTPUT
-      debugStream << ::hex << setw(2) << (int)A << " "
-                  << ::hex << setw(2) << (int)X << " "
-                  << ::hex << setw(2) << (int)Y << " "
-                  << ::hex << setw(2) << (int)SP << "  "
-                  << setw(4) << (PC-1) << ": "
-                  << setw(2) << (int)IR << "       "
-//      << "<" << ourAddressingModeTable[IR] << " ";
-//      debugStream << hex << setw(4) << operandAddress << " ";
-                  << setw(3) << ourInstructionMnemonicTable[IR]
-
-//      debugStream << "PS=" << ::hex << setw(2) << (int)PS() << " ";
-
-//      debugStream << "Cyc=" << dec << mySystem->cycles();
-                  << endl;
-#endif
-
-      // Call code to execute the instruction
-      switch(IR)
-      {
-        // 6502 instruction emulation is generated by an M4 macro file
-        #include "M6502.ins"
-
-        default:
-          // Oops, illegal instruction executed so set fatal error flag
-          myExecutionStatus |= FatalErrorBit;
-      }
-
-      myTotalInstructionCount++;
-    }
-
-    // See if we need to handle an interrupt
-    if((myExecutionStatus & MaskableInterruptBit) || 
-        (myExecutionStatus & NonmaskableInterruptBit))
-    {
-      // Yes, so handle the interrupt
-      interruptHandler();
-    }
-
-    // See if execution has been stopped
-    if(myExecutionStatus & StopExecutionBit)
-    {
-      // Yes, so answer that everything finished fine
-      return true;
-    }
-
-    // See if a fatal error has occured
-    if(myExecutionStatus & FatalErrorBit)
-    {
-      // Yes, so answer that something when wrong
-      return false;
-    }
-
-    // See if we've executed the specified number of instructions
-    if(number == 0)
-    {
-      // Yes, so answer that everything finished fine
-      return true;
-    }
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6502::interruptHandler()
-{
-  // Handle the interrupt
-  if((myExecutionStatus & MaskableInterruptBit) && !I)
-  {
-    mySystem->incrementCycles(7 * mySystemCyclesPerProcessorCycle);
-    mySystem->poke(0x0100 + SP--, (PC - 1) >> 8);
-    mySystem->poke(0x0100 + SP--, (PC - 1) & 0x00ff);
-    mySystem->poke(0x0100 + SP--, PS() & (~0x10));
-    D = false;
-    I = true;
-    PC = (uInt16)mySystem->peek(0xFFFE) | ((uInt16)mySystem->peek(0xFFFF) << 8);
-  }
-  else if(myExecutionStatus & NonmaskableInterruptBit)
-  {
-    mySystem->incrementCycles(7 * mySystemCyclesPerProcessorCycle);
-    mySystem->poke(0x0100 + SP--, (PC - 1) >> 8);
-    mySystem->poke(0x0100 + SP--, (PC - 1) & 0x00ff);
-    mySystem->poke(0x0100 + SP--, PS() & (~0x10));
-    D = false;
-    PC = (uInt16)mySystem->peek(0xFFFA) | ((uInt16)mySystem->peek(0xFFFB) << 8);
-  }
-
-  // Clear the interrupt bits in myExecutionStatus
-  myExecutionStatus &= ~(MaskableInterruptBit | NonmaskableInterruptBit);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::save(Serializer& out)
-{
-  string CPU = name();
-
-  try
-  {
-    out.putString(CPU);
-
-    out.putByte((char)A);   // Accumulator
-    out.putByte((char)X);   // X index register
-    out.putByte((char)Y);   // Y index register
-    out.putByte((char)SP);  // Stack Pointer
-    out.putByte((char)IR);  // Instruction register
-    out.putInt(PC);         // Program Counter
-
-    out.putBool(N);     // N flag for processor status register
-    out.putBool(V);     // V flag for processor status register
-    out.putBool(B);     // B flag for processor status register
-    out.putBool(D);     // D flag for processor status register
-    out.putBool(I);     // I flag for processor status register
-    out.putBool(notZ);  // Z flag complement for processor status register
-    out.putBool(C);     // C flag for processor status register
-
-    out.putByte((char)myExecutionStatus);
-
-    // Indicates the number of distinct memory accesses
-    out.putInt(myNumberOfDistinctAccesses);
-    // Indicates the last address which was accessed
-    out.putInt(myLastAddress);
-
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6502::load(Deserializer& in)
-{
-  string CPU = name();
-
-  try
-  {
-    if(in.getString() != CPU)
-      return false;
-
-    A = (uInt8) in.getByte();    // Accumulator
-    X = (uInt8) in.getByte();    // X index register
-    Y = (uInt8) in.getByte();    // Y index register
-    SP = (uInt8) in.getByte();   // Stack Pointer
-    IR = (uInt8) in.getByte();   // Instruction register
-    PC = (uInt16) in.getInt();  // Program Counter
-
-    N = in.getBool();     // N flag for processor status register
-    V = in.getBool();     // V flag for processor status register
-    B = in.getBool();     // B flag for processor status register
-    D = in.getBool();     // D flag for processor status register
-    I = in.getBool();     // I flag for processor status register
-    notZ = in.getBool();  // Z flag complement for processor status register
-    C = in.getBool();     // C flag for processor status register
-
-    myExecutionStatus = (uInt8) in.getByte();
-
-    // Indicates the number of distinct memory accesses
-    myNumberOfDistinctAccesses = (uInt32) in.getInt();
-    // Indicates the last address which was accessed
-    myLastAddress = (uInt16) in.getInt();
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << CPU << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ostream& operator<<(ostream& out, const M6502::AddressingMode& mode)
 {
   switch(mode)
@@ -472,6 +189,9 @@ ostream& operator<<(ostream& out, const M6502::AddressingMode& mode)
   }
   return out;
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8 M6502::ourBCDTable[2][256];
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6502::AddressingMode M6502::ourAddressingModeTable[256] = {
@@ -741,9 +461,8 @@ void M6502::delCondBreak(unsigned int brk)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void M6502::clearCondBreaks()
 {
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
+  for(unsigned int i=0; i<myBreakConds.size(); i++)
     delete myBreakConds[i];
-
   myBreakConds.clear();
   myBreakCondNames.clear();
 }
@@ -757,7 +476,7 @@ const StringList& M6502::getCondBreakNames() const
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int M6502::evalCondBreaks()
 {
-  for(uInt32 i = 0; i < myBreakConds.size(); i++)
+  for(unsigned int i=0; i<myBreakConds.size(); i++)
     if(myBreakConds[i]->evaluate())
       return i;
 
@@ -776,5 +495,4 @@ void M6502::setTraps(PackedBitArray *read, PackedBitArray *write)
   myReadTraps = read;
   myWriteTraps = write;
 }
-
 #endif

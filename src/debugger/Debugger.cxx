@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Debugger.cxx,v 1.126 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
 #include "bspf.hxx"
@@ -34,7 +34,6 @@
 #include "Console.hxx"
 #include "System.hxx"
 #include "M6502.hxx"
-#include "Cart.hxx"
 
 #include "EquateList.hxx"
 #include "CpuDebug.hxx"
@@ -58,34 +57,34 @@ Debugger* Debugger::myStaticDebugger;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 static const string builtin_functions[][3] = {
-  // { "name", "definition", "help text" }
+	// { "name", "definition", "help text" }
 
-  // left joystick:
-  { "_joy0left", "!(*SWCHA & $40)", "Left joystick moved left" },
-  { "_joy0right", "!(*SWCHA & $80)", "Left joystick moved right" },
-  { "_joy0up", "!(*SWCHA & $10)", "Left joystick moved up" },
-  { "_joy0down", "!(*SWCHA & $20)", "Left joystick moved down" },
-  { "_joy0button", "!(*INPT4 & $80)", "Left joystick button pressed" },
+	// left joystick:
+	{ "_joy0left", "!(*SWCHA & $40)", "Left joystick moved left" },
+	{ "_joy0right", "!(*SWCHA & $80)", "Left joystick moved right" },
+	{ "_joy0up", "!(*SWCHA & $10)", "Left joystick moved up" },
+	{ "_joy0down", "!(*SWCHA & $20)", "Left joystick moved down" },
+	{ "_joy0button", "!(*INPT4 & $80)", "Left joystick button pressed" },
 
-  // right joystick:
-  { "_joy1left", "!(*SWCHA & $04)", "Right joystick moved left" },
-  { "_joy1right", "!(*SWCHA & $08)", "Right joystick moved right" },
-  { "_joy1up", "!(*SWCHA & $01)", "Right joystick moved up" },
-  { "_joy1down", "!(*SWCHA & $02)", "Right joystick moved down" },
-  { "_joy1button", "!(*INPT5 & $80)", "Right joystick button pressed" },
+	// right joystick:
+	{ "_joy1left", "!(*SWCHA & $04)", "Right joystick moved left" },
+	{ "_joy1right", "!(*SWCHA & $08)", "Right joystick moved right" },
+	{ "_joy1up", "!(*SWCHA & $01)", "Right joystick moved up" },
+	{ "_joy1down", "!(*SWCHA & $02)", "Right joystick moved down" },
+	{ "_joy1button", "!(*INPT5 & $80)", "Right joystick button pressed" },
 
-  // console switches:
-  { "_select", "!(*SWCHB & $02)", "Game Select pressed" },
-  { "_reset", "!(*SWCHB & $01)", "Game Reset pressed" },
-  { "_color", "*SWCHB & $08", "Color/BW set to Color" },
-  { "_bw", "!(*SWCHB & $08)", "Color/BW set to BW" },
-  { "_diff0b", "!(*SWCHB & $40)", "Left difficulty set to B (easy)" },
-  { "_diff0a", "*SWCHB & $40", "Left difficulty set to A (hard)" },
-  { "_diff1b", "!(*SWCHB & $80)", "Right difficulty set to B (easy)" },
-  { "_diff1a", "*SWCHB & $80", "Right difficulty set to A (hard)" },
+	// console switches:
+	{ "_select", "!(*SWCHB & $02)", "Game Select pressed" },
+	{ "_reset", "!(*SWCHB & $01)", "Game Reset pressed" },
+	{ "_color", "*SWCHB & $08", "Color/BW set to Color" },
+	{ "_bw", "!(*SWCHB & $08)", "Color/BW set to BW" },
+	{ "_diff0a", "!(*SWCHB & $40)", "Right difficulty set to A (easy)" },
+	{ "_diff0b", "*SWCHB & $40", "Right difficulty set to B (hard)" },
+	{ "_diff1a", "!(*SWCHB & $80)", "Right difficulty set to A (easy)" },
+	{ "_diff1b", "*SWCHB & $80", "Right difficulty set to B (hard)" },
 
-  // empty string marks end of list, do not remove
-  { "", "", "" }
+	// empty string marks end of list, do not remove
+	{ "", "", "" }
 };
 
 
@@ -107,16 +106,16 @@ Debugger::Debugger(OSystem* osystem)
     myBreakPoints(NULL),
     myReadTraps(NULL),
     myWriteTraps(NULL),
-    myWidth(1050),
-    myHeight(620)
+    myWidth(1030),
+    myHeight(690)
 {
   // Get the dialog size
   int w, h;
   myOSystem->settings().getSize("debuggerres", w, h);
   myWidth = BSPF_max(w, 0);
   myHeight = BSPF_max(h, 0);
-  myWidth = BSPF_max(myWidth, 1050u);
-  myHeight = BSPF_max(myHeight, 620u);
+  myWidth = BSPF_max(myWidth, 1030u);
+  myHeight = BSPF_max(myHeight, 690u);
   myOSystem->settings().setSize("debuggerres", myWidth, myHeight);
 
   // Init parser
@@ -151,7 +150,7 @@ Debugger::~Debugger()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Debugger::initialize()
 {
-  const GUI::Rect& r = getDialogBounds();
+  GUI::Rect r = getDialogBounds();
 
   delete myBaseDialog;
   DebuggerDialog *dd = new DebuggerDialog(myOSystem, this,
@@ -167,12 +166,12 @@ void Debugger::initialize()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Debugger::initializeVideo()
+void Debugger::initializeVideo()
 {
-  const GUI::Rect& r = getDialogBounds();
+  GUI::Rect r = getDialogBounds();
 
   string title = string("Stella ") + STELLA_VERSION + ": Debugger mode";
-  return myOSystem->frameBuffer().initialize(title, r.width(), r.height());
+  myOSystem->frameBuffer().initialize(title, r.width(), r.height());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -191,12 +190,6 @@ void Debugger::setConsole(Console* console)
   delete myRamDebug;
   myRamDebug = new RamDebug(*this, *myConsole);
 
-  // Register any RAM areas in the Cartridge
-  // Zero-page RAM is automatically recognized by RamDebug
-  const Cartridge::RamAreaList& areas = myConsole->cartridge().ramAreas();
-  for(Cartridge::RamAreaList::const_iterator i = areas.begin(); i != areas.end(); ++i)
-    myRamDebug->addRamArea(i->start, i->size, i->roffset, i->woffset);
-
   delete myRiotDebug;
   myRiotDebug = new RiotDebug(*this, *myConsole);
 
@@ -212,8 +205,6 @@ void Debugger::setConsole(Console* console)
   autoLoadSymbols(myOSystem->romFile());
   loadListFile();
 
-  // Make sure cart RAM is added before this is called,
-  // otherwise the debugger state won't know about it
   saveOldState();
 }
 
@@ -334,34 +325,35 @@ string Debugger::getSourceLines(int addr) const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Debugger::autoExec()
-{
-  // autoexec.stella is always run
-  const string& autoexec = myOSystem->baseDir() + BSPF_PATH_SEPARATOR +
-                           "autoexec.stella";
-  myPrompt->print("autoExec():\n" + myParser->exec(autoexec) + "\n");
+void Debugger::autoExec() {
+	// autoexec.stella is always run
+	myPrompt->print("autoExec():\n" +
+			myParser->exec(
+				myOSystem->baseDir() +
+				BSPF_PATH_SEPARATOR +
+				"autoexec.stella") +
+			"\n");
 
-  // Also, "romname.stella" if present
-  string file = myOSystem->romFile();
+	// also, "romname.stella" if present
+	string file = myOSystem->romFile();
 
-  string::size_type pos;
-  if( (pos = file.find_last_of('.')) != string::npos )
-    file.replace(pos, file.size(), ".stella");
-  else
-    file += ".stella";
+	string::size_type pos;
+	if( (pos = file.find_last_of('.')) != string::npos ) {
+		file.replace(pos, file.size(), ".stella");
+	} else {
+		file += ".stella";
+	}
+	myPrompt->print("autoExec():\n" + myParser->exec(file) + "\n");
+	myPrompt->printPrompt();
 
-  myPrompt->print("autoExec():\n" + myParser->exec(file) + "\n");
-  myPrompt->printPrompt();
-
-  // Init builtins
-  for(int i = 0; builtin_functions[i][0] != ""; i++)
-  {
-    // TODO - check this for memory leaks
-    int res = YaccParser::parse(builtin_functions[i][1].c_str());
-    if(res != 0) cerr << "ERROR in builtin function!" << endl;
-    Expression* exp = YaccParser::getResult();
-    addFunction(builtin_functions[i][0], builtin_functions[i][1], exp, true);
-  }
+	// init builtins
+	for(int i=0; builtin_functions[i][0] != ""; i++) {
+		string f = builtin_functions[i][1];
+		int res = YaccParser::parse(f.c_str());
+		if(res != 0) cerr << "ERROR in builtin function!" << endl;
+		Expression *exp = YaccParser::getResult();
+		addFunction(builtin_functions[i][0], builtin_functions[i][1], exp, true);
+	}
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -371,9 +363,9 @@ const string Debugger::run(const string& command)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string Debugger::valueToString(int value, BaseFormat outputBase)
+const string Debugger::valueToString(int value, BaseFormat outputBase)
 {
-  char buf[32];
+  char rendered[32];
 
   if(outputBase == kBASE_DEFAULT)
     outputBase = myParser->base();
@@ -382,34 +374,32 @@ string Debugger::valueToString(int value, BaseFormat outputBase)
   {
     case kBASE_2:
       if(value < 0x100)
-        Debugger::to_bin(value, 8, buf);
+        sprintf(rendered, Debugger::to_bin_8(value));
       else
-        Debugger::to_bin(value, 16, buf);
+        sprintf(rendered, Debugger::to_bin_16(value));
       break;
 
     case kBASE_10:
       if(value < 0x100)
-        sprintf(buf, "%3d", value);
+        sprintf(rendered, "%3d", value);
       else
-        sprintf(buf, "%5d", value);
+        sprintf(rendered, "%5d", value);
       break;
 
     case kBASE_16_4:
-      strcpy(buf, Debugger::to_hex_4(value));
+      sprintf(rendered, Debugger::to_hex_4(value));
       break;
 
     case kBASE_16:
     default:
       if(value < 0x100)
-        sprintf(buf, "%02x", value);
-      else if(value < 0x10000)
-        sprintf(buf, "%04x", value);
+        sprintf(rendered, Debugger::to_hex_8(value));
       else
-        sprintf(buf, "%08x", value);
+        sprintf(rendered, Debugger::to_hex_16(value));
       break;
   }
 
-  return string(buf);
+  return string(rendered);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -474,7 +464,7 @@ int Debugger::step()
   int cyc = mySystem->cycles();
 
   unlockState();
-  myOSystem->console().tia().updateScanlineByStep();
+  myOSystem->console().mediaSource().updateScanlineByStep();
   lockState();
 
   return mySystem->cycles() - cyc;
@@ -502,7 +492,7 @@ int Debugger::trace()
     int targetPC = myCpuDebug->pc() + 3; // return address
 
     unlockState();
-    myOSystem->console().tia().updateScanlineByTrace(targetPC);
+    myOSystem->console().mediaSource().updateScanlineByTrace(targetPC);
     lockState();
 
     return mySystem->cycles() - cyc;
@@ -584,7 +574,7 @@ const string& Debugger::disassemble(int start, int lines)
   string cpubuf;
 
   do {
-    buffer << myEquateList->getLabel(start, true, 4) << ": ";
+    buffer << myEquateList->getFormatted(start, 4, true) << ": ";
 
     int count = myCpuDebug->disassemble(start, cpubuf, *myEquateList);
     for(int i = 0; i < count; i++)
@@ -610,7 +600,7 @@ void Debugger::disassemble(IntArray& addr, StringList& addrLabel,
 
   do
   {
-    addrLabel.push_back(myEquateList->getLabel(start, true, 4) + ":");
+    addrLabel.push_back(myEquateList->getFormatted(start, 4, true) + ":");
     addr.push_back(start);
 
     cpubuf = "";
@@ -782,8 +772,8 @@ GUI::Rect Debugger::getTiaBounds() const
 GUI::Rect Debugger::getRomBounds() const
 {
   // The ROM area is the full area to the right of the tabs
-  const GUI::Rect& dialog = getDialogBounds();
-  const GUI::Rect& status = getStatusBounds();
+  GUI::Rect dialog = getDialogBounds();
+  GUI::Rect status = getStatusBounds();
 
   int x1 = status.right + 1;
   int y1 = 0;
@@ -800,8 +790,8 @@ GUI::Rect Debugger::getStatusBounds() const
   // The status area is the full area to the right of the TIA image
   // extending as far as necessary
   // 30% of any space above 1030 pixels will be allocated to this area
-  const GUI::Rect& dlg = getDialogBounds();
-  const GUI::Rect& tia = getTiaBounds();
+  GUI::Rect dlg = getDialogBounds();
+  GUI::Rect tia = getTiaBounds();
 
   int x1 = tia.right + 1;
   int y1 = 0;
@@ -817,9 +807,9 @@ GUI::Rect Debugger::getStatusBounds() const
 GUI::Rect Debugger::getTabBounds() const
 {
   // The tab area is the full area below the TIA image
-  const GUI::Rect& dialog = getDialogBounds();
-  const GUI::Rect& tia    = getTiaBounds();
-  const GUI::Rect& status = getStatusBounds();
+  GUI::Rect dialog = getDialogBounds();
+  GUI::Rect tia    = getTiaBounds();
+  GUI::Rect status = getStatusBounds();
 
   int x1 = 0;
   int y1 = tia.bottom + 1;

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CpuDebug.cxx,v 1.12 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
 #include <sstream>
@@ -132,21 +132,21 @@ int CpuDebug::disassemble(int address, string& result, EquateList& list)
   {
     case M6502::Absolute:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(dpeek(mySystem, address + 1), isRead, 4) << " ; "
+          << list.getFormatted(dpeek(mySystem, address + 1), 4, isRead) << " ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 3;
       break;
 
     case M6502::AbsoluteX:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(dpeek(mySystem, address + 1), isRead, 4) << ",x ; "
+          << list.getFormatted(dpeek(mySystem, address + 1), 4, isRead) << ",x ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 3;
       break;
 
     case M6502::AbsoluteY:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(dpeek(mySystem, address + 1), isRead, 4) << ",y ; "
+          << list.getFormatted(dpeek(mySystem, address + 1), 4, isRead) << ",y ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 3;
       break;
@@ -166,49 +166,49 @@ int CpuDebug::disassemble(int address, string& result, EquateList& list)
 
     case M6502::Indirect:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " ("
-          << list.getLabel(dpeek(mySystem, address + 1), isRead, 4) << ") ; "
+          << list.getFormatted(dpeek(mySystem, address + 1), 4, isRead) << ") ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 3;
       break;
 
     case M6502::IndirectX:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " ("
-          << list.getLabel(mySystem.peek(address + 1), isRead, 2) << ",x) ; "
+          << list.getFormatted(mySystem.peek(address + 1), 2, isRead) << ",x) ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
 
     case M6502::IndirectY:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " ("
-          << list.getLabel(mySystem.peek(address + 1), isRead, 2) << "),y ; "
+          << list.getFormatted(mySystem.peek(address + 1), 2, isRead) << "),y ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
 
     case M6502::Relative:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(address + 2 + ((Int16)(Int8)mySystem.peek(address + 1)), isRead, 4)
+          << list.getFormatted(address + 2 + ((Int16)(Int8)mySystem.peek(address + 1)), 4, isRead)
           << " ; " << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
 
     case M6502::Zero:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(mySystem.peek(address + 1), isRead, 2) << " ; "
+          << list.getFormatted(mySystem.peek(address + 1), 2, isRead) << " ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
 
     case M6502::ZeroX:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(mySystem.peek(address + 1), isRead, 2) << ",x ; "
+          << list.getFormatted(mySystem.peek(address + 1), 2, isRead) << ",x ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
 
     case M6502::ZeroY:
       buf << M6502::ourInstructionMnemonicTable[opcode] << " "
-          << list.getLabel(mySystem.peek(address + 1), isRead, 2) << ",y ; "
+          << list.getFormatted(mySystem.peek(address + 1), 2, isRead) << ",y ; "
           << M6502::ourInstructionProcessorCycleTable[opcode];
       count = 2;
       break;
