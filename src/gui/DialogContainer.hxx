@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DialogContainer.hxx,v 1.16 2006-01-09 16:50:01 stephena Exp $
 //============================================================================
 
 #ifndef DIALOG_CONTAINER_HXX
@@ -26,6 +26,7 @@ class OSystem;
 #include "Stack.hxx"
 #include "bspf.hxx"
 
+typedef FixedStack<Dialog *> DialogStack;
 
 /**
   The base class for groups of dialog boxes.  Each dialog box has a
@@ -36,7 +37,7 @@ class OSystem;
   a stack, and handles their events.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: DialogContainer.hxx,v 1.16 2006-01-09 16:50:01 stephena Exp $
 */
 class DialogContainer
 {
@@ -65,12 +66,12 @@ class DialogContainer
     /**
       Handle a keyboard event.
 
-      @param ascii    ASCII translation
+      @param unicode  Unicode translation
       @param key      Actual key symbol
       @param mod      Modifiers
       @param state    Pressed or released
     */
-    void handleKeyEvent(int ascii, int key, int mod, uInt8 state);
+    void handleKeyEvent(int unicode, int key, int mod, uInt8 state);
 
     /**
       Handle a mouse motion event.
@@ -119,93 +120,103 @@ class DialogContainer
     void handleJoyHatEvent(int stick, int hat, int value);
 
     /**
-      Draw the stack of menus (full indicates to redraw all items).
+      Draw the stack of menus.
     */
-    void draw(bool full = false);
+    void draw();
 
     /**
-      Add a dialog box to the stack.
+      Add a dialog box to the stack
     */
     void addDialog(Dialog* d);
 
     /**
-      Remove the topmost dialog box from the stack.
+      Remove the topmost dialog box from the stack
     */
     void removeDialog();
 
     /**
-      Reset dialog stack to the main configuration menu.
+      Reset dialog stack to the main configuration menu
     */
     void reStack();
 
     /**
-      Return the bottom-most dialog of this container.
+      Redraw all dialogs on the stack
     */
-    const Dialog* baseDialog() const { return myBaseDialog; }
+    void refresh() { myRefreshFlag = true; }
+
+    /**
+      (Re)initialize the menuing system.  This is necessary if a new Console
+      has been loaded, since in most cases the screen dimensions will have changed.
+    */
+    virtual void initialize() = 0;
+
+    /**
+      Whether joymouse emulation is enabled
+    */
+    static bool joymouse() { return ourEnableJoyMouseFlag; }
 
   private:
+    void handleJoyMouse(uInt32);
     void reset();
 
   protected:
     OSystem* myOSystem;
     Dialog*  myBaseDialog;
-    FixedStack<Dialog *> myDialogStack;
+    DialogStack myDialogStack;
 
-  private:
     enum {
-      kDoubleClickDelay   = 500,
-      kRepeatInitialDelay = 400,
-      kRepeatSustainDelay = 50
+      kDoubleClickDelay        = 500,
+      kKeyRepeatInitialDelay   = 400,
+      kKeyRepeatSustainDelay   = 50,
+      kClickRepeatInitialDelay = kKeyRepeatInitialDelay,
+      kClickRepeatSustainDelay = kKeyRepeatSustainDelay,
+      kAxisRepeatInitialDelay  = kKeyRepeatInitialDelay,
+      kAxisRepeatSustainDelay  = kKeyRepeatSustainDelay
     };
 
     // Indicates the most current time (in milliseconds) as set by updateTime()
-    int myTime;
+    uInt32 myTime;
 
-    // For continuous 'key down' events
+    // Indicates a full refresh of all dialogs is required
+    bool myRefreshFlag;
+
+    // For continuous events (keyDown)
     struct {
       int ascii;
       int keycode;
-      int flags;
+      uInt8 flags;
     } myCurrentKeyDown;
-    int myKeyRepeatTime;
+    uInt32 myKeyRepeatTime;
 
-    // For continuous 'mouse down' events
+    // For continuous events (mouseDown)
     struct {
       int x;
       int y;
       int button;
     } myCurrentMouseDown;
-    int myClickRepeatTime;
+    uInt32 myClickRepeatTime;
 	
-    // For continuous 'joy button down' events
-    struct {
-      int stick;
-      int button;
-    } myCurrentButtonDown;
-    int myButtonRepeatTime;
-
-    // For continuous 'joy axis down' events
+    // For continuous events (joyaxisDown)
     struct {
       int stick;
       int axis;
       int value;
+      int count;
     } myCurrentAxisDown;
-    int myAxisRepeatTime;
-
-    // For continuous 'joy hat' events
-    struct {
-      int stick;
-      int hat;
-      int value;
-    } myCurrentHatDown;
-    int myHatRepeatTime;
+    uInt32 myAxisRepeatTime;
 
     // Position and time of last mouse click (used to detect double clicks)
     struct {
-      int x, y;   // Position of mouse when the click occured
-      int time;   // Time
-      int count;  // How often was it already pressed?
+      int x, y;     // Position of mouse when the click occured
+      uInt32 time;  // Time
+      int count;    // How often was it already pressed?
     } myLastClick;
+
+    // Whether to enable joymouse emulation
+    static bool ourEnableJoyMouseFlag;
+
+    // Emulation of mouse using joystick axis events
+    static JoyMouse ourJoyMouse;
 };
 
 #endif

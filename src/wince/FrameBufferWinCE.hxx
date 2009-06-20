@@ -8,13 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
 //============================================================================
 
 #ifndef FRAMEBUFFER_WINCE_HXX
@@ -33,7 +32,6 @@
 #define FORMAT_555 2
 #define FORMAT_OTHER 3
 
-#if _WIN32_WCE <= 300
 typedef struct _RawFrameBufferInfo
 {
    WORD wFormat;
@@ -44,7 +42,7 @@ typedef struct _RawFrameBufferInfo
    int  cxPixels;
    int  cyPixels;
 } RawFrameBufferInfo;
-#endif
+
 
 class FrameBufferWinCE : public FrameBuffer
 {
@@ -52,61 +50,56 @@ class FrameBufferWinCE : public FrameBuffer
 
 	FrameBufferWinCE(OSystem *osystem);
 	~FrameBufferWinCE();
-	virtual void setTIAPalette(const uInt32* palette);
-	virtual void setUIPalette(const uInt32* palette);
+	virtual void setPalette(const uInt32* palette);
 	virtual bool initSubsystem();
 	virtual BufferType type() { return kSoftBuffer; } 
-    virtual void setAspectRatio() { return; };
-    virtual bool createScreen() { return true; };
-    virtual void toggleFilter() { return; };
+    	virtual void setAspectRatio() ;
+    virtual bool createScreen();
+    virtual void toggleFilter();
     virtual void drawMediaSource();
     virtual void preFrameUpdate();
     virtual void postFrameUpdate();
-	virtual void scanline(uInt32 row, uInt8* data) { return; };
-    virtual Uint32 mapRGB(Uint8 r, Uint8 g, Uint8 b) { return 0xFFFFFFFF; };
-    virtual void hLine(uInt32 x, uInt32 y, uInt32 x2, int color);
-    virtual void vLine(uInt32 x, uInt32 y, uInt32 y2, int color);
-    virtual void fillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, int color);
-    virtual void drawChar(const GUI::Font* font, uInt8 c, uInt32 x, uInt32 y, int color);
-    virtual void drawBitmap(uInt32* bitmap, Int32 x, Int32 y, int color, Int32 h = 8);
+    virtual void scanline(uInt32 row, uInt8* data);
+    virtual Uint32 mapRGB(Uint8 r, Uint8 g, Uint8 b);
+    virtual void hLine(uInt32 x, uInt32 y, uInt32 x2, OverlayColor color);
+    virtual void vLine(uInt32 x, uInt32 y, uInt32 y2, OverlayColor color);
+    virtual void fillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, OverlayColor color);
+    virtual void drawChar(const GUI::Font* font, uInt8 c, uInt32 x, uInt32 y, OverlayColor color);
+    virtual void drawBitmap(uInt32* bitmap, Int32 x, Int32 y, OverlayColor color, Int32 h = 8);
     virtual void translateCoords(Int32* x, Int32* y);
     virtual void addDirtyRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h);
-	virtual void enablePhosphor(bool enable, int blend)  { return; };
-    virtual uInt32 lineDim() { return 1; };
-	virtual string about();
-	virtual void setScaler(Scaler scaler) { return; };
-	void wipescreen(bool atinit=false);
+	virtual void enablePhosphor(bool enable)  { return; };
+    virtual uInt32 lineDim();
+	void wipescreen(void);
+	virtual void cls() { return; };
 	void setmode(uInt8 mode);
 	uInt8 rotatedisplay(void);
 	
 	private:
 
 	void lateinit(void);
-	void PlothLine(uInt32 x, uInt32 y, uInt32 x2, int color);
-    void PlotvLine(uInt32 x, uInt32 y, uInt32 y2, int color);
-	void PlotfillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, int color);
+	void PlothLine(uInt32 x, uInt32 y, uInt32 x2, OverlayColor color);
+    void PlotvLine(uInt32 x, uInt32 y, uInt32 y2, OverlayColor color);
+	void PlotfillRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h, OverlayColor color);
 	void GetDeviceProperties(void);
 
-	uInt16 pal[256+kNumColors], myWidth, myWidthdiv4, myHeight, scrwidth, scrheight;
-	Int32 pixelstep, pixelstepdouble, linestep, linestepdouble, scrpixelstep, scrlinestep;
-	uInt32 paldouble[256+kNumColors], displacement;
+	uInt16 pal[256], myWidth, myWidthdiv4, myHeight, guipal[kNumColors-256], scrwidth, scrheight;
+	Int32 pixelstep, linestep, scrpixelstep, scrlinestep;
+	uInt32 displacement;
 	bool SubsystemInited;
 	uInt8 *myDstScreen;
 
-	bool issmartphone, islandscape, issquare, legacygapi, screenlocked;
+	bool issmartphone, islandscape, legacygapi;
 	enum {SM_LOW, QVGA, VGA} devres;
 	uInt16 minydim, optgreenmaskN, optgreenmask;
-	Int32 pixelsteptimes5, pixelsteptimes6, pixelsteptimes8, pixelsteptimes12, pixelsteptimes16;
+	Int32 pixelsteptimes5, pixelsteptimes6;
 	GXDisplayProperties gxdp;
 	uInt8 displaymode;
 
 	public:
 	bool IsSmartphone(void) { return issmartphone; }
 	bool IsSmartphoneLowRes(void) { return (issmartphone && devres==SM_LOW); }
-	bool IsVGA(void) { return (devres==VGA); }
 	uInt8 getmode(void) { return displaymode; }
-	bool IsLandscape(void) { return islandscape; }
-	void GetScreenExtents(uInt16 *x, uInt16 *y) { *x = scrwidth; *y = scrheight; return; }
 };
 
 #endif

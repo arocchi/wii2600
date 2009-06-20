@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DataGridOpsWidget.cxx,v 1.3 2006-02-22 17:38:04 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -34,46 +34,44 @@ DataGridOpsWidget::DataGridOpsWidget(GuiObject* boss, const GUI::Font& font,
     _shiftLeftButton(NULL),
     _shiftRightButton(NULL)
 {
-  _type = kDataGridOpsWidget;
-
-  const int bwidth  = _font->getMaxCharWidth() * 4,
-            bheight = _font->getFontHeight() + 3,
+  const int bwidth  = _font->getMaxCharWidth() * 3,
+            bheight = _font->getFontHeight() + 2,
             space = 6;
   int xpos, ypos;
 
   // Create operations buttons
   xpos = x;  ypos = y;
   _zeroButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                 "0", kDGZeroCmd);
+                                 "0", kDGZeroCmd, 0);
 
   ypos += bheight + space;
   _invButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                "Inv", kDGInvertCmd);
+                                "Inv", kDGInvertCmd, 0);
 
   ypos += bheight + space;
   _incButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                "++", kDGIncCmd);
+                                "++", kDGIncCmd, 0);
 
   ypos += bheight + space;
   _shiftLeftButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                      "<<", kDGShiftLCmd);
+                                      "<<", kDGShiftLCmd, 0);
 
   // Move to next column, skip a row
   xpos = x + bwidth + space;  ypos = y + bheight + space;
   _negButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                "Neg", kDGNegateCmd);
+                                "Neg", kDGNegateCmd, 0);
 
   ypos += bheight + space;
   _decButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                "--", kDGDecCmd);
+                                "--", kDGDecCmd, 0);
 
   ypos += bheight + space;
   _shiftRightButton = new ButtonWidget(boss, font, xpos, ypos, bwidth, bheight,
-                                       ">>", kDGShiftRCmd);
+                                       ">>", kDGShiftRCmd, 0);
 
   // Calculate real dimensions
-  _w = 2 * (bwidth+space);
-  _h = 4 * (bheight+space);
+  _w = xpos + bwidth;
+  _h = ypos + bheight;
 
   // We don't enable the buttons until the DataGridWidget is attached
   // Don't call setEnabled(false), since that does an immediate redraw

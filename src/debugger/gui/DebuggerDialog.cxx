@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerDialog.cxx,v 1.13 2006-03-23 16:16:32 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -29,7 +29,6 @@
 #include "PromptWidget.hxx"
 #include "CpuWidget.hxx"
 #include "RamWidget.hxx"
-#include "RiotWidget.hxx"
 #include "RomWidget.hxx"
 #include "TiaWidget.hxx"
 #include "DataGridOpsWidget.hxx"
@@ -51,7 +50,7 @@ enum {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DebuggerDialog::DebuggerDialog(OSystem* osystem, DialogContainer* parent,
                                int x, int y, int w, int h)
-  : Dialog(osystem, parent, x, y, w, h, true),  // use base surface
+  : Dialog(osystem, parent, x, y, w, h),
     myTab(NULL)
 {
   addTiaArea();
@@ -85,10 +84,10 @@ void DebuggerDialog::loadConfig()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::handleKeyDown(int ascii, int keycode, int modifiers)
 {
-  bool handled = instance().eventHandler().kbdAlt(modifiers);
-  if(handled)
+  // Doing this means we disallow 'Alt xxx' events to any widget in the tabset
+  if(instance()->eventHandler().kbdAlt(modifiers))
   {
-    switch(keycode)
+    switch(ascii)
     {
       case 's':
         doStep();
@@ -102,12 +101,9 @@ void DebuggerDialog::handleKeyDown(int ascii, int keycode, int modifiers)
       case 'l':
         doScanlineAdvance();
         break;
-      default:
-        handled = false;
-        break;
     }
   }
-  if(!handled)
+  else
     Dialog::handleKeyDown(ascii, keycode, modifiers);
 }
 
@@ -147,21 +143,21 @@ void DebuggerDialog::handleCommand(CommandSender* sender, int cmd,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::addTiaArea()
 {
-  GUI::Rect r = instance().debugger().getTiaBounds();
+  GUI::Rect r = instance()->debugger().getTiaBounds();
 
-  myTiaOutput = new TiaOutputWidget(this, instance().consoleFont(),
+  myTiaOutput = new TiaOutputWidget(this, instance()->consoleFont(),
                                     r.left, r.top, r.width(), r.height());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::addTabArea()
 {
-  GUI::Rect r = instance().debugger().getTabBounds();
+  GUI::Rect r = instance()->debugger().getTabBounds();
 
   const int vBorder = 4;
 
   // The tab widget
-  myTab = new TabWidget(this, instance().consoleFont(), r.left, r.top + vBorder,
+  myTab = new TabWidget(this, instance()->consoleFont(), r.left, r.top + vBorder,
                         r.width(), r.height() - vBorder);
   addTabWidget(myTab);
 
@@ -171,31 +167,27 @@ void DebuggerDialog::addTabArea()
 
   // The Prompt/console tab
   tabID = myTab->addTab("Prompt");
-  myPrompt = new PromptWidget(myTab, instance().consoleFont(),
+  myPrompt = new PromptWidget(myTab, instance()->consoleFont(),
                               2, 2, widWidth, widHeight);
   myTab->setParentWidget(tabID, myPrompt);
   addToFocusList(myPrompt->getFocusList(), tabID);
 
   // The TIA tab
   tabID = myTab->addTab("TIA");
-  TiaWidget* tia = new TiaWidget(myTab, instance().consoleFont(),
+  TiaWidget* tia = new TiaWidget(myTab, instance()->consoleFont(),
                                  2, 2, widWidth, widHeight);
   myTab->setParentWidget(tabID, tia);
   addToFocusList(tia->getFocusList(), tabID);
 
-  // The input/output tab (includes RIOT and INPTx from TIA)
-  tabID = myTab->addTab("I/O");
-  RiotWidget* riot = new RiotWidget(myTab, instance().consoleFont(),
-                                    2, 2, widWidth, widHeight);
-  myTab->setParentWidget(tabID, riot);
-  addToFocusList(riot->getFocusList(), tabID);
-
   // The Audio tab
   tabID = myTab->addTab("Audio");
-  AudioWidget* aud = new AudioWidget(myTab, instance().consoleFont(),
+  AudioWidget* aud = new AudioWidget(myTab, instance()->consoleFont(),
                                      2, 2, widWidth, widHeight);
   myTab->setParentWidget(tabID, aud);
   addToFocusList(aud->getFocusList(), tabID);
+
+  // The input/output tab (part of RIOT)
+//  tabID = myTab->addTab("I/O");
 
   myTab->setActiveTab(0);
 }
@@ -203,68 +195,65 @@ void DebuggerDialog::addTabArea()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::addStatusArea()
 {
-  const GUI::Font& font = instance().consoleFont();
-  const int lineHeight = font.getLineHeight();
-  GUI::Rect r = instance().debugger().getStatusBounds();
+  const GUI::Font& font = instance()->consoleFont();
+  GUI::Rect r = instance()->debugger().getStatusBounds();
   int xpos, ypos;
 
   xpos = r.left;  ypos = r.top;
-  myTiaInfo = new TiaInfoWidget(this, instance().consoleFont(), xpos, ypos);
+  myTiaInfo = new TiaInfoWidget(this, instance()->consoleFont(), xpos, ypos);
 
   ypos += myTiaInfo->getHeight() + 10;
-  myTiaZoom = new TiaZoomWidget(this, instance().consoleFont(), xpos+10, ypos,
-                                r.width()-10, r.height()-lineHeight-ypos-10);
+  myTiaZoom = new TiaZoomWidget(this, instance()->consoleFont(), xpos+10, ypos);
   addToFocusList(myTiaZoom->getFocusList());
 
-  xpos += 10;  ypos += myTiaZoom->getHeight() + 10;
-  myMessageBox = new EditTextWidget(this, instance().consoleFont(),
+  xpos += 10;  ypos += myTiaZoom->getHeight() + 20;
+  myMessageBox = new EditTextWidget(this, instance()->consoleFont(),
                                     xpos, ypos, myTiaZoom->getWidth(),
                                     font.getLineHeight(), "");
   myMessageBox->setEditable(false);
-  myMessageBox->clearFlags(WIDGET_RETAIN_FOCUS);
-  myMessageBox->setTextColor(kTextColorEm);
+  myMessageBox->setColor(kTextColorEm);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::addRomArea()
 {
-  GUI::Rect r = instance().debugger().getRomBounds();
+  GUI::Rect r = instance()->debugger().getRomBounds();
   int xpos, ypos;
 
   xpos = r.left + 10;  ypos = 10;
-  myCpu = new CpuWidget(this, instance().consoleFont(), xpos, ypos);
+  myCpu = new CpuWidget(this, instance()->consoleFont(), xpos, ypos);
   addToFocusList(myCpu->getFocusList());
 
   xpos = r.left + 10;  ypos += myCpu->getHeight() + 10;
-  myRam = new RamWidget(this, instance().consoleFont(), xpos, ypos);
+  myRam = new RamWidget(this, instance()->consoleFont(), xpos, ypos);
   addToFocusList(myRam->getFocusList());
 
-  xpos = r.left + 10 + myCpu->getWidth() + 5;
-  DataGridOpsWidget* ops = new DataGridOpsWidget(this, instance().consoleFont(),
+  xpos = r.left + 10 + myCpu->getWidth() + 20;
+  DataGridOpsWidget* ops = new DataGridOpsWidget(this, instance()->consoleFont(),
                                                  xpos, 20);
 
-  const int bwidth  = instance().consoleFont().getStringWidth("Frame +1 "),
-            bheight = instance().consoleFont().getLineHeight() + 2;
+  const int bwidth  = instance()->consoleFont().getStringWidth("Frame +1 "),
+            bheight = instance()->consoleFont().getLineHeight() + 2;
   int buttonX = r.right - bwidth - 5, buttonY = r.top + 5;
 
-  new ButtonWidget(this, instance().consoleFont(), buttonX, buttonY,
+  new ButtonWidget(this, instance()->consoleFont(), buttonX, buttonY,
                    bwidth, bheight, "Step", kDDStepCmd);
   buttonY += bheight + 4;
-  new ButtonWidget(this, instance().consoleFont(), buttonX, buttonY,
+  new ButtonWidget(this, instance()->consoleFont(), buttonX, buttonY,
                    bwidth, bheight, "Trace", kDDTraceCmd);
   buttonY += bheight + 4;
-  new ButtonWidget(this, instance().consoleFont(), buttonX, buttonY,
+  new ButtonWidget(this, instance()->consoleFont(), buttonX, buttonY,
                    bwidth, bheight, "Scan +1", kDDSAdvCmd);
   buttonY += bheight + 4;
-  new ButtonWidget(this, instance().consoleFont(), buttonX, buttonY,
+  new ButtonWidget(this, instance()->consoleFont(), buttonX, buttonY,
                    bwidth, bheight, "Frame +1", kDDAdvCmd);
   buttonY += bheight + 4;
-  new ButtonWidget(this, instance().consoleFont(), buttonX, buttonY,
+  new ButtonWidget(this, instance()->consoleFont(), buttonX, buttonY,
                    bwidth, bheight, "Exit", kDDExitCmd);
   buttonY += bheight + 4;
 
   xpos = r.left + 10;  ypos += myRam->getHeight() + 5;
-  myRom = new RomWidget(this, instance().consoleFont(), xpos, ypos);
+  myRom = new RomWidget(this, instance()->consoleFont(), xpos, ypos);
   addToFocusList(myRom->getFocusList());
 
   // Add the DataGridOpsWidget to any widgets which contain a
@@ -276,29 +265,29 @@ void DebuggerDialog::addRomArea()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::doStep()
 {
-  instance().debugger().parser().run("step");
+  instance()->debugger().parser()->run("step");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::doTrace()
 {
-  instance().debugger().parser().run("trace");
+  instance()->debugger().parser()->run("trace");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::doAdvance()
 {
-  instance().debugger().parser().run("frame #1");
+  instance()->debugger().parser()->run("frame #1");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::doScanlineAdvance()
 {
-  instance().debugger().parser().run("scanline #1");
+  instance()->debugger().parser()->run("scanline #1");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DebuggerDialog::doExit()
 {
-  instance().debugger().parser().run("run");
+  instance()->debugger().quit();
 }

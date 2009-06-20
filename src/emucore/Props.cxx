@@ -8,19 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.cxx,v 1.12 2006-03-05 01:18:42 stephena Exp $
 //============================================================================
 
 #include <cctype>
 #include <algorithm>
-#include <sstream>
 
-#include "bspf.hxx"
+#include "GuiUtils.hxx"
 #include "Props.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -66,22 +65,12 @@ void Properties::set(PropertyType key, const string& value)
       case Console_SwapPorts:
       case Controller_Left:
       case Controller_Right:
-      case Controller_SwapPaddles:
       case Display_Format:
       case Display_Phosphor:
+      case Emulation_HmoveBlanks:
       {
         transform(myProperties[key].begin(), myProperties[key].end(),
                   myProperties[key].begin(), (int(*)(int)) toupper);
-        break;
-      }
-
-      case Display_PPBlend:
-      {
-        int blend = atoi(myProperties[key].c_str());
-        if(blend < 0 || blend > 100) blend = 77;
-        ostringstream buf;
-        buf << blend;
-        myProperties[key] = buf.str();
         break;
       }
 
@@ -135,10 +124,9 @@ void Properties::load(istream& in)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::save(ostream& out) const
+void Properties::save(ostream& out)
 {
   // Write out each of the key and value pairs
-  bool changed = false;
   for(int i = 0; i < LastPropType; ++i)
   {
     // Try to save some space by only saving the items that differ from default
@@ -148,17 +136,13 @@ void Properties::save(ostream& out) const
       out.put(' ');
       writeQuotedString(out, myProperties[i]);
       out.put('\n');
-      changed = true;
     }
   }
 
-  if(changed)
-  {
-    // Put a trailing null string so we know when to stop reading
-    writeQuotedString(out, "");
-    out.put('\n');
-    out.put('\n');
-  }
+  // Put a trailing null string so we know when to stop reading
+  writeQuotedString(out, "");
+  out.put('\n');
+  out.put('\n');
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -248,7 +232,7 @@ void Properties::copy(const Properties& properties)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::print() const
+void Properties::print()
 {
   cout << get(Cartridge_MD5) << "|"
        << get(Cartridge_Name) << "|"
@@ -292,12 +276,13 @@ const char* Properties::ourDefaultProperties[LastPropType] = {
   "NO",          // Console.SwapPorts
   "JOYSTICK",    // Controller.Left
   "JOYSTICK",    // Controller.Right
-  "NO",          // Controller.SwapPaddles
-  "AUTO-DETECT", // Display.Format
+  "NTSC",        // Display.Format
+  "0",           // Display.XStart
+  "160",         // Display.Width
   "34",          // Display.YStart
   "210",         // Display.Height
   "NO",          // Display.Phosphor
-  "77"           // Display.PPBlend
+  "YES"          // Emulation.HmoveBlanks
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -316,10 +301,11 @@ const char* Properties::ourPropertyNames[LastPropType] = {
   "Console.SwapPorts",
   "Controller.Left",
   "Controller.Right",
-  "Controller.SwapPaddles",
   "Display.Format",
+  "Display.XStart",
+  "Display.Width",
   "Display.YStart",
   "Display.Height",
   "Display.Phosphor",
-  "Display.PPBlend"
+  "Emulation.HmoveBlanks"
 };

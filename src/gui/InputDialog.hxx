@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputDialog.hxx,v 1.8 2006-04-05 12:28:39 stephena Exp $
 //============================================================================
 
 #ifndef INPUT_DIALOG_HXX
@@ -24,7 +24,6 @@ class GuiObject;
 class TabWidget;
 class EventMappingWidget;
 class CheckBoxWidget;
-class EditTextWidget;
 class PopUpWidget;
 class SliderWidget;
 class StaticTextWidget;
@@ -36,7 +35,7 @@ class InputDialog : public Dialog
 {
   public:
     InputDialog(OSystem* osystem, DialogContainer* parent,
-                const GUI::Font& font);
+                const GUI::Font& font, int x, int y, int w, int h);
     ~InputDialog();
 
   protected:
@@ -53,29 +52,21 @@ class InputDialog : public Dialog
     void addVDeviceTab(const GUI::Font& font);
 
   private:
-    enum {
-      kLeftChanged     = 'LCch',
-      kRightChanged    = 'RCch',
-      kDeadzoneChanged = 'DZch',
-      kPaddleChanged   = 'PDch',
-      kPSpeedChanged   = 'PSch'
-    };
-
     TabWidget* myTab;
 
-    EventMappingWidget* myEmulEventMapper;
-    EventMappingWidget* myMenuEventMapper;
+    EventMappingWidget* myEventMapper;
 
     PopUpWidget* myLeftPort;
     PopUpWidget* myRightPort;
 
-    SliderWidget*     myDeadzone;
-    StaticTextWidget* myDeadzoneLabel;
     SliderWidget*     myPaddleMode;
     StaticTextWidget* myPaddleModeLabel;
-    SliderWidget*     myPaddleSpeed;
-    StaticTextWidget* myPaddleLabel;
-    EditTextWidget*   myAVoxPort;
+    SliderWidget*     myPaddleThreshold;
+    StaticTextWidget* myPaddleThresholdLabel;
+    SliderWidget*     myPaddleSpeed[4];
+    StaticTextWidget* myPaddleLabel[4];
+
+    CheckBoxWidget* myJoyMouse;
 };
 
 #endif

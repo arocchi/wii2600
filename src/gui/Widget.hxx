@@ -8,82 +8,74 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Widget.hxx,v 1.49 2006-03-25 00:34:17 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include "Dialog.hxx"
-
 #ifndef WIDGET_HXX
 #define WIDGET_HXX
 
+class Dialog;
+
 #include <assert.h>
 
-#include "bspf.hxx"
-
-#include "Array.hxx"
-#include "Event.hxx"
-#include "Font.hxx"
+#include "OSystem.hxx"
 #include "FrameBuffer.hxx"
 #include "GuiObject.hxx"
-#include "OSystem.hxx"
+#include "GuiUtils.hxx"
+#include "Array.hxx"
 #include "Rect.hxx"
+#include "Font.hxx"
+#include "bspf.hxx"
 
 enum {
-  WIDGET_ENABLED       = 1 << 0,
-  WIDGET_INVISIBLE     = 1 << 1,
-  WIDGET_HILITED       = 1 << 2,
-  WIDGET_BORDER        = 1 << 3,
-  WIDGET_CLEARBG       = 1 << 4,
-  WIDGET_TRACK_MOUSE   = 1 << 5,
-  WIDGET_RETAIN_FOCUS  = 1 << 6,
-  WIDGET_WANTS_TAB     = 1 << 7,
-  WIDGET_WANTS_RAWDATA = 1 << 8
+  WIDGET_ENABLED      = 1 << 0,
+  WIDGET_INVISIBLE    = 1 << 1,
+  WIDGET_HILITED      = 1 << 2,
+  WIDGET_BORDER       = 1 << 3,
+  WIDGET_INV_BORDER   = 1 << 4,
+  WIDGET_CLEARBG      = 1 << 5,
+  WIDGET_TRACK_MOUSE  = 1 << 6,
+  WIDGET_RETAIN_FOCUS = 1 << 7,
+  WIDGET_NODRAW_FOCUS = 1 << 8,
+  WIDGET_STICKY_FOCUS = 1 << 9,
+  WIDGET_WANTS_TAB    = 1 << 10,
+  WIDGET_WANTS_EVENTS = 1 << 11
 };
 
 enum {
-  kStaticTextWidget   = 'TEXT',
-  kEditTextWidget     = 'EDIT',
-  kButtonWidget       = 'BTTN',
-  kCheckboxWidget     = 'CHKB',
-  kSliderWidget       = 'SLDE',
-  kListWidget         = 'LIST',
-  kScrollBarWidget    = 'SCRB',
-  kPopUpWidget        = 'POPU',
-  kTabWidget          = 'TABW',
-  kEventMappingWidget = 'EVMP',
-  kEditableWidget     = 'EDLE',
-  kAudioWidget        = 'AUDW',
-  kColorWidget        = 'COLR',
-  kCpuWidget          = 'CPUW',
-  kDataGridOpsWidget  = 'BGRO',
-  kDataGridWidget     = 'BGRI',
-  kPromptWidget       = 'PROM',
-  kRamWidget          = 'RAMW',
-  kRiotWidget         = 'RIOW',
-  kRomListWidget      = 'ROML',
-  kRomWidget          = 'ROMW',
-  kTiaInfoWidget      = 'TIAI',
-  kTiaOutputWidget    = 'TIAO',
-  kTiaWidget          = 'TIAW',
-  kTiaZoomWidget      = 'TIAZ',
-  kToggleBitWidget    = 'TGLB',
-  kTogglePixelWidget  = 'TGLP',
-  kToggleWidget       = 'TOGL'
+  kStaticTextWidget = 'TEXT',
+  kEditTextWidget   = 'EDIT',
+  kButtonWidget     = 'BTTN',
+  kCheckboxWidget   = 'CHKB',
+  kSliderWidget     = 'SLDE',
+  kListWidget       = 'LIST',
+  kScrollBarWidget  = 'SCRB',
+  kPopUpWidget      = 'POPU',
+  kTabWidget        = 'TABW',
+  kPromptWidget     = 'PROM',
+  kDataGridWidget   = 'BGRI',
+  kToggleWidget     = 'TOGL',
+  kColorWidget      = 'COLR'
+};
+
+enum {
+  kButtonWidth  = 50,
+  kButtonHeight = 16
 };
 
 /**
   This is the base class for all widgets.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Widget.hxx,v 1.49 2006-03-25 00:34:17 stephena Exp $
 */
 class Widget : public GuiObject
 {
@@ -108,12 +100,14 @@ class Widget : public GuiObject
     virtual void handleJoyUp(int stick, int button) {}
     virtual void handleJoyAxis(int stick, int axis, int value) {}
     virtual bool handleJoyHat(int stick, int hat, int value) { return false; }
-    virtual bool handleEvent(Event::Type event) { return false; }
 
     void draw();
     void receivedFocus();
     void lostFocus();
     void addFocusWidget(Widget* w) { _focusList.push_back(w); }
+
+    virtual GUI::Rect getRect() const;
+    virtual bool wantsFocus()  { return false; }
 
     /** Set/clear WIDGET_ENABLED flag and immediately redraw */
     void setEnabled(bool e);
@@ -122,21 +116,16 @@ class Widget : public GuiObject
     void clearFlags(int flags)  { _flags &= ~flags; }
     int  getFlags() const       { return _flags;    }
 
-    bool isEnabled() const   { return _flags & WIDGET_ENABLED;       }
-    bool isVisible() const   { return !(_flags & WIDGET_INVISIBLE);  }
-    bool wantsFocus() const  { return _flags & WIDGET_RETAIN_FOCUS;  }
-    bool wantsTab() const    { return _flags & WIDGET_WANTS_TAB;     }
-    bool wantsRaw() const    { return _flags & WIDGET_WANTS_RAWDATA; }
+    bool isEnabled() const   { return _flags & WIDGET_ENABLED;      }
+    bool isVisible() const   { return !(_flags & WIDGET_INVISIBLE); }
+    bool isSticky() const    { return _flags & WIDGET_STICKY_FOCUS; }
+    bool wantsEvents() const { return _flags & WIDGET_WANTS_EVENTS; }
 
     void setID(int id)  { _id = id;   }
     int  getID()        { return _id; }
 
+    void setColor(int color)        { _color = color; }
     virtual const GUI::Font* font() { return _font; }
-
-    void setTextColor(uInt32 color)   { _textcolor = color;   }
-    void setTextColorHi(uInt32 color) { _textcolorhi = color; }
-    void setBGColor(uInt32 color)     { _bgcolor = color;     }
-    void setBGColorHi(uInt32 color)   { _bgcolorhi = color;   }
 
     virtual void loadConfig() {}
 
@@ -162,12 +151,9 @@ class Widget : public GuiObject
     int        _id;
     int        _flags;
     bool       _hasFocus;
+    int        _color;
     int        _fontWidth;
     int        _fontHeight;
-    uInt32     _bgcolor;
-    uInt32     _bgcolorhi;
-    uInt32     _textcolor;
-    uInt32     _textcolorhi;
 
   public:
     static Widget* findWidgetInChain(Widget* start, int x, int y);
@@ -199,6 +185,7 @@ class StaticTextWidget : public Widget
     void setLabel(const string& label);
     void setAlign(TextAlignment align)  { _align = align; }
     const string& getLabel() const      { return _label; }
+    void setEditable(bool editable);
 
   protected:
     void drawWidget(bool hilite);
@@ -216,21 +203,27 @@ class ButtonWidget : public StaticTextWidget, public CommandSender
   public:
     ButtonWidget(GuiObject* boss, const GUI::Font& font,
                  int x, int y, int w, int h,
-                 const string& label, int cmd = 0);
+                 const string& label, int cmd = 0, uInt8 hotkey = 0);
 
     void setCmd(int cmd)  { _cmd = cmd; }
     int getCmd() const    { return _cmd; }
 
-    virtual void handleMouseUp(int x, int y, int button, int clickCount);
-    virtual void handleMouseEntered(int button);
-    virtual void handleMouseLeft(int button);
-    virtual bool handleEvent(Event::Type event);
+    void handleMouseUp(int x, int y, int button, int clickCount);
+    void handleMouseEntered(int button);
+    void handleMouseLeft(int button);
+    bool handleKeyDown(int ascii, int keycode, int modifiers);
+    void handleJoyDown(int stick, int button);
+
+    bool wantsFocus();
+    void setEditable(bool editable);
 
   protected:
     void drawWidget(bool hilite);
 
   protected:
     int    _cmd;
+    bool   _editable;
+    uInt8  _hotkey;
 };
 
 
@@ -244,6 +237,10 @@ class CheckboxWidget : public ButtonWidget
     void handleMouseUp(int x, int y, int button, int clickCount);
     virtual void handleMouseEntered(int button)	{}
     virtual void handleMouseLeft(int button)	{}
+    virtual bool handleKeyDown(int ascii, int keycode, int modifiers);
+
+    bool wantsFocus();
+    void holdFocus(bool status) { _holdFocus = status; }
 
     void setEditable(bool editable);
     void setFill(bool fill) { _fillRect = fill; }
@@ -260,11 +257,12 @@ class CheckboxWidget : public ButtonWidget
 
   protected:
     bool _state;
+    bool _editable;
     bool _holdFocus;
     bool _fillRect;
     bool _drawBox;
 
-    uInt32 _fillColor;
+    int _fillColor;
 
   private:
     int _boxY;
@@ -278,22 +276,19 @@ class SliderWidget : public ButtonWidget
   public:
     SliderWidget(GuiObject *boss, const GUI::Font& font,
                  int x, int y, int w, int h, const string& label = "",
-                 int labelWidth = 0, int cmd = 0);
+                 int labelWidth = 0, int cmd = 0, uInt8 hotkey = 0);
 
     void setValue(int value);
     int getValue() const      { return _value; }
 
-    void setMinValue(int value);
-    int  getMinValue() const      { return _valueMin; }
-    void setMaxValue(int value);
-    int  getMaxValue() const      { return _valueMax; }
-    void setStepValue(int value);
-    int  getStepValue() const     { return _stepValue; }
+    void  setMinValue(int value) { _valueMin = value; }
+    int getMinValue() const      { return _valueMin; }
+    void  setMaxValue(int value) { _valueMax = value; }
+    int getMaxValue() const      { return _valueMax; }
 
-    virtual void handleMouseMoved(int x, int y, int button);
-    virtual void handleMouseDown(int x, int y, int button, int clickCount);
-    virtual void handleMouseUp(int x, int y, int button, int clickCount);
-    virtual bool handleEvent(Event::Type event);
+    void handleMouseMoved(int x, int y, int button);
+    void handleMouseDown(int x, int y, int button, int clickCount);
+    void handleMouseUp(int x, int y, int button, int clickCount);
 
   protected:
     void drawWidget(bool hilite);
@@ -302,7 +297,7 @@ class SliderWidget : public ButtonWidget
     int posToValue(int pos);
 
   protected:
-    int  _value, _stepValue;
+    int  _value, _oldValue;
     int  _valueMin, _valueMax;
     bool _isDragging;
     int  _labelWidth;

@@ -8,24 +8,23 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Event.cxx,v 1.8 2006-02-09 15:10:17 stephena Exp $
 //============================================================================
 
-#include "OSystem.hxx"
-#include "Console.hxx"
-#include "Control.hxx"
-
 #include "Event.hxx"
+#include "EventStreamer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Event::Event()
-  : myNumberOfTypes(Event::LastType)
+Event::Event(EventStreamer* ev)
+  : myNumberOfTypes(Event::LastType),
+    myEventStreamer(ev)
 {
+  // Set all of the events to 0 / false to start with
   clear();
 }
 
@@ -44,6 +43,12 @@ Int32 Event::get(Type type) const
 void Event::set(Type type, Int32 value)
 {
   myValues[type] = value;
+
+/* FIXME - add full functionality at some point
+  // Add to history if we're in recording mode
+  if(myEventStreamer->isRecording())
+    myEventStreamer->addEvent(type, value);
+*/
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: BrowserDialog.hxx,v 1.8 2006-03-19 22:06:20 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -26,7 +26,6 @@ class GuiObject;
 class ButtonWidget;
 class StaticTextWidget;
 class StringListWidget;
-class GameList;
 
 #include "Dialog.hxx"
 #include "Command.hxx"
@@ -36,38 +35,36 @@ class GameList;
 class BrowserDialog : public Dialog, public CommandSender
 {
   public:
-    BrowserDialog(GuiObject* boss, const GUI::Font& font);
-    virtual ~BrowserDialog();
+    BrowserDialog(GuiObject* boss, const GUI::Font& font,
+                  int x, int y, int w, int h);
 
-    const FilesystemNode& getResult() { return _node; }
+    const FilesystemNode& getResult() { return _choice; }
 
-    /** Place the browser window onscreen, using the given attributes */
-    void show(const string& title, const string& startpath,
-              FilesystemNode::ListMode mode, int cmd);
+    void setTitle(const string& title) { _title->setLabel(title); }
+    void setEmitSignal(int cmd) { _cmd = cmd; }
+    void setStartPath(const string& startpath);
 
   protected:
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
     void updateListing();
 
-  private:
-    enum {
-      kChooseCmd  = 'CHOS',
-      kGoUpCmd    = 'GOUP',
-      kBaseDirCmd = 'BADR'
-    };
-
-    int	_cmd;
-
+  protected:
     StringListWidget* _fileList;
     StaticTextWidget* _currentPath;
     StaticTextWidget* _title;
     ButtonWidget*     _goUpButton;
-    ButtonWidget*     _basedirButton;
 
-    FilesystemNode _node;
-    GameList*      _nodeList;
+    FilesystemNode    _node;
+    FSList            _nodeContent;
+    FilesystemNode    _choice;
 
-    FilesystemNode::ListMode _mode;
+  private:
+    int	_cmd;
+
+    enum {
+      kChooseCmd = 'CHOS',
+      kGoUpCmd   = 'GOUP'
+    };
 };
 
 #endif

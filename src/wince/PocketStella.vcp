@@ -54,7 +54,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /Gf /I "./" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /YX /Oxs /M$(CECrtMT) /Zm200 /c
+# ADD CPP /nologo /W3 /I "./" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -80,16 +80,13 @@ LINK32=link.exe
 # PROP Intermediate_Dir "ARMDbg"
 # PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
 # PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
-# PROP Ignore_Export_Lib 0
-# PROP Sec_AlwaysSign 0
-# PROP Sec_ConfigureDevice 0
 # PROP Target_Dir ""
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /I "./" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /FR /YX /M$(CECrtMTDebug) /Zm1000 /c
+# ADD CPP /nologo /W3 /Zi /Od /I "port" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /YX /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -98,7 +95,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib zlib/arm/zlibce.lib gx.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /libpath:"f:\a\stlport\lib\evc3-arm" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /libpath:"f:\a\stlport\lib\evc3-x86" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
@@ -124,7 +121,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /Oxs /c
-# ADD CPP /nologo /W3 /I "./" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /YX /Gs8192 /GF /Oxs /Zm200 /c
+# ADD CPP /nologo /W3 /I "./" /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /YX /Gs8192 /GF /Oxs /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -159,7 +156,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
-# ADD CPP /nologo /W3 /Zi /Od /I "." /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "DEBUG" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /FR /YX /Gs8192 /GF /Zm200 /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "../emucore" /I "../emucore/m6502/src" /I "../gui" /I "zlib" /I "sdl" /I "../common" /I "../debugger" /I "../debugger/gui" /I "../yacc" /I "../emucore/m6502/src/bspf/src" /D "DEBUG" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "BSPF_WIN32" /D "SOUND_SUPPORT" /FR /YX /Gs8192 /GF /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -191,7 +188,6 @@ SOURCE=..\gui\AboutDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_ABOUT=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -219,6 +215,9 @@ DEP_CPP_ABOUT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_ABOUT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -237,6 +236,7 @@ DEP_CPP_ABOUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
@@ -246,7 +246,6 @@ DEP_CPP_ABOUT=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_ABOUT=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -254,13 +253,11 @@ DEP_CPP_ABOUT=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -273,7 +270,12 @@ DEP_CPP_ABOUT=\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_ABOUT=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -292,6 +294,7 @@ DEP_CPP_ABOUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
@@ -301,7 +304,6 @@ DEP_CPP_ABOUT=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_ABOUT=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -315,7 +317,6 @@ DEP_CPP_ABOUT=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -329,6 +330,10 @@ DEP_CPP_ABOUT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_ABOUT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -347,6 +352,7 @@ DEP_CPP_ABOUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
@@ -384,28 +390,9 @@ DEP_CPP_ABOUT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
+	
+NODEP_CPP_ABOUT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ENDIF 
@@ -422,7 +409,6 @@ SOURCE=..\gui\AudioDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_AUDIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -453,6 +439,9 @@ DEP_CPP_AUDIO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_AUDIO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -471,32 +460,27 @@ DEP_CPP_AUDIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_AUDIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_AUDIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -513,7 +497,13 @@ DEP_CPP_AUDIO=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_AUDIO=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -532,19 +522,16 @@ DEP_CPP_AUDIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_AUDIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_AUDIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -557,7 +544,6 @@ DEP_CPP_AUDIO=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -575,6 +561,10 @@ DEP_CPP_AUDIO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_AUDIO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -593,13 +583,11 @@ DEP_CPP_AUDIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_AUDIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -636,28 +624,6 @@ DEP_CPP_AUDIO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_AUDIO=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -677,7 +643,6 @@ SOURCE=..\gui\BrowserDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_BROWS=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -709,6 +674,9 @@ DEP_CPP_BROWS=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_BROWS=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -727,19 +695,16 @@ DEP_CPP_BROWS=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_BROWS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_BROWS=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -747,13 +712,11 @@ DEP_CPP_BROWS=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -770,7 +733,12 @@ DEP_CPP_BROWS=\
 	"..\gui\StringList.hxx"\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_BROWS=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -789,19 +757,16 @@ DEP_CPP_BROWS=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_BROWS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_BROWS=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -815,7 +780,6 @@ DEP_CPP_BROWS=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -833,6 +797,10 @@ DEP_CPP_BROWS=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_BROWS=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -851,13 +819,11 @@ DEP_CPP_BROWS=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_BROWS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -895,28 +861,6 @@ DEP_CPP_BROWS=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_BROWS=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -936,7 +880,6 @@ SOURCE=..\gui\CheckListWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_CHECK=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -965,6 +908,9 @@ DEP_CPP_CHECK=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_CHECK=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -983,32 +929,27 @@ DEP_CPP_CHECK=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CHECK=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_CHECK=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1023,7 +964,12 @@ DEP_CPP_CHECK=\
 	"..\gui\ScrollBarWidget.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_CHECK=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1042,19 +988,16 @@ DEP_CPP_CHECK=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CHECK=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_CHECK=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1067,7 +1010,6 @@ DEP_CPP_CHECK=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1083,6 +1025,10 @@ DEP_CPP_CHECK=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_CHECK=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1101,13 +1047,11 @@ DEP_CPP_CHECK=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CHECK=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -1142,28 +1086,6 @@ DEP_CPP_CHECK=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_CHECK=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -1187,7 +1109,6 @@ SOURCE=..\gui\CommandDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_COMMA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1216,6 +1137,9 @@ DEP_CPP_COMMA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_COMMA=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1234,32 +1158,27 @@ DEP_CPP_COMMA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_COMMA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1274,7 +1193,13 @@ DEP_CPP_COMMA=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_COMMA=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1293,19 +1218,16 @@ DEP_CPP_COMMA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_COMMA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1318,7 +1240,6 @@ DEP_CPP_COMMA=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1334,6 +1255,10 @@ DEP_CPP_COMMA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_COMMA=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1352,13 +1277,11 @@ DEP_CPP_COMMA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -1393,28 +1316,6 @@ DEP_CPP_COMMA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_COMMA=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -1434,7 +1335,6 @@ SOURCE=..\gui\CommandMenu.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_COMMAN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1464,6 +1364,9 @@ DEP_CPP_COMMAN=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_COMMAN=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1482,32 +1385,27 @@ DEP_CPP_COMMAN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMAN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_COMMAN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1523,7 +1421,13 @@ DEP_CPP_COMMAN=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_COMMAN=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1542,19 +1446,16 @@ DEP_CPP_COMMAN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMAN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_COMMAN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1567,7 +1468,6 @@ DEP_CPP_COMMAN=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1584,6 +1484,10 @@ DEP_CPP_COMMAN=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_COMMAN=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1602,13 +1506,11 @@ DEP_CPP_COMMAN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_COMMAN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -1644,28 +1546,6 @@ DEP_CPP_COMMAN=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_COMMAN=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -1689,7 +1569,6 @@ SOURCE=..\gui\Dialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_DIALO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1719,6 +1598,9 @@ DEP_CPP_DIALO=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_DIALO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1737,32 +1619,27 @@ DEP_CPP_DIALO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_DIALO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1778,7 +1655,13 @@ DEP_CPP_DIALO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_DIALO=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1797,19 +1680,16 @@ DEP_CPP_DIALO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_DIALO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1822,7 +1702,6 @@ DEP_CPP_DIALO=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -1839,6 +1718,10 @@ DEP_CPP_DIALO=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_DIALO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1857,13 +1740,11 @@ DEP_CPP_DIALO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -1899,28 +1780,6 @@ DEP_CPP_DIALO=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_DIALO=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -1940,7 +1799,6 @@ SOURCE=..\gui\DialogContainer.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_DIALOG=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -1968,6 +1826,9 @@ DEP_CPP_DIALOG=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_DIALOG=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -1986,32 +1847,27 @@ DEP_CPP_DIALOG=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALOG=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_DIALOG=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2025,7 +1881,13 @@ DEP_CPP_DIALOG=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_DIALOG=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2044,19 +1906,16 @@ DEP_CPP_DIALOG=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALOG=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_DIALOG=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2069,7 +1928,6 @@ DEP_CPP_DIALOG=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2084,6 +1942,10 @@ DEP_CPP_DIALOG=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_DIALOG=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2102,13 +1964,11 @@ DEP_CPP_DIALOG=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_DIALOG=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -2142,28 +2002,6 @@ DEP_CPP_DIALOG=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_DIALOG=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -2183,7 +2021,6 @@ SOURCE=..\gui\EditableWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_EDITA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2209,6 +2046,9 @@ DEP_CPP_EDITA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EDITA=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2227,32 +2067,27 @@ DEP_CPP_EDITA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EDITA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2264,7 +2099,12 @@ DEP_CPP_EDITA=\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_EDITA=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2283,19 +2123,16 @@ DEP_CPP_EDITA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_EDITA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2308,7 +2145,6 @@ DEP_CPP_EDITA=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2321,6 +2157,10 @@ DEP_CPP_EDITA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EDITA=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2339,13 +2179,11 @@ DEP_CPP_EDITA=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITA=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -2377,28 +2215,6 @@ DEP_CPP_EDITA=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_EDITA=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -2418,7 +2234,6 @@ SOURCE=..\gui\EditTextWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_EDITT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2446,6 +2261,9 @@ DEP_CPP_EDITT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EDITT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2464,32 +2282,27 @@ DEP_CPP_EDITT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EDITT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2503,7 +2316,12 @@ DEP_CPP_EDITT=\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_EDITT=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2522,19 +2340,16 @@ DEP_CPP_EDITT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_EDITT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2547,7 +2362,6 @@ DEP_CPP_EDITT=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2562,6 +2376,10 @@ DEP_CPP_EDITT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EDITT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2580,13 +2398,11 @@ DEP_CPP_EDITT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EDITT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -2620,28 +2436,6 @@ DEP_CPP_EDITT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_EDITT=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -2661,7 +2455,6 @@ SOURCE=..\gui\EventMappingWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_EVENT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2691,6 +2484,9 @@ DEP_CPP_EVENT=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EVENT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2709,32 +2505,27 @@ DEP_CPP_EVENT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EVENT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2750,7 +2541,12 @@ DEP_CPP_EVENT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_EVENT=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2769,19 +2565,16 @@ DEP_CPP_EVENT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_EVENT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -2794,7 +2587,6 @@ DEP_CPP_EVENT=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -2811,6 +2603,10 @@ DEP_CPP_EVENT=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EVENT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -2829,13 +2625,11 @@ DEP_CPP_EVENT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -2871,28 +2665,6 @@ DEP_CPP_EVENT=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_EVENT=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -2928,7 +2700,9 @@ DEP_CPP_FONT_=\
 	"..\gui\GuiUtils.hxx"\
 	
 NODEP_CPP_FONT_=\
-	"..\gui\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -2969,7 +2743,6 @@ SOURCE=..\gui\GameInfoDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_GAMEI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3000,6 +2773,9 @@ DEP_CPP_GAMEI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_GAMEI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3018,49 +2794,45 @@ DEP_CPP_GAMEI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_GAMEI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_GAMEI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\Dialog.hxx"\
-	"..\gui\EditableWidget.hxx"\
-	"..\gui\EditTextWidget.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GameInfoDialog.hxx"\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
-	"..\gui\PopUpWidget.hxx"\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
-	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_GAMEI=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3079,19 +2851,16 @@ DEP_CPP_GAMEI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_GAMEI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_GAMEI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3104,7 +2873,6 @@ DEP_CPP_GAMEI=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3122,6 +2890,10 @@ DEP_CPP_GAMEI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_GAMEI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3140,13 +2912,11 @@ DEP_CPP_GAMEI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_GAMEI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -3183,28 +2953,6 @@ DEP_CPP_GAMEI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_GAMEI=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -3224,7 +2972,6 @@ SOURCE=..\gui\GameList.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_GAMEL=\
-	"..\common\Array.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\gui\GameList.hxx"\
 	"..\gui\GuiUtils.hxx"\
@@ -3237,19 +2984,19 @@ NODEP_CPP_GAMEL=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_GAMEL=\
-	"..\common\Array.hxx"\
 	"..\gui\GameList.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	
 NODEP_CPP_GAMEL=\
-	"..\common\bspf.hxx"\
-	"..\gui\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_GAMEL=\
-	"..\common\Array.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\gui\GameList.hxx"\
 	"..\gui\GuiUtils.hxx"\
@@ -3257,6 +3004,7 @@ DEP_CPP_GAMEL=\
 	
 NODEP_CPP_GAMEL=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -3294,7 +3042,6 @@ SOURCE=..\gui\HelpDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_HELPD=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3321,6 +3068,9 @@ DEP_CPP_HELPD=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_HELPD=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3339,32 +3089,27 @@ DEP_CPP_HELPD=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_HELPD=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_HELPD=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3377,7 +3122,12 @@ DEP_CPP_HELPD=\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_HELPD=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3396,19 +3146,16 @@ DEP_CPP_HELPD=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_HELPD=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_HELPD=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3421,7 +3168,6 @@ DEP_CPP_HELPD=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3435,6 +3181,10 @@ DEP_CPP_HELPD=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_HELPD=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3453,13 +3203,11 @@ DEP_CPP_HELPD=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_HELPD=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -3492,28 +3240,6 @@ DEP_CPP_HELPD=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_HELPD=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -3533,7 +3259,6 @@ SOURCE=..\gui\InputDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_INPUT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3563,6 +3288,9 @@ DEP_CPP_INPUT=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_INPUT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3581,32 +3309,27 @@ DEP_CPP_INPUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_INPUT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3622,7 +3345,12 @@ DEP_CPP_INPUT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_INPUT=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3641,19 +3369,16 @@ DEP_CPP_INPUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_INPUT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3666,7 +3391,6 @@ DEP_CPP_INPUT=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3683,6 +3407,10 @@ DEP_CPP_INPUT=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_INPUT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3701,13 +3429,11 @@ DEP_CPP_INPUT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -3743,28 +3469,6 @@ DEP_CPP_INPUT=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_INPUT=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -3784,7 +3488,6 @@ SOURCE=..\gui\InputTextDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_INPUTT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3813,6 +3516,9 @@ DEP_CPP_INPUTT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_INPUTT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3831,32 +3537,27 @@ DEP_CPP_INPUTT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUTT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_INPUTT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3871,7 +3572,12 @@ DEP_CPP_INPUTT=\
 	"..\gui\Rect.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_INPUTT=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3890,19 +3596,16 @@ DEP_CPP_INPUTT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUTT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_INPUTT=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -3915,7 +3618,6 @@ DEP_CPP_INPUTT=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -3931,6 +3633,10 @@ DEP_CPP_INPUTT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_INPUTT=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -3949,13 +3655,11 @@ DEP_CPP_INPUTT=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_INPUTT=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -3990,28 +3694,6 @@ DEP_CPP_INPUTT=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_INPUTT=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -4031,7 +3713,6 @@ SOURCE=..\gui\Launcher.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_LAUNC=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -4063,6 +3744,9 @@ DEP_CPP_LAUNC=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNC=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4081,19 +3765,16 @@ DEP_CPP_LAUNC=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNC=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_LAUNC=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -4101,13 +3782,11 @@ DEP_CPP_LAUNC=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4124,7 +3803,13 @@ DEP_CPP_LAUNC=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_LAUNC=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4143,19 +3828,16 @@ DEP_CPP_LAUNC=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNC=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_LAUNC=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -4169,7 +3851,6 @@ DEP_CPP_LAUNC=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4187,6 +3868,10 @@ DEP_CPP_LAUNC=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNC=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4205,13 +3890,11 @@ DEP_CPP_LAUNC=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNC=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -4249,28 +3932,6 @@ DEP_CPP_LAUNC=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_LAUNC=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -4290,7 +3951,6 @@ SOURCE=..\gui\LauncherDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_LAUNCH=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4330,6 +3990,9 @@ DEP_CPP_LAUNCH=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNCH=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4348,19 +4011,16 @@ DEP_CPP_LAUNCH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCH=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_LAUNCH=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4368,7 +4028,6 @@ DEP_CPP_LAUNCH=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MD5.hxx"\
@@ -4376,7 +4035,6 @@ DEP_CPP_LAUNCH=\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4399,7 +4057,13 @@ DEP_CPP_LAUNCH=\
 	"..\gui\StringList.hxx"\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_LAUNCH=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4418,19 +4082,16 @@ DEP_CPP_LAUNCH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCH=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_LAUNCH=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4446,7 +4107,6 @@ DEP_CPP_LAUNCH=\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4470,6 +4130,10 @@ DEP_CPP_LAUNCH=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNCH=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4488,13 +4152,11 @@ DEP_CPP_LAUNCH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCH=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -4540,28 +4202,6 @@ DEP_CPP_LAUNCH=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_LAUNCH=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -4581,7 +4221,6 @@ SOURCE=..\gui\LauncherOptionsDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_LAUNCHE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4616,6 +4255,9 @@ DEP_CPP_LAUNCHE=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNCHE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4634,19 +4276,16 @@ DEP_CPP_LAUNCHE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCHE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_LAUNCHE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4654,13 +4293,11 @@ DEP_CPP_LAUNCHE=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4680,7 +4317,13 @@ DEP_CPP_LAUNCHE=\
 	"..\gui\StringList.hxx"\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_LAUNCHE=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4699,19 +4342,16 @@ DEP_CPP_LAUNCHE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCHE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_LAUNCHE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4725,7 +4365,6 @@ DEP_CPP_LAUNCHE=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4746,6 +4385,10 @@ DEP_CPP_LAUNCHE=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LAUNCHE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4764,13 +4407,11 @@ DEP_CPP_LAUNCHE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LAUNCHE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -4811,28 +4452,6 @@ DEP_CPP_LAUNCHE=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_LAUNCHE=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -4852,7 +4471,6 @@ SOURCE=..\gui\ListWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_LISTW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4881,6 +4499,9 @@ DEP_CPP_LISTW=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LISTW=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4899,32 +4520,27 @@ DEP_CPP_LISTW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LISTW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_LISTW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4939,7 +4555,12 @@ DEP_CPP_LISTW=\
 	"..\gui\ScrollBarWidget.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_LISTW=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -4958,19 +4579,16 @@ DEP_CPP_LISTW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LISTW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_LISTW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -4983,7 +4601,6 @@ DEP_CPP_LISTW=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -4999,6 +4616,10 @@ DEP_CPP_LISTW=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_LISTW=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5017,13 +4638,11 @@ DEP_CPP_LISTW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_LISTW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -5058,28 +4677,6 @@ DEP_CPP_LISTW=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_LISTW=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -5099,7 +4696,6 @@ SOURCE=..\gui\Menu.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_MENU_=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5130,6 +4726,9 @@ DEP_CPP_MENU_=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_MENU_=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5148,32 +4747,27 @@ DEP_CPP_MENU_=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_MENU_=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_MENU_=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5190,7 +4784,15 @@ DEP_CPP_MENU_=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_MENU_=\
+	"..\common\Cheat.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\CheatCodeDialog.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5209,19 +4811,16 @@ DEP_CPP_MENU_=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_MENU_=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_MENU_=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5234,7 +4833,6 @@ DEP_CPP_MENU_=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5252,6 +4850,10 @@ DEP_CPP_MENU_=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_MENU_=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5270,13 +4872,11 @@ DEP_CPP_MENU_=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_MENU_=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -5313,28 +4913,6 @@ DEP_CPP_MENU_=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_MENU_=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -5354,7 +4932,6 @@ SOURCE=..\gui\OptionsDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_OPTIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5389,6 +4966,10 @@ DEP_CPP_OPTIO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_OPTIO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\CheatCodeDialog.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5407,33 +4988,27 @@ DEP_CPP_OPTIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_OPTIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	"..\gui\CheatCodeDialog.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_OPTIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5447,14 +5022,22 @@ DEP_CPP_OPTIO=\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\HelpDialog.hxx"\
-	"..\gui\InputDialog.hxx"\
 	"..\gui\OptionsDialog.hxx"\
 	"..\gui\Rect.hxx"\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_OPTIO=\
+	"..\common\Cheat.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\CheatCodeDialog.hxx"\
+	"..\gui\EventMappingDialog.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5473,20 +5056,16 @@ DEP_CPP_OPTIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_OPTIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	"..\gui\CheatCodeDialog.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_OPTIO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5499,7 +5078,6 @@ DEP_CPP_OPTIO=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5521,6 +5099,11 @@ DEP_CPP_OPTIO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_OPTIO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
+	"..\gui\CheatCodeDialog.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5539,14 +5122,11 @@ DEP_CPP_OPTIO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_OPTIO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	"..\gui\CheatCodeDialog.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -5587,28 +5167,6 @@ DEP_CPP_OPTIO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_OPTIO=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -5629,7 +5187,6 @@ SOURCE=..\gui\PopUpWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_POPUP=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5662,6 +5219,9 @@ DEP_CPP_POPUP=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_POPUP=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5680,51 +5240,48 @@ DEP_CPP_POPUP=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_POPUP=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_POPUP=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
-	"..\gui\EditableWidget.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
-	"..\gui\ListWidget.hxx"\
 	"..\gui\PopUpWidget.hxx"\
 	"..\gui\Rect.hxx"\
-	"..\gui\ScrollBarWidget.hxx"\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
-	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_POPUP=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5743,19 +5300,16 @@ DEP_CPP_POPUP=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_POPUP=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_POPUP=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5768,7 +5322,6 @@ DEP_CPP_POPUP=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5788,6 +5341,10 @@ DEP_CPP_POPUP=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_POPUP=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5806,13 +5363,11 @@ DEP_CPP_POPUP=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_POPUP=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -5851,28 +5406,6 @@ DEP_CPP_POPUP=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_POPUP=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -5892,7 +5425,6 @@ SOURCE=..\gui\ProgressDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_PROGR=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -5921,6 +5453,9 @@ DEP_CPP_PROGR=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_PROGR=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5939,32 +5474,27 @@ DEP_CPP_PROGR=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_PROGR=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_PROGR=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -5979,7 +5509,13 @@ DEP_CPP_PROGR=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_PROGR=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -5998,19 +5534,16 @@ DEP_CPP_PROGR=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_PROGR=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_PROGR=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6023,7 +5556,6 @@ DEP_CPP_PROGR=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6039,6 +5571,10 @@ DEP_CPP_PROGR=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_PROGR=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6057,13 +5593,11 @@ DEP_CPP_PROGR=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_PROGR=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -6098,28 +5632,6 @@ DEP_CPP_PROGR=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_PROGR=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -6143,7 +5655,6 @@ SOURCE=..\gui\ScrollBarWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_SCROL=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6170,6 +5681,9 @@ DEP_CPP_SCROL=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SCROL=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6188,32 +5702,27 @@ DEP_CPP_SCROL=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SCROL=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SCROL=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6226,7 +5735,12 @@ DEP_CPP_SCROL=\
 	"..\gui\ScrollBarWidget.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_SCROL=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6245,19 +5759,16 @@ DEP_CPP_SCROL=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SCROL=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SCROL=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6270,7 +5781,6 @@ DEP_CPP_SCROL=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6284,6 +5794,10 @@ DEP_CPP_SCROL=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SCROL=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6302,13 +5816,11 @@ DEP_CPP_SCROL=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SCROL=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -6341,28 +5853,6 @@ DEP_CPP_SCROL=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_SCROL=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -6394,7 +5884,6 @@ SOURCE=..\gui\StringListWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_STRIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6423,6 +5912,9 @@ DEP_CPP_STRIN=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6441,32 +5933,27 @@ DEP_CPP_STRIN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_STRIN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_STRIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6481,7 +5968,12 @@ DEP_CPP_STRIN=\
 	"..\gui\StringList.hxx"\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6500,19 +5992,16 @@ DEP_CPP_STRIN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_STRIN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_STRIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6525,7 +6014,6 @@ DEP_CPP_STRIN=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6541,6 +6029,10 @@ DEP_CPP_STRIN=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6559,13 +6051,11 @@ DEP_CPP_STRIN=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_STRIN=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -6600,28 +6090,6 @@ DEP_CPP_STRIN=\
 	"..\gui\StringListWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_STRIN=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -6641,7 +6109,6 @@ SOURCE=..\gui\TabWidget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_TABWI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6668,6 +6135,9 @@ DEP_CPP_TABWI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_TABWI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6686,32 +6156,27 @@ DEP_CPP_TABWI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_TABWI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_TABWI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6724,7 +6189,12 @@ DEP_CPP_TABWI=\
 	"..\gui\StringList.hxx"\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_TABWI=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6743,19 +6213,16 @@ DEP_CPP_TABWI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_TABWI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_TABWI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6768,7 +6235,6 @@ DEP_CPP_TABWI=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6782,6 +6248,10 @@ DEP_CPP_TABWI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_TABWI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6800,13 +6270,11 @@ DEP_CPP_TABWI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_TABWI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -6839,28 +6307,6 @@ DEP_CPP_TABWI=\
 	"..\gui\TabWidget.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_TABWI=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -6884,7 +6330,6 @@ SOURCE=..\gui\VideoDialog.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_VIDEO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -6915,6 +6360,9 @@ DEP_CPP_VIDEO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_VIDEO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6933,32 +6381,27 @@ DEP_CPP_VIDEO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_VIDEO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_VIDEO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -6975,7 +6418,13 @@ DEP_CPP_VIDEO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_VIDEO=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -6994,19 +6443,16 @@ DEP_CPP_VIDEO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_VIDEO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_VIDEO=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -7019,7 +6465,6 @@ DEP_CPP_VIDEO=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -7037,6 +6482,10 @@ DEP_CPP_VIDEO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_VIDEO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -7055,13 +6504,11 @@ DEP_CPP_VIDEO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_VIDEO=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -7098,28 +6545,6 @@ DEP_CPP_VIDEO=\
 	"..\gui\VideoDialog.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_VIDEO=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -7139,7 +6564,6 @@ SOURCE=..\gui\Widget.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_WIDGE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -7158,16 +6582,17 @@ DEP_CPP_WIDGE=\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\Dialog.hxx"\
-	"..\gui\DialogContainer.hxx"\
 	"..\gui\EditableWidget.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_WIDGE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -7186,47 +6611,44 @@ DEP_CPP_WIDGE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_WIDGE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_WIDGE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\Dialog.hxx"\
-	"..\gui\DialogContainer.hxx"\
-	"..\gui\EditableWidget.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_WIDGE=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -7245,19 +6667,16 @@ DEP_CPP_WIDGE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_WIDGE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_WIDGE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -7270,22 +6689,23 @@ DEP_CPP_WIDGE=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\Dialog.hxx"\
-	"..\gui\DialogContainer.hxx"\
 	"..\gui\EditableWidget.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_WIDGE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -7304,13 +6724,11 @@ DEP_CPP_WIDGE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_WIDGE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -7345,28 +6763,6 @@ DEP_CPP_WIDGE=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_WIDGE=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -7405,7 +6801,9 @@ DEP_CPP_BOOST=\
 	"..\emucore\Event.hxx"\
 	
 NODEP_CPP_BOOST=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7501,16 +6899,16 @@ DEP_CPP_CART_=\
 	"..\emucore\CartMB.hxx"\
 	"..\emucore\CartMC.hxx"\
 	"..\emucore\CartUA.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\MD5.hxx"\
 	"..\emucore\Props.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_CART_=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7621,8 +7019,9 @@ DEP_CPP_CART2=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CART2=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7703,8 +7102,9 @@ DEP_CPP_CART3=\
 	"..\emucore\TIA.hxx"\
 	
 NODEP_CPP_CART3=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7791,8 +7191,9 @@ DEP_CPP_CART3F=\
 	"..\emucore\TIA.hxx"\
 	
 NODEP_CPP_CART3F=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7871,8 +7272,9 @@ DEP_CPP_CART4=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CART4=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -7919,7 +7321,6 @@ SOURCE=..\emucore\CartAR.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_CARTA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\CartAR.hxx"\
 	"..\emucore\Deserializer.hxx"\
@@ -7941,7 +7342,6 @@ NODEP_CPP_CARTA=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_CARTA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\CartAR.hxx"\
 	"..\emucore\Deserializer.hxx"\
@@ -7955,16 +7355,15 @@ DEP_CPP_CARTA=\
 	"..\gui\StringList.hxx"\
 	
 NODEP_CPP_CARTA=\
-	"..\common\bspf.hxx"\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
-	"..\gui\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_CARTA=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\CartAR.hxx"\
 	"..\emucore\Deserializer.hxx"\
@@ -7981,6 +7380,7 @@ DEP_CPP_CARTA=\
 	
 NODEP_CPP_CARTA=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -8043,8 +7443,9 @@ DEP_CPP_CARTC=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTC=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8119,8 +7520,9 @@ DEP_CPP_CARTD=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTD=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8193,8 +7595,9 @@ DEP_CPP_CARTE=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTE=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8269,8 +7672,9 @@ DEP_CPP_CARTE7=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTE7=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8347,8 +7751,9 @@ DEP_CPP_CARTF=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8425,8 +7830,9 @@ DEP_CPP_CARTF4=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF4=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8501,8 +7907,9 @@ DEP_CPP_CARTF6=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF6=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8577,8 +7984,9 @@ DEP_CPP_CARTF6S=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF6S=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8653,8 +8061,9 @@ DEP_CPP_CARTF8=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF8=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8729,8 +8138,9 @@ DEP_CPP_CARTF8S=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTF8S=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8807,8 +8217,9 @@ DEP_CPP_CARTFA=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTFA=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8883,8 +8294,9 @@ DEP_CPP_CARTFE=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTFE=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -8957,8 +8369,9 @@ DEP_CPP_CARTM=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTM=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9033,8 +8446,9 @@ DEP_CPP_CARTMC=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTMC=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9109,8 +8523,9 @@ DEP_CPP_CARTU=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_CARTU=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9157,7 +8572,6 @@ SOURCE=..\emucore\Console.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_CONSO=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\common\Version.hxx"\
 	"..\debugger\Debugger.hxx"\
@@ -9180,7 +8594,6 @@ DEP_CPP_CONSO=\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\M6502Hi.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
@@ -9206,6 +8619,10 @@ DEP_CPP_CONSO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_CONSO=\
+	"..\emucore\CheatManager.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9224,20 +8641,16 @@ DEP_CPP_CONSO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CONSO=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_CONSO=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\common\Version.hxx"\
 	"..\debugger\Debugger.hxx"\
@@ -9256,26 +8669,25 @@ DEP_CPP_CONSO=\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\Joystick.hxx"\
 	"..\emucore\Keyboard.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\M6502Hi.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
+	"..\emucore\MD5.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Paddles.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\Switches.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -9285,7 +8697,12 @@ DEP_CPP_CONSO=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_CONSO=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9304,20 +8721,16 @@ DEP_CPP_CONSO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CONSO=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_CONSO=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\common\Version.hxx"\
 	"..\debugger\Debugger.hxx"\
@@ -9340,7 +8753,6 @@ DEP_CPP_CONSO=\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\M6502Hi.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
@@ -9349,13 +8761,13 @@ DEP_CPP_CONSO=\
 	"..\emucore\Paddles.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\Switches.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -9366,6 +8778,10 @@ DEP_CPP_CONSO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_CONSO=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9384,14 +8800,11 @@ DEP_CPP_CONSO=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_CONSO=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -9420,7 +8833,6 @@ DEP_CPP_CONSO=\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\M6502Hi.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
@@ -9446,28 +8858,6 @@ DEP_CPP_CONSO=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_CONSO=\
 	"..\emucore\CheatManager.hxx"\
@@ -9498,7 +8888,9 @@ DEP_CPP_CONTR=\
 	"..\emucore\Control.hxx"\
 	
 NODEP_CPP_CONTR=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9547,7 +8939,9 @@ DEP_CPP_DESER=\
 	"..\emucore\Deserializer.hxx"\
 	
 NODEP_CPP_DESER=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9596,7 +8990,9 @@ DEP_CPP_DEVIC=\
 	"..\emucore\m6502\src\Device.hxx"\
 	
 NODEP_CPP_DEVIC=\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9655,8 +9051,9 @@ DEP_CPP_DRIVI=\
 	"..\emucore\m6502\src\System.hxx"\
 	
 NODEP_CPP_DRIVI=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -9701,10 +9098,7 @@ SOURCE=..\emucore\Event.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_EVENT_=\
-	"..\common\Array.hxx"\
-	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
-	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Serializer.hxx"\
 	".\missing.h"\
@@ -9716,26 +9110,19 @@ NODEP_CPP_EVENT_=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EVENT_=\
-	"..\common\Array.hxx"\
-	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
-	"..\emucore\EventStreamer.hxx"\
-	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_EVENT_=\
-	"..\common\bspf.hxx"\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_EVENT_=\
-	"..\common\Array.hxx"\
-	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
-	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\Serializer.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_EVENT_=\
@@ -9767,7 +9154,6 @@ SOURCE=..\emucore\EventHandler.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_EVENTH=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -9781,7 +9167,6 @@ DEP_CPP_EVENTH=\
 	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
-	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
@@ -9810,6 +9195,10 @@ DEP_CPP_EVENTH=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EVENTH=\
+	"..\emucore\CheatManager.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9828,20 +9217,16 @@ DEP_CPP_EVENTH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENTH=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EVENTH=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -9852,13 +9237,10 @@ DEP_CPP_EVENTH=\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
-	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
@@ -9867,12 +9249,12 @@ DEP_CPP_EVENTH=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -9883,7 +9265,12 @@ DEP_CPP_EVENTH=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_EVENTH=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9902,20 +9289,16 @@ DEP_CPP_EVENTH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENTH=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_EVENTH=\
-	"..\common\Array.hxx"\
 	"..\common\Snapshot.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -9926,10 +9309,8 @@ DEP_CPP_EVENTH=\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
-	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
@@ -9941,12 +9322,12 @@ DEP_CPP_EVENTH=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -9958,6 +9339,11 @@ DEP_CPP_EVENTH=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_EVENTH=\
+	"..\emucore\CheatManager.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -9976,14 +9362,11 @@ DEP_CPP_EVENTH=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_EVENTH=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -10032,28 +9415,6 @@ DEP_CPP_EVENTH=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_EVENTH=\
 	"..\emucore\CheatManager.hxx"\
@@ -10134,7 +9495,6 @@ DEP_CPP_EVENTS=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\EventStreamer.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
@@ -10149,7 +9509,6 @@ DEP_CPP_EVENTS=\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
-	".\missing.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10174,7 +9533,10 @@ DEP_CPP_EVENTS=\
 	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_EVENTS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\common\bspf.hxx"\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\bspf.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -10297,7 +9659,6 @@ SOURCE=..\emucore\FrameBuffer.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_FRAME=\
-	"..\common\Array.hxx"\
 	"..\common\stella.xpm"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -10337,6 +9698,11 @@ DEP_CPP_FRAME=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_FRAME=\
+	"..\emucore\DisplayPSP.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\emucore\macOSXDisplay.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10355,19 +9721,16 @@ DEP_CPP_FRAME=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_FRAME=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FRAME=\
-	"..\common\Array.hxx"\
 	"..\common\stella.xpm"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -10381,7 +9744,6 @@ DEP_CPP_FRAME=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
@@ -10390,12 +9752,12 @@ DEP_CPP_FRAME=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -10406,7 +9768,14 @@ DEP_CPP_FRAME=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_FRAME=\
+	"..\emucore\DisplayPSP.hxx"\
+	"..\emucore\macOSXDisplay.h"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10425,19 +9794,16 @@ DEP_CPP_FRAME=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_FRAME=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_FRAME=\
-	"..\common\Array.hxx"\
 	"..\common\stella.xpm"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
@@ -10460,12 +9826,12 @@ DEP_CPP_FRAME=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -10477,6 +9843,12 @@ DEP_CPP_FRAME=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_FRAME=\
+	"..\emucore\DisplayPSP.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\emucore\macOSXDisplay.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10495,13 +9867,11 @@ DEP_CPP_FRAME=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_FRAME=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -10547,28 +9917,6 @@ DEP_CPP_FRAME=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_FRAME=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -10584,7 +9932,6 @@ SOURCE=..\emucore\FSNode.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_FSNOD=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\gui\GuiUtils.hxx"\
@@ -10597,20 +9944,19 @@ NODEP_CPP_FSNOD=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FSNOD=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	
 NODEP_CPP_FSNOD=\
-	"..\common\bspf.hxx"\
-	"..\emucore\bspf.hxx"\
-	"..\gui\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_FSNOD=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\gui\GuiUtils.hxx"\
@@ -10618,6 +9964,7 @@ DEP_CPP_FSNOD=\
 	
 NODEP_CPP_FSNOD=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -10661,7 +10008,9 @@ DEP_CPP_JOYST=\
 	"..\emucore\Joystick.hxx"\
 	
 NODEP_CPP_JOYST=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -10718,7 +10067,9 @@ DEP_CPP_KEYBO=\
 	"..\emucore\Keyboard.hxx"\
 	
 NODEP_CPP_KEYBO=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -10757,7 +10108,6 @@ SOURCE=..\emucore\m6502\src\M6502.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_M6502=\
-	"..\common\Array.hxx"\
 	"..\debugger\Expression.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
@@ -10774,7 +10124,6 @@ NODEP_CPP_M6502=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_M6502=\
-	"..\common\Array.hxx"\
 	"..\debugger\Expression.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
@@ -10783,16 +10132,15 @@ DEP_CPP_M6502=\
 	"..\gui\StringList.hxx"\
 	
 NODEP_CPP_M6502=\
-	"..\common\bspf.hxx"\
-	"..\debugger\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
-	"..\gui\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_M6502=\
-	"..\common\Array.hxx"\
 	"..\debugger\Expression.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
@@ -10804,6 +10152,7 @@ DEP_CPP_M6502=\
 	
 NODEP_CPP_M6502=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -10833,7 +10182,6 @@ SOURCE=..\emucore\m6502\src\M6502Hi.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_M6502H=\
-	"..\common\Array.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -10872,6 +10220,9 @@ DEP_CPP_M6502H=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_M6502H=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10890,20 +10241,17 @@ DEP_CPP_M6502H=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502H=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 # ADD CPP /U "DEBUG"
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_M6502H=\
-	"..\common\Array.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -10917,7 +10265,6 @@ DEP_CPP_M6502H=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\M6502Hi.hxx"\
@@ -10933,6 +10280,7 @@ DEP_CPP_M6502H=\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -10941,7 +10289,13 @@ DEP_CPP_M6502H=\
 	"..\gui\Stack.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_M6502H=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\EventHandler.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -10960,20 +10314,17 @@ DEP_CPP_M6502H=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502H=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 # ADD CPP /U "DEBUG"
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_M6502H=\
-	"..\common\Array.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -11003,6 +10354,7 @@ DEP_CPP_M6502H=\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Command.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -11012,6 +10364,10 @@ DEP_CPP_M6502H=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_M6502H=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -11030,13 +10386,11 @@ DEP_CPP_M6502H=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502H=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 # ADD CPP /U "DEBUG"
 
@@ -11082,315 +10436,8 @@ DEP_CPP_M6502H=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_M6502H=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	
-# ADD CPP /U "DEBUG"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\emucore\m6502\src\M6502Low.cxx
-
-!IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
-
-DEP_CPP_M6502L=\
-	"..\common\Array.hxx"\
-	"..\debugger\Debugger.hxx"\
-	"..\debugger\DebuggerParser.hxx"\
-	"..\debugger\Equate.hxx"\
-	"..\debugger\EquateList.hxx"\
-	"..\debugger\gui\PromptWidget.hxx"\
-	"..\debugger\PackedBitArray.hxx"\
-	"..\emucore\Cart.hxx"\
-	"..\emucore\Console.hxx"\
-	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
-	"..\emucore\Event.hxx"\
-	"..\emucore\EventHandler.hxx"\
-	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\m6502\src\Device.hxx"\
-	"..\emucore\m6502\src\M6502.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
-	"..\emucore\m6502\src\M6502Low.ins"\
-	"..\emucore\m6502\src\NullDev.hxx"\
-	"..\emucore\m6502\src\System.hxx"\
-	"..\emucore\M6532.hxx"\
-	"..\emucore\MediaSrc.hxx"\
-	"..\emucore\OSystem.hxx"\
-	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
-	"..\emucore\Settings.hxx"\
-	"..\emucore\Sound.hxx"\
-	"..\emucore\TIA.hxx"\
-	"..\gui\Command.hxx"\
-	"..\gui\DialogContainer.hxx"\
-	"..\gui\Font.hxx"\
-	"..\gui\GuiObject.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
-	"..\gui\StringList.hxx"\
-	"..\gui\Widget.hxx"\
-	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502L=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	
-
-!ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
-
-DEP_CPP_M6502L=\
-	"..\common\Array.hxx"\
-	"..\debugger\Debugger.hxx"\
-	"..\debugger\DebuggerParser.hxx"\
-	"..\debugger\Equate.hxx"\
-	"..\debugger\EquateList.hxx"\
-	"..\debugger\gui\PromptWidget.hxx"\
-	"..\debugger\PackedBitArray.hxx"\
-	"..\emucore\Cart.hxx"\
-	"..\emucore\Console.hxx"\
-	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
-	"..\emucore\Event.hxx"\
-	"..\emucore\EventHandler.hxx"\
-	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\m6502\src\Device.hxx"\
-	"..\emucore\m6502\src\M6502.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
-	"..\emucore\m6502\src\M6502Low.ins"\
-	"..\emucore\m6502\src\NullDev.hxx"\
-	"..\emucore\m6502\src\System.hxx"\
-	"..\emucore\M6532.hxx"\
-	"..\emucore\MediaSrc.hxx"\
-	"..\emucore\OSystem.hxx"\
-	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
-	"..\emucore\Settings.hxx"\
-	"..\emucore\Sound.hxx"\
-	"..\emucore\TIA.hxx"\
-	"..\gui\Command.hxx"\
-	"..\gui\DialogContainer.hxx"\
-	"..\gui\Font.hxx"\
-	"..\gui\GuiObject.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
-	"..\gui\StringList.hxx"\
-	"..\gui\Widget.hxx"\
-	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502L=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	
-# ADD CPP /U "DEBUG"
-
-!ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
-
-DEP_CPP_M6502L=\
-	"..\common\Array.hxx"\
-	"..\debugger\Debugger.hxx"\
-	"..\debugger\DebuggerParser.hxx"\
-	"..\debugger\Equate.hxx"\
-	"..\debugger\EquateList.hxx"\
-	"..\debugger\gui\PromptWidget.hxx"\
-	"..\debugger\PackedBitArray.hxx"\
-	"..\emucore\Cart.hxx"\
-	"..\emucore\Console.hxx"\
-	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
-	"..\emucore\Event.hxx"\
-	"..\emucore\EventHandler.hxx"\
-	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\m6502\src\Device.hxx"\
-	"..\emucore\m6502\src\M6502.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
-	"..\emucore\m6502\src\M6502Low.ins"\
-	"..\emucore\m6502\src\NullDev.hxx"\
-	"..\emucore\m6502\src\System.hxx"\
-	"..\emucore\M6532.hxx"\
-	"..\emucore\MediaSrc.hxx"\
-	"..\emucore\OSystem.hxx"\
-	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
-	"..\emucore\Settings.hxx"\
-	"..\emucore\Sound.hxx"\
-	"..\emucore\TIA.hxx"\
-	"..\gui\Command.hxx"\
-	"..\gui\DialogContainer.hxx"\
-	"..\gui\Font.hxx"\
-	"..\gui\GuiObject.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
-	"..\gui\StringList.hxx"\
-	"..\gui\Widget.hxx"\
-	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502L=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	
-
-!ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
-
-DEP_CPP_M6502L=\
-	"..\common\Array.hxx"\
-	"..\debugger\Debugger.hxx"\
-	"..\debugger\DebuggerParser.hxx"\
-	"..\debugger\Equate.hxx"\
-	"..\debugger\EquateList.hxx"\
-	"..\debugger\gui\PromptWidget.hxx"\
-	"..\debugger\PackedBitArray.hxx"\
-	"..\emucore\Cart.hxx"\
-	"..\emucore\Console.hxx"\
-	"..\emucore\Control.hxx"\
-	"..\emucore\Deserializer.hxx"\
-	"..\emucore\Event.hxx"\
-	"..\emucore\EventHandler.hxx"\
-	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\m6502\src\Device.hxx"\
-	"..\emucore\m6502\src\M6502.hxx"\
-	"..\emucore\m6502\src\M6502Low.hxx"\
-	"..\emucore\m6502\src\M6502Low.ins"\
-	"..\emucore\m6502\src\NullDev.hxx"\
-	"..\emucore\m6502\src\System.hxx"\
-	"..\emucore\M6532.hxx"\
-	"..\emucore\MediaSrc.hxx"\
-	"..\emucore\OSystem.hxx"\
-	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
-	"..\emucore\Settings.hxx"\
-	"..\emucore\Sound.hxx"\
-	"..\emucore\TIA.hxx"\
-	"..\gui\Command.hxx"\
-	"..\gui\DialogContainer.hxx"\
-	"..\gui\Font.hxx"\
-	"..\gui\GuiObject.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	"..\gui\Rect.hxx"\
-	"..\gui\Stack.hxx"\
-	"..\gui\StringList.hxx"\
-	"..\gui\Widget.hxx"\
-	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_M6502L=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 # ADD CPP /U "DEBUG"
@@ -11434,7 +10481,6 @@ DEP_CPP_M6532=\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Deserializer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
@@ -11446,10 +10492,11 @@ DEP_CPP_M6532=\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\Switches.hxx"\
 	"..\emucore\TIA.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_M6532=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -11526,7 +10573,9 @@ DEP_CPP_MD5_C=\
 	"..\emucore\MD5.hxx"\
 	
 NODEP_CPP_MD5_C=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -11589,6 +10638,11 @@ DEP_CPP_MEDIA=\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_MEDIA=\
+	"..\emucore\FrameBufferPSP.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -11613,12 +10667,7 @@ DEP_CPP_MEDIA=\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	{$(INCLUDE)}"gx.h"\
-	
-NODEP_CPP_MEDIA=\
-	"..\emucore\FrameBufferPSP.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
@@ -11629,29 +10678,22 @@ DEP_CPP_MEDIA=\
 	"..\common\FrameBufferSoft.hxx"\
 	"..\common\SoundNull.hxx"\
 	"..\common\SoundSDL.hxx"\
-	"..\emucore\Cart.hxx"\
-	"..\emucore\Console.hxx"\
-	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
-	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	"..\emucore\m6502\src\Device.hxx"\
-	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaFactory.hxx"\
 	"..\emucore\MediaSrc.hxx"\
-	"..\emucore\OSystem.hxx"\
-	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
-	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
-	"..\emucore\TIA.hxx"\
 	"..\emucore\TIASnd.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiUtils.hxx"\
-	"..\gui\StringList.hxx"\
-	".\FrameBufferWinCE.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_MEDIA=\
+	"..\common\bspf.hxx"\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\FrameBufferPSP.hxx"\
+	"..\emucore\FrameBufferWinCE.hxx"\
+	"..\emucore\SoundWinCE.hxx"\
+	"..\gui\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -11676,12 +10718,6 @@ DEP_CPP_MEDIA=\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_MEDIA=\
-	"..\emucore\FrameBufferPSP.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
-	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -11715,6 +10751,11 @@ DEP_CPP_MEDIA=\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_MEDIA=\
+	"..\emucore\FrameBufferPSP.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -11739,11 +10780,6 @@ DEP_CPP_MEDIA=\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_MEDIA=\
-	"..\emucore\FrameBufferPSP.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
@@ -11834,7 +10870,9 @@ DEP_CPP_MEDIAS=\
 	"..\emucore\MediaSrc.hxx"\
 	
 NODEP_CPP_MEDIAS=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -11889,8 +10927,9 @@ DEP_CPP_NULLD=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_NULLD=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -11931,7 +10970,6 @@ SOURCE=..\emucore\OSystem.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_OSYST=\
-	"..\common\Array.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -11977,6 +11015,10 @@ DEP_CPP_OSYST=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_OSYST=\
+	"..\emucore\CheatManager.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -11995,22 +11037,22 @@ DEP_CPP_OSYST=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
-	
-NODEP_CPP_OSYST=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_OSYST=\
-	"..\common\Array.hxx"\
+	"..\common\FrameBufferGL.hxx"\
+	"..\common\FrameBufferSoft.hxx"\
+	"..\common\SoundNull.hxx"\
+	"..\common\SoundSDL.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -12024,26 +11066,24 @@ DEP_CPP_OSYST=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
-	"..\emucore\MD5.hxx"\
-	"..\emucore\MediaFactory.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
+	"..\emucore\TIASnd.hxx"\
 	"..\emucore\unzip.h"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
 	"..\gui\ConsoleFont.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -12055,7 +11095,13 @@ DEP_CPP_OSYST=\
 	"..\gui\StellaFont.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_OSYST=\
+	"..\emucore\FrameBufferPSP.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12072,24 +11118,25 @@ DEP_CPP_OSYST=\
 	".\sdl\SDL_main.h"\
 	".\sdl\SDL_mouse.h"\
 	".\sdl\SDL_mutex.h"\
+	".\sdl\SDL_opengl.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
-	
-NODEP_CPP_OSYST=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_OSYST=\
-	"..\common\Array.hxx"\
+	"..\common\FrameBufferGL.hxx"\
+	"..\common\FrameBufferSoft.hxx"\
+	"..\common\SoundNull.hxx"\
+	"..\common\SoundSDL.hxx"\
 	"..\debugger\Debugger.hxx"\
 	"..\debugger\DebuggerParser.hxx"\
 	"..\debugger\Equate.hxx"\
@@ -12110,19 +11157,19 @@ DEP_CPP_OSYST=\
 	"..\emucore\m6502\src\System.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MD5.hxx"\
-	"..\emucore\MediaFactory.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
+	"..\emucore\TIASnd.hxx"\
 	"..\emucore\unzip.h"\
 	"..\gui\Command.hxx"\
 	"..\gui\CommandMenu.hxx"\
 	"..\gui\ConsoleFont.hxx"\
+	"..\gui\Dialog.hxx"\
 	"..\gui\DialogContainer.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiObject.hxx"\
@@ -12134,7 +11181,15 @@ DEP_CPP_OSYST=\
 	"..\gui\StellaFont.hxx"\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
+	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_OSYST=\
+	"..\emucore\CheatManager.hxx"\
+	"..\emucore\FrameBufferPSP.hxx"\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12151,18 +11206,17 @@ DEP_CPP_OSYST=\
 	".\sdl\SDL_main.h"\
 	".\sdl\SDL_mouse.h"\
 	".\sdl\SDL_mutex.h"\
+	".\sdl\SDL_opengl.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
+	".\x.h"\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
-	
-NODEP_CPP_OSYST=\
-	"..\emucore\CheatManager.hxx"\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -12214,30 +11268,6 @@ DEP_CPP_OSYST=\
 	"..\gui\StringList.hxx"\
 	"..\gui\Widget.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
-	".\zlib\zconf.h"\
-	".\zlib\zlib.h"\
 	
 NODEP_CPP_OSYST=\
 	"..\emucore\CheatManager.hxx"\
@@ -12272,7 +11302,9 @@ DEP_CPP_PADDL=\
 	"..\emucore\Paddles.hxx"\
 	
 NODEP_CPP_PADDL=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -12313,7 +11345,6 @@ SOURCE=..\emucore\Props.cxx
 DEP_CPP_PROPS=\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPS=\
@@ -12323,13 +11354,12 @@ NODEP_CPP_PROPS=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_PROPS=\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_PROPS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -12337,7 +11367,6 @@ NODEP_CPP_PROPS=\
 DEP_CPP_PROPS=\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPS=\
@@ -12349,7 +11378,6 @@ NODEP_CPP_PROPS=\
 DEP_CPP_PROPS=\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPS=\
@@ -12366,11 +11394,9 @@ SOURCE=..\emucore\PropsSet.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_PROPSS=\
-	"..\emucore\DefProps.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPSS=\
@@ -12380,26 +11406,21 @@ NODEP_CPP_PROPSS=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_PROPSS=\
-	"..\emucore\DefProps.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\gui\GuiUtils.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_PROPSS=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
-# ADD CPP /Zp8
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_PROPSS=\
-	"..\emucore\DefProps.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPSS=\
@@ -12409,11 +11430,9 @@ NODEP_CPP_PROPSS=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
 
 DEP_CPP_PROPSS=\
-	"..\emucore\DefProps.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\gui\GuiUtils.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_PROPSS=\
@@ -12444,7 +11463,9 @@ DEP_CPP_RANDO=\
 	"..\emucore\Random.hxx"\
 	
 NODEP_CPP_RANDO=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -12493,7 +11514,9 @@ DEP_CPP_SERIA=\
 	"..\emucore\Serializer.hxx"\
 	
 NODEP_CPP_SERIA=\
-	"..\emucore\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -12528,7 +11551,6 @@ SOURCE=..\emucore\Settings.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_SETTI=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -12550,6 +11572,9 @@ DEP_CPP_SETTI=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SETTI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12568,19 +11593,16 @@ DEP_CPP_SETTI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SETTI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SETTI=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -12588,20 +11610,23 @@ DEP_CPP_SETTI=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_SETTI=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12620,19 +11645,16 @@ DEP_CPP_SETTI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SETTI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SETTI=\
-	"..\common\Array.hxx"\
 	"..\common\Version.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -12646,7 +11668,6 @@ DEP_CPP_SETTI=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -12654,6 +11675,10 @@ DEP_CPP_SETTI=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SETTI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12672,13 +11697,11 @@ DEP_CPP_SETTI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SETTI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -12706,28 +11729,6 @@ DEP_CPP_SETTI=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_SETTI=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -12766,6 +11767,9 @@ DEP_CPP_SOUND=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SOUND=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12784,19 +11788,16 @@ DEP_CPP_SOUND=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SOUND=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SOUND=\
-	"..\common\Array.hxx"\
 	"..\common\SoundNull.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -12805,7 +11806,6 @@ DEP_CPP_SOUND=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
@@ -12818,7 +11818,12 @@ DEP_CPP_SOUND=\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_SOUND=\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12837,19 +11842,16 @@ DEP_CPP_SOUND=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SOUND=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SOUND=\
-	"..\common\Array.hxx"\
 	"..\common\SoundNull.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
@@ -12872,6 +11874,10 @@ DEP_CPP_SOUND=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_SOUND=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -12890,13 +11896,11 @@ DEP_CPP_SOUND=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_SOUND=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -12925,28 +11929,6 @@ DEP_CPP_SOUND=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	
 NODEP_CPP_SOUND=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
@@ -12976,13 +11958,13 @@ NODEP_CPP_SWITC=\
 
 DEP_CPP_SWITC=\
 	"..\emucore\Event.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\Switches.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_SWITC=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -13021,7 +12003,6 @@ SOURCE=..\emucore\m6502\src\System.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_SYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Deserializer.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
@@ -13042,7 +12023,6 @@ NODEP_CPP_SYSTE=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Deserializer.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
@@ -13055,16 +12035,15 @@ DEP_CPP_SYSTE=\
 	"..\gui\StringList.hxx"\
 	
 NODEP_CPP_SYSTE=\
-	"..\common\bspf.hxx"\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
-	"..\gui\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Deserializer.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
@@ -13080,6 +12059,7 @@ DEP_CPP_SYSTE=\
 	
 NODEP_CPP_SYSTE=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -13113,7 +12093,6 @@ SOURCE=..\emucore\TIA.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_TIA_C=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13141,12 +12120,10 @@ NODEP_CPP_TIA_C=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_TIA_C=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Deserializer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\M6502.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
@@ -13160,16 +12137,17 @@ DEP_CPP_TIA_C=\
 	"..\emucore\TIA.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
-	".\missing.h"\
 	
 NODEP_CPP_TIA_C=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_TIA_C=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13192,6 +12170,7 @@ DEP_CPP_TIA_C=\
 	
 NODEP_CPP_TIA_C=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -13252,8 +12231,9 @@ DEP_CPP_TIASN=\
 	"..\emucore\TIASnd.hxx"\
 	
 NODEP_CPP_TIASN=\
-	"..\emucore\bspf.hxx"\
-	"..\emucore\m6502\src\bspf.hxx"\
+	".\port\bspf.hxx"\
+	".\port\missing.h"\
+	".\port\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
@@ -13295,6 +12275,8 @@ SOURCE=..\emucore\unzip.c
 
 DEP_CPP_UNZIP=\
 	"..\emucore\unzip.h"\
+	
+NODEP_CPP_UNZIP=\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
 	
@@ -13303,6 +12285,8 @@ DEP_CPP_UNZIP=\
 
 DEP_CPP_UNZIP=\
 	"..\emucore\unzip.h"\
+	
+NODEP_CPP_UNZIP=\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
 	
@@ -13311,6 +12295,8 @@ DEP_CPP_UNZIP=\
 
 DEP_CPP_UNZIP=\
 	"..\emucore\unzip.h"\
+	
+NODEP_CPP_UNZIP=\
 	".\zlib\zconf.h"\
 	".\zlib\zlib.h"\
 	
@@ -13319,8 +12305,6 @@ DEP_CPP_UNZIP=\
 
 DEP_CPP_UNZIP=\
 	"..\emucore\unzip.h"\
-	".\zlib\zconf.h"\
-	".\zlib\zlib.h"\
 	
 
 !ENDIF 
@@ -13429,10 +12413,6 @@ SOURCE=..\emucore\Console.hxx
 # Begin Source File
 
 SOURCE=..\emucore\Control.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\emucore\DefProps.hxx
 # End Source File
 # Begin Source File
 
@@ -13596,7 +12576,6 @@ SOURCE=.\FrameBufferWinCE.cpp
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_FRAMEB=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13618,6 +12597,9 @@ DEP_CPP_FRAMEB=\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_FRAMEB=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -13636,33 +12618,28 @@ DEP_CPP_FRAMEB=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	{$(INCLUDE)}"gx.h"\
-	
-NODEP_CPP_FRAMEB=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FRAMEB=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -13670,7 +12647,13 @@ DEP_CPP_FRAMEB=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
-	".\missing.h"\
+	
+NODEP_CPP_FRAMEB=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
+	".\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -13689,20 +12672,17 @@ DEP_CPP_FRAMEB=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_FRAMEB=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_FRAMEB=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13715,7 +12695,6 @@ DEP_CPP_FRAMEB=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -13724,6 +12703,10 @@ DEP_CPP_FRAMEB=\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
+	
+NODEP_CPP_FRAMEB=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -13742,13 +12725,11 @@ DEP_CPP_FRAMEB=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_FRAMEB=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
@@ -13819,35 +12800,29 @@ SOURCE=.\FSNodeWinCE.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_FSNODE=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
-	".\missing.h"\
-	
-NODEP_CPP_FSNODE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FSNODE=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
 	
 NODEP_CPP_FSNODE=\
-	"..\common\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_FSNODE=\
-	"..\common\Array.hxx"\
 	"..\emucore\FSNode.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	".\missing.h"\
 	
 NODEP_CPP_FSNODE=\
 	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -13872,7 +12847,6 @@ SOURCE=.\missing.cpp
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_MISSI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13895,6 +12869,9 @@ DEP_CPP_MISSI=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	
+NODEP_CPP_MISSI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -13913,33 +12890,28 @@ DEP_CPP_MISSI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	{$(INCLUDE)}"gx.h"\
-	
-NODEP_CPP_MISSI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_MISSI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -13947,8 +12919,14 @@ DEP_CPP_MISSI=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
-	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	
+NODEP_CPP_MISSI=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
+	".\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -13967,20 +12945,17 @@ DEP_CPP_MISSI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_MISSI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_MISSI=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -13993,7 +12968,6 @@ DEP_CPP_MISSI=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -14003,6 +12977,10 @@ DEP_CPP_MISSI=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	
+NODEP_CPP_MISSI=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14021,13 +12999,11 @@ DEP_CPP_MISSI=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	
-NODEP_CPP_MISSI=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
@@ -14099,7 +13075,6 @@ SOURCE=.\OSystemWinCE.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_OSYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14123,6 +13098,10 @@ DEP_CPP_OSYSTE=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_OSYSTE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14141,34 +13120,28 @@ DEP_CPP_OSYSTE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	{$(INCLUDE)}"gx.h"\
-	
-NODEP_CPP_OSYSTE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_OSYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -14177,8 +13150,15 @@ DEP_CPP_OSYSTE=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
-	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_OSYSTE=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
+	".\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14197,21 +13177,17 @@ DEP_CPP_OSYSTE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_OSYSTE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_OSYSTE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14224,7 +13200,6 @@ DEP_CPP_OSYSTE=\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -14235,6 +13210,11 @@ DEP_CPP_OSYSTE=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_OSYSTE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14253,14 +13233,11 @@ DEP_CPP_OSYSTE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_OSYSTE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
@@ -14334,7 +13311,6 @@ SOURCE=.\PocketStella.cpp
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_POCKE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14359,6 +13335,10 @@ DEP_CPP_POCKE=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SettingsWinCE.hxx"\
+	
+NODEP_CPP_POCKE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14377,21 +13357,17 @@ DEP_CPP_POCKE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SettingsWinCE.hxx"\
-	{$(INCLUDE)}"gx.h"\
-	
-NODEP_CPP_POCKE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_POCKE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14399,14 +13375,12 @@ DEP_CPP_POCKE=\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
 	"..\emucore\FSNode.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\M6532.hxx"\
 	"..\emucore\MediaSrc.hxx"\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -14414,8 +13388,15 @@ DEP_CPP_POCKE=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\FrameBufferWinCE.hxx"\
-	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SettingsWinCE.hxx"\
+	
+NODEP_CPP_POCKE=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
+	".\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14434,21 +13415,17 @@ DEP_CPP_POCKE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SettingsWinCE.hxx"\
-	
-NODEP_CPP_POCKE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_POCKE=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14463,7 +13440,6 @@ DEP_CPP_POCKE=\
 	"..\emucore\OSystem.hxx"\
 	"..\emucore\Props.hxx"\
 	"..\emucore\PropsSet.hxx"\
-	"..\emucore\Serializer.hxx"\
 	"..\emucore\Settings.hxx"\
 	"..\emucore\Sound.hxx"\
 	"..\emucore\TIA.hxx"\
@@ -14473,6 +13449,11 @@ DEP_CPP_POCKE=\
 	".\FrameBufferWinCE.hxx"\
 	".\missing.h"\
 	".\OSystemWinCE.hxx"\
+	".\SettingsWinCE.hxx"\
+	
+NODEP_CPP_POCKE=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14491,14 +13472,11 @@ DEP_CPP_POCKE=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SettingsWinCE.hxx"\
-	
-NODEP_CPP_POCKE=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\x.h"\
 	
 
@@ -14569,7 +13547,6 @@ SOURCE=.\SettingsWinCE.cpp
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_SETTIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Settings.hxx"\
 	".\missing.h"\
@@ -14582,12 +13559,10 @@ NODEP_CPP_SETTIN=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SETTIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\Settings.hxx"\
 	".\SettingsWinCE.hxx"\
 	
 NODEP_CPP_SETTIN=\
-	"..\common\bspf.hxx"\
 	"..\emucore\bspf.hxx"\
 	".\bspf.hxx"\
 	
@@ -14595,7 +13570,6 @@ NODEP_CPP_SETTIN=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SETTIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Settings.hxx"\
 	".\missing.h"\
@@ -14608,7 +13582,6 @@ NODEP_CPP_SETTIN=\
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
 
 DEP_CPP_SETTIN=\
-	"..\common\Array.hxx"\
 	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\Settings.hxx"\
 	".\missing.h"\
@@ -14632,7 +13605,6 @@ SOURCE=.\SoundWinCE.cxx
 !IF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Release"
 
 DEP_CPP_SOUNDW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14657,6 +13629,10 @@ DEP_CPP_SOUNDW=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_SOUNDW=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14675,20 +13651,16 @@ DEP_CPP_SOUNDW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_SOUNDW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE ARM) Debug"
 
 DEP_CPP_SOUNDW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14696,7 +13668,6 @@ DEP_CPP_SOUNDW=\
 	"..\emucore\Event.hxx"\
 	"..\emucore\EventHandler.hxx"\
 	"..\emucore\FrameBuffer.hxx"\
-	"..\emucore\m6502\src\bspf\src\bspf.hxx"\
 	"..\emucore\m6502\src\Device.hxx"\
 	"..\emucore\m6502\src\NullDev.hxx"\
 	"..\emucore\m6502\src\System.hxx"\
@@ -14712,7 +13683,14 @@ DEP_CPP_SOUNDW=\
 	"..\gui\Font.hxx"\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
-	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_SOUNDW=\
+	"..\emucore\bspf.hxx"\
+	"..\emucore\m6502\src\bspf.hxx"\
+	"..\gui\Array.hxx"\
+	"..\gui\bspf.hxx"\
+	".\bspf.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14731,20 +13709,16 @@ DEP_CPP_SOUNDW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_SOUNDW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Release"
 
 DEP_CPP_SOUNDW=\
-	"..\common\Array.hxx"\
 	"..\emucore\Cart.hxx"\
 	"..\emucore\Console.hxx"\
 	"..\emucore\Control.hxx"\
@@ -14769,6 +13743,11 @@ DEP_CPP_SOUNDW=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
+	".\SoundWinCE.hxx"\
+	
+NODEP_CPP_SOUNDW=\
+	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
+	"..\gui\Array.hxx"\
 	".\sdl\begin_code.h"\
 	".\sdl\close_code.h"\
 	".\sdl\SDL.h"\
@@ -14787,14 +13766,11 @@ DEP_CPP_SOUNDW=\
 	".\sdl\SDL_mutex.h"\
 	".\sdl\SDL_quit.h"\
 	".\sdl\SDL_rwops.h"\
+	".\sdl\SDL_syswm.h"\
 	".\sdl\SDL_timer.h"\
 	".\sdl\SDL_types.h"\
 	".\sdl\SDL_version.h"\
 	".\sdl\SDL_video.h"\
-	".\SoundWinCE.hxx"\
-	
-NODEP_CPP_SOUNDW=\
-	"..\emucore\m6502\src\bspf\src\pspstdint.h"\
 	
 
 !ELSEIF  "$(CFG)" == "PocketStella - Win32 (WCE x86) Debug"
@@ -14825,28 +13801,6 @@ DEP_CPP_SOUNDW=\
 	"..\gui\GuiUtils.hxx"\
 	"..\gui\StringList.hxx"\
 	".\missing.h"\
-	".\sdl\begin_code.h"\
-	".\sdl\close_code.h"\
-	".\sdl\SDL.h"\
-	".\sdl\SDL_active.h"\
-	".\sdl\SDL_audio.h"\
-	".\sdl\SDL_byteorder.h"\
-	".\sdl\SDL_cdrom.h"\
-	".\sdl\SDL_error.h"\
-	".\sdl\SDL_events.h"\
-	".\sdl\SDL_getenv.h"\
-	".\sdl\SDL_joystick.h"\
-	".\sdl\SDL_keyboard.h"\
-	".\sdl\SDL_keysym.h"\
-	".\sdl\SDL_main.h"\
-	".\sdl\SDL_mouse.h"\
-	".\sdl\SDL_mutex.h"\
-	".\sdl\SDL_quit.h"\
-	".\sdl\SDL_rwops.h"\
-	".\sdl\SDL_timer.h"\
-	".\sdl\SDL_types.h"\
-	".\sdl\SDL_version.h"\
-	".\sdl\SDL_video.h"\
 	".\SoundWinCE.hxx"\
 	
 NODEP_CPP_SOUNDW=\

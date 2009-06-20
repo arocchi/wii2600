@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsMACOSX.cxx,v 1.11 2006-03-09 03:16:30 markgrebe Exp $
 //============================================================================
 
 #include <cassert>
@@ -27,7 +27,6 @@
 #include "bspf.hxx"
 #include "Console.hxx"
 #include "EventHandler.hxx"
-#include "Version.hxx"
 
 #include "Settings.hxx"
 #include "SettingsMACOSX.hxx"
@@ -43,8 +42,7 @@ SettingsMACOSX::SettingsMACOSX(OSystem* osystem)
   : Settings(osystem)
 {
   setInternal("video", "gl");        // Use opengl mode by default
-  setInternal("gl_lib", "libGL.so"); // Try this one first, then let the system decide
-  setInternal("gl_vsync", "true");   // OSX almost always supports vsync; let's use it
+  setInternal("gl_lib", "libGL.so");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -58,7 +56,7 @@ void SettingsMACOSX::loadConfig()
   string key, value;
   char cvalue[2048];
   
-  // Read key/value pairs from the plist file
+  // Write out each of the key and value pairs
   const SettingsArray& settings = getInternalSettings();
   for(unsigned int i = 0; i < settings.size(); ++i)
   {

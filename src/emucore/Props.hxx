@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.hxx,v 1.8 2006-03-19 00:46:04 stephena Exp $
 //============================================================================
 
 #ifndef PROPERTIES_HXX
@@ -36,12 +36,13 @@ enum PropertyType {
   Console_SwapPorts,
   Controller_Left,
   Controller_Right,
-  Controller_SwapPaddles,
   Display_Format,
+  Display_XStart,
+  Display_Width,
   Display_YStart,
   Display_Height,
   Display_Phosphor,
-  Display_PPBlend,
+  Emulation_HmoveBlanks,
   LastPropType
 };
 
@@ -54,7 +55,7 @@ enum PropertyType {
   if the property key is not found in the original property list.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Props.hxx,v 1.8 2006-03-19 00:46:04 stephena Exp $
 */
 class Properties
 {
@@ -109,12 +110,12 @@ class Properties
 
       @param out The output stream to use
     */
-    void save(ostream& out) const;
+    void save(ostream& out);
 
     /**
       Print the attributes of this properties object
     */
-    void print() const;
+    void print();
 
     /**
       Resets all properties to their defaults

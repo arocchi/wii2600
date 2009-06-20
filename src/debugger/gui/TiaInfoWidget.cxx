@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TiaInfoWidget.cxx,v 1.5 2006-03-23 16:16:32 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -35,8 +35,6 @@ TiaInfoWidget::TiaInfoWidget(GuiObject* boss, const GUI::Font& font,
   : Widget(boss, font, x, y, 16, 16),
     CommandSender(boss)
 {
-  _type = kTiaInfoWidget;
-
   x += 5;
   const int lineHeight = font.getLineHeight();
   int xpos = x, ypos = y, lwidth = font.getStringWidth("F. Cyc:");
@@ -121,7 +119,7 @@ void TiaInfoWidget::handleCommand(CommandSender* sender, int cmd, int data, int 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TiaInfoWidget::loadConfig()
 {
-  Debugger& dbg = instance().debugger();
+  Debugger& dbg = instance()->debugger();
   TIADebug& tia = dbg.tiaDebug();
 
   myFrameCount->setEditString(dbg.valueToString(tia.frameCount(), kBASE_10));

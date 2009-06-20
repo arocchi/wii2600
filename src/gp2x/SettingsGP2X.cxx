@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsGP2X.cxx,v 1.8 2006-03-15 21:39:48 azaballa Exp $
 // Modified on 2006/02/05 by Alex Zaballa for use on GP2X
 //============================================================================
 
@@ -28,24 +28,14 @@ SettingsGP2X::SettingsGP2X(OSystem* osystem)
 {
   // Some of these settings might be redundant, but are crucial for GP2X
   setInternal("center", "true");
-  setInternal("volume", "33");
+  setInternal("volume", "50");
   setInternal("sound", "true");
   setInternal("zoom", "1");
-  setInternal("fragsize", "256");
-  setInternal("freq", "15700");
-  setInternal("tiafreq", "15700");
+  setInternal("fragsize", "512");
+  setInternal("tiafreq", "22050");
   setInternal("clipvol", "false");
+  setInternal("joymouse", "true");
   setInternal("rombrowse", "true");
-  setInternal("romdir", "/mnt/sd/");
-  setInternal("ssdir", "/mnt/sd/");
-  setInternal("p0speed", "15");
-  setInternal("p1speed", "15");
-  setInternal("p2speed", "15");
-  setInternal("p3speed", "15");
-  setInternal("launchersize", "1");
-  setInternal("uipalette", "2");
-  setInternal("tv_scale_width", "1.125");
-  setInternal("tv_scale_height", "1.2");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

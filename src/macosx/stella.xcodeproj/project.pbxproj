@@ -38,6 +38,7 @@
 		2D9173E609BA90380026E9FF /* Keyboard.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF450627AE07006BEC99 /* Keyboard.hxx */; };
 		2D9173E709BA90380026E9FF /* M6532.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF7D0627AE33006BEC99 /* M6532.hxx */; };
 		2D9173E809BA90380026E9FF /* MD5.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF7F0627AE34006BEC99 /* MD5.hxx */; };
+		2D9173E909BA90380026E9FF /* MediaSrc.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF810627AE34006BEC99 /* MediaSrc.hxx */; };
 		2D9173EA09BA90380026E9FF /* Paddles.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF830627AE34006BEC99 /* Paddles.hxx */; };
 		2D9173EB09BA90380026E9FF /* Props.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF850627AE34006BEC99 /* Props.hxx */; };
 		2D9173EC09BA90380026E9FF /* PropsSet.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF870627AE34006BEC99 /* PropsSet.hxx */; };
@@ -48,6 +49,7 @@
 		2D9173F109BA90380026E9FF /* TIA.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DF910627AE34006BEC99 /* TIA.hxx */; };
 		2D9173F209BA90380026E9FF /* Device.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DFBF0627B1DF006BEC99 /* Device.hxx */; };
 		2D9173F309BA90380026E9FF /* M6502.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DFC10627B1DF006BEC99 /* M6502.hxx */; };
+		2D9173F409BA90380026E9FF /* M6502Hi.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DFC30627B1DF006BEC99 /* M6502Hi.hxx */; };
 		2D9173F509BA90380026E9FF /* NullDev.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DFC70627B1DF006BEC99 /* NullDev.hxx */; };
 		2D9173F609BA90380026E9FF /* System.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE2DFC90627B1DF006BEC99 /* System.hxx */; };
 		2D9173F709BA90380026E9FF /* FrameBufferGL.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D733D5E062893E7006265D9 /* FrameBufferGL.hxx */; };
@@ -68,9 +70,11 @@
 		2D91740609BA90380026E9FF /* GameInfoDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAB3084578BF00812C11 /* GameInfoDialog.hxx */; };
 		2D91740709BA90380026E9FF /* GameList.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAB5084578BF00812C11 /* GameList.hxx */; };
 		2D91740809BA90380026E9FF /* GuiObject.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAB6084578BF00812C11 /* GuiObject.hxx */; };
+		2D91740909BA90380026E9FF /* GuiUtils.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAB7084578BF00812C11 /* GuiUtils.hxx */; };
 		2D91740A09BA90380026E9FF /* HelpDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAB9084578BF00812C11 /* HelpDialog.hxx */; };
 		2D91740B09BA90380026E9FF /* Launcher.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEABB084578BF00812C11 /* Launcher.hxx */; };
 		2D91740C09BA90380026E9FF /* LauncherDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEABD084578BF00812C11 /* LauncherDialog.hxx */; };
+		2D91740D09BA90380026E9FF /* LauncherOptionsDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEABF084578BF00812C11 /* LauncherOptionsDialog.hxx */; };
 		2D91740E09BA90380026E9FF /* ListWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAC1084578BF00812C11 /* ListWidget.hxx */; };
 		2D91740F09BA90380026E9FF /* Menu.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAC3084578BF00812C11 /* Menu.hxx */; };
 		2D91741009BA90380026E9FF /* OptionsDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DDBEAC5084578BF00812C11 /* OptionsDialog.hxx */; };
@@ -95,6 +99,7 @@
 		2D91742309BA90380026E9FF /* DebuggerParser.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D659E32085D3DD6005D96C8 /* DebuggerParser.hxx */; };
 		2D91742409BA90380026E9FF /* EditableWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D403BA1086116D1001E31A1 /* EditableWidget.hxx */; };
 		2D91742509BA90380026E9FF /* EditTextWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D403BA5086116D1001E31A1 /* EditTextWidget.hxx */; };
+		2D91742609BA90380026E9FF /* Equate.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D403BC808611898001E31A1 /* Equate.hxx */; };
 		2D91742709BA90380026E9FF /* EquateList.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D403BCA08611898001E31A1 /* EquateList.hxx */; };
 		2D91742809BA90380026E9FF /* PackedBitArray.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D403BCF08611A69001E31A1 /* PackedBitArray.hxx */; };
 		2D91742909BA90380026E9FF /* TIADebug.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D30F8760868A4DB00938B9D /* TIADebug.hxx */; };
@@ -102,8 +107,39 @@
 		2D91742B09BA90380026E9FF /* Cart3E.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D9555DA0880E78000466554 /* Cart3E.hxx */; };
 		2D91742C09BA90380026E9FF /* CpuDebug.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D9555DE0880E79600466554 /* CpuDebug.hxx */; };
 		2D91742D09BA90380026E9FF /* RamDebug.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D9555E00880E79600466554 /* RamDebug.hxx */; };
+		2D91742E09BA90380026E9FF /* BinAndExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971C80892CEA400F64D23 /* BinAndExpression.hxx */; };
+		2D91742F09BA90380026E9FF /* BinNotExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971CA0892CEA400F64D23 /* BinNotExpression.hxx */; };
+		2D91743009BA90380026E9FF /* BinOrExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971CC0892CEA400F64D23 /* BinOrExpression.hxx */; };
+		2D91743109BA90380026E9FF /* BinXorExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971CE0892CEA400F64D23 /* BinXorExpression.hxx */; };
+		2D91743209BA90380026E9FF /* ByteDerefExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D00892CEA400F64D23 /* ByteDerefExpression.hxx */; };
+		2D91743309BA90380026E9FF /* ByteDerefOffsetExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D20892CEA400F64D23 /* ByteDerefOffsetExpression.hxx */; };
+		2D91743409BA90380026E9FF /* ConstExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D40892CEA400F64D23 /* ConstExpression.hxx */; };
+		2D91743509BA90380026E9FF /* CpuMethodExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D60892CEA400F64D23 /* CpuMethodExpression.hxx */; };
 		2D91743609BA90380026E9FF /* DebuggerSystem.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D70892CEA400F64D23 /* DebuggerSystem.hxx */; };
+		2D91743709BA90380026E9FF /* DivExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971D90892CEA400F64D23 /* DivExpression.hxx */; };
+		2D91743809BA90380026E9FF /* EqualsExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971DB0892CEA400F64D23 /* EqualsExpression.hxx */; };
+		2D91743909BA90380026E9FF /* EquateExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971DD0892CEA400F64D23 /* EquateExpression.hxx */; };
 		2D91743A09BA90380026E9FF /* Expression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971DF0892CEA400F64D23 /* Expression.hxx */; };
+		2D91743B09BA90380026E9FF /* FunctionExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971E10892CEA400F64D23 /* FunctionExpression.hxx */; };
+		2D91743C09BA90380026E9FF /* GreaterEqualsExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971E30892CEA400F64D23 /* GreaterEqualsExpression.hxx */; };
+		2D91743D09BA90380026E9FF /* GreaterExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971E50892CEA400F64D23 /* GreaterExpression.hxx */; };
+		2D91743E09BA90380026E9FF /* HiByteExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971E70892CEA400F64D23 /* HiByteExpression.hxx */; };
+		2D91743F09BA90380026E9FF /* LessEqualsExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971E90892CEA400F64D23 /* LessEqualsExpression.hxx */; };
+		2D91744009BA90380026E9FF /* LessExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971EB0892CEA400F64D23 /* LessExpression.hxx */; };
+		2D91744109BA90380026E9FF /* LoByteExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971ED0892CEA400F64D23 /* LoByteExpression.hxx */; };
+		2D91744209BA90380026E9FF /* LogAndExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971EF0892CEA400F64D23 /* LogAndExpression.hxx */; };
+		2D91744309BA90380026E9FF /* LogNotExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971F10892CEA400F64D23 /* LogNotExpression.hxx */; };
+		2D91744409BA90380026E9FF /* LogOrExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971F30892CEA400F64D23 /* LogOrExpression.hxx */; };
+		2D91744509BA90380026E9FF /* MinusExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971F50892CEA400F64D23 /* MinusExpression.hxx */; };
+		2D91744609BA90380026E9FF /* ModExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971F70892CEA400F64D23 /* ModExpression.hxx */; };
+		2D91744709BA90380026E9FF /* MultExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971F90892CEA400F64D23 /* MultExpression.hxx */; };
+		2D91744809BA90380026E9FF /* NotEqualsExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971FB0892CEA400F64D23 /* NotEqualsExpression.hxx */; };
+		2D91744909BA90380026E9FF /* PlusExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971FD0892CEA400F64D23 /* PlusExpression.hxx */; };
+		2D91744A09BA90380026E9FF /* ShiftLeftExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF971FF0892CEA400F64D23 /* ShiftLeftExpression.hxx */; };
+		2D91744B09BA90380026E9FF /* ShiftRightExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF972010892CEA400F64D23 /* ShiftRightExpression.hxx */; };
+		2D91744C09BA90380026E9FF /* TiaMethodExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF972050892CEA400F64D23 /* TiaMethodExpression.hxx */; };
+		2D91744D09BA90380026E9FF /* UnaryMinusExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF972090892CEA400F64D23 /* UnaryMinusExpression.hxx */; };
+		2D91744E09BA90380026E9FF /* WordDerefExpression.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DF9720B0892CEA400F64D23 /* WordDerefExpression.hxx */; };
 		2D91744F09BA90380026E9FF /* InputTextDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D02208008A301F200B9C76B /* InputTextDialog.hxx */; };
 		2D91745009BA90380026E9FF /* CheckListWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DEF21F908BC033500B246B4 /* CheckListWidget.hxx */; };
 		2D91745109BA90380026E9FF /* StringListWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DEF21FB08BC033500B246B4 /* StringListWidget.hxx */; };
@@ -124,12 +160,15 @@
 		2D91746009BA90380026E9FF /* ToggleBitWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D20F9FD08C603EC00A73076 /* ToggleBitWidget.hxx */; };
 		2D91746109BA90380026E9FF /* TogglePixelWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D20F9FF08C603EC00A73076 /* TogglePixelWidget.hxx */; };
 		2D91746209BA90380026E9FF /* ToggleWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D20FA0108C603EC00A73076 /* ToggleWidget.hxx */; };
+		2D91746309BA90380026E9FF /* ContextMenu.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D6CC10208C811A600B8F642 /* ContextMenu.hxx */; };
 		2D91746409BA90380026E9FF /* TiaZoomWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D6CC10408C811A600B8F642 /* TiaZoomWidget.hxx */; };
 		2D91746509BA90380026E9FF /* TIASnd.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2DE7242E08CE910900C889A8 /* TIASnd.hxx */; };
 		2D91746609BA90380026E9FF /* AudioWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D2331900900B5EF00613B1F /* AudioWidget.hxx */; };
+		2D91746709BA90380026E9FF /* EventStreamer.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D05FF51096E25F200A518FE /* EventStreamer.hxx */; };
 		2D91746809BA90380026E9FF /* MediaFactory.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D05FF5B096E261E00A518FE /* MediaFactory.hxx */; };
 		2D91746909BA90380026E9FF /* EventMappingWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D05FF5F096E269100A518FE /* EventMappingWidget.hxx */; };
 		2D91746A09BA90380026E9FF /* InputDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D05FF61096E269100A518FE /* InputDialog.hxx */; };
+		2D91746B09BA90380026E9FF /* M6502Low.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 2D10A7DC09B16F7A001F913C /* M6502Low.hxx */; };
 		2D91746D09BA90380026E9FF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		2D91746E09BA90380026E9FF /* SDLMain.nib in Resources */ = {isa = PBXBuildFile; fileRef = B2F367C504C7ADC700A80002 /* SDLMain.nib */; };
 		2D91746F09BA90380026E9FF /* Stella.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2D16A8E106324136005DF364 /* Stella.icns */; };
@@ -166,6 +205,7 @@
 		2D91748F09BA90380026E9FF /* Keyboard.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF440627AE07006BEC99 /* Keyboard.cxx */; };
 		2D91749009BA90380026E9FF /* M6532.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF7C0627AE33006BEC99 /* M6532.cxx */; };
 		2D91749109BA90380026E9FF /* MD5.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF7E0627AE33006BEC99 /* MD5.cxx */; };
+		2D91749209BA90380026E9FF /* MediaSrc.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF800627AE34006BEC99 /* MediaSrc.cxx */; };
 		2D91749309BA90380026E9FF /* Paddles.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF820627AE34006BEC99 /* Paddles.cxx */; };
 		2D91749409BA90380026E9FF /* Props.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF840627AE34006BEC99 /* Props.cxx */; };
 		2D91749509BA90380026E9FF /* PropsSet.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF860627AE34006BEC99 /* PropsSet.cxx */; };
@@ -175,6 +215,7 @@
 		2D91749909BA90380026E9FF /* TIA.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DF900627AE34006BEC99 /* TIA.cxx */; };
 		2D91749A09BA90380026E9FF /* Device.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DFBE0627B1DF006BEC99 /* Device.cxx */; };
 		2D91749B09BA90380026E9FF /* M6502.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DFC00627B1DF006BEC99 /* M6502.cxx */; };
+		2D91749C09BA90380026E9FF /* M6502Hi.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DFC20627B1DF006BEC99 /* M6502Hi.cxx */; };
 		2D91749D09BA90380026E9FF /* NullDev.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DFC60627B1DF006BEC99 /* NullDev.cxx */; };
 		2D91749E09BA90380026E9FF /* System.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE2DFC80627B1DF006BEC99 /* System.cxx */; };
 		2D91749F09BA90380026E9FF /* FrameBufferGL.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D733D5D062893E7006265D9 /* FrameBufferGL.cxx */; };
@@ -198,6 +239,7 @@
 		2D9174B109BA90380026E9FF /* HelpDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEAB8084578BF00812C11 /* HelpDialog.cxx */; };
 		2D9174B209BA90380026E9FF /* Launcher.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEABA084578BF00812C11 /* Launcher.cxx */; };
 		2D9174B309BA90380026E9FF /* LauncherDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEABC084578BF00812C11 /* LauncherDialog.cxx */; };
+		2D9174B409BA90380026E9FF /* LauncherOptionsDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEABE084578BF00812C11 /* LauncherOptionsDialog.cxx */; };
 		2D9174B509BA90380026E9FF /* ListWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEAC0084578BF00812C11 /* ListWidget.cxx */; };
 		2D9174B609BA90380026E9FF /* Menu.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEAC2084578BF00812C11 /* Menu.cxx */; };
 		2D9174B709BA90380026E9FF /* OptionsDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DDBEAC4084578BF00812C11 /* OptionsDialog.cxx */; };
@@ -226,7 +268,38 @@
 		2D9174CE09BA90380026E9FF /* Cart3E.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D9555D90880E78000466554 /* Cart3E.cxx */; };
 		2D9174CF09BA90380026E9FF /* CpuDebug.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D9555DD0880E79600466554 /* CpuDebug.cxx */; };
 		2D9174D009BA90380026E9FF /* RamDebug.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D9555DF0880E79600466554 /* RamDebug.cxx */; };
+		2D9174D109BA90380026E9FF /* BinAndExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971C70892CEA400F64D23 /* BinAndExpression.cxx */; };
+		2D9174D209BA90380026E9FF /* BinNotExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971C90892CEA400F64D23 /* BinNotExpression.cxx */; };
+		2D9174D309BA90380026E9FF /* BinOrExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971CB0892CEA400F64D23 /* BinOrExpression.cxx */; };
+		2D9174D409BA90380026E9FF /* BinXorExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971CD0892CEA400F64D23 /* BinXorExpression.cxx */; };
+		2D9174D509BA90380026E9FF /* ByteDerefExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971CF0892CEA400F64D23 /* ByteDerefExpression.cxx */; };
+		2D9174D609BA90380026E9FF /* ByteDerefOffsetExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971D10892CEA400F64D23 /* ByteDerefOffsetExpression.cxx */; };
+		2D9174D709BA90380026E9FF /* ConstExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971D30892CEA400F64D23 /* ConstExpression.cxx */; };
+		2D9174D809BA90380026E9FF /* CpuMethodExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971D50892CEA400F64D23 /* CpuMethodExpression.cxx */; };
+		2D9174D909BA90380026E9FF /* DivExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971D80892CEA400F64D23 /* DivExpression.cxx */; };
+		2D9174DA09BA90380026E9FF /* EqualsExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971DA0892CEA400F64D23 /* EqualsExpression.cxx */; };
+		2D9174DB09BA90380026E9FF /* EquateExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971DC0892CEA400F64D23 /* EquateExpression.cxx */; };
 		2D9174DC09BA90380026E9FF /* Expression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971DE0892CEA400F64D23 /* Expression.cxx */; };
+		2D9174DD09BA90380026E9FF /* FunctionExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971E00892CEA400F64D23 /* FunctionExpression.cxx */; };
+		2D9174DE09BA90380026E9FF /* GreaterEqualsExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971E20892CEA400F64D23 /* GreaterEqualsExpression.cxx */; };
+		2D9174DF09BA90380026E9FF /* GreaterExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971E40892CEA400F64D23 /* GreaterExpression.cxx */; };
+		2D9174E009BA90380026E9FF /* HiByteExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971E60892CEA400F64D23 /* HiByteExpression.cxx */; };
+		2D9174E109BA90380026E9FF /* LessEqualsExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971E80892CEA400F64D23 /* LessEqualsExpression.cxx */; };
+		2D9174E209BA90380026E9FF /* LessExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971EA0892CEA400F64D23 /* LessExpression.cxx */; };
+		2D9174E309BA90380026E9FF /* LoByteExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971EC0892CEA400F64D23 /* LoByteExpression.cxx */; };
+		2D9174E409BA90380026E9FF /* LogAndExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971EE0892CEA400F64D23 /* LogAndExpression.cxx */; };
+		2D9174E509BA90380026E9FF /* LogNotExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971F00892CEA400F64D23 /* LogNotExpression.cxx */; };
+		2D9174E609BA90380026E9FF /* LogOrExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971F20892CEA400F64D23 /* LogOrExpression.cxx */; };
+		2D9174E709BA90380026E9FF /* MinusExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971F40892CEA400F64D23 /* MinusExpression.cxx */; };
+		2D9174E809BA90380026E9FF /* ModExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971F60892CEA400F64D23 /* ModExpression.cxx */; };
+		2D9174E909BA90380026E9FF /* MultExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971F80892CEA400F64D23 /* MultExpression.cxx */; };
+		2D9174EA09BA90380026E9FF /* NotEqualsExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971FA0892CEA400F64D23 /* NotEqualsExpression.cxx */; };
+		2D9174EB09BA90380026E9FF /* PlusExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971FC0892CEA400F64D23 /* PlusExpression.cxx */; };
+		2D9174EC09BA90380026E9FF /* ShiftLeftExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF971FE0892CEA400F64D23 /* ShiftLeftExpression.cxx */; };
+		2D9174ED09BA90380026E9FF /* ShiftRightExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF972000892CEA400F64D23 /* ShiftRightExpression.cxx */; };
+		2D9174EE09BA90380026E9FF /* TiaMethodExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF972040892CEA400F64D23 /* TiaMethodExpression.cxx */; };
+		2D9174EF09BA90380026E9FF /* UnaryMinusExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF972080892CEA400F64D23 /* UnaryMinusExpression.cxx */; };
+		2D9174F009BA90380026E9FF /* WordDerefExpression.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DF9720A0892CEA400F64D23 /* WordDerefExpression.cxx */; };
 		2D9174F109BA90380026E9FF /* InputTextDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D02207F08A301F200B9C76B /* InputTextDialog.cxx */; };
 		2D9174F209BA90380026E9FF /* CheckListWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DEF21F808BC033500B246B4 /* CheckListWidget.cxx */; };
 		2D9174F309BA90380026E9FF /* StringListWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DEF21FA08BC033500B246B4 /* StringListWidget.cxx */; };
@@ -247,12 +320,15 @@
 		2D91750209BA90380026E9FF /* ToggleBitWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D20F9FC08C603EC00A73076 /* ToggleBitWidget.cxx */; };
 		2D91750309BA90380026E9FF /* TogglePixelWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D20F9FE08C603EC00A73076 /* TogglePixelWidget.cxx */; };
 		2D91750409BA90380026E9FF /* ToggleWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D20FA0008C603EC00A73076 /* ToggleWidget.cxx */; };
+		2D91750509BA90380026E9FF /* ContextMenu.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D6CC10108C811A600B8F642 /* ContextMenu.cxx */; };
 		2D91750609BA90380026E9FF /* TiaZoomWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D6CC10308C811A600B8F642 /* TiaZoomWidget.cxx */; };
 		2D91750709BA90380026E9FF /* TIASnd.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2DE7242D08CE910900C889A8 /* TIASnd.cxx */; };
 		2D91750809BA90380026E9FF /* AudioWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D23318F0900B5EF00613B1F /* AudioWidget.cxx */; };
+		2D91750909BA90380026E9FF /* EventStreamer.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D05FF50096E25F200A518FE /* EventStreamer.cxx */; };
 		2D91750A09BA90380026E9FF /* MediaFactory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D05FF5A096E261E00A518FE /* MediaFactory.cxx */; };
 		2D91750B09BA90380026E9FF /* EventMappingWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D05FF5E096E269100A518FE /* EventMappingWidget.cxx */; };
 		2D91750C09BA90380026E9FF /* InputDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D05FF60096E269100A518FE /* InputDialog.cxx */; };
+		2D91750D09BA90380026E9FF /* M6502Low.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 2D10A7DB09B16F7A001F913C /* M6502Low.cxx */; };
 		2D91750F09BA90380026E9FF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		2D91751009BA90380026E9FF /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DEB3D4C0629BD24007EBBD3 /* OpenGL.framework */; };
 		2D91751109BA90380026E9FF /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D4764C806683C5F00F63D87 /* SDL.framework */; };
@@ -260,20 +336,6 @@
 		2D91751409BA90380026E9FF /* SDL.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D4764C806683C5F00F63D87 /* SDL.framework */; };
 		2D91753809BA91BC0026E9FF /* StellaOSX.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 2D91753709BA91BC0026E9FF /* StellaOSX.xcconfig */; };
 		2DEFB40C09C3386F00754289 /* Cart.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2DEFB40B09C3386F00754289 /* Cart.icns */; };
-		DC07A3C80CAD738A009B4BC9 /* StateManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC07A3C60CAD738A009B4BC9 /* StateManager.cxx */; };
-		DC07A3C90CAD738A009B4BC9 /* StateManager.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC07A3C70CAD738A009B4BC9 /* StateManager.hxx */; };
-		DC0984850D3985160073C852 /* CartSB.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC0984830D3985160073C852 /* CartSB.cxx */; };
-		DC0984860D3985160073C852 /* CartSB.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC0984840D3985160073C852 /* CartSB.hxx */; };
-		DC0DF8690F0DAAF500B0F1F3 /* GlobalPropsDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC0DF8670F0DAAF500B0F1F3 /* GlobalPropsDialog.cxx */; };
-		DC0DF86A0F0DAAF500B0F1F3 /* GlobalPropsDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC0DF8680F0DAAF500B0F1F3 /* GlobalPropsDialog.hxx */; };
-		DC11F78D0DB36933003B505E /* MT24LC256.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC11F78B0DB36933003B505E /* MT24LC256.cxx */; };
-		DC11F78E0DB36933003B505E /* MT24LC256.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC11F78C0DB36933003B505E /* MT24LC256.hxx */; };
-		DC173F760E2CAC1E00320F94 /* ContextMenu.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC173F740E2CAC1E00320F94 /* ContextMenu.cxx */; };
-		DC173F770E2CAC1E00320F94 /* ContextMenu.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC173F750E2CAC1E00320F94 /* ContextMenu.hxx */; };
-		DC1FC18A0DB3B2C7009B3DF7 /* SerialPortMACOSX.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC1FC1880DB3B2C7009B3DF7 /* SerialPortMACOSX.cxx */; };
-		DC1FC18B0DB3B2C7009B3DF7 /* SerialPortMACOSX.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC1FC1890DB3B2C7009B3DF7 /* SerialPortMACOSX.hxx */; };
-		DC4613670D92C03600D8DAB9 /* RomAuditDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC4613650D92C03600D8DAB9 /* RomAuditDialog.cxx */; };
-		DC4613680D92C03600D8DAB9 /* RomAuditDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC4613660D92C03600D8DAB9 /* RomAuditDialog.hxx */; };
 		DC47455509C34BFA00EDDA3A /* BankRomCheat.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC47454A09C34BFA00EDDA3A /* BankRomCheat.cxx */; };
 		DC47455609C34BFA00EDDA3A /* BankRomCheat.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC47454B09C34BFA00EDDA3A /* BankRomCheat.hxx */; };
 		DC47455709C34BFA00EDDA3A /* Cheat.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC47454C09C34BFA00EDDA3A /* Cheat.hxx */; };
@@ -285,56 +347,6 @@
 		DC47455D09C34BFA00EDDA3A /* CheetahCheat.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC47455209C34BFA00EDDA3A /* CheetahCheat.hxx */; };
 		DC47455E09C34BFA00EDDA3A /* RamCheat.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC47455309C34BFA00EDDA3A /* RamCheat.cxx */; };
 		DC47455F09C34BFA00EDDA3A /* RamCheat.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC47455409C34BFA00EDDA3A /* RamCheat.hxx */; };
-		DC487FB60DA5350900E12499 /* AtariVox.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC487FB40DA5350900E12499 /* AtariVox.cxx */; };
-		DC487FB70DA5350900E12499 /* AtariVox.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC487FB50DA5350900E12499 /* AtariVox.hxx */; };
-		DC4AC6EF0DC8DACB00CD3AD2 /* RiotWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC4AC6ED0DC8DACB00CD3AD2 /* RiotWidget.cxx */; };
-		DC4AC6F00DC8DACB00CD3AD2 /* RiotWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC4AC6EE0DC8DACB00CD3AD2 /* RiotWidget.hxx */; };
-		DC4AC6F30DC8DAEF00CD3AD2 /* SaveKey.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC4AC6F10DC8DAEF00CD3AD2 /* SaveKey.cxx */; };
-		DC4AC6F40DC8DAEF00CD3AD2 /* SaveKey.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC4AC6F20DC8DAEF00CD3AD2 /* SaveKey.hxx */; };
-		DC5D2C520F117CFD004D1660 /* Rect.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC5D2C4E0F117CFD004D1660 /* Rect.hxx */; };
-		DC5D2C530F117CFD004D1660 /* StellaFont.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC5D2C4F0F117CFD004D1660 /* StellaFont.hxx */; };
-		DC5D2C540F117CFD004D1660 /* StellaLargeFont.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC5D2C500F117CFD004D1660 /* StellaLargeFont.hxx */; };
-		DC5D2C550F117CFD004D1660 /* StellaMediumFont.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC5D2C510F117CFD004D1660 /* StellaMediumFont.hxx */; };
-		DC5D2C600F129B1E004D1660 /* LauncherFilterDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC5D2C5E0F129B1E004D1660 /* LauncherFilterDialog.cxx */; };
-		DC5D2C610F129B1E004D1660 /* LauncherFilterDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC5D2C5F0F129B1E004D1660 /* LauncherFilterDialog.hxx */; };
-		DC8078DB0B4BD5F3005E9305 /* DebuggerExpressions.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC8078DA0B4BD5F3005E9305 /* DebuggerExpressions.hxx */; };
-		DC8078E80B4BD697005E9305 /* FileSnapDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC8078E40B4BD697005E9305 /* FileSnapDialog.cxx */; };
-		DC8078E90B4BD697005E9305 /* FileSnapDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC8078E50B4BD697005E9305 /* FileSnapDialog.hxx */; };
-		DC8078EA0B4BD697005E9305 /* UIDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC8078E60B4BD697005E9305 /* UIDialog.cxx */; };
-		DC8078EB0B4BD697005E9305 /* UIDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC8078E70B4BD697005E9305 /* UIDialog.hxx */; };
-		DC932D440F278A5200FEFEFC /* DefProps.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC932D3F0F278A5200FEFEFC /* DefProps.hxx */; };
-		DC932D450F278A5200FEFEFC /* Serializable.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC932D400F278A5200FEFEFC /* Serializable.hxx */; };
-		DC932D460F278A5200FEFEFC /* SerialPort.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC932D410F278A5200FEFEFC /* SerialPort.hxx */; };
-		DC932D470F278A5200FEFEFC /* TIATables.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC932D420F278A5200FEFEFC /* TIATables.cxx */; };
-		DC932D480F278A5200FEFEFC /* TIATables.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC932D430F278A5200FEFEFC /* TIATables.hxx */; };
-		DC9EA8870F729A36000452B5 /* KidVid.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DC9EA8850F729A36000452B5 /* KidVid.cxx */; };
-		DC9EA8880F729A36000452B5 /* KidVid.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DC9EA8860F729A36000452B5 /* KidVid.hxx */; };
-		DCA00FF70DBABCAD00C3823D /* RiotDebug.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCA00FF50DBABCAD00C3823D /* RiotDebug.cxx */; };
-		DCA00FF80DBABCAD00C3823D /* RiotDebug.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCA00FF60DBABCAD00C3823D /* RiotDebug.hxx */; };
-		DCA23AE90D75B22500F77B33 /* CartX07.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCA23AE70D75B22500F77B33 /* CartX07.cxx */; };
-		DCA23AEA0D75B22500F77B33 /* CartX07.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCA23AE80D75B22500F77B33 /* CartX07.hxx */; };
-		DCB9DA5F0FCD527000B192F6 /* GLShaderProgs.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCB9DA5E0FCD527000B192F6 /* GLShaderProgs.hxx */; };
-		DCD56D380B247D920092F9F8 /* Cart4A50.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCD56D360B247D920092F9F8 /* Cart4A50.cxx */; };
-		DCD56D390B247D920092F9F8 /* Cart4A50.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCD56D370B247D920092F9F8 /* Cart4A50.hxx */; };
-		DCD56D3C0B247DB40092F9F8 /* RectList.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCD56D3A0B247DB40092F9F8 /* RectList.cxx */; };
-		DCD56D3D0B247DB40092F9F8 /* RectList.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCD56D3B0B247DB40092F9F8 /* RectList.hxx */; };
-		DCE3BBF90C95CEDC00A671DF /* RomInfoWidget.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCE3BBF50C95CEDC00A671DF /* RomInfoWidget.cxx */; };
-		DCE3BBFA0C95CEDC00A671DF /* RomInfoWidget.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCE3BBF60C95CEDC00A671DF /* RomInfoWidget.hxx */; };
-		DCE3BBFB0C95CEDC00A671DF /* Surface.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCE3BBF70C95CEDC00A671DF /* Surface.cxx */; };
-		DCE3BBFC0C95CEDC00A671DF /* Surface.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCE3BBF80C95CEDC00A671DF /* Surface.hxx */; };
-		DCE6EB220DD9ADA00047AC28 /* TrackBall.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCE6EB200DD9ADA00047AC28 /* TrackBall.cxx */; };
-		DCE6EB230DD9ADA00047AC28 /* TrackBall.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCE6EB210DD9ADA00047AC28 /* TrackBall.hxx */; };
-		DCEECE560B5E5E540021D754 /* Cart0840.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCEECE540B5E5E540021D754 /* Cart0840.cxx */; };
-		DCEECE570B5E5E540021D754 /* Cart0840.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCEECE550B5E5E540021D754 /* Cart0840.hxx */; };
-		DCF467B50F93993B00B25D7A /* Array.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467B10F93993B00B25D7A /* Array.hxx */; };
-		DCF467B60F93993B00B25D7A /* SharedPtr.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467B20F93993B00B25D7A /* SharedPtr.hxx */; };
-		DCF467B70F93993B00B25D7A /* SoundNull.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCF467B30F93993B00B25D7A /* SoundNull.cxx */; };
-		DCF467B80F93993B00B25D7A /* SoundNull.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467B40F93993B00B25D7A /* SoundNull.hxx */; };
-		DCF467BD0F9399F500B25D7A /* Version.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467BC0F9399F500B25D7A /* Version.hxx */; };
-		DCF467C20F939A1400B25D7A /* CartEF.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCF467BE0F939A1400B25D7A /* CartEF.cxx */; };
-		DCF467C30F939A1400B25D7A /* CartEF.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467BF0F939A1400B25D7A /* CartEF.hxx */; };
-		DCF467C40F939A1400B25D7A /* CartEFSC.cxx in Sources */ = {isa = PBXBuildFile; fileRef = DCF467C00F939A1400B25D7A /* CartEFSC.cxx */; };
-		DCF467C50F939A1400B25D7A /* CartEFSC.hxx in Headers */ = {isa = PBXBuildFile; fileRef = DCF467C10F939A1400B25D7A /* CartEFSC.hxx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -363,6 +375,31 @@
 			);
 		};
 /* End PBXBuildRule section */
+
+/* Begin PBXBuildStyle section */
+		4A9504CCFFE6A4B311CA0CBA /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OPTIMIZATION_CFLAGS = "-O0";
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		4A9504CDFFE6A4B311CA0CBA /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		2D91751309BA90380026E9FF /* CopyFiles */ = {
@@ -393,12 +430,16 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2D02207F08A301F200B9C76B /* InputTextDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InputTextDialog.cxx; path = ../gui/InputTextDialog.cxx; sourceTree = SOURCE_ROOT; };
 		2D02208008A301F200B9C76B /* InputTextDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = InputTextDialog.hxx; path = ../gui/InputTextDialog.hxx; sourceTree = SOURCE_ROOT; };
+		2D05FF50096E25F200A518FE /* EventStreamer.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EventStreamer.cxx; path = ../emucore/EventStreamer.cxx; sourceTree = SOURCE_ROOT; };
+		2D05FF51096E25F200A518FE /* EventStreamer.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EventStreamer.hxx; path = ../emucore/EventStreamer.hxx; sourceTree = SOURCE_ROOT; };
 		2D05FF5A096E261E00A518FE /* MediaFactory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MediaFactory.cxx; path = ../emucore/MediaFactory.cxx; sourceTree = SOURCE_ROOT; };
 		2D05FF5B096E261E00A518FE /* MediaFactory.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MediaFactory.hxx; path = ../emucore/MediaFactory.hxx; sourceTree = SOURCE_ROOT; };
 		2D05FF5E096E269100A518FE /* EventMappingWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EventMappingWidget.cxx; path = ../gui/EventMappingWidget.cxx; sourceTree = SOURCE_ROOT; };
 		2D05FF5F096E269100A518FE /* EventMappingWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EventMappingWidget.hxx; path = ../gui/EventMappingWidget.hxx; sourceTree = SOURCE_ROOT; };
 		2D05FF60096E269100A518FE /* InputDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InputDialog.cxx; path = ../gui/InputDialog.cxx; sourceTree = SOURCE_ROOT; };
 		2D05FF61096E269100A518FE /* InputDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = InputDialog.hxx; path = ../gui/InputDialog.hxx; sourceTree = SOURCE_ROOT; };
+		2D10A7DB09B16F7A001F913C /* M6502Low.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = M6502Low.cxx; path = ../emucore/m6502/src/M6502Low.cxx; sourceTree = SOURCE_ROOT; };
+		2D10A7DC09B16F7A001F913C /* M6502Low.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = M6502Low.hxx; path = ../emucore/m6502/src/M6502Low.hxx; sourceTree = SOURCE_ROOT; };
 		2D113E090672BF2100317017 /* ../../docs */ = {isa = PBXFileReference; explicitFileType = folder; path = ../../docs; sourceTree = "<group>"; };
 		2D11C9A90667003F00724063 /* Snapshot.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Snapshot.cxx; path = ../common/Snapshot.cxx; sourceTree = SOURCE_ROOT; };
 		2D11C9AA0667003F00724063 /* Snapshot.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Snapshot.hxx; path = ../common/Snapshot.hxx; sourceTree = SOURCE_ROOT; };
@@ -448,6 +489,7 @@
 		2D403BA1086116D1001E31A1 /* EditableWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EditableWidget.hxx; path = ../gui/EditableWidget.hxx; sourceTree = SOURCE_ROOT; };
 		2D403BA4086116D1001E31A1 /* EditTextWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EditTextWidget.cxx; path = ../gui/EditTextWidget.cxx; sourceTree = SOURCE_ROOT; };
 		2D403BA5086116D1001E31A1 /* EditTextWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EditTextWidget.hxx; path = ../gui/EditTextWidget.hxx; sourceTree = SOURCE_ROOT; };
+		2D403BC808611898001E31A1 /* Equate.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Equate.hxx; path = ../debugger/Equate.hxx; sourceTree = SOURCE_ROOT; };
 		2D403BC908611898001E31A1 /* EquateList.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EquateList.cxx; path = ../debugger/EquateList.cxx; sourceTree = SOURCE_ROOT; };
 		2D403BCA08611898001E31A1 /* EquateList.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EquateList.hxx; path = ../debugger/EquateList.hxx; sourceTree = SOURCE_ROOT; };
 		2D403BCE08611A69001E31A1 /* PackedBitArray.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PackedBitArray.cxx; path = ../debugger/PackedBitArray.cxx; sourceTree = SOURCE_ROOT; };
@@ -459,6 +501,8 @@
 		2D659E2E085D3DD6005D96C8 /* Debugger.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Debugger.hxx; path = ../debugger/Debugger.hxx; sourceTree = SOURCE_ROOT; };
 		2D659E31085D3DD6005D96C8 /* DebuggerParser.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DebuggerParser.cxx; path = ../debugger/DebuggerParser.cxx; sourceTree = SOURCE_ROOT; };
 		2D659E32085D3DD6005D96C8 /* DebuggerParser.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = DebuggerParser.hxx; path = ../debugger/DebuggerParser.hxx; sourceTree = SOURCE_ROOT; };
+		2D6CC10108C811A600B8F642 /* ContextMenu.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextMenu.cxx; path = ../debugger/gui/ContextMenu.cxx; sourceTree = SOURCE_ROOT; };
+		2D6CC10208C811A600B8F642 /* ContextMenu.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ContextMenu.hxx; path = ../debugger/gui/ContextMenu.hxx; sourceTree = SOURCE_ROOT; };
 		2D6CC10308C811A600B8F642 /* TiaZoomWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TiaZoomWidget.cxx; path = ../debugger/gui/TiaZoomWidget.cxx; sourceTree = SOURCE_ROOT; };
 		2D6CC10408C811A600B8F642 /* TiaZoomWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = TiaZoomWidget.hxx; path = ../debugger/gui/TiaZoomWidget.hxx; sourceTree = SOURCE_ROOT; };
 		2D733D5D062893E7006265D9 /* FrameBufferGL.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FrameBufferGL.cxx; path = ../common/FrameBufferGL.cxx; sourceTree = SOURCE_ROOT; };
@@ -512,12 +556,15 @@
 		2DDBEAB4084578BF00812C11 /* GameList.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GameList.cxx; path = ../gui/GameList.cxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAB5084578BF00812C11 /* GameList.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = GameList.hxx; path = ../gui/GameList.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAB6084578BF00812C11 /* GuiObject.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = GuiObject.hxx; path = ../gui/GuiObject.hxx; sourceTree = SOURCE_ROOT; };
+		2DDBEAB7084578BF00812C11 /* GuiUtils.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = GuiUtils.hxx; path = ../gui/GuiUtils.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAB8084578BF00812C11 /* HelpDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HelpDialog.cxx; path = ../gui/HelpDialog.cxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAB9084578BF00812C11 /* HelpDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = HelpDialog.hxx; path = ../gui/HelpDialog.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEABA084578BF00812C11 /* Launcher.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Launcher.cxx; path = ../gui/Launcher.cxx; sourceTree = SOURCE_ROOT; };
 		2DDBEABB084578BF00812C11 /* Launcher.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Launcher.hxx; path = ../gui/Launcher.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEABC084578BF00812C11 /* LauncherDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LauncherDialog.cxx; path = ../gui/LauncherDialog.cxx; sourceTree = SOURCE_ROOT; };
 		2DDBEABD084578BF00812C11 /* LauncherDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LauncherDialog.hxx; path = ../gui/LauncherDialog.hxx; sourceTree = SOURCE_ROOT; };
+		2DDBEABE084578BF00812C11 /* LauncherOptionsDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LauncherOptionsDialog.cxx; path = ../gui/LauncherOptionsDialog.cxx; sourceTree = SOURCE_ROOT; };
+		2DDBEABF084578BF00812C11 /* LauncherOptionsDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LauncherOptionsDialog.hxx; path = ../gui/LauncherOptionsDialog.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAC0084578BF00812C11 /* ListWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListWidget.cxx; path = ../gui/ListWidget.cxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAC1084578BF00812C11 /* ListWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ListWidget.hxx; path = ../gui/ListWidget.hxx; sourceTree = SOURCE_ROOT; };
 		2DDBEAC2084578BF00812C11 /* Menu.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Menu.cxx; path = ../gui/Menu.cxx; sourceTree = SOURCE_ROOT; };
@@ -606,6 +653,8 @@
 		2DE2DF7D0627AE33006BEC99 /* M6532.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = M6532.hxx; path = ../emucore/M6532.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DF7E0627AE33006BEC99 /* MD5.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MD5.cxx; path = ../emucore/MD5.cxx; sourceTree = SOURCE_ROOT; };
 		2DE2DF7F0627AE34006BEC99 /* MD5.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MD5.hxx; path = ../emucore/MD5.hxx; sourceTree = SOURCE_ROOT; };
+		2DE2DF800627AE34006BEC99 /* MediaSrc.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MediaSrc.cxx; path = ../emucore/MediaSrc.cxx; sourceTree = SOURCE_ROOT; };
+		2DE2DF810627AE34006BEC99 /* MediaSrc.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MediaSrc.hxx; path = ../emucore/MediaSrc.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DF820627AE34006BEC99 /* Paddles.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Paddles.cxx; path = ../emucore/Paddles.cxx; sourceTree = SOURCE_ROOT; };
 		2DE2DF830627AE34006BEC99 /* Paddles.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Paddles.hxx; path = ../emucore/Paddles.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DF840627AE34006BEC99 /* Props.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Props.cxx; path = ../emucore/Props.cxx; sourceTree = SOURCE_ROOT; };
@@ -625,6 +674,8 @@
 		2DE2DFBF0627B1DF006BEC99 /* Device.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Device.hxx; path = ../emucore/m6502/src/Device.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DFC00627B1DF006BEC99 /* M6502.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = M6502.cxx; path = ../emucore/m6502/src/M6502.cxx; sourceTree = SOURCE_ROOT; };
 		2DE2DFC10627B1DF006BEC99 /* M6502.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = M6502.hxx; path = ../emucore/m6502/src/M6502.hxx; sourceTree = SOURCE_ROOT; };
+		2DE2DFC20627B1DF006BEC99 /* M6502Hi.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = M6502Hi.cxx; path = ../emucore/m6502/src/M6502Hi.cxx; sourceTree = SOURCE_ROOT; };
+		2DE2DFC30627B1DF006BEC99 /* M6502Hi.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = M6502Hi.hxx; path = ../emucore/m6502/src/M6502Hi.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DFC60627B1DF006BEC99 /* NullDev.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NullDev.cxx; path = ../emucore/m6502/src/NullDev.cxx; sourceTree = SOURCE_ROOT; };
 		2DE2DFC70627B1DF006BEC99 /* NullDev.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = NullDev.hxx; path = ../emucore/m6502/src/NullDev.hxx; sourceTree = SOURCE_ROOT; };
 		2DE2DFC80627B1DF006BEC99 /* System.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = System.cxx; path = ../emucore/m6502/src/System.cxx; sourceTree = SOURCE_ROOT; };
@@ -637,24 +688,72 @@
 		2DEF21FA08BC033500B246B4 /* StringListWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringListWidget.cxx; path = ../gui/StringListWidget.cxx; sourceTree = SOURCE_ROOT; };
 		2DEF21FB08BC033500B246B4 /* StringListWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = StringListWidget.hxx; path = ../gui/StringListWidget.hxx; sourceTree = SOURCE_ROOT; };
 		2DEFB40B09C3386F00754289 /* Cart.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Cart.icns; sourceTree = SOURCE_ROOT; };
+		2DF971C70892CEA400F64D23 /* BinAndExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BinAndExpression.cxx; path = ../debugger/BinAndExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971C80892CEA400F64D23 /* BinAndExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = BinAndExpression.hxx; path = ../debugger/BinAndExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971C90892CEA400F64D23 /* BinNotExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BinNotExpression.cxx; path = ../debugger/BinNotExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971CA0892CEA400F64D23 /* BinNotExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = BinNotExpression.hxx; path = ../debugger/BinNotExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971CB0892CEA400F64D23 /* BinOrExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BinOrExpression.cxx; path = ../debugger/BinOrExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971CC0892CEA400F64D23 /* BinOrExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = BinOrExpression.hxx; path = ../debugger/BinOrExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971CD0892CEA400F64D23 /* BinXorExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BinXorExpression.cxx; path = ../debugger/BinXorExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971CE0892CEA400F64D23 /* BinXorExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = BinXorExpression.hxx; path = ../debugger/BinXorExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971CF0892CEA400F64D23 /* ByteDerefExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ByteDerefExpression.cxx; path = ../debugger/ByteDerefExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971D00892CEA400F64D23 /* ByteDerefExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ByteDerefExpression.hxx; path = ../debugger/ByteDerefExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971D10892CEA400F64D23 /* ByteDerefOffsetExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ByteDerefOffsetExpression.cxx; path = ../debugger/ByteDerefOffsetExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971D20892CEA400F64D23 /* ByteDerefOffsetExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ByteDerefOffsetExpression.hxx; path = ../debugger/ByteDerefOffsetExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971D30892CEA400F64D23 /* ConstExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConstExpression.cxx; path = ../debugger/ConstExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971D40892CEA400F64D23 /* ConstExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ConstExpression.hxx; path = ../debugger/ConstExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971D50892CEA400F64D23 /* CpuMethodExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CpuMethodExpression.cxx; path = ../debugger/CpuMethodExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971D60892CEA400F64D23 /* CpuMethodExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = CpuMethodExpression.hxx; path = ../debugger/CpuMethodExpression.hxx; sourceTree = SOURCE_ROOT; };
 		2DF971D70892CEA400F64D23 /* DebuggerSystem.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = DebuggerSystem.hxx; path = ../debugger/DebuggerSystem.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971D80892CEA400F64D23 /* DivExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DivExpression.cxx; path = ../debugger/DivExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971D90892CEA400F64D23 /* DivExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = DivExpression.hxx; path = ../debugger/DivExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971DA0892CEA400F64D23 /* EqualsExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EqualsExpression.cxx; path = ../debugger/EqualsExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971DB0892CEA400F64D23 /* EqualsExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EqualsExpression.hxx; path = ../debugger/EqualsExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971DC0892CEA400F64D23 /* EquateExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EquateExpression.cxx; path = ../debugger/EquateExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971DD0892CEA400F64D23 /* EquateExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = EquateExpression.hxx; path = ../debugger/EquateExpression.hxx; sourceTree = SOURCE_ROOT; };
 		2DF971DE0892CEA400F64D23 /* Expression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Expression.cxx; path = ../debugger/Expression.cxx; sourceTree = SOURCE_ROOT; };
 		2DF971DF0892CEA400F64D23 /* Expression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Expression.hxx; path = ../debugger/Expression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971E00892CEA400F64D23 /* FunctionExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FunctionExpression.cxx; path = ../debugger/FunctionExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971E10892CEA400F64D23 /* FunctionExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = FunctionExpression.hxx; path = ../debugger/FunctionExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971E20892CEA400F64D23 /* GreaterEqualsExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GreaterEqualsExpression.cxx; path = ../debugger/GreaterEqualsExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971E30892CEA400F64D23 /* GreaterEqualsExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = GreaterEqualsExpression.hxx; path = ../debugger/GreaterEqualsExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971E40892CEA400F64D23 /* GreaterExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GreaterExpression.cxx; path = ../debugger/GreaterExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971E50892CEA400F64D23 /* GreaterExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = GreaterExpression.hxx; path = ../debugger/GreaterExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971E60892CEA400F64D23 /* HiByteExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HiByteExpression.cxx; path = ../debugger/HiByteExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971E70892CEA400F64D23 /* HiByteExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = HiByteExpression.hxx; path = ../debugger/HiByteExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971E80892CEA400F64D23 /* LessEqualsExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LessEqualsExpression.cxx; path = ../debugger/LessEqualsExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971E90892CEA400F64D23 /* LessEqualsExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LessEqualsExpression.hxx; path = ../debugger/LessEqualsExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971EA0892CEA400F64D23 /* LessExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LessExpression.cxx; path = ../debugger/LessExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971EB0892CEA400F64D23 /* LessExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LessExpression.hxx; path = ../debugger/LessExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971EC0892CEA400F64D23 /* LoByteExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LoByteExpression.cxx; path = ../debugger/LoByteExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971ED0892CEA400F64D23 /* LoByteExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LoByteExpression.hxx; path = ../debugger/LoByteExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971EE0892CEA400F64D23 /* LogAndExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LogAndExpression.cxx; path = ../debugger/LogAndExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971EF0892CEA400F64D23 /* LogAndExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LogAndExpression.hxx; path = ../debugger/LogAndExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971F00892CEA400F64D23 /* LogNotExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LogNotExpression.cxx; path = ../debugger/LogNotExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971F10892CEA400F64D23 /* LogNotExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LogNotExpression.hxx; path = ../debugger/LogNotExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971F20892CEA400F64D23 /* LogOrExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LogOrExpression.cxx; path = ../debugger/LogOrExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971F30892CEA400F64D23 /* LogOrExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = LogOrExpression.hxx; path = ../debugger/LogOrExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971F40892CEA400F64D23 /* MinusExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MinusExpression.cxx; path = ../debugger/MinusExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971F50892CEA400F64D23 /* MinusExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MinusExpression.hxx; path = ../debugger/MinusExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971F60892CEA400F64D23 /* ModExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ModExpression.cxx; path = ../debugger/ModExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971F70892CEA400F64D23 /* ModExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ModExpression.hxx; path = ../debugger/ModExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971F80892CEA400F64D23 /* MultExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MultExpression.cxx; path = ../debugger/MultExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971F90892CEA400F64D23 /* MultExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MultExpression.hxx; path = ../debugger/MultExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971FA0892CEA400F64D23 /* NotEqualsExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NotEqualsExpression.cxx; path = ../debugger/NotEqualsExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971FB0892CEA400F64D23 /* NotEqualsExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = NotEqualsExpression.hxx; path = ../debugger/NotEqualsExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971FC0892CEA400F64D23 /* PlusExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PlusExpression.cxx; path = ../debugger/PlusExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971FD0892CEA400F64D23 /* PlusExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = PlusExpression.hxx; path = ../debugger/PlusExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF971FE0892CEA400F64D23 /* ShiftLeftExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ShiftLeftExpression.cxx; path = ../debugger/ShiftLeftExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF971FF0892CEA400F64D23 /* ShiftLeftExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ShiftLeftExpression.hxx; path = ../debugger/ShiftLeftExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF972000892CEA400F64D23 /* ShiftRightExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ShiftRightExpression.cxx; path = ../debugger/ShiftRightExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF972010892CEA400F64D23 /* ShiftRightExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ShiftRightExpression.hxx; path = ../debugger/ShiftRightExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF972040892CEA400F64D23 /* TiaMethodExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TiaMethodExpression.cxx; path = ../debugger/TiaMethodExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF972050892CEA400F64D23 /* TiaMethodExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = TiaMethodExpression.hxx; path = ../debugger/TiaMethodExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF972080892CEA400F64D23 /* UnaryMinusExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UnaryMinusExpression.cxx; path = ../debugger/UnaryMinusExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF972090892CEA400F64D23 /* UnaryMinusExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = UnaryMinusExpression.hxx; path = ../debugger/UnaryMinusExpression.hxx; sourceTree = SOURCE_ROOT; };
+		2DF9720A0892CEA400F64D23 /* WordDerefExpression.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WordDerefExpression.cxx; path = ../debugger/WordDerefExpression.cxx; sourceTree = SOURCE_ROOT; };
+		2DF9720B0892CEA400F64D23 /* WordDerefExpression.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = WordDerefExpression.hxx; path = ../debugger/WordDerefExpression.hxx; sourceTree = SOURCE_ROOT; };
 		B2F367C504C7ADC700A80002 /* SDLMain.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = SDLMain.nib; sourceTree = "<group>"; };
-		DC07A3C60CAD738A009B4BC9 /* StateManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StateManager.cxx; path = ../emucore/StateManager.cxx; sourceTree = SOURCE_ROOT; };
-		DC07A3C70CAD738A009B4BC9 /* StateManager.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = StateManager.hxx; path = ../emucore/StateManager.hxx; sourceTree = SOURCE_ROOT; };
-		DC0984830D3985160073C852 /* CartSB.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CartSB.cxx; path = ../emucore/CartSB.cxx; sourceTree = SOURCE_ROOT; };
-		DC0984840D3985160073C852 /* CartSB.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CartSB.hxx; path = ../emucore/CartSB.hxx; sourceTree = SOURCE_ROOT; };
-		DC0DF8670F0DAAF500B0F1F3 /* GlobalPropsDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GlobalPropsDialog.cxx; path = ../gui/GlobalPropsDialog.cxx; sourceTree = SOURCE_ROOT; };
-		DC0DF8680F0DAAF500B0F1F3 /* GlobalPropsDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GlobalPropsDialog.hxx; path = ../gui/GlobalPropsDialog.hxx; sourceTree = SOURCE_ROOT; };
-		DC11F78B0DB36933003B505E /* MT24LC256.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MT24LC256.cxx; path = ../emucore/MT24LC256.cxx; sourceTree = SOURCE_ROOT; };
-		DC11F78C0DB36933003B505E /* MT24LC256.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MT24LC256.hxx; path = ../emucore/MT24LC256.hxx; sourceTree = SOURCE_ROOT; };
-		DC173F740E2CAC1E00320F94 /* ContextMenu.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextMenu.cxx; path = ../gui/ContextMenu.cxx; sourceTree = SOURCE_ROOT; };
-		DC173F750E2CAC1E00320F94 /* ContextMenu.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ContextMenu.hxx; path = ../gui/ContextMenu.hxx; sourceTree = SOURCE_ROOT; };
-		DC1FC1880DB3B2C7009B3DF7 /* SerialPortMACOSX.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SerialPortMACOSX.cxx; sourceTree = "<group>"; };
-		DC1FC1890DB3B2C7009B3DF7 /* SerialPortMACOSX.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SerialPortMACOSX.hxx; sourceTree = "<group>"; };
-		DC4613650D92C03600D8DAB9 /* RomAuditDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RomAuditDialog.cxx; path = ../gui/RomAuditDialog.cxx; sourceTree = SOURCE_ROOT; };
-		DC4613660D92C03600D8DAB9 /* RomAuditDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RomAuditDialog.hxx; path = ../gui/RomAuditDialog.hxx; sourceTree = SOURCE_ROOT; };
 		DC47454A09C34BFA00EDDA3A /* BankRomCheat.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BankRomCheat.cxx; path = ../cheat/BankRomCheat.cxx; sourceTree = SOURCE_ROOT; };
 		DC47454B09C34BFA00EDDA3A /* BankRomCheat.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = BankRomCheat.hxx; path = ../cheat/BankRomCheat.hxx; sourceTree = SOURCE_ROOT; };
 		DC47454C09C34BFA00EDDA3A /* Cheat.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Cheat.hxx; path = ../cheat/Cheat.hxx; sourceTree = SOURCE_ROOT; };
@@ -666,56 +765,6 @@
 		DC47455209C34BFA00EDDA3A /* CheetahCheat.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = CheetahCheat.hxx; path = ../cheat/CheetahCheat.hxx; sourceTree = SOURCE_ROOT; };
 		DC47455309C34BFA00EDDA3A /* RamCheat.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RamCheat.cxx; path = ../cheat/RamCheat.cxx; sourceTree = SOURCE_ROOT; };
 		DC47455409C34BFA00EDDA3A /* RamCheat.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RamCheat.hxx; path = ../cheat/RamCheat.hxx; sourceTree = SOURCE_ROOT; };
-		DC487FB40DA5350900E12499 /* AtariVox.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AtariVox.cxx; path = ../emucore/AtariVox.cxx; sourceTree = SOURCE_ROOT; };
-		DC487FB50DA5350900E12499 /* AtariVox.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = AtariVox.hxx; path = ../emucore/AtariVox.hxx; sourceTree = SOURCE_ROOT; };
-		DC4AC6ED0DC8DACB00CD3AD2 /* RiotWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RiotWidget.cxx; path = ../debugger/gui/RiotWidget.cxx; sourceTree = SOURCE_ROOT; };
-		DC4AC6EE0DC8DACB00CD3AD2 /* RiotWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RiotWidget.hxx; path = ../debugger/gui/RiotWidget.hxx; sourceTree = SOURCE_ROOT; };
-		DC4AC6F10DC8DAEF00CD3AD2 /* SaveKey.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SaveKey.cxx; path = ../emucore/SaveKey.cxx; sourceTree = SOURCE_ROOT; };
-		DC4AC6F20DC8DAEF00CD3AD2 /* SaveKey.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = SaveKey.hxx; path = ../emucore/SaveKey.hxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C4E0F117CFD004D1660 /* Rect.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Rect.hxx; path = ../gui/Rect.hxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C4F0F117CFD004D1660 /* StellaFont.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StellaFont.hxx; path = ../gui/StellaFont.hxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C500F117CFD004D1660 /* StellaLargeFont.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StellaLargeFont.hxx; path = ../gui/StellaLargeFont.hxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C510F117CFD004D1660 /* StellaMediumFont.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StellaMediumFont.hxx; path = ../gui/StellaMediumFont.hxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C5E0F129B1E004D1660 /* LauncherFilterDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LauncherFilterDialog.cxx; path = ../gui/LauncherFilterDialog.cxx; sourceTree = SOURCE_ROOT; };
-		DC5D2C5F0F129B1E004D1660 /* LauncherFilterDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = LauncherFilterDialog.hxx; path = ../gui/LauncherFilterDialog.hxx; sourceTree = SOURCE_ROOT; };
-		DC8078DA0B4BD5F3005E9305 /* DebuggerExpressions.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = DebuggerExpressions.hxx; path = ../debugger/DebuggerExpressions.hxx; sourceTree = SOURCE_ROOT; };
-		DC8078E40B4BD697005E9305 /* FileSnapDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSnapDialog.cxx; path = ../gui/FileSnapDialog.cxx; sourceTree = SOURCE_ROOT; };
-		DC8078E50B4BD697005E9305 /* FileSnapDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = FileSnapDialog.hxx; path = ../gui/FileSnapDialog.hxx; sourceTree = SOURCE_ROOT; };
-		DC8078E60B4BD697005E9305 /* UIDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UIDialog.cxx; path = ../gui/UIDialog.cxx; sourceTree = SOURCE_ROOT; };
-		DC8078E70B4BD697005E9305 /* UIDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = UIDialog.hxx; path = ../gui/UIDialog.hxx; sourceTree = SOURCE_ROOT; };
-		DC932D3F0F278A5200FEFEFC /* DefProps.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DefProps.hxx; path = ../emucore/DefProps.hxx; sourceTree = SOURCE_ROOT; };
-		DC932D400F278A5200FEFEFC /* Serializable.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Serializable.hxx; path = ../emucore/Serializable.hxx; sourceTree = SOURCE_ROOT; };
-		DC932D410F278A5200FEFEFC /* SerialPort.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = SerialPort.hxx; path = ../emucore/SerialPort.hxx; sourceTree = SOURCE_ROOT; };
-		DC932D420F278A5200FEFEFC /* TIATables.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TIATables.cxx; path = ../emucore/TIATables.cxx; sourceTree = SOURCE_ROOT; };
-		DC932D430F278A5200FEFEFC /* TIATables.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = TIATables.hxx; path = ../emucore/TIATables.hxx; sourceTree = SOURCE_ROOT; };
-		DC9EA8850F729A36000452B5 /* KidVid.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = KidVid.cxx; path = ../emucore/KidVid.cxx; sourceTree = SOURCE_ROOT; };
-		DC9EA8860F729A36000452B5 /* KidVid.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = KidVid.hxx; path = ../emucore/KidVid.hxx; sourceTree = SOURCE_ROOT; };
-		DCA00FF50DBABCAD00C3823D /* RiotDebug.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RiotDebug.cxx; path = ../debugger/RiotDebug.cxx; sourceTree = SOURCE_ROOT; };
-		DCA00FF60DBABCAD00C3823D /* RiotDebug.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RiotDebug.hxx; path = ../debugger/RiotDebug.hxx; sourceTree = SOURCE_ROOT; };
-		DCA23AE70D75B22500F77B33 /* CartX07.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CartX07.cxx; path = ../emucore/CartX07.cxx; sourceTree = SOURCE_ROOT; };
-		DCA23AE80D75B22500F77B33 /* CartX07.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = CartX07.hxx; path = ../emucore/CartX07.hxx; sourceTree = SOURCE_ROOT; };
-		DCB9DA5E0FCD527000B192F6 /* GLShaderProgs.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GLShaderProgs.hxx; path = ../common/GLShaderProgs.hxx; sourceTree = SOURCE_ROOT; };
-		DCD56D360B247D920092F9F8 /* Cart4A50.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Cart4A50.cxx; path = ../emucore/Cart4A50.cxx; sourceTree = SOURCE_ROOT; };
-		DCD56D370B247D920092F9F8 /* Cart4A50.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Cart4A50.hxx; path = ../emucore/Cart4A50.hxx; sourceTree = SOURCE_ROOT; };
-		DCD56D3A0B247DB40092F9F8 /* RectList.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RectList.cxx; path = ../common/RectList.cxx; sourceTree = SOURCE_ROOT; };
-		DCD56D3B0B247DB40092F9F8 /* RectList.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RectList.hxx; path = ../common/RectList.hxx; sourceTree = SOURCE_ROOT; };
-		DCE3BBF50C95CEDC00A671DF /* RomInfoWidget.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RomInfoWidget.cxx; path = ../gui/RomInfoWidget.cxx; sourceTree = SOURCE_ROOT; };
-		DCE3BBF60C95CEDC00A671DF /* RomInfoWidget.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RomInfoWidget.hxx; path = ../gui/RomInfoWidget.hxx; sourceTree = SOURCE_ROOT; };
-		DCE3BBF70C95CEDC00A671DF /* Surface.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Surface.cxx; path = ../gui/Surface.cxx; sourceTree = SOURCE_ROOT; };
-		DCE3BBF80C95CEDC00A671DF /* Surface.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Surface.hxx; path = "..//gui/Surface.hxx"; sourceTree = SOURCE_ROOT; };
-		DCE6EB200DD9ADA00047AC28 /* TrackBall.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TrackBall.cxx; path = ../emucore/TrackBall.cxx; sourceTree = SOURCE_ROOT; };
-		DCE6EB210DD9ADA00047AC28 /* TrackBall.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = TrackBall.hxx; path = ../emucore/TrackBall.hxx; sourceTree = SOURCE_ROOT; };
-		DCEECE540B5E5E540021D754 /* Cart0840.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Cart0840.cxx; path = ../emucore/Cart0840.cxx; sourceTree = SOURCE_ROOT; };
-		DCEECE550B5E5E540021D754 /* Cart0840.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Cart0840.hxx; path = ../emucore/Cart0840.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467B10F93993B00B25D7A /* Array.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Array.hxx; path = ../common/Array.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467B20F93993B00B25D7A /* SharedPtr.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = SharedPtr.hxx; path = ../common/SharedPtr.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467B30F93993B00B25D7A /* SoundNull.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoundNull.cxx; path = ../common/SoundNull.cxx; sourceTree = SOURCE_ROOT; };
-		DCF467B40F93993B00B25D7A /* SoundNull.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = SoundNull.hxx; path = ../common/SoundNull.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467BC0F9399F500B25D7A /* Version.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Version.hxx; path = ../common/Version.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467BE0F939A1400B25D7A /* CartEF.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CartEF.cxx; path = ../emucore/CartEF.cxx; sourceTree = SOURCE_ROOT; };
-		DCF467BF0F939A1400B25D7A /* CartEF.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CartEF.hxx; path = ../emucore/CartEF.hxx; sourceTree = SOURCE_ROOT; };
-		DCF467C00F939A1400B25D7A /* CartEFSC.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CartEFSC.cxx; path = ../emucore/CartEFSC.cxx; sourceTree = SOURCE_ROOT; };
-		DCF467C10F939A1400B25D7A /* CartEFSC.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CartEFSC.hxx; path = ../emucore/CartEFSC.hxx; sourceTree = SOURCE_ROOT; };
 		F5A47A9D01A0482F01D3D55B /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = SOURCE_ROOT; };
 		F5A47A9E01A0483001D3D55B /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -833,8 +882,6 @@
 		2D20F9E308C603C500A73076 /* gui */ = {
 			isa = PBXGroup;
 			children = (
-				DC4AC6ED0DC8DACB00CD3AD2 /* RiotWidget.cxx */,
-				DC4AC6EE0DC8DACB00CD3AD2 /* RiotWidget.hxx */,
 				2D23318F0900B5EF00613B1F /* AudioWidget.cxx */,
 				2D2331900900B5EF00613B1F /* AudioWidget.hxx */,
 				2D20F9E408C603EC00A73076 /* ColorWidget.cxx */,
@@ -874,14 +921,6 @@
 		2D6050C5089876F300C6DE89 /* common */ = {
 			isa = PBXGroup;
 			children = (
-				DCB9DA5E0FCD527000B192F6 /* GLShaderProgs.hxx */,
-				DCF467BC0F9399F500B25D7A /* Version.hxx */,
-				DCF467B10F93993B00B25D7A /* Array.hxx */,
-				DCF467B20F93993B00B25D7A /* SharedPtr.hxx */,
-				DCF467B30F93993B00B25D7A /* SoundNull.cxx */,
-				DCF467B40F93993B00B25D7A /* SoundNull.hxx */,
-				DCD56D3A0B247DB40092F9F8 /* RectList.cxx */,
-				DCD56D3B0B247DB40092F9F8 /* RectList.hxx */,
 				2D733D5D062893E7006265D9 /* FrameBufferGL.cxx */,
 				2D733D5E062893E7006265D9 /* FrameBufferGL.hxx */,
 				2D733D61062893E7006265D9 /* FrameBufferSoft.cxx */,
@@ -896,8 +935,6 @@
 		2D6050C60898771C00C6DE89 /* macosx */ = {
 			isa = PBXGroup;
 			children = (
-				DC1FC1880DB3B2C7009B3DF7 /* SerialPortMACOSX.cxx */,
-				DC1FC1890DB3B2C7009B3DF7 /* SerialPortMACOSX.hxx */,
 				2DDBEA0E0845709700812C11 /* OSystemMACOSX.cxx */,
 				2DDBEA0F0845709700812C11 /* OSystemMACOSX.hxx */,
 				2D944866062911CD00DD9879 /* SettingsMACOSX.cxx */,
@@ -920,35 +957,6 @@
 		2D6050CC0898776500C6DE89 /* emucore */ = {
 			isa = PBXGroup;
 			children = (
-				DCF467BE0F939A1400B25D7A /* CartEF.cxx */,
-				DCF467BF0F939A1400B25D7A /* CartEF.hxx */,
-				DCF467C00F939A1400B25D7A /* CartEFSC.cxx */,
-				DCF467C10F939A1400B25D7A /* CartEFSC.hxx */,
-				DC9EA8850F729A36000452B5 /* KidVid.cxx */,
-				DC9EA8860F729A36000452B5 /* KidVid.hxx */,
-				DC932D3F0F278A5200FEFEFC /* DefProps.hxx */,
-				DC932D400F278A5200FEFEFC /* Serializable.hxx */,
-				DC932D410F278A5200FEFEFC /* SerialPort.hxx */,
-				DC932D420F278A5200FEFEFC /* TIATables.cxx */,
-				DC932D430F278A5200FEFEFC /* TIATables.hxx */,
-				DCE6EB200DD9ADA00047AC28 /* TrackBall.cxx */,
-				DCE6EB210DD9ADA00047AC28 /* TrackBall.hxx */,
-				DC4AC6F10DC8DAEF00CD3AD2 /* SaveKey.cxx */,
-				DC4AC6F20DC8DAEF00CD3AD2 /* SaveKey.hxx */,
-				DC11F78B0DB36933003B505E /* MT24LC256.cxx */,
-				DC11F78C0DB36933003B505E /* MT24LC256.hxx */,
-				DC487FB40DA5350900E12499 /* AtariVox.cxx */,
-				DC487FB50DA5350900E12499 /* AtariVox.hxx */,
-				DCA23AE70D75B22500F77B33 /* CartX07.cxx */,
-				DCA23AE80D75B22500F77B33 /* CartX07.hxx */,
-				DC0984830D3985160073C852 /* CartSB.cxx */,
-				DC0984840D3985160073C852 /* CartSB.hxx */,
-				DC07A3C60CAD738A009B4BC9 /* StateManager.cxx */,
-				DC07A3C70CAD738A009B4BC9 /* StateManager.hxx */,
-				DCEECE540B5E5E540021D754 /* Cart0840.cxx */,
-				DCEECE550B5E5E540021D754 /* Cart0840.hxx */,
-				DCD56D360B247D920092F9F8 /* Cart4A50.cxx */,
-				DCD56D370B247D920092F9F8 /* Cart4A50.hxx */,
 				2DE2DF100627AE07006BEC99 /* Booster.cxx */,
 				2DE2DF110627AE07006BEC99 /* Booster.hxx */,
 				2DE2DF120627AE07006BEC99 /* Cart.cxx */,
@@ -1005,6 +1013,8 @@
 				2DE2DF410627AE07006BEC99 /* Event.hxx */,
 				2D733D6E062895B2006265D9 /* EventHandler.cxx */,
 				2D733D6F062895B2006265D9 /* EventHandler.hxx */,
+				2D05FF50096E25F200A518FE /* EventStreamer.cxx */,
+				2D05FF51096E25F200A518FE /* EventStreamer.hxx */,
 				2D733D70062895B2006265D9 /* FrameBuffer.cxx */,
 				2D733D71062895B2006265D9 /* FrameBuffer.hxx */,
 				2DDBEB7208457B7D00812C11 /* FSNode.cxx */,
@@ -1019,6 +1029,8 @@
 				2DE2DF7F0627AE34006BEC99 /* MD5.hxx */,
 				2D05FF5A096E261E00A518FE /* MediaFactory.cxx */,
 				2D05FF5B096E261E00A518FE /* MediaFactory.hxx */,
+				2DE2DF800627AE34006BEC99 /* MediaSrc.cxx */,
+				2DE2DF810627AE34006BEC99 /* MediaSrc.hxx */,
 				2DDBEB7408457B7D00812C11 /* OSystem.cxx */,
 				2DDBEB7508457B7D00812C11 /* OSystem.hxx */,
 				2DE2DF820627AE34006BEC99 /* Paddles.cxx */,
@@ -1054,6 +1066,10 @@
 				2DE2DFBF0627B1DF006BEC99 /* Device.hxx */,
 				2DE2DFC00627B1DF006BEC99 /* M6502.cxx */,
 				2DE2DFC10627B1DF006BEC99 /* M6502.hxx */,
+				2D10A7DB09B16F7A001F913C /* M6502Low.cxx */,
+				2D10A7DC09B16F7A001F913C /* M6502Low.hxx */,
+				2DE2DFC20627B1DF006BEC99 /* M6502Hi.cxx */,
+				2DE2DFC30627B1DF006BEC99 /* M6502Hi.hxx */,
 				2DE2DFC60627B1DF006BEC99 /* NullDev.cxx */,
 				2DE2DFC70627B1DF006BEC99 /* NullDev.hxx */,
 				2DE2DFC80627B1DF006BEC99 /* System.cxx */,
@@ -1065,26 +1081,6 @@
 		2D6050FA0898786C00C6DE89 /* gui */ = {
 			isa = PBXGroup;
 			children = (
-				DC5D2C5E0F129B1E004D1660 /* LauncherFilterDialog.cxx */,
-				DC5D2C5F0F129B1E004D1660 /* LauncherFilterDialog.hxx */,
-				DC5D2C4E0F117CFD004D1660 /* Rect.hxx */,
-				DC5D2C4F0F117CFD004D1660 /* StellaFont.hxx */,
-				DC5D2C500F117CFD004D1660 /* StellaLargeFont.hxx */,
-				DC5D2C510F117CFD004D1660 /* StellaMediumFont.hxx */,
-				DC0DF8670F0DAAF500B0F1F3 /* GlobalPropsDialog.cxx */,
-				DC0DF8680F0DAAF500B0F1F3 /* GlobalPropsDialog.hxx */,
-				DC173F740E2CAC1E00320F94 /* ContextMenu.cxx */,
-				DC173F750E2CAC1E00320F94 /* ContextMenu.hxx */,
-				DC4613650D92C03600D8DAB9 /* RomAuditDialog.cxx */,
-				DC4613660D92C03600D8DAB9 /* RomAuditDialog.hxx */,
-				DCE3BBF50C95CEDC00A671DF /* RomInfoWidget.cxx */,
-				DCE3BBF60C95CEDC00A671DF /* RomInfoWidget.hxx */,
-				DCE3BBF70C95CEDC00A671DF /* Surface.cxx */,
-				DCE3BBF80C95CEDC00A671DF /* Surface.hxx */,
-				DC8078E40B4BD697005E9305 /* FileSnapDialog.cxx */,
-				DC8078E50B4BD697005E9305 /* FileSnapDialog.hxx */,
-				DC8078E60B4BD697005E9305 /* UIDialog.cxx */,
-				DC8078E70B4BD697005E9305 /* UIDialog.hxx */,
 				2DDBEAA3084578BF00812C11 /* AboutDialog.cxx */,
 				2DDBEAA4084578BF00812C11 /* AboutDialog.hxx */,
 				2DDBEAA6084578BF00812C11 /* AudioDialog.cxx */,
@@ -1116,6 +1112,7 @@
 				2DDBEAB4084578BF00812C11 /* GameList.cxx */,
 				2DDBEAB5084578BF00812C11 /* GameList.hxx */,
 				2DDBEAB6084578BF00812C11 /* GuiObject.hxx */,
+				2DDBEAB7084578BF00812C11 /* GuiUtils.hxx */,
 				2DDBEAB8084578BF00812C11 /* HelpDialog.cxx */,
 				2DDBEAB9084578BF00812C11 /* HelpDialog.hxx */,
 				2D05FF60096E269100A518FE /* InputDialog.cxx */,
@@ -1126,6 +1123,8 @@
 				2DDBEABB084578BF00812C11 /* Launcher.hxx */,
 				2DDBEABC084578BF00812C11 /* LauncherDialog.cxx */,
 				2DDBEABD084578BF00812C11 /* LauncherDialog.hxx */,
+				2DDBEABE084578BF00812C11 /* LauncherOptionsDialog.cxx */,
+				2DDBEABF084578BF00812C11 /* LauncherOptionsDialog.hxx */,
 				2DDBEAC0084578BF00812C11 /* ListWidget.cxx */,
 				2DDBEAC1084578BF00812C11 /* ListWidget.hxx */,
 				2DDBEAC2084578BF00812C11 /* Menu.cxx */,
@@ -1155,29 +1154,91 @@
 		2D605130089879BA00C6DE89 /* debugger */ = {
 			isa = PBXGroup;
 			children = (
-				DCA00FF50DBABCAD00C3823D /* RiotDebug.cxx */,
-				DCA00FF60DBABCAD00C3823D /* RiotDebug.hxx */,
-				DC8078DA0B4BD5F3005E9305 /* DebuggerExpressions.hxx */,
 				2D20F9E308C603C500A73076 /* gui */,
+				2DF971C70892CEA400F64D23 /* BinAndExpression.cxx */,
+				2DF971C80892CEA400F64D23 /* BinAndExpression.hxx */,
+				2DF971C90892CEA400F64D23 /* BinNotExpression.cxx */,
+				2DF971CA0892CEA400F64D23 /* BinNotExpression.hxx */,
+				2DF971CB0892CEA400F64D23 /* BinOrExpression.cxx */,
+				2DF971CC0892CEA400F64D23 /* BinOrExpression.hxx */,
+				2DF971CD0892CEA400F64D23 /* BinXorExpression.cxx */,
+				2DF971CE0892CEA400F64D23 /* BinXorExpression.hxx */,
+				2DF971CF0892CEA400F64D23 /* ByteDerefExpression.cxx */,
+				2DF971D00892CEA400F64D23 /* ByteDerefExpression.hxx */,
+				2DF971D10892CEA400F64D23 /* ByteDerefOffsetExpression.cxx */,
+				2DF971D20892CEA400F64D23 /* ByteDerefOffsetExpression.hxx */,
+				2DF971D30892CEA400F64D23 /* ConstExpression.cxx */,
+				2DF971D40892CEA400F64D23 /* ConstExpression.hxx */,
+				2D6CC10108C811A600B8F642 /* ContextMenu.cxx */,
+				2D6CC10208C811A600B8F642 /* ContextMenu.hxx */,
 				2D9555DD0880E79600466554 /* CpuDebug.cxx */,
 				2D9555DE0880E79600466554 /* CpuDebug.hxx */,
+				2DF971D50892CEA400F64D23 /* CpuMethodExpression.cxx */,
+				2DF971D60892CEA400F64D23 /* CpuMethodExpression.hxx */,
 				2D659E2D085D3DD6005D96C8 /* Debugger.cxx */,
 				2D659E2E085D3DD6005D96C8 /* Debugger.hxx */,
 				2D659E31085D3DD6005D96C8 /* DebuggerParser.cxx */,
 				2D659E32085D3DD6005D96C8 /* DebuggerParser.hxx */,
 				2DF971D70892CEA400F64D23 /* DebuggerSystem.hxx */,
+				2DF971D80892CEA400F64D23 /* DivExpression.cxx */,
+				2DF971D90892CEA400F64D23 /* DivExpression.hxx */,
+				2DF971DA0892CEA400F64D23 /* EqualsExpression.cxx */,
+				2DF971DB0892CEA400F64D23 /* EqualsExpression.hxx */,
+				2D403BC808611898001E31A1 /* Equate.hxx */,
+				2DF971DC0892CEA400F64D23 /* EquateExpression.cxx */,
+				2DF971DD0892CEA400F64D23 /* EquateExpression.hxx */,
 				2D403BCA08611898001E31A1 /* EquateList.hxx */,
 				2D403BC908611898001E31A1 /* EquateList.cxx */,
 				2DF971DE0892CEA400F64D23 /* Expression.cxx */,
 				2DF971DF0892CEA400F64D23 /* Expression.hxx */,
+				2DF971E00892CEA400F64D23 /* FunctionExpression.cxx */,
+				2DF971E10892CEA400F64D23 /* FunctionExpression.hxx */,
+				2DF971E20892CEA400F64D23 /* GreaterEqualsExpression.cxx */,
+				2DF971E30892CEA400F64D23 /* GreaterEqualsExpression.hxx */,
+				2DF971E40892CEA400F64D23 /* GreaterExpression.cxx */,
+				2DF971E50892CEA400F64D23 /* GreaterExpression.hxx */,
+				2DF971E60892CEA400F64D23 /* HiByteExpression.cxx */,
+				2DF971E70892CEA400F64D23 /* HiByteExpression.hxx */,
+				2DF971E80892CEA400F64D23 /* LessEqualsExpression.cxx */,
+				2DF971E90892CEA400F64D23 /* LessEqualsExpression.hxx */,
+				2DF971EA0892CEA400F64D23 /* LessExpression.cxx */,
+				2DF971EB0892CEA400F64D23 /* LessExpression.hxx */,
+				2DF971EC0892CEA400F64D23 /* LoByteExpression.cxx */,
+				2DF971ED0892CEA400F64D23 /* LoByteExpression.hxx */,
+				2DF971EE0892CEA400F64D23 /* LogAndExpression.cxx */,
+				2DF971EF0892CEA400F64D23 /* LogAndExpression.hxx */,
+				2DF971F00892CEA400F64D23 /* LogNotExpression.cxx */,
+				2DF971F10892CEA400F64D23 /* LogNotExpression.hxx */,
+				2DF971F20892CEA400F64D23 /* LogOrExpression.cxx */,
+				2DF971F30892CEA400F64D23 /* LogOrExpression.hxx */,
+				2DF971F40892CEA400F64D23 /* MinusExpression.cxx */,
+				2DF971F50892CEA400F64D23 /* MinusExpression.hxx */,
+				2DF971F60892CEA400F64D23 /* ModExpression.cxx */,
+				2DF971F70892CEA400F64D23 /* ModExpression.hxx */,
+				2DF971F80892CEA400F64D23 /* MultExpression.cxx */,
+				2DF971F90892CEA400F64D23 /* MultExpression.hxx */,
+				2DF971FA0892CEA400F64D23 /* NotEqualsExpression.cxx */,
+				2DF971FB0892CEA400F64D23 /* NotEqualsExpression.hxx */,
 				2D403BCE08611A69001E31A1 /* PackedBitArray.cxx */,
 				2D403BCF08611A69001E31A1 /* PackedBitArray.hxx */,
+				2DF971FC0892CEA400F64D23 /* PlusExpression.cxx */,
+				2DF971FD0892CEA400F64D23 /* PlusExpression.hxx */,
 				2D9555DF0880E79600466554 /* RamDebug.cxx */,
 				2D9555E00880E79600466554 /* RamDebug.hxx */,
+				2DF971FE0892CEA400F64D23 /* ShiftLeftExpression.cxx */,
+				2DF971FF0892CEA400F64D23 /* ShiftLeftExpression.hxx */,
+				2DF972000892CEA400F64D23 /* ShiftRightExpression.cxx */,
+				2DF972010892CEA400F64D23 /* ShiftRightExpression.hxx */,
 				2D30F8750868A4DB00938B9D /* TIADebug.cxx */,
 				2D30F8760868A4DB00938B9D /* TIADebug.hxx */,
+				2DF972040892CEA400F64D23 /* TiaMethodExpression.cxx */,
+				2DF972050892CEA400F64D23 /* TiaMethodExpression.hxx */,
 				2D6CC10308C811A600B8F642 /* TiaZoomWidget.cxx */,
 				2D6CC10408C811A600B8F642 /* TiaZoomWidget.hxx */,
+				2DF972080892CEA400F64D23 /* UnaryMinusExpression.cxx */,
+				2DF972090892CEA400F64D23 /* UnaryMinusExpression.hxx */,
+				2DF9720A0892CEA400F64D23 /* WordDerefExpression.cxx */,
+				2DF9720B0892CEA400F64D23 /* WordDerefExpression.hxx */,
 			);
 			name = debugger;
 			sourceTree = "<group>";
@@ -1246,6 +1307,7 @@
 				2D9173E609BA90380026E9FF /* Keyboard.hxx in Headers */,
 				2D9173E709BA90380026E9FF /* M6532.hxx in Headers */,
 				2D9173E809BA90380026E9FF /* MD5.hxx in Headers */,
+				2D9173E909BA90380026E9FF /* MediaSrc.hxx in Headers */,
 				2D9173EA09BA90380026E9FF /* Paddles.hxx in Headers */,
 				2D9173EB09BA90380026E9FF /* Props.hxx in Headers */,
 				2D9173EC09BA90380026E9FF /* PropsSet.hxx in Headers */,
@@ -1256,6 +1318,7 @@
 				2D9173F109BA90380026E9FF /* TIA.hxx in Headers */,
 				2D9173F209BA90380026E9FF /* Device.hxx in Headers */,
 				2D9173F309BA90380026E9FF /* M6502.hxx in Headers */,
+				2D9173F409BA90380026E9FF /* M6502Hi.hxx in Headers */,
 				2D9173F509BA90380026E9FF /* NullDev.hxx in Headers */,
 				2D9173F609BA90380026E9FF /* System.hxx in Headers */,
 				2D9173F709BA90380026E9FF /* FrameBufferGL.hxx in Headers */,
@@ -1276,9 +1339,11 @@
 				2D91740609BA90380026E9FF /* GameInfoDialog.hxx in Headers */,
 				2D91740709BA90380026E9FF /* GameList.hxx in Headers */,
 				2D91740809BA90380026E9FF /* GuiObject.hxx in Headers */,
+				2D91740909BA90380026E9FF /* GuiUtils.hxx in Headers */,
 				2D91740A09BA90380026E9FF /* HelpDialog.hxx in Headers */,
 				2D91740B09BA90380026E9FF /* Launcher.hxx in Headers */,
 				2D91740C09BA90380026E9FF /* LauncherDialog.hxx in Headers */,
+				2D91740D09BA90380026E9FF /* LauncherOptionsDialog.hxx in Headers */,
 				2D91740E09BA90380026E9FF /* ListWidget.hxx in Headers */,
 				2D91740F09BA90380026E9FF /* Menu.hxx in Headers */,
 				2D91741009BA90380026E9FF /* OptionsDialog.hxx in Headers */,
@@ -1303,6 +1368,7 @@
 				2D91742309BA90380026E9FF /* DebuggerParser.hxx in Headers */,
 				2D91742409BA90380026E9FF /* EditableWidget.hxx in Headers */,
 				2D91742509BA90380026E9FF /* EditTextWidget.hxx in Headers */,
+				2D91742609BA90380026E9FF /* Equate.hxx in Headers */,
 				2D91742709BA90380026E9FF /* EquateList.hxx in Headers */,
 				2D91742809BA90380026E9FF /* PackedBitArray.hxx in Headers */,
 				2D91742909BA90380026E9FF /* TIADebug.hxx in Headers */,
@@ -1310,8 +1376,39 @@
 				2D91742B09BA90380026E9FF /* Cart3E.hxx in Headers */,
 				2D91742C09BA90380026E9FF /* CpuDebug.hxx in Headers */,
 				2D91742D09BA90380026E9FF /* RamDebug.hxx in Headers */,
+				2D91742E09BA90380026E9FF /* BinAndExpression.hxx in Headers */,
+				2D91742F09BA90380026E9FF /* BinNotExpression.hxx in Headers */,
+				2D91743009BA90380026E9FF /* BinOrExpression.hxx in Headers */,
+				2D91743109BA90380026E9FF /* BinXorExpression.hxx in Headers */,
+				2D91743209BA90380026E9FF /* ByteDerefExpression.hxx in Headers */,
+				2D91743309BA90380026E9FF /* ByteDerefOffsetExpression.hxx in Headers */,
+				2D91743409BA90380026E9FF /* ConstExpression.hxx in Headers */,
+				2D91743509BA90380026E9FF /* CpuMethodExpression.hxx in Headers */,
 				2D91743609BA90380026E9FF /* DebuggerSystem.hxx in Headers */,
+				2D91743709BA90380026E9FF /* DivExpression.hxx in Headers */,
+				2D91743809BA90380026E9FF /* EqualsExpression.hxx in Headers */,
+				2D91743909BA90380026E9FF /* EquateExpression.hxx in Headers */,
 				2D91743A09BA90380026E9FF /* Expression.hxx in Headers */,
+				2D91743B09BA90380026E9FF /* FunctionExpression.hxx in Headers */,
+				2D91743C09BA90380026E9FF /* GreaterEqualsExpression.hxx in Headers */,
+				2D91743D09BA90380026E9FF /* GreaterExpression.hxx in Headers */,
+				2D91743E09BA90380026E9FF /* HiByteExpression.hxx in Headers */,
+				2D91743F09BA90380026E9FF /* LessEqualsExpression.hxx in Headers */,
+				2D91744009BA90380026E9FF /* LessExpression.hxx in Headers */,
+				2D91744109BA90380026E9FF /* LoByteExpression.hxx in Headers */,
+				2D91744209BA90380026E9FF /* LogAndExpression.hxx in Headers */,
+				2D91744309BA90380026E9FF /* LogNotExpression.hxx in Headers */,
+				2D91744409BA90380026E9FF /* LogOrExpression.hxx in Headers */,
+				2D91744509BA90380026E9FF /* MinusExpression.hxx in Headers */,
+				2D91744609BA90380026E9FF /* ModExpression.hxx in Headers */,
+				2D91744709BA90380026E9FF /* MultExpression.hxx in Headers */,
+				2D91744809BA90380026E9FF /* NotEqualsExpression.hxx in Headers */,
+				2D91744909BA90380026E9FF /* PlusExpression.hxx in Headers */,
+				2D91744A09BA90380026E9FF /* ShiftLeftExpression.hxx in Headers */,
+				2D91744B09BA90380026E9FF /* ShiftRightExpression.hxx in Headers */,
+				2D91744C09BA90380026E9FF /* TiaMethodExpression.hxx in Headers */,
+				2D91744D09BA90380026E9FF /* UnaryMinusExpression.hxx in Headers */,
+				2D91744E09BA90380026E9FF /* WordDerefExpression.hxx in Headers */,
 				2D91744F09BA90380026E9FF /* InputTextDialog.hxx in Headers */,
 				2D91745009BA90380026E9FF /* CheckListWidget.hxx in Headers */,
 				2D91745109BA90380026E9FF /* StringListWidget.hxx in Headers */,
@@ -1332,12 +1429,15 @@
 				2D91746009BA90380026E9FF /* ToggleBitWidget.hxx in Headers */,
 				2D91746109BA90380026E9FF /* TogglePixelWidget.hxx in Headers */,
 				2D91746209BA90380026E9FF /* ToggleWidget.hxx in Headers */,
+				2D91746309BA90380026E9FF /* ContextMenu.hxx in Headers */,
 				2D91746409BA90380026E9FF /* TiaZoomWidget.hxx in Headers */,
 				2D91746509BA90380026E9FF /* TIASnd.hxx in Headers */,
 				2D91746609BA90380026E9FF /* AudioWidget.hxx in Headers */,
+				2D91746709BA90380026E9FF /* EventStreamer.hxx in Headers */,
 				2D91746809BA90380026E9FF /* MediaFactory.hxx in Headers */,
 				2D91746909BA90380026E9FF /* EventMappingWidget.hxx in Headers */,
 				2D91746A09BA90380026E9FF /* InputDialog.hxx in Headers */,
+				2D91746B09BA90380026E9FF /* M6502Low.hxx in Headers */,
 				DC47455609C34BFA00EDDA3A /* BankRomCheat.hxx in Headers */,
 				DC47455709C34BFA00EDDA3A /* Cheat.hxx in Headers */,
 				DC47455909C34BFA00EDDA3A /* CheatCodeDialog.hxx in Headers */,
@@ -1345,44 +1445,6 @@
 				DC47455D09C34BFA00EDDA3A /* CheetahCheat.hxx in Headers */,
 				DC47455F09C34BFA00EDDA3A /* RamCheat.hxx in Headers */,
 				2D28DDE509DC2D9F00A17585 /* MenusEvents.h in Headers */,
-				DCD56D390B247D920092F9F8 /* Cart4A50.hxx in Headers */,
-				DCD56D3D0B247DB40092F9F8 /* RectList.hxx in Headers */,
-				DC8078DB0B4BD5F3005E9305 /* DebuggerExpressions.hxx in Headers */,
-				DC8078E90B4BD697005E9305 /* FileSnapDialog.hxx in Headers */,
-				DC8078EB0B4BD697005E9305 /* UIDialog.hxx in Headers */,
-				DCEECE570B5E5E540021D754 /* Cart0840.hxx in Headers */,
-				DCE3BBFA0C95CEDC00A671DF /* RomInfoWidget.hxx in Headers */,
-				DCE3BBFC0C95CEDC00A671DF /* Surface.hxx in Headers */,
-				DC07A3C90CAD738A009B4BC9 /* StateManager.hxx in Headers */,
-				DC0984860D3985160073C852 /* CartSB.hxx in Headers */,
-				DCA23AEA0D75B22500F77B33 /* CartX07.hxx in Headers */,
-				DC4613680D92C03600D8DAB9 /* RomAuditDialog.hxx in Headers */,
-				DC487FB70DA5350900E12499 /* AtariVox.hxx in Headers */,
-				DC11F78E0DB36933003B505E /* MT24LC256.hxx in Headers */,
-				DC1FC18B0DB3B2C7009B3DF7 /* SerialPortMACOSX.hxx in Headers */,
-				DCA00FF80DBABCAD00C3823D /* RiotDebug.hxx in Headers */,
-				DC4AC6F00DC8DACB00CD3AD2 /* RiotWidget.hxx in Headers */,
-				DC4AC6F40DC8DAEF00CD3AD2 /* SaveKey.hxx in Headers */,
-				DCE6EB230DD9ADA00047AC28 /* TrackBall.hxx in Headers */,
-				DC173F770E2CAC1E00320F94 /* ContextMenu.hxx in Headers */,
-				DC0DF86A0F0DAAF500B0F1F3 /* GlobalPropsDialog.hxx in Headers */,
-				DC5D2C520F117CFD004D1660 /* Rect.hxx in Headers */,
-				DC5D2C530F117CFD004D1660 /* StellaFont.hxx in Headers */,
-				DC5D2C540F117CFD004D1660 /* StellaLargeFont.hxx in Headers */,
-				DC5D2C550F117CFD004D1660 /* StellaMediumFont.hxx in Headers */,
-				DC5D2C610F129B1E004D1660 /* LauncherFilterDialog.hxx in Headers */,
-				DC932D440F278A5200FEFEFC /* DefProps.hxx in Headers */,
-				DC932D450F278A5200FEFEFC /* Serializable.hxx in Headers */,
-				DC932D460F278A5200FEFEFC /* SerialPort.hxx in Headers */,
-				DC932D480F278A5200FEFEFC /* TIATables.hxx in Headers */,
-				DC9EA8880F729A36000452B5 /* KidVid.hxx in Headers */,
-				DCF467B50F93993B00B25D7A /* Array.hxx in Headers */,
-				DCF467B60F93993B00B25D7A /* SharedPtr.hxx in Headers */,
-				DCF467B80F93993B00B25D7A /* SoundNull.hxx in Headers */,
-				DCF467BD0F9399F500B25D7A /* Version.hxx in Headers */,
-				DCF467C30F939A1400B25D7A /* CartEF.hxx in Headers */,
-				DCF467C50F939A1400B25D7A /* CartEFSC.hxx in Headers */,
-				DCB9DA5F0FCD527000B192F6 /* GLShaderProgs.hxx in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1407,6 +1469,59 @@
 				2D91751C09BA90380026E9FF /* PBXBuildRule */,
 				2D91751D09BA90390026E9FF /* PBXBuildRule */,
 			);
+			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(HOME)/Library/Frameworks",
+					.,
+				);
+				GCC_VERSION = 3.3;
+				HEADER_SEARCH_PATHS = (
+					./SDL.framework/Headers,
+					../emucore,
+					../emucore/m6502/src/bspf/src,
+					../emucore/m6502/src,
+					../ui/sound,
+					../common,
+					../debugger,
+					../debugger/gui,
+					../yacc,
+					../../../../debugger,
+					./gui,
+					../gui,
+					.,
+				);
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = .;
+				OPTIMIZATION_CFLAGS = "-O3";
+				OTHER_CFLAGS = (
+					"-DMAC_OSX",
+					"-DJOYSTICK_SUPPORT",
+					"-DSOUND_SUPPORT",
+					"-DDISPLAY_OPENGL",
+					"-DTEXTURES_ARE_LOST",
+					"-DDEVELOPER_SUPPORT",
+					"-DCHEATCODE_SUPPORT",
+					"-DHAVE_GETTIMEOFDAY",
+					"-DSNAPSHOT_SUPPORT",
+					"-DBSPF_MAC_OSX",
+					"-DHAVE_INTTYPES",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					SDL,
+					"-lz",
+					"-lpng",
+				);
+				PRODUCT_NAME = StellaOSX;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+			};
 			dependencies = (
 			);
 			name = StellaOSX;
@@ -1421,11 +1536,15 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 2D91752109BA903B0026E9FF /* Build configuration list for PBXProject "stella" */;
-			compatibilityVersion = "Xcode 2.4";
+			buildSettings = {
+			};
+			buildStyles = (
+				4A9504CCFFE6A4B311CA0CBA /* Development */,
+				4A9504CDFFE6A4B311CA0CBA /* Deployment */,
+			);
 			hasScannedForEncodings = 1;
 			mainGroup = 29B97314FDCFA39411CA2CEA /* «PROJECTNAMEASXML» */;
 			projectDirPath = "";
-			projectRoot = "";
 			targets = (
 				2D9173C809BA90380026E9FF /* StellaOSX */,
 			);
@@ -1462,7 +1581,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "m4 ../emucore/m6502/src/M6502.m4 > M6502.ins\n";
+			shellScript = "m4 ../emucore/m6502/src/M6502Low.m4 ../emucore/m6502/src/M6502.m4 > M6502Low.ins\nm4 ../emucore/m6502/src/M6502Hi.m4 ../emucore/m6502/src/M6502.m4 > M6502Hi.ins\n";
 		};
 		2D91751509BA90380026E9FF /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1514,6 +1633,7 @@
 				2D91748F09BA90380026E9FF /* Keyboard.cxx in Sources */,
 				2D91749009BA90380026E9FF /* M6532.cxx in Sources */,
 				2D91749109BA90380026E9FF /* MD5.cxx in Sources */,
+				2D91749209BA90380026E9FF /* MediaSrc.cxx in Sources */,
 				2D91749309BA90380026E9FF /* Paddles.cxx in Sources */,
 				2D91749409BA90380026E9FF /* Props.cxx in Sources */,
 				2D91749509BA90380026E9FF /* PropsSet.cxx in Sources */,
@@ -1523,6 +1643,7 @@
 				2D91749909BA90380026E9FF /* TIA.cxx in Sources */,
 				2D91749A09BA90380026E9FF /* Device.cxx in Sources */,
 				2D91749B09BA90380026E9FF /* M6502.cxx in Sources */,
+				2D91749C09BA90380026E9FF /* M6502Hi.cxx in Sources */,
 				2D91749D09BA90380026E9FF /* NullDev.cxx in Sources */,
 				2D91749E09BA90380026E9FF /* System.cxx in Sources */,
 				2D91749F09BA90380026E9FF /* FrameBufferGL.cxx in Sources */,
@@ -1546,6 +1667,7 @@
 				2D9174B109BA90380026E9FF /* HelpDialog.cxx in Sources */,
 				2D9174B209BA90380026E9FF /* Launcher.cxx in Sources */,
 				2D9174B309BA90380026E9FF /* LauncherDialog.cxx in Sources */,
+				2D9174B409BA90380026E9FF /* LauncherOptionsDialog.cxx in Sources */,
 				2D9174B509BA90380026E9FF /* ListWidget.cxx in Sources */,
 				2D9174B609BA90380026E9FF /* Menu.cxx in Sources */,
 				2D9174B709BA90380026E9FF /* OptionsDialog.cxx in Sources */,
@@ -1574,7 +1696,38 @@
 				2D9174CE09BA90380026E9FF /* Cart3E.cxx in Sources */,
 				2D9174CF09BA90380026E9FF /* CpuDebug.cxx in Sources */,
 				2D9174D009BA90380026E9FF /* RamDebug.cxx in Sources */,
+				2D9174D109BA90380026E9FF /* BinAndExpression.cxx in Sources */,
+				2D9174D209BA90380026E9FF /* BinNotExpression.cxx in Sources */,
+				2D9174D309BA90380026E9FF /* BinOrExpression.cxx in Sources */,
+				2D9174D409BA90380026E9FF /* BinXorExpression.cxx in Sources */,
+				2D9174D509BA90380026E9FF /* ByteDerefExpression.cxx in Sources */,
+				2D9174D609BA90380026E9FF /* ByteDerefOffsetExpression.cxx in Sources */,
+				2D9174D709BA90380026E9FF /* ConstExpression.cxx in Sources */,
+				2D9174D809BA90380026E9FF /* CpuMethodExpression.cxx in Sources */,
+				2D9174D909BA90380026E9FF /* DivExpression.cxx in Sources */,
+				2D9174DA09BA90380026E9FF /* EqualsExpression.cxx in Sources */,
+				2D9174DB09BA90380026E9FF /* EquateExpression.cxx in Sources */,
 				2D9174DC09BA90380026E9FF /* Expression.cxx in Sources */,
+				2D9174DD09BA90380026E9FF /* FunctionExpression.cxx in Sources */,
+				2D9174DE09BA90380026E9FF /* GreaterEqualsExpression.cxx in Sources */,
+				2D9174DF09BA90380026E9FF /* GreaterExpression.cxx in Sources */,
+				2D9174E009BA90380026E9FF /* HiByteExpression.cxx in Sources */,
+				2D9174E109BA90380026E9FF /* LessEqualsExpression.cxx in Sources */,
+				2D9174E209BA90380026E9FF /* LessExpression.cxx in Sources */,
+				2D9174E309BA90380026E9FF /* LoByteExpression.cxx in Sources */,
+				2D9174E409BA90380026E9FF /* LogAndExpression.cxx in Sources */,
+				2D9174E509BA90380026E9FF /* LogNotExpression.cxx in Sources */,
+				2D9174E609BA90380026E9FF /* LogOrExpression.cxx in Sources */,
+				2D9174E709BA90380026E9FF /* MinusExpression.cxx in Sources */,
+				2D9174E809BA90380026E9FF /* ModExpression.cxx in Sources */,
+				2D9174E909BA90380026E9FF /* MultExpression.cxx in Sources */,
+				2D9174EA09BA90380026E9FF /* NotEqualsExpression.cxx in Sources */,
+				2D9174EB09BA90380026E9FF /* PlusExpression.cxx in Sources */,
+				2D9174EC09BA90380026E9FF /* ShiftLeftExpression.cxx in Sources */,
+				2D9174ED09BA90380026E9FF /* ShiftRightExpression.cxx in Sources */,
+				2D9174EE09BA90380026E9FF /* TiaMethodExpression.cxx in Sources */,
+				2D9174EF09BA90380026E9FF /* UnaryMinusExpression.cxx in Sources */,
+				2D9174F009BA90380026E9FF /* WordDerefExpression.cxx in Sources */,
 				2D9174F109BA90380026E9FF /* InputTextDialog.cxx in Sources */,
 				2D9174F209BA90380026E9FF /* CheckListWidget.cxx in Sources */,
 				2D9174F309BA90380026E9FF /* StringListWidget.cxx in Sources */,
@@ -1595,43 +1748,20 @@
 				2D91750209BA90380026E9FF /* ToggleBitWidget.cxx in Sources */,
 				2D91750309BA90380026E9FF /* TogglePixelWidget.cxx in Sources */,
 				2D91750409BA90380026E9FF /* ToggleWidget.cxx in Sources */,
+				2D91750509BA90380026E9FF /* ContextMenu.cxx in Sources */,
 				2D91750609BA90380026E9FF /* TiaZoomWidget.cxx in Sources */,
 				2D91750709BA90380026E9FF /* TIASnd.cxx in Sources */,
 				2D91750809BA90380026E9FF /* AudioWidget.cxx in Sources */,
+				2D91750909BA90380026E9FF /* EventStreamer.cxx in Sources */,
 				2D91750A09BA90380026E9FF /* MediaFactory.cxx in Sources */,
 				2D91750B09BA90380026E9FF /* EventMappingWidget.cxx in Sources */,
 				2D91750C09BA90380026E9FF /* InputDialog.cxx in Sources */,
+				2D91750D09BA90380026E9FF /* M6502Low.cxx in Sources */,
 				DC47455509C34BFA00EDDA3A /* BankRomCheat.cxx in Sources */,
 				DC47455809C34BFA00EDDA3A /* CheatCodeDialog.cxx in Sources */,
 				DC47455A09C34BFA00EDDA3A /* CheatManager.cxx in Sources */,
 				DC47455C09C34BFA00EDDA3A /* CheetahCheat.cxx in Sources */,
 				DC47455E09C34BFA00EDDA3A /* RamCheat.cxx in Sources */,
-				DCD56D380B247D920092F9F8 /* Cart4A50.cxx in Sources */,
-				DCD56D3C0B247DB40092F9F8 /* RectList.cxx in Sources */,
-				DC8078E80B4BD697005E9305 /* FileSnapDialog.cxx in Sources */,
-				DC8078EA0B4BD697005E9305 /* UIDialog.cxx in Sources */,
-				DCEECE560B5E5E540021D754 /* Cart0840.cxx in Sources */,
-				DCE3BBF90C95CEDC00A671DF /* RomInfoWidget.cxx in Sources */,
-				DCE3BBFB0C95CEDC00A671DF /* Surface.cxx in Sources */,
-				DC07A3C80CAD738A009B4BC9 /* StateManager.cxx in Sources */,
-				DC0984850D3985160073C852 /* CartSB.cxx in Sources */,
-				DCA23AE90D75B22500F77B33 /* CartX07.cxx in Sources */,
-				DC4613670D92C03600D8DAB9 /* RomAuditDialog.cxx in Sources */,
-				DC487FB60DA5350900E12499 /* AtariVox.cxx in Sources */,
-				DC11F78D0DB36933003B505E /* MT24LC256.cxx in Sources */,
-				DC1FC18A0DB3B2C7009B3DF7 /* SerialPortMACOSX.cxx in Sources */,
-				DCA00FF70DBABCAD00C3823D /* RiotDebug.cxx in Sources */,
-				DC4AC6EF0DC8DACB00CD3AD2 /* RiotWidget.cxx in Sources */,
-				DC4AC6F30DC8DAEF00CD3AD2 /* SaveKey.cxx in Sources */,
-				DCE6EB220DD9ADA00047AC28 /* TrackBall.cxx in Sources */,
-				DC173F760E2CAC1E00320F94 /* ContextMenu.cxx in Sources */,
-				DC0DF8690F0DAAF500B0F1F3 /* GlobalPropsDialog.cxx in Sources */,
-				DC5D2C600F129B1E004D1660 /* LauncherFilterDialog.cxx in Sources */,
-				DC932D470F278A5200FEFEFC /* TIATables.cxx in Sources */,
-				DC9EA8870F729A36000452B5 /* KidVid.cxx in Sources */,
-				DCF467B70F93993B00B25D7A /* SoundNull.cxx in Sources */,
-				DCF467C20F939A1400B25D7A /* CartEF.cxx in Sources */,
-				DCF467C40F939A1400B25D7A /* CartEFSC.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1665,11 +1795,12 @@
 					MAC_OSX,
 					JOYSTICK_SUPPORT,
 					SOUND_SUPPORT,
-					WINDOWED_SUPPORT,
 					DISPLAY_OPENGL,
+					TEXTURES_ARE_LOST,
 					CHEATCODE_SUPPORT,
-					DEBUGGER_SUPPORT,
+					DEVELOPER_SUPPORT,
 					HAVE_GETTIMEOFDAY,
+					SNAPSHOT_SUPPORT,
 					BSPF_MAC_OSX,
 					HAVE_INTTYPES,
 				);
@@ -1686,16 +1817,21 @@
 					../../../../debugger,
 					./gui,
 					../gui,
+					./libpng,
 					.,
 				);
 				INFOPLIST_FILE = "Info-StellaOSX__Upgraded_.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "$(LIBRARY_SEARCH_PATHS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS)",
+					./libpng/build/release,
+				);
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-framework",
 					SDL,
 					"-lz",
+					"-lpng",
 				);
 				PRODUCT_NAME = StellaOSX;
 				SECTORDER_FLAGS = "";
@@ -1723,11 +1859,12 @@
 					MAC_OSX,
 					JOYSTICK_SUPPORT,
 					SOUND_SUPPORT,
-					WINDOWED_SUPPORT,
 					DISPLAY_OPENGL,
+					TEXTURES_ARE_LOST,
 					CHEATCODE_SUPPORT,
-					DEBUGGER_SUPPORT,
+					DEVELOPER_SUPPORT,
 					HAVE_GETTIMEOFDAY,
+					SNAPSHOT_SUPPORT,
 					BSPF_MAC_OSX,
 					HAVE_INTTYPES,
 				);
@@ -1744,16 +1881,21 @@
 					../../../../debugger,
 					./gui,
 					../gui,
+					./libpng,
 					.,
 				);
 				INFOPLIST_FILE = "Info-StellaOSX__Upgraded_.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "$(LIBRARY_SEARCH_PATHS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS)",
+					./libpng/build/release,
+				);
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-framework",
 					SDL,
 					"-lz",
+					"-lpng",
 				);
 				PRODUCT_NAME = StellaOSX;
 				SECTORDER_FLAGS = "";
@@ -1779,11 +1921,12 @@
 					MAC_OSX,
 					JOYSTICK_SUPPORT,
 					SOUND_SUPPORT,
-					WINDOWED_SUPPORT,
 					DISPLAY_OPENGL,
+					TEXTURES_ARE_LOST,
 					CHEATCODE_SUPPORT,
-					DEBUGGER_SUPPORT,
+					DEVELOPER_SUPPORT,
 					HAVE_GETTIMEOFDAY,
+					SNAPSHOT_SUPPORT,
 					BSPF_MAC_OSX,
 					HAVE_INTTYPES,
 				);
@@ -1810,6 +1953,7 @@
 					"-framework",
 					SDL,
 					"-lz",
+					"-lpng",
 				);
 				PRODUCT_NAME = StellaOSX;
 				SECTORDER_FLAGS = "";
@@ -1844,9 +1988,6 @@
 					.,
 					"$(HOME)/Library/Frameworks",
 				);
-				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				SDKROOT_ppc = /Developer/SDKs/MacOSX10.3.9.sdk;
 			};
 			name = Deployment;
 		};

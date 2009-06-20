@@ -16,12 +16,12 @@ CXXFLAGS="$CXXFLAGS $CPPFLAGS"
 # default lib behaviour yes/no/auto
 _opengl=auto
 _zlib=auto
+_png=auto
 
 # default option behaviour yes/no
 _build_gl=yes
-_build_windowed=yes
 _build_sound=yes
-_build_debugger=yes
+_build_developer=yes
 _build_snapshot=yes
 _build_joystick=yes
 _build_cheats=yes
@@ -32,7 +32,6 @@ _build_profile=no
 _ranlib=ranlib
 _install=install
 _ar="ar cru"
-_strip=strip
 _mkdir="mkdir -p"
 _echo=printf
 _cat=cat
@@ -41,10 +40,13 @@ _rm_rec="$_rm -r"
 _zip="zip -q"
 _cp=cp
 _win32path=""
-_windres=windres
 _sdlconfig=sdl-config
 _sdlpath="$PATH"
+_nasmpath="$PATH"
+NASMFLAGS=""
+NASM=""
 _prefix=/usr/local
+_have_x86=""
 X_LIBS="/usr/X11R6/lib"
 
 _srcdir=`dirname $0`
@@ -60,7 +62,6 @@ _host=""
 _host_cpu=""
 _host_vendor=""
 _host_os=""
-_host_prefix=""
 
 cc_check() {
 	echo >> "$TMPLOG"
@@ -148,6 +149,79 @@ echo_n()
 }
 
 #
+# Determine a data type with the given length
+#
+find_type_with_size ()
+{
+cat <<EOF >tmp_find_type_with_size.cpp
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+	int size = argv[1][0] - '0';
+	if (size == sizeof(int))
+		printf("int\n");
+	else if (size == sizeof(short))
+		printf("short\n");
+	else if (size == sizeof(char))
+		printf("char\n");
+	else if (size == sizeof(long))
+		printf("long\n");
+	else {
+		printf("unknown\n");
+		return 1;
+	}
+
+	return 0;
+}
+EOF
+if eval "$CXX -o tmp_find_type_with_size tmp_find_type_with_size.cpp"; then
+	datatype=`./tmp_find_type_with_size $1`
+	if test "$datatype" = "unknown"; then
+		echo "couldn't find data type with $1 bytes"
+		exit 1
+	fi
+fi
+rm -f tmp_find_type_with_size$EXEEXT tmp_find_type_with_size.cpp
+echo $datatype
+}
+
+CheckNASM()
+{
+	echocheck "nasm"
+	if test "$_nasm" = no ; then
+		echo "disabled"
+		return;
+	fi
+
+	IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+		
+	for path_dir in $_nasmpath; do
+		if test -x "$path_dir/nasm" ; then
+			NASM="$path_dir/nasm"
+			echo $NASM
+			break
+		fi
+	done
+		
+	IFS="$ac_save_ifs"
+
+	if test x$NASM = x -o x$NASM = x'"$NASM"'; then
+		echo "not found"
+		_nasm=no
+	else
+		case $_host_os in
+			mingw* | cygwin*)
+				NASMFLAGS="-f win32"
+			;;
+			*)
+				NASMFLAGS="-f elf"
+			;;
+		esac
+		_nasm=yes
+	fi
+}
+
+#
 # Greet user
 #
 
@@ -181,12 +255,12 @@ Installation directories:
 Optional Features:
   --enable-gl            enable/disable OpenGL rendering support [enabled]
   --disable-gl
-  --enable-windowed      enable/disable windowed rendering modes [enabled]
-  --disable-windowed
   --enable-sound         enable/disable sound support [enabled]
   --disable-sound
-  --enable-debugger      enable/disable all debugger options [enabled]
-  --disable-debugger
+  --enable-developer     enable/disable all developer/debugger options [enabled]
+  --disable-developer
+  --enable-snapshot      enable/disable snapshot support [enabled]
+  --disable-snapshot
   --enable-joystick      enable/disable joystick support [enabled]
   --disable-joystick
   --enable-cheats        enable/disable cheatcode support [enabled]
@@ -198,8 +272,17 @@ Optional Features:
   --disable-profile
 
 Optional Libraries:
-  --with-sdl-prefix=DIR    Prefix where the sdl-config script is installed (optional)
   --with-zlib-prefix=DIR   Prefix where zlib is installed (optional)
+  --disable-zlib           disable zlib (compression) support [autodetect]
+
+  --with-png-prefix=DIR    Prefix where png is installed (optional)
+  --disable-png            disable png support [autodetect]
+
+  --with-sdl-prefix=DIR    Prefix where the sdl-config script is installed (optional)
+
+  --with-nasm-prefix=DIR   Prefix where nasm executable is installed (optional)
+  --disable-nasm           disable assembly language optimizations [autodetect]
+
   --x-libraries            Path to X11 libraries [${X_LIBS}]
 
 Some influential environment variables:
@@ -219,29 +302,44 @@ for ac_option in $@; do
     case "$ac_option" in
       --enable-gl)              _build_gl=yes        ;;
       --disable-gl)             _build_gl=no         ;;
-      --enable-windowed)        _build_windowed=yes  ;;
-      --disable-windowed)       _build_windowed=no   ;;
       --enable-sound)           _build_sound=yes     ;;
       --disable-sound)          _build_sound=no      ;;
-      --enable-debugger)        _build_debugger=yes  ;;
-      --disable-debugger)       _build_debugger=no   ;;
+      --enable-developer)       _build_developer=yes ;;
+      --disable-developer)      _build_developer=no  ;;
+      --enable-snapshot)        _build_snapshot=yes  ;;
+      --disable-snapshot)       _build_snapshot=no   ;;
       --enable-joystick)        _build_joystick=yes  ;;
       --disable-joystick)       _build_joystick=no   ;;
       --enable-cheats)          _build_cheats=yes    ;;
       --disable-cheats)         _build_cheats=no     ;;
+      --enable-zlib)            _zlib=yes            ;;
+      --disable-zlib)           _zlib=no             ;;
+      --enable-png)             _png=yes             ;;
+      --disable-png)            _png=no              ;;
+      --enable-nasm)            _nasm=yes            ;;
+      --disable-nasm)           _nasm=no             ;;
       --enable-shared)          _build_static=no     ;;
       --enable-static)          _build_static=yes    ;;
       --disable-static)         _build_static=no     ;;
       --enable-profile)         _build_profile=yes   ;;
       --disable-profile)        _build_profile=no    ;;
-      --with-sdl-prefix=*)
-        arg=`echo $ac_option | cut -d '=' -f 2`
-        _sdlpath="$arg:$arg/bin"
-        ;;
       --with-zlib-prefix=*)
         _prefix=`echo $ac_option | cut -d '=' -f 2`
         ZLIB_CFLAGS="-I$_prefix/include"
         ZLIB_LIBS="-L$_prefix/lib"
+        ;;
+      --with-png-prefix=*)
+        _prefix=`echo $ac_option | cut -d '=' -f 2`
+        PNG_CFLAGS="-I$_prefix/include"
+        PNG_LIBS="-L$_prefix/lib"
+        ;;
+      --with-sdl-prefix=*)
+        arg=`echo $ac_option | cut -d '=' -f 2`
+        _sdlpath="$arg:$arg/bin"
+        ;;
+      --with-nasm-prefix=*)
+        arg=`echo $ac_option | cut -d '=' -f 2`
+        _nasmpath="$arg:$arg/bin"
         ;;
       --x-libraries=*)
         arg=`echo $ac_option | cut -d '=' -f 2`
@@ -271,27 +369,30 @@ done;
 CXXFLAGS="$CXXFLAGS $DEBFLAGS"
 
 case $_host in
-#linupy)
-#	_host_os=linux
-#	_host_cpu=arm
-#	;;
-#arm-riscos-aof)
-#	_host_os=riscos
-#	_host_cpu=arm
-#	;;
-#ppc-amigaos)
-#	_host_os=amigaos
-#	_host_cpu=ppc
-#	;;
+linupy)
+	_host_os=linux
+	_host_cpu=arm
+	;;
+arm-riscos-aof)
+	_host_os=riscos
+	_host_cpu=arm
+	;;
+ppc-amigaos)
+	_host_os=amigaos
+	_host_cpu=ppc
+	;;
+psp)
+	_host_os=psp
+	_host_cpu=mips
+	_png=yes
+	# force psp sdl path 
+	_sdlpath=$(psp-config --pspdev-path)/psp/bin:$_sdlpath
+	PATH=$(psp-config --pspdev-path)/psp/bin:$(psp-config --pspdev-path)/bin:$PATH
+	;;
 gp2x)
 	_host_os=gp2x
 	_host_cpu=arm
-	_host_prefix=arm-open2x-linux
-	;;
-mingw32-cross)
-	_host_os=mingw32msvc
-	_host_cpu=i386
-	_host_prefix=i386-mingw32msvc
+	_png=yes
 	;;
 *)
 	guessed_host=`$_srcdir/config.guess`
@@ -340,16 +441,26 @@ esac
 #
 echo_n "Looking for C++ compiler... "
 if test -n "$_host"; then
-	compilers="$CXX $_host_prefix-g++ $_host_prefix-c++ $_host_cpu-$_host_os-g++ $_host_cpu-$_host_os-c++"
+	compilers="$CXX $_host_cpu-$_host_os-g++ $_host_cpu-$_host_os-c++"
 else
 	compilers="$CXX g++ c++"
 fi
 
+CXX=
+if [ "$_host" = "psp" ] ; then
+	compilers="$CXX psp-g++ psp-c++"
+	CXX="psp-c++"
+fi
+if [ "$_host" = "gp2x" ] ; then
+	compilers="$CXX arm-linux-g++ arm-linux-c++"
+	CXX="arm-linux-c++"
+fi
+
 for compiler in $compilers; do
 	if test_compiler $compiler; then
-		CXX=$compiler
-		echo $CXX
-		break
+	CXX=$compiler
+	echo $CXX
+	break
 	fi
 done
 if test -z $CXX; then
@@ -416,36 +527,32 @@ fi;
 if test -n "$_host"; then
 	# Cross-compiling mode - add your target here if needed
 	case "$_host" in
-#		linupy|arm-riscos-aof)
-#			echo "Cross-compiling to $_host, forcing endianness, alignment and type sizes"
-#			DEFINES="$DEFINES -DUNIX"
-#			_def_endianness='#define SCUMM_LITTLE_ENDIAN'
-#			_def_align='#define SCUMM_NEED_ALIGNMENT'
-#			_def_linupy="#define DLINUPY"
-#			type_1_byte='char'
-#			type_2_byte='short'
-#			type_4_byte='int'
-#			;;
-#		ppc-amigaos)
-#			echo "Cross-compiling to $_host, forcing endianness, alignment and type sizes"
-#			_def_endianness='#define SCUMM_BIG_ENDIAN'
-#			_def_align='#define	SCUMM_NEED_ALIGNMENT'
-#			type_1_byte='char'
-#			type_2_byte='short'
-#			type_4_byte='long'
-#			CXXFLAGS="$CFLAGS -newlib -mstrict-align -mcpu=750 -mtune=7400"
-#			LDFLAGS="$LDFLAGS -newlib"
-#			;;
+		linupy|arm-riscos-aof)
+			echo "Cross-compiling to $_host, forcing endianness, alignment and type sizes"
+			DEFINES="$DEFINES -DUNIX"
+			_def_endianness='#define SCUMM_LITTLE_ENDIAN'
+			_def_align='#define SCUMM_NEED_ALIGNMENT'
+			_def_linupy="#define DLINUPY"
+			type_1_byte='char'
+			type_2_byte='short'
+			type_4_byte='int'
+			;;
+		ppc-amigaos)
+			echo "Cross-compiling to $_host, forcing endianness, alignment and type sizes"
+			_def_endianness='#define SCUMM_BIG_ENDIAN'
+			_def_align='#define	SCUMM_NEED_ALIGNMENT'
+			type_1_byte='char'
+			type_2_byte='short'
+			type_4_byte='long'
+			CXXFLAGS="$CFLAGS -newlib -mstrict-align -mcpu=750 -mtune=7400"
+			LDFLAGS="$LDFLAGS -newlib"
+			;;
+		psp)
+			;;
 		gp2x)
-			echo "Cross-compiling to $_host, forcing static build, and disabling OpenGL."
+			echo "Cross-compiling to $_host, forcing static build, and disabling openGL."
 			_build_static=yes
 			_build_gl=no
-			_build_windowed=no
-			;;
-		mingw32-cross)
-			echo "Cross-compiling for Win32 using MinGW."
-			DEFINES="$DEFINES -DWIN32"
-			_host_os=win32
 			;;
 		*)
 			echo "Cross-compiling to unknown target, please add your target to configure."
@@ -470,6 +577,14 @@ else
 			_ranlib=:
 			_host_os=unix
 			;;
+		darwin*)
+			DEFINES="$DEFINES -DUNIX -DMACOSX"
+			LIBS="$LIBS -framework QuickTime -framework AudioUnit -framework Carbon"
+			# TODO: Add proper check for Altivec support in the compiler...
+			DEFINES="$DEFINES -DHAS_ALTIVEC"
+			CXXFLAGS="$CXXFLAGS -faltivec"
+			_host_os=unix
+			;;
 		mingw*)
 			DEFINES="$DEFINES -DWIN32"
 			_host_os=win32
@@ -481,7 +596,7 @@ else
 			;;
 		os2*)
 			DEFINES="$DEFINES -DUNIX -DOS2"
-			LIBS="$LIBS -lz"
+			LIBS="$LIBS -lpng -lz"
 			_host_os=unix
 			;;
 		# given this is a shell script assume some type of unix
@@ -490,12 +605,6 @@ else
 			DEFINES="$DEFINES -DUNIX"
 			;;
 	esac
-fi
-
-# Cross-compilers use their own commands for the following functions
-if test -n "$_host_prefix"; then
-	_strip="$_host_prefix-$_strip"
-	_windres="$_host_prefix-$_windres"
 fi
 
 #
@@ -511,12 +620,22 @@ int main(void) { return strcmp(ZLIB_VERSION, zlibVersion()); }
 EOF
 	cc_check $LDFLAGS $CXXFLAGS $ZLIB_CFLAGS $ZLIB_LIBS -lz && _zlib=yes
 fi
-if test "$_zlib" = yes ; then
-	echo "$_zlib"
-else
-	echo "none found!"
-	exit 1
+echo "$_zlib"
+
+#
+# Check for PNG
+#
+echocheck "png"
+if test "$_png" = auto ; then
+	_png=no
+	cat > $TMPC << EOF
+#include <string.h>
+#include <png.h>
+int main(void) { return 0; }
+EOF
+	cc_check $LDFLAGS $CXXFLAGS && _png=yes
 fi
+echo "$_png"
 
 #
 # Check for GL
@@ -533,6 +652,21 @@ EOF
 	cc_check $LDFLAGS $CXXFLAGS && _opengl=yes
 fi
 echo "$_opengl"
+
+#
+# Check for nasm
+#
+#if test "$_have_x86" = yes ; then
+#    CheckNASM
+#fi
+#
+#if test "$_nasm" = yes ; then
+#	_def_nasm='#define USE_NASM'
+#	_make_def_HAVE_NASM='HAVE_NASM = 1'
+#else
+#	_def_nasm='#undef USE_NASM'
+#	_make_def_HAVE_NASM='# HAVE_NASM = 1'
+#fi
 
 #
 # figure out installation directories
@@ -559,14 +693,6 @@ else
 	echo
 fi
 
-if test "$_build_windowed" = "yes" ; then
-	echo_n "   Windowed rendering modes enabled"
-	echo
-else
-	echo_n "   Windowed rendering modes disabled"
-	echo
-fi
-
 if test "$_build_sound" = "yes" ; then
 	echo_n "   Sound support enabled"
 	echo
@@ -575,17 +701,23 @@ else
 	echo
 fi
 
-if test "$_build_debugger" = "yes" ; then
-	echo_n "   Debugger support enabled"
+if test "$_build_developer" = "yes" ; then
+	echo_n "   Developer/debugger support enabled"
 	echo
 else
-	echo_n "   Debugger support disabled"
+	echo_n "   Developer/debugger support disabled"
 	echo
 fi
 
 if test "$_build_snapshot" = "yes" ; then
-	echo_n "   Snapshot support enabled"
-	echo
+	if test "$_png" = "yes" ; then
+		echo_n "   Snapshot support enabled"
+		echo
+	else
+		echo_n "   Snapshot support disabled (missing PNG library)"
+		echo
+		_build_snapshot=no
+	fi
 else
 	echo_n "   Snapshot support disabled"
 	echo
@@ -656,22 +788,68 @@ case $_host_os in
 			DEFINES="$DEFINES -DBSPF_UNIX -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
 			MODULES="$MODULES $SRC/unix"
 			INCLUDES="$INCLUDES -I$SRC/unix"
+
+			# Add OpenGL stuff
+			if test "$_build_gl" = yes ; then
+				DEFINES="$DEFINES -DDISPLAY_OPENGL"
+			fi
 			;;
 		win32)
 			DEFINES="$DEFINES -DBSPF_WIN32 -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
 			MODULES="$MODULES $SRC/win32"
 			INCLUDES="$INCLUDES -I$SRC/win32"
 			LIBS="$LIBS -lmingw32 -lwinmm"
+
+			# Add OpenGL stuff
+			if test "$_build_gl" = yes ; then
+				DEFINES="$DEFINES -DDISPLAY_OPENGL -DTEXTURES_ARE_LOST"
+			fi
+			;;
+		psp)
+			# -O3 is need for speed
+			# -G0 to avoid c++ link problems
+			CXXFLAGS="-G0 -O2  -fno-rtti"
+			# 2 times -lc to avoid link problems. psp-gcc seems to to forget the first -lc wiile stdc++ linking
+			LIBS="-L `psp-config  --pspsdk-path`/lib -L`psp-config  --pspsdk-path`/../lib  "
+			LIBS="$LIBS -lSDLmain -lSDL -lGL -lm -lpspdebug -lpspgu -lpspctrl -lpspge -lpspdisplay -lpsphprm -lpspsdk -lpsprtc -lpspaudio -lc -lpspuser -lpspkernel -lpsppower -lpng -lz -lm -lg -lstdc++ -lc -lpsputility"
+			# psp compiler
+			CC="psp-gcc"
+			LD="psp-gcc"
+			_ranlib="psp-ranlib"
+			_ar="psp-ar cru"
+        
+			MODULES="$MODULES  src/psp"
+
+			# psp specific tool 
+			PSP_STRIP=`psp-config  --pspdev-path`"/bin/psp-strip"
+			PSP_FIX=`psp-config  --pspdev-path`"/bin/psp-fixup-imports"
+			PACK_PBP=`psp-config  --pspdev-path`"/bin/pack-pbp"
+			MKSFO="`psp-config  --pspdev-path`/bin/mksfo"
+
+			# mount point of psp
+			PSP_MOUNTPOINT="/mnt/psp"
+
+			INCLUDES="$INCLUDES -Isrc/psp  -I`psp-config --pspsdk-path`/include"
+			DEFINES="$DEFINES -Dmain=SDL_main -DPSP -DBSPF_PSP -DPSP_DEBUG"
 			;;
 		gp2x)
-			# -O3 hangs the GP2X, do not use.
-			CXXFLAGS="-O2 -finline-functions -mtune=arm920t"
+			CXXFLAGS="-O2 -finline-functions"
 			DEFINES="$DEFINES -DBSPF_GP2X -DGP2X -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
 			MODULES="$MODULES $SRC/gp2x"
-			INCLUDES="$INCLUDES -I$SRC/gp2x $ZLIB_CFLAGS"
-			
+
+			#If PNG_CFLAGS is specified, include it.
+			#This saves the user the step of having to specify CXXFLAGS beforehand.
+			if [ -n $PNG_CFLAGS  ]; then
+				INCLUDES="$INCLUDES $PNG_CFLAGS -I$SRC/gp2x"
+			else
+				INCLUDES="$INCLUDES -I$SRC/gp2x"
+			fi
+
 			_ranlib="arm-linux-ranlib"
 			_ar="arm-linux-ar cru"
+
+			# GP2X ARM Linux Specific strip
+			GP2X_STRIP="arm-linux-strip"
 			;;
 		*)
 			echo "WARNING: host system not currenty supported"
@@ -679,26 +857,19 @@ case $_host_os in
 			;;
 esac
 
-if test "$_build_gl" = yes ; then
-	DEFINES="$DEFINES -DDISPLAY_OPENGL"
-fi
-
-if test "$_build_windowed" = yes ; then
-	DEFINES="$DEFINES -DWINDOWED_SUPPORT"
-fi
-
 if test "$_build_sound" = yes ; then
 	DEFINES="$DEFINES -DSOUND_SUPPORT"
 fi
 
-if test "$_build_debugger" = yes ; then
-	DEFINES="$DEFINES -DDEBUGGER_SUPPORT"
+if test "$_build_developer" = yes ; then
+	DEFINES="$DEFINES -DDEVELOPER_SUPPORT"
 	MODULES="$MODULES $DBG $DBGGUI $YACC"
 	INCLUDES="$INCLUDES -I$DBG -I$DBGGUI -I$YACC"
 fi
 
 if test "$_build_snapshot" = yes ; then
 	DEFINES="$DEFINES -DSNAPSHOT_SUPPORT"
+	LIBS="$LIBS -lpng"
 fi
 
 if test "$_build_joystick" = yes ; then
@@ -715,6 +886,21 @@ if test "$_build_profile" = no ; then
 	_build_profile=
 fi
 
+# 20051003 bkw: fix static Linux build.
+# No guarantee this will work for anyone other than me, and no
+# guarantee it's needed by anyone but me (and Steve)...
+if test "$_host_os" = unix ; then
+  if test "$_build_static" = yes ; then
+    LIBS="`echo \"$LIBS\" | sed 's/-lz -lpng/-lpng -lz/'`"
+  fi
+fi
+
+# Works for GP2X which needs a static build.
+if test "$_host_os" = gp2x ; then
+  if test "$_build_static" = yes ; then
+    LIBS="`echo \"$LIBS\" | sed 's/-lz -lpng/-lpng -lz/'`"
+  fi
+fi
 
 echo "Creating config.mak"
 cat > config.mak << EOF
@@ -735,12 +921,12 @@ RM_REC := $_rm_rec
 ZIP := $_zip
 CP := $_cp
 WIN32PATH=$_win32path
-STRIP := $_strip
-WINDRES := $_windres
 
 MODULES += $MODULES
 MODULE_DIRS += $MODULE_DIRS
 EXEEXT := $EXEEXT
+NASM := $NASM
+NASMFLAGS := $NASMFLAGS
 
 PREFIX := $_prefix
 BINDIR := $_bindir
@@ -749,12 +935,31 @@ DATADIR := $_datadir
 PROFILE := $_build_profile
 
 $_make_def_HAVE_GCC3
+#$_make_def_HAVE_NASM
 
 INCLUDES += $INCLUDES
 OBJS += $OBJS
 DEFINES += $DEFINES
 LDFLAGS += $LDFLAGS
 EOF
+
+if test $_host_os = "psp" ; then
+cat >> config.mak << EOF
+
+PSP-STRIP       := $PSP_STRIP
+PSP-FIX         := $PSP_FIX
+PACK-PBP        := $PACK_PBP
+MKSFO           := $MKSFO
+PSP-MOUNTPOINT  := $PSP_MOUNTPOINT
+EOF
+fi
+
+if test $_host_os = "gp2x" ; then
+cat >> config.mak << EOF
+
+GP2X-STRIP := $GP2X_STRIP
+EOF
+fi
 
 # This should be taken care of elsewhere, but I'm not sure where
 rm -f stella-conf*

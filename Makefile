@@ -13,7 +13,7 @@
 ## See the file "license" for information on usage and redistribution of
 ## this file, and for a DISCLAIMER OF ALL WARRANTIES.
 ##
-## $Id: Makefile,v 1.37 2009-01-11 21:31:21 stephena Exp $
+## $Id: Makefile,v 1.23 2006-03-19 20:57:54 stephena Exp $
 ##
 ##   Based on code from ScummVM - Scumm Interpreter
 ##   Copyright (C) 2002-2004 The ScummVM project
@@ -68,7 +68,7 @@ endif
 
 EXECUTABLE  := stella$(EXEEXT)
 
-all: tags $(EXECUTABLE)
+all: $(EXECUTABLE)
 
 
 ######################################################################
@@ -151,6 +151,12 @@ else
 	$(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
 endif
 
+ifdef HAVE_NASM
+.SUFFIXES: .asm
+.asm.o:
+	$(NASM) -O1 $(NASMFLAGS) -g -o $*.o $(<)
+endif
+
 # Include the dependency tracking files. We add /dev/null at the end
 # of the list to avoid a warning/error if no .d file exist
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS))) /dev/null
@@ -167,42 +173,72 @@ install: all
 	$(INSTALL) -d "$(DESTDIR)$(DOCDIR)"
 	$(INSTALL) -c -m 644 "$(srcdir)/Announce.txt" "$(srcdir)/Changes.txt" "$(srcdir)/Copyright.txt" "$(srcdir)/License.txt" "$(srcdir)/README-SDL.txt" "$(srcdir)/Readme.txt" "$(srcdir)/Todo.txt" "$(srcdir)/docs/index.html" "$(srcdir)/docs/debugger.html" "$(DESTDIR)$(DOCDIR)/"
 	$(INSTALL) -d "$(DESTDIR)$(DOCDIR)/graphics"
-	$(INSTALL) -c -m 644 $(wildcard $(srcdir)/docs/graphics/*.png) "$(DESTDIR)$(DOCDIR)/graphics"
-	$(INSTALL) -d "$(DESTDIR)$(DATADIR)/applications"
-	$(INSTALL) -c -m 644 "$(srcdir)/src/unix/stella.desktop" "$(DESTDIR)$(DATADIR)/applications"
+	$(INSTALL) -c -m 644 "$(srcdir)/docs/graphics/chucky_cheese.png" "$(srcdir)/docs/graphics/circuit.png" "$(srcdir)/docs/graphics/console.png" "$(srcdir)/docs/graphics/eventmapping.png" "$(srcdir)/docs/graphics/eventmapping_remap.png" "$(srcdir)/docs/graphics/jr_pacman.png" "$(srcdir)/docs/graphics/launcher_options_rom.png" "$(srcdir)/docs/graphics/launcher_options_snap.png" "$(srcdir)/docs/graphics/launcher.png" "$(srcdir)/docs/graphics/options_about.png" "$(srcdir)/docs/graphics/options_audio.png" "$(srcdir)/docs/graphics/options_gameinfo.png" "$(srcdir)/docs/graphics/options_help.png" "$(srcdir)/docs/graphics/options_video.png" "$(srcdir)/docs/graphics/pacman.png" "$(srcdir)/docs/graphics/rom_browser.png" "$(srcdir)/docs/graphics/secret_quest.png" "$(srcdir)/docs/graphics/space_invaders.png" "$(DESTDIR)$(DOCDIR)/graphics"
 	$(INSTALL) -d "$(DESTDIR)$(DATADIR)/icons"
-	$(INSTALL) -d "$(DESTDIR)$(DATADIR)/icons/mini"
-	$(INSTALL) -d "$(DESTDIR)$(DATADIR)/icons/large"
-	$(INSTALL) -c -m 644 "$(srcdir)/src/common/stella.png" "$(DESTDIR)$(DATADIR)/icons"
-	$(INSTALL) -c -m 644 "$(srcdir)/src/common/stella.png" "$(DESTDIR)$(DATADIR)/icons/mini"
-	$(INSTALL) -c -m 644 "$(srcdir)/src/common/stella.png" "$(DESTDIR)$(DATADIR)/icons/large"
+	$(INSTALL) -c -m 644 "$(srcdir)/src/common/stella.xpm" "$(DESTDIR)$(DATADIR)/icons"
 
 install-strip: install
-	$(STRIP) stella$(EXEEXT)
+	strip stella$(EXEEXT)
 
 uninstall:
 	rm -f  "$(DESTDIR)$(BINDIR)/stella$(EXEEXT)"
 	rm -rf "$(DESTDIR)$(DOCDIR)/"
-	rm -f  "$(DESTDIR)$(DATADIR)/applications/stella.desktop"
-	rm -f  "$(DESTDIR)$(DATADIR)/icons/stella.png"
-	rm -f  "$(DESTDIR)$(DATADIR)/icons/mini/stella.png"
-	rm -f  "$(DESTDIR)$(DATADIR)/icons/large/stella.png"
+	rm -f  "$(DESTDIR)$(DATADIR)/icons/stella.xpm"
 
 # Special rule for Win32 icon stuff (there's probably a better way to do this ...)
 src/win32/stella_icon.o: src/win32/stella.ico src/win32/stella.rc
-	$(WINDRES) --include-dir src/win32 src/win32/stella.rc src/win32/stella_icon.o 
+	windres --include-dir src/win32 src/win32/stella.rc src/win32/stella_icon.o 
 		
 # Special target to create a Win32 snapshot package
 win32dist: stella$(EXEEXT)
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)/docs/graphics
-	$(STRIP) stella$(EXEEXT) -o $(DISTNAME)/Stella$(EXEEXT)
-	cp /bin/SDL.dll $(DISTNAME)
+	strip stella$(EXEEXT) -o $(DISTNAME)/stella$(EXEEXT)
 	cp Announce.txt Changes.txt Copyright.txt License.txt README-SDL.txt Readme.txt Todo.txt $(DISTNAME)/docs
 	cp -r docs/*.html $(DISTNAME)/docs
 	cp -r docs/graphics/*.png $(DISTNAME)/docs/graphics
-#	flip -m $(DISTNAME)/docs/*.txt
-#	zip -r $(DISTNAME)-win32.zip $(DISTNAME)
+	cp /usr/bin/SDL.dll /mingw/bin/libpng12.dll /mingw/bin/zlib1.dll $(DISTNAME)
+#	u2d $(DISTNAME)/*.txt
+#	zip $(DISTNAME)-win32.zip $(DISTNAME)
+
+# Special target to create psp stuff
+psp-package: $(EXECUTABLE)
+	$(MKSFO) 'Stella' PARAM.SFO
+	mkdir -p "psp/stella"
+	$(PSP-FIX) stella.elf
+	$(PSP-STRIP) stella.elf -o psp/stella/EBOOT.PBP
+	mkdir -p "psp/stella%"
+	$(PACK-PBP) "psp/stella%/EBOOT.PBP" PARAM.SFO src/psp/data/ICON0.PNG NULL NULL src/psp/data/PIC1.PNG  NULL NULL NULL
+	rm -f PARAM.SFO
+	
+psp-upload: psp-package
+	mount | grep  $(PSP-MOUNTPOINT) || mount $(PSP-MOUNTPOINT)
+	cp -rv "psp/stella" "psp/stella%" $(PSP-MOUNTPOINT)/psp/game/
+	umount $(PSP-MOUNTPOINT)
+
+psp-debug:
+	mount | grep \$(PSP-MOUNTPOINT) || mount $(PSP-MOUNTPOINT)
+	@cat $(PSP-MOUNTPOINT)/stderr.txt
+	@echo -e "\n\n------------------------------------------------------------"
+	@cat $(PSP-MOUNTPOINT)/stdout.txt
+	umount $(PSP-MOUNTPOINT)
+
+psp-cleanup:
+	rm -rf psp
+	mount | grep $(PSP-MOUNTPOINT) || mount $(PSP-MOUNTPOINT)
+	rm -rf  $(PSP-MOUNTPOINT)/std*
+	umount $(PSP-MOUNTPOINT)
+	
+psp-layout:
+	mount | grep $(PSP-MOUNTPOINT) || mount $(PSP-MOUNTPOINT)
+	mkdir -p $(PSP-MOUNTPOINT)/stella/roms
+	mkdir -p $(PSP-MOUNTPOINT)/stella/snapshots
+	cp -v src/psp/data/stellarc.psp $(PSP-MOUNTPOINT)/stella/stellarc
+	umount $(PSP-MOUNTPOINT)
+
+# GP2X exec needs strip
+gp2x-strip: $(EXECUTABLE)
+	$(GP2X-STRIP) stella
 
 # GP2X organize: groups necessary files into a gp2x folder for easy access.
 gp2x-organize:
@@ -212,11 +248,5 @@ gp2x-organize:
 	cp -v $(srcdir)/src/gp2x/stella.gpe $(srcdir)/gp2x
 	cp -v $(srcdir)/README-GP2X.txt $(srcdir)/gp2x
 	cp -v -r $(srcdir)/docs/* $(srcdir)/gp2x/docs
-	$(STRIP) $(srcdir)/gp2x/stella
-
+	
 .PHONY: deb bundle test win32dist install uninstall
-
-# Use Exuberant ctags (the one from Slackware's vim package, for instance),
-# not the one from emacs!
-tags:
-	ctags `find . -name '*.[ch]xx' -o -name '*.c' -o -name '*.y'` || true

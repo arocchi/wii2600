@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CommandMenu.cxx,v 1.3 2005-12-24 22:50:52 stephena Exp $
 //============================================================================
 
 #include "Dialog.hxx"
@@ -24,10 +24,16 @@
 CommandMenu::CommandMenu(OSystem* osystem)
   : DialogContainer(osystem)
 {
-  myBaseDialog = new CommandDialog(myOSystem, this);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CommandMenu::~CommandMenu()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void CommandMenu::initialize()
+{
+  delete myBaseDialog;
+  myBaseDialog = new CommandDialog(myOSystem, this);
 }

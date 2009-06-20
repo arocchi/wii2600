@@ -6,7 +6,6 @@ MODULE_OBJS := \
 	src/common/SoundSDL.o \
 	src/common/FrameBufferSoft.o \
 	src/common/FrameBufferGL.o \
-	src/common/RectList.o \
 	src/common/Snapshot.o
 
 MODULE_DIRS += \

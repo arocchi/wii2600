@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemGP2X.cxx,v 1.9 2006-03-17 19:44:18 stephena Exp $
 // Modified on 2006/01/06 by Alex Zaballa for use on GP2X
 //============================================================================
 
@@ -48,7 +48,7 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemGP2X::OSystemGP2X() : OSystem()
+OSystemGP2X::OSystemGP2X()
 {
   // GP2X needs all config files in exec directory
   
@@ -57,6 +57,9 @@ OSystemGP2X::OSystemGP2X() : OSystem()
   free(currdir);
   setBaseDir(basedir);
   
+  setStateDir(basedir + "/state");
+  
+  setPropertiesDir(basedir);
   setConfigFile(basedir + "/stellarc");
 
   setCacheFile(basedir + "/stella.cache");
@@ -74,7 +77,43 @@ OSystemGP2X::~OSystemGP2X()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemGP2X::getTicks() const
+void OSystemGP2X::mainLoop()
+{
+  // These variables are common to both timing options
+  // and are needed to calculate the overall frames per second.
+  uInt32 frameTime = 0, numberOfFrames = 0;
+
+  // Set up less accurate timing stuff
+  uInt32 startTime, virtualTime, currentTime;
+
+  // Set the base for the timers
+  virtualTime = getTicks();
+  frameTime = 0;
+
+  // Main game loop
+  for(;;)
+  {
+    // Exit if the user wants to quit
+    if(myEventHandler->doQuit())
+      break;
+
+    startTime = getTicks();
+    myEventHandler->poll(startTime);
+    myFrameBuffer->update();
+
+    currentTime = getTicks();
+    virtualTime += myTimePerFrame;
+    if(currentTime < virtualTime)
+      SDL_Delay((virtualTime - currentTime)/1000);
+
+    currentTime = getTicks() - startTime;
+    frameTime += currentTime;
+    ++numberOfFrames;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 OSystemGP2X::getTicks()
 {
 #ifdef HAVE_GETTIMEOFDAY
   timeval now;
@@ -89,36 +128,24 @@ uInt32 OSystemGP2X::getTicks() const
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystemGP2X::getScreenDimensions(int& width, int& height)
 {
-  width  = 400;
-  height = 300;
+  width  = 320;
+  height = 240;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystemGP2X::setDefaultJoymap()
 {
-  myEventHandler->setDefaultJoyMapping(Event::LauncherMode, kEmulationMode, 0, 8);	// Start
-  myEventHandler->setDefaultJoyMapping(Event::TakeSnapshot, kEmulationMode, 0, 9);	// Select
-  myEventHandler->setDefaultJoyMapping(Event::ConsoleReset, kEmulationMode, 0, 10);	// L
-  myEventHandler->setDefaultJoyMapping(Event::ConsoleSelect, kEmulationMode, 0, 11);	// R
-  myEventHandler->setDefaultJoyMapping(Event::CmdMenuMode, kEmulationMode, 0, 12);	// A
-  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire1, kEmulationMode, 0, 13);	// B
-  myEventHandler->setDefaultJoyMapping(Event::MenuMode, kEmulationMode, 0, 14);         // Y
-//  myEventHandler->setDefaultJoyMapping(Event::Pause, kEmulationMode, 0, 15);            // X
-  myEventHandler->setDefaultJoyMapping(Event::VolumeIncrease, kEmulationMode, 0, 16);	// Vol+
-  myEventHandler->setDefaultJoyMapping(Event::VolumeDecrease, kEmulationMode, 0, 17);	// Vol-
-  myEventHandler->setDefaultJoyMapping(Event::NoType, kEmulationMode, 0, 18);		// Click
-  //Begin Menu Navigation Mapping
-  myEventHandler->setDefaultJoyMapping(Event::UICancel, kMenuMode, 0, 8);		// Start
-  myEventHandler->setDefaultJoyMapping(Event::UIOK, kMenuMode, 0, 9);			// Select
-  myEventHandler->setDefaultJoyMapping(Event::UIPgUp, kMenuMode, 0, 10);		// L
-  myEventHandler->setDefaultJoyMapping(Event::UIPgDown, kMenuMode, 0, 11);		// R
-//  myEventHandler->setDefaultJoyMapping(Event::UITabPrev, kMenuMode, 0, 12);		// A
-  myEventHandler->setDefaultJoyMapping(Event::UISelect, kMenuMode, 0, 13);		// B
-//  myEventHandler->setDefaultJoyMapping(Event::UITabNext, kMenuMode, 0, 14);             // Y
-  myEventHandler->setDefaultJoyMapping(Event::UICancel, kMenuMode, 0, 15);              // X
-  myEventHandler->setDefaultJoyMapping(Event::UINavNext, kMenuMode, 0, 16);		// Vol+
-  myEventHandler->setDefaultJoyMapping(Event::UINavPrev, kMenuMode, 0, 17);		// Vol-
-  myEventHandler->setDefaultJoyMapping(Event::NoType, kMenuMode, 0, 18);		// Click
+  myEventHandler->setDefaultJoyMapping(Event::LauncherMode, 0, 8);      // Start
+  myEventHandler->setDefaultJoyMapping(Event::CmdMenuMode, 0, 9);       // Select
+  myEventHandler->setDefaultJoyMapping(Event::ConsoleReset, 0, 10);     // L
+  myEventHandler->setDefaultJoyMapping(Event::ConsoleSelect, 0, 11);    // R
+  myEventHandler->setDefaultJoyMapping(Event::TakeSnapshot, 0, 12);	    // A
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire, 0, 13); // B
+  myEventHandler->setDefaultJoyMapping(Event::Pause, 0, 14);            // X
+  myEventHandler->setDefaultJoyMapping(Event::MenuMode, 0, 15);         // Y
+  myEventHandler->setDefaultJoyMapping(Event::VolumeIncrease, 0, 16);   // Vol+
+  myEventHandler->setDefaultJoyMapping(Event::VolumeDecrease, 0, 17);   // Vol-
+  myEventHandler->setDefaultJoyMapping(Event::NoType, 0, 18);           // Click
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

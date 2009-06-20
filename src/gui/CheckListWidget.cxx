@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CheckListWidget.cxx,v 1.10 2006-02-22 17:38:04 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -25,13 +25,13 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CheckListWidget::CheckListWidget(GuiObject* boss, const GUI::Font& font,
                                  int x, int y, int w, int h)
-  : ListWidget(boss, font, x, y, w, h, false)  // disable quick select
+  : ListWidget(boss, font, x, y, w, h)
 {
   int ypos = _y + 2;
 
   // rowheight is determined by largest item on a line,
   // possibly meaning that number of rows will change
-  _fontHeight = BSPF_max(_fontHeight, CheckboxWidget::boxSize());
+  _fontHeight = MAX(_fontHeight, CheckboxWidget::boxSize());
   _rows = h / _fontHeight;
 
   // Create a CheckboxWidget for each row in the list
@@ -41,6 +41,7 @@ CheckListWidget::CheckListWidget(GuiObject* boss, const GUI::Font& font,
     t = new CheckboxWidget(boss, font, _x + 2, ypos, "", kCheckActionCmd);
     t->setTarget(this);
     t->setID(i);
+    t->holdFocus(false);
     ypos += _fontHeight;
 
     _checkList.push_back(t);
@@ -61,13 +62,13 @@ void CheckListWidget::setStyle(CheckStyle style)
     {
       _checkList[i]->drawBox(true);
       _checkList[i]->setFill(false);
-      _checkList[i]->setTextColor(kTextColor);
+      _checkList[i]->setColor(kTextColor);
     }
     else if(style == kSolidFill)
     {
       _checkList[i]->drawBox(false);
       _checkList[i]->setFill(true);
-      _checkList[i]->setTextColor(kTextColorEm);
+      _checkList[i]->setColor(kTextColorEm);
     }
   }
 }
@@ -106,17 +107,17 @@ void CheckListWidget::setLine(int line, const string& str, const bool& state)
 void CheckListWidget::drawWidget(bool hilite)
 {
 //cerr << "CheckListWidget::drawWidget\n";
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
   int i, pos, len = _list.size();
   string buffer;
   int deltax;
 
   // Draw a thin frame around the list and to separate columns
-  s.hLine(_x, _y, _x + _w - 1, kColor);
-  s.hLine(_x, _y + _h - 1, _x + _w - 1, kShadowColor);
-  s.vLine(_x, _y, _y + _h - 1, kColor);
+  fb.hLine(_x, _y, _x + _w - 1, kColor);
+  fb.hLine(_x, _y + _h - 1, _x + _w - 1, kShadowColor);
+  fb.vLine(_x, _y, _y + _h - 1, kColor);
 
-  s.vLine(_x + CheckboxWidget::boxSize() + 5, _y, _y + _h - 1, kColor);
+  fb.vLine(_x + CheckboxWidget::boxSize() + 5, _y, _y + _h - 1, kColor);
 
   // Draw the list items
   for (i = 0, pos = _currentPos; i < _rows && pos < len; i++, pos++)
@@ -134,11 +135,13 @@ void CheckListWidget::drawWidget(bool hilite)
     if (_selectedItem == pos)
     {
       if (_hasFocus && !_editMode)
-        s.fillRect(_x + r.left - 3, _y + 1 + _fontHeight * i,
-                   _w - r.left, _fontHeight, kTextColorHi);
+        fb.fillRect(_x + r.left - 3, _y + 1 + _fontHeight * i,
+                    _w - r.left, _fontHeight,
+                    kTextColorHi);
       else
-        s.frameRect(_x + r.left - 3, _y + 1 + _fontHeight * i,
-                    _w - r.left, _fontHeight, kTextColorHi);
+        fb.frameRect(_x + r.left - 3, _y + 1 + _fontHeight * i,
+                     _w - r.left, _fontHeight,
+                     kTextColorHi);
     }
 
     if (_selectedItem == pos && _editMode)
@@ -147,14 +150,14 @@ void CheckListWidget::drawWidget(bool hilite)
       adjustOffset();
       deltax = -_editScrollOffset;
 
-      s.drawString(_font, buffer, _x + r.left, y, r.width(), kTextColor,
-                   kTextAlignLeft, deltax, false);
+      fb.drawString(_font, buffer, _x + r.left, y, r.width(), kTextColor,
+                    kTextAlignLeft, deltax, false);
     }
     else
     {
       buffer = _list[pos];
       deltax = 0;
-      s.drawString(_font, buffer, _x + r.left, y, r.width(), kTextColor);
+      fb.drawString(_font, buffer, _x + r.left, y, r.width(), kTextColor);
     }
   }
 
@@ -188,23 +191,6 @@ bool CheckListWidget::getState(int line)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CheckListWidget::handleEvent(Event::Type e)
-{
-  switch(e)
-  {
-    case Event::UISelect:
-      // Simulate a mouse button click
-      _checkList[ListWidget::getSelected()]->handleMouseUp(0, 0, 1, 0);
-      return true;
-      break;
-
-    default:
-      return ListWidget::handleEvent(e);
-      break;
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CheckListWidget::handleCommand(CommandSender* sender, int cmd,
                                     int data, int id)
 {
@@ -223,6 +209,5 @@ void CheckListWidget::handleCommand(CommandSender* sender, int cmd,
 
     default:
       ListWidget::handleCommand(sender, cmd, data, id);
-      break;
   }
 }

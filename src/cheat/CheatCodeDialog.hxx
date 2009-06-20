@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CheatCodeDialog.hxx,v 1.5 2006-02-22 17:38:03 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -42,7 +42,7 @@ class CheatCodeDialog : public Dialog
 {
   public:
     CheatCodeDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font);
+                   const GUI::Font& font, int x, int y, int w, int h);
     ~CheatCodeDialog();
 
   protected:
@@ -62,16 +62,7 @@ class CheatCodeDialog : public Dialog
 
     ButtonWidget* myEditButton;
     ButtonWidget* myRemoveButton;
-
-    enum {
-      kAddCheatCmd       = 'CHTa',
-      kEditCheatCmd      = 'CHTe',
-      kAddOneShotCmd     = 'CHTo',
-      kCheatAdded        = 'CHad',
-      kCheatEdited       = 'CHed',
-      kOneShotCheatAdded = 'CHoa',
-      kRemCheatCmd       = 'CHTr'
-    };
+    ButtonWidget* myCancelButton;
 };
 
 #endif

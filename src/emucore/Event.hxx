@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Event.hxx,v 1.19 2006-01-05 18:53:22 stephena Exp $
 //============================================================================
 
 #ifndef EVENT_HXX
@@ -22,10 +22,11 @@
 #include "bspf.hxx"
 
 class Event;
+class EventStreamer;
 
 /**
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Event.hxx,v 1.19 2006-01-05 18:53:22 stephena Exp $
 */
 class Event
 {
@@ -33,7 +34,7 @@ class Event
     /**
       Enumeration of all possible events in Stella, including both
       console and controller event types as well as events that aren't
-      technically part of the emulation core
+      technically part of the core
     */
     enum Type
     {
@@ -43,15 +44,22 @@ class Event
       ConsoleRightDifficultyA, ConsoleRightDifficultyB,
       ConsoleSelect, ConsoleReset,
 
-      JoystickZeroUp, JoystickZeroDown, JoystickZeroLeft, JoystickZeroRight,
-        JoystickZeroFire1, JoystickZeroFire2, JoystickZeroFire3,
-      JoystickOneUp, JoystickOneDown, JoystickOneLeft, JoystickOneRight,
-        JoystickOneFire1, JoystickOneFire2, JoystickOneFire3,
+      JoystickZeroUp, JoystickZeroDown, JoystickZeroLeft,
+      JoystickZeroRight, JoystickZeroFire,
+      JoystickOneUp, JoystickOneDown, JoystickOneLeft,
+      JoystickOneRight, JoystickOneFire,
 
-      PaddleZeroDecrease, PaddleZeroIncrease, PaddleZeroAnalog, PaddleZeroFire,
-      PaddleOneDecrease, PaddleOneIncrease, PaddleOneAnalog, PaddleOneFire,
-      PaddleTwoDecrease, PaddleTwoIncrease, PaddleTwoAnalog, PaddleTwoFire,
-      PaddleThreeDecrease, PaddleThreeIncrease, PaddleThreeAnalog, PaddleThreeFire,
+      BoosterGripZeroTrigger, BoosterGripZeroBooster,
+      BoosterGripOneTrigger, BoosterGripOneBooster,
+
+      PaddleZeroResistance, PaddleZeroFire,
+        PaddleZeroDecrease, PaddleZeroIncrease, PaddleZeroAnalog,
+      PaddleOneResistance, PaddleOneFire,
+        PaddleOneDecrease, PaddleOneIncrease, PaddleOneAnalog,
+      PaddleTwoResistance, PaddleTwoFire,
+        PaddleTwoDecrease, PaddleTwoIncrease, PaddleTwoAnalog,
+      PaddleThreeResistance, PaddleThreeFire,
+        PaddleThreeDecrease, PaddleThreeIncrease, PaddleThreeAnalog,
 
       KeyboardZero1, KeyboardZero2, KeyboardZero3,
       KeyboardZero4, KeyboardZero5, KeyboardZero6,
@@ -62,27 +70,24 @@ class Event
       KeyboardOne4, KeyboardOne5, KeyboardOne6,
       KeyboardOne7, KeyboardOne8, KeyboardOne9,
       KeyboardOneStar, KeyboardOne0, KeyboardOnePound,
-  
-      SALeftAxis0Value, SALeftAxis1Value,
-      SARightAxis0Value, SARightAxis1Value,
 
-      MouseAxisXValue, MouseAxisYValue, MouseButtonValue,
-
-      ChangeState, LoadState, SaveState, TakeSnapshot, Quit,
-      PauseMode, MenuMode, CmdMenuMode, DebuggerMode, LauncherMode,
-      Fry, VolumeDecrease, VolumeIncrease,
-
-      UIUp, UIDown, UILeft, UIRight, UIHome, UIEnd, UIPgUp, UIPgDown,
-      UISelect, UINavPrev, UINavNext, UIOK, UICancel,
+      DrivingZeroClockwise, DrivingZeroCounterClockwise, DrivingZeroValue, 
+	  DrivingZeroFire,
+      DrivingOneClockwise, DrivingOneCounterClockwise, DrivingOneValue,
+	  DrivingOneFire,
+	  
+      ChangeState, LoadState, SaveState, TakeSnapshot, Pause, Quit,
+      MenuMode, CmdMenuMode, DebuggerMode, LauncherMode, Fry,
+      VolumeDecrease, VolumeIncrease,
 
       LastType
     };
 
   public:
     /**
-      Create a new event object
+      Create a new event object and use the given eventstreamer
     */
-    Event();
+    Event(EventStreamer* ev);
  
     /**
       Destructor
@@ -111,6 +116,9 @@ class Event
 
     // Array of values associated with each event type
     Int32 myValues[LastType];
+
+    // The eventstreamer to record events to
+    EventStreamer* myEventStreamer;
 };
 
 #endif
