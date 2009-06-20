@@ -14,8 +14,6 @@ MODULE_OBJS := \
 	src/emucore/CartDPC.o \
 	src/emucore/CartE0.o \
 	src/emucore/CartE7.o \
-	src/emucore/CartEF.o \
-	src/emucore/CartEFSC.o \
 	src/emucore/CartF4.o \
 	src/emucore/CartF4SC.o \
 	src/emucore/CartF6.o \
@@ -40,16 +38,14 @@ MODULE_OBJS := \
 	src/emucore/FSNode.o \
 	src/emucore/Joystick.o \
 	src/emucore/Keyboard.o \
-	src/emucore/KidVid.o \
 	src/emucore/M6532.o \
-	src/emucore/MT24LC256.o \
 	src/emucore/MD5.o \
+	src/emucore/MediaSrc.o \
 	src/emucore/OSystem.o \
 	src/emucore/Paddles.o \
 	src/emucore/Props.o \
 	src/emucore/PropsSet.o \
 	src/emucore/Random.o \
-	src/emucore/SaveKey.o \
 	src/emucore/Serializer.o \
 	src/emucore/Settings.o \
 	src/emucore/SpeakJet.o \
@@ -57,8 +53,7 @@ MODULE_OBJS := \
 	src/emucore/StateManager.o \
 	src/emucore/TIA.o \
 	src/emucore/TIASnd.o \
-	src/emucore/TIATables.o \
-	src/emucore/TrackBall.o \
+	src/emucore/TrackBall22.o \
 	src/emucore/unzip.o \
 	src/emucore/MediaFactory.o
 

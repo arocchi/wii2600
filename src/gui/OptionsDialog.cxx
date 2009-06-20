@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OptionsDialog.cxx,v 1.69 2008-03-23 16:22:46 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -42,13 +42,13 @@
 
 #include "bspf.hxx"
 
-#define addODButton(label, cmd) \
+#define addBigButton(label, cmd) \
   new ButtonWidget(this, font, xoffset, yoffset, buttonWidth, buttonHeight, label, cmd); yoffset += rowHeight
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OptionsDialog::OptionsDialog(OSystem* osystem, DialogContainer* parent,
                              GuiObject* boss, bool global)
-  : Dialog(osystem, parent, 0, 0, 0, 0),
+  : Dialog(osystem, parent, 0, 0, 1, 1),
     myVideoDialog(NULL),
     myAudioDialog(NULL),
     myInputDialog(NULL),
@@ -60,7 +60,7 @@ OptionsDialog::OptionsDialog(OSystem* osystem, DialogContainer* parent,
     myAboutDialog(NULL),
     myIsGlobal(global)
 {
-  const GUI::Font& font = instance().font();
+  const GUI::Font& font = instance()->font();
   const int buttonWidth = font.getStringWidth("Game Properties") + 20,
             buttonHeight = font.getLineHeight() + 6,
             rowHeight = font.getLineHeight() + 10;
@@ -72,74 +72,92 @@ OptionsDialog::OptionsDialog(OSystem* osystem, DialogContainer* parent,
   WidgetArray wid;
   ButtonWidget* b = NULL;
 
-  myVideoSettingsButton = addODButton("Video Settings", kVidCmd);
+  myVideoSettingsButton = addBigButton("Video Settings", kVidCmd);
   wid.push_back(myVideoSettingsButton);
 
-  myAudioSettingsButton = addODButton("Audio Settings", kAudCmd);
+  myAudioSettingsButton = addBigButton("Audio Settings", kAudCmd);
 #ifndef SOUND_SUPPORT
   myAudioSettingsButton->clearFlags(WIDGET_ENABLED);
 #endif
   wid.push_back(myAudioSettingsButton);
 
-  b = addODButton("Input Settings", kInptCmd);
+  b = addBigButton("Input Settings", kInptCmd);
   wid.push_back(b);
 
-  myUIButton = addODButton("UI Settings", kUsrIfaceCmd);
+  myUIButton = addBigButton("UI Settings", kUsrIfaceCmd);
   wid.push_back(myUIButton);
 
-  myFileSnapButton = addODButton("Config Files", kFileSnapCmd);
+  myFileSnapButton = addBigButton("Config Files", kFileSnapCmd);
   wid.push_back(myFileSnapButton);
 
-  myRomAuditButton = addODButton("Audit ROMs", kAuditCmd);
+  myRomAuditButton = addBigButton("Audit ROMs", kAuditCmd);
   wid.push_back(myRomAuditButton);
 
   // Move to second column
   xoffset += buttonWidth + 10;  yoffset = 10;
 
-  myGameInfoButton = addODButton("Game Properties", kInfoCmd);
+  myGameInfoButton = addBigButton("Game Properties", kInfoCmd);
   wid.push_back(myGameInfoButton);
 
-  myCheatCodeButton = addODButton("Cheat Code", kCheatCmd);
+  myCheatCodeButton = addBigButton("Cheat Code", kCheatCmd);
 #ifndef CHEATCODE_SUPPORT
   myCheatCodeButton->clearFlags(WIDGET_ENABLED);
 #endif
   wid.push_back(myCheatCodeButton);
 
-  myHelpButton = addODButton("Help", kHelpCmd);
+  myHelpButton = addBigButton("Help", kHelpCmd);
   wid.push_back(myHelpButton);
 
-  myAboutButton = addODButton("About", kAboutCmd);
+  myAboutButton = addBigButton("About", kAboutCmd);
   wid.push_back(myAboutButton);
 
-  b = addODButton("Exit Menu", kExitCmd);
+  b = addBigButton("Exit Menu", kExitCmd);
   wid.push_back(b);
   addCancelWidget(b);
 
-  // Now create all the dialogs attached to each menu button
-  myVideoDialog = new VideoDialog(osystem, parent, font);
-  myAudioDialog = new AudioDialog(osystem, parent, font);
+  // Set some sane values for the dialog boxes
+  int x = 0, y = 0, w, h;
 
-/*  FIXME - may not be needed with small-font functionality
+  // Now create all the dialogs attached to each menu button
+  w = 240; h = 185;
+  myVideoDialog = new VideoDialog(myOSystem, parent, font, x, y, w, h);
+
+  w = 200; h = 140;
+  myAudioDialog = new AudioDialog(myOSystem, parent, font, x, y, w, h);
+
 #ifdef _WIN32_WCE
-  // FIXME - adjust size for WINCE using a smaller font
   // we scale the input dialog down a bit in low res devices.
   // looks only a little ugly, but the functionality is very welcome
-  if(instance().desktopWidth() < 320) { w = 220; h = 176; }
+  if(myOSystem->desktopWidth() < 320) { w = 220; h = 176; }
   else                                { w = 230; h = 185; }
 #else
-  w = 380; h = 310;
+  w = 230; h = 185;
 #endif
-*/
-  myInputDialog = new InputDialog(osystem, parent, font);
-  myUIDialog = new UIDialog(osystem, parent, font);
-  myFileSnapDialog = new FileSnapDialog(osystem, parent, font, boss);
-  myRomAuditDialog = new RomAuditDialog(osystem, parent, font);
-  myGameInfoDialog = new GameInfoDialog(osystem, parent, font, this);
+  myInputDialog = new InputDialog(myOSystem, parent, font, x, y, w, h);
+
+  w = 200; h = 155;
+  myUIDialog = new UIDialog(myOSystem, parent, font, x, y, w, h);
+
+  w = 280; h = 180;
+  myFileSnapDialog = new FileSnapDialog(myOSystem, parent, font,
+                                        boss, x, y, w, h);
+
+  w = 240; h = 115;
+  myRomAuditDialog = new RomAuditDialog(myOSystem, parent, font, x, y, w, h);
+
+  w = 255; h = 190;
+  myGameInfoDialog = new GameInfoDialog(myOSystem, parent, font, this, x, y, w, h);
+
 #ifdef CHEATCODE_SUPPORT
-  myCheatCodeDialog = new CheatCodeDialog(osystem, parent, font);
+  w = 230; h = 150;
+  myCheatCodeDialog = new CheatCodeDialog(myOSystem, parent, font, x, y, w, h);
 #endif
-  myHelpDialog = new HelpDialog(osystem, parent, font);
-  myAboutDialog = new AboutDialog(osystem, parent, font);
+
+  w = 255; h = 150;
+  myHelpDialog = new HelpDialog(myOSystem, parent, font, x, y, w, h);
+
+  w = 255; h = 150;
+  myAboutDialog = new AboutDialog(myOSystem, parent, font, x, y, w, h);
 
   addToFocusList(wid);
 
@@ -155,8 +173,7 @@ OptionsDialog::OptionsDialog(OSystem* osystem, DialogContainer* parent,
 #ifdef _WIN32_WCE
   myAudioSettingsButton->clearFlags(WIDGET_ENABLED);  // not honored in wince port
 #endif
-//FIXME - this may no longer be true (with the new small font functionality)
-  if(instance().desktopWidth() < 320)
+  if(myOSystem->desktopWidth() < 320)
   {
     // These cannot be displayed in low res devices
     myVideoSettingsButton->clearFlags(WIDGET_ENABLED);
@@ -190,13 +207,13 @@ void OptionsDialog::loadConfig()
   // Determine whether we should show the 'Game Information' button
   // We always show it in emulation mode, or if a valid ROM is selected
   // in launcher mode
-  switch(instance().eventHandler().state())
+  switch(instance()->eventHandler().state())
   {
     case EventHandler::S_EMULATE:
       myGameInfoButton->setFlags(WIDGET_ENABLED);
       break;
     case EventHandler::S_LAUNCHER:
-      if(instance().launcher().selectedRomMD5() != "")
+      if(instance()->launcher().selectedRomMD5() != "")
         myGameInfoButton->setFlags(WIDGET_ENABLED);
       else
         myGameInfoButton->clearFlags(WIDGET_ENABLED);
@@ -213,52 +230,52 @@ void OptionsDialog::handleCommand(CommandSender* sender, int cmd,
   switch(cmd)
   {
     case kVidCmd:
-      parent().addDialog(myVideoDialog);
+      parent()->addDialog(myVideoDialog);
       break;
 
     case kAudCmd:
-      parent().addDialog(myAudioDialog);
+      parent()->addDialog(myAudioDialog);
       break;
 
     case kInptCmd:
-      parent().addDialog(myInputDialog);
+      parent()->addDialog(myInputDialog);
       break;
 
     case kUsrIfaceCmd:
-      parent().addDialog(myUIDialog);
+      parent()->addDialog(myUIDialog);
       break;
 
     case kFileSnapCmd:
-      parent().addDialog(myFileSnapDialog);
+      parent()->addDialog(myFileSnapDialog);
       break;
 
     case kAuditCmd:
-      parent().addDialog(myRomAuditDialog);
+      parent()->addDialog(myRomAuditDialog);
       break;
 
     case kInfoCmd:
-      parent().addDialog(myGameInfoDialog);
+      parent()->addDialog(myGameInfoDialog);
       break;
 
 #ifdef CHEATCODE_SUPPORT
     case kCheatCmd:
-      parent().addDialog(myCheatCodeDialog);
+      parent()->addDialog(myCheatCodeDialog);
       break;
 #endif
 
     case kHelpCmd:
-      parent().addDialog(myHelpDialog);
+      parent()->addDialog(myHelpDialog);
       break;
 
     case kAboutCmd:
-      parent().addDialog(myAboutDialog);
+      parent()->addDialog(myAboutDialog);
       break;
 
     case kExitCmd:
       if(myIsGlobal)
         close();
       else
-        instance().eventHandler().leaveMenuMode();
+        instance()->eventHandler().leaveMenuMode();
       break;
 
     default:

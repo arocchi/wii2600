@@ -1,5 +1,5 @@
 %define name    stella
-%define version 2.8.1
+%define version 2.5
 %define rel     1
 
 %define enable_gl 1
@@ -107,42 +107,6 @@ rm -rf $RPM_BUILD_DIR/%{name}-%{version}
 %_datadir/icons/large/%{name}.png
 
 %changelog
-* Fri Jun 19 2009 Stephen Anthony <stephena@users.sf.net> 2.8.1-1
-- Version 2.8.1 release
-
-* Tue Jun 9 2009 Stephen Anthony <stephena@users.sf.net> 2.8-1
-- Version 2.8 release
-
-* Tue May 1 2009 Stephen Anthony <stephena@users.sf.net> 2.7.7-1
-- Version 2.7.7 release
-
-* Tue Apr 14 2009 Stephen Anthony <stephena@users.sf.net> 2.7.6-1
-- Version 2.7.6 release
-
-* Fri Mar 27 2009 Stephen Anthony <stephena@users.sf.net> 2.7.5-1
-- Version 2.7.5 release
-
-* Mon Feb 9 2009 Stephen Anthony <stephena@users.sf.net> 2.7.3-1
-- Version 2.7.3 release
-
-* Tue Jan 27 2009 Stephen Anthony <stephena@users.sf.net> 2.7.2-1
-- Version 2.7.2 release
-
-* Mon Jan 26 2009 Stephen Anthony <stephena@users.sf.net> 2.7.1-1
-- Version 2.7.1 release
-
-* Sat Jan 17 2009 Stephen Anthony <stephena@users.sf.net> 2.7-1
-- Version 2.7 release
-
-* Thu May 22 2008 Stephen Anthony <stephena@users.sf.net> 2.6.1-1
-- Version 2.6.1 release
-
-* Fri May 16 2008 Stephen Anthony <stephena@users.sf.net> 2.6-1
-- Version 2.6 release
-
-* Wed Apr 9 2008 Stephen Anthony <stephena@users.sf.net> 2.5.1-1
-- Version 2.5.1 release
-
 * Fri Mar 28 2008 Stephen Anthony <stephena@users.sf.net> 2.5-1
 - Version 2.5 release
 

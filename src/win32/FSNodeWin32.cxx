@@ -8,163 +8,108 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FSNodeWin32.cxx,v 1.14 2008-03-14 23:52:17 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include <cassert>
-#include <shlobj.h>
+#include <sstream>
 
-#ifdef ARRAYSIZE
-  #undef ARRAYSIZE
-#endif
-#ifdef _WIN32_WCE
-  #include <windows.h>
-  // winnt.h defines ARRAYSIZE, but we want our own one...
-  #undef ARRAYSIZE
-  #undef GetCurrentDirectory
-#endif
-
-#include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef _WIN32_WCE
-  #include <windows.h>
-  // winnt.h defines ARRAYSIZE, but we want our own one...
-  #undef ARRAYSIZE
-#endif
+#include <windows.h>
 #include <tchar.h>
-
-// F_OK, R_OK and W_OK are not defined under MSVC, so we define them here
-// For more information on the modes used by MSVC, check:
-// http://msdn2.microsoft.com/en-us/library/1w06ktdy(VS.80).aspx
-#ifndef F_OK
-  #define F_OK 0
-#endif
-
-#ifndef R_OK
-  #define R_OK 4
-#endif
-
-#ifndef W_OK
-  #define W_OK 2
-#endif
+#include <direct.h>
 
 #include "FSNode.hxx"
-#include "HomeFinder.hxx"
-
-static HomeFinder myHomeFinder;
 
 /*
  * Implementation of the Stella file system API based on Windows API.
- *
- * Parts of this class are documented in the base interface class, AbstractFilesystemNode.
  */
+
 class WindowsFilesystemNode : public AbstractFilesystemNode
 {
   public:
-    /**
-     * Creates a WindowsFilesystemNode with the root node as path.
-     *
-     * In regular windows systems, a virtual root path is used "".
-     * In windows CE, the "\" root is used instead.
-     */
     WindowsFilesystemNode();
+    WindowsFilesystemNode(const string &path);
+    WindowsFilesystemNode(const WindowsFilesystemNode* node);
 
-    /**
-     * Creates a WindowsFilesystemNode for a given path.
-     *
-     * Examples:
-     *   path=c:\foo\bar.txt, currentDir=false -> c:\foo\bar.txt
-     *   path=c:\foo\bar.txt, currentDir=true -> current directory
-     *   path=NULL, currentDir=true -> current directory
-     *
-     * @param path String with the path the new node should point to.
-     */
-    WindowsFilesystemNode(const string& path);
-
-    virtual bool exists() const { return _access(_path.c_str(), F_OK) == 0; }
-    virtual string getDisplayName() const { return _displayName; }
-    virtual string getName() const   { return _displayName; }
-    virtual string getPath() const   { return _path; }
-    virtual string getRelativePath() const;
+    virtual string displayName() const { return _displayName; }
+    virtual bool isValid() const { return _isValid; }
     virtual bool isDirectory() const { return _isDirectory; }
-    virtual bool isReadable() const  { return _access(_path.c_str(), R_OK) == 0; }
-    virtual bool isWritable() const  { return _access(_path.c_str(), W_OK) == 0; }
+    virtual string path() const { return _path; }
 
-    virtual bool getChildren(AbstractFSList& list, ListMode mode, bool hidden) const;
-    virtual AbstractFilesystemNode* getParent() const;
+    virtual FSList listDir(ListMode) const;
+    virtual AbstractFilesystemNode* parent() const;
 
   protected:
     string _displayName;
+    bool   _isDirectory;
+    bool   _isValid;
+    bool   _isPseudoRoot;
     string _path;
-    bool _isDirectory;
-    bool _isPseudoRoot;
-    bool _isValid;
 
   private:
-    /**
-     * Adds a single WindowsFilesystemNode to a given list.
-     * This method is used by getChildren() to populate the directory entries list.
-     *
-     * @param list List to put the file entry node in.
-     * @param mode Mode to use while adding the file entry to the list.
-     * @param base String with the directory being listed.
-     * @param find_data Describes a file that the FindFirstFile, FindFirstFileEx, or FindNextFile functions find.
-     */
-    static void addFile(AbstractFSList& list, ListMode mode, const char* base, WIN32_FIND_DATA* find_data);
-
-    /**
-     * Converts a Unicode string to Ascii format.
-     *
-     * @param str String to convert from Unicode to Ascii.
-     * @return str in Ascii format.
-     */
-    static char* toAscii(TCHAR *str);
-
-    /**
-     * Converts an Ascii string to Unicode format.
-     *
-     * @param str String to convert from Ascii to Unicode.
-     * @return str in Unicode format.
-     */
-    static const TCHAR* toUnicode(const char* str);
+    static char* toAscii(TCHAR* x);
+    static TCHAR* toUnicode(char* x);
+    static void addFile (FSList& list, ListMode mode,
+                         const char* base, WIN32_FIND_DATA* find_data);
 };
 
-/**
- * Returns the last component of a given path.
- *
- * Examples:
- *			c:\foo\bar.txt would return "\bar.txt"
- *			c:\foo\bar\    would return "\bar\"
- *
- * @param str Path to obtain the last component from.
- * @return Pointer to the first char of the last component inside str.
- */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const char* lastPathComponent(const string& str)
+static const char* lastPathComponent(const string& str)
 {
-  if(str.empty())
-    return "";
+  const char* start = str.c_str();
+  const char* cur = start + str.size() - 2;
 
-  const char *start = str.c_str();
-  const char *cur = start + str.size() - 2;
-
-  while (cur >= start && *cur != '\\')
+  while (cur > start && *cur != '\\')
     --cur;
 
   return cur + 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void WindowsFilesystemNode::addFile(AbstractFSList& list, ListMode mode,
+static string validatePath(const string& p)
+{
+  string path = p;
+  if(p.size() < 2 || p[1] != ':')
+    path = "c:";
+
+  return path;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+char* WindowsFilesystemNode::toAscii(TCHAR* x)
+{
+#ifndef UNICODE
+  return (char*)x;
+#else	
+  static char asciiString[MAX_PATH];
+  WideCharToMultiByte(CP_ACP, 0, x, _tcslen(x) + 1, asciiString, sizeof(asciiString), NULL, NULL);
+  return asciiString;
+#endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TCHAR* WindowsFilesystemNode::toUnicode(char* x)
+{
+#ifndef UNICODE
+  return (TCHAR*)x;
+#else
+  static TCHAR unicodeString[MAX_PATH];
+  MultiByteToWideChar(CP_ACP, 0, x, strlen(x) + 1, unicodeString, sizeof(unicodeString));
+  return unicodeString;
+#endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void WindowsFilesystemNode::addFile(FSList& list, ListMode mode,
                                     const char* base, WIN32_FIND_DATA* find_data)
 {
   WindowsFilesystemNode entry;
@@ -177,8 +122,8 @@ void WindowsFilesystemNode::addFile(AbstractFSList& list, ListMode mode,
 
   isDirectory = (find_data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? true : false);
 
-  if ((!isDirectory && mode == FilesystemNode::kListDirectoriesOnly) ||
-      (isDirectory && mode == FilesystemNode::kListFilesOnly))
+  if ((!isDirectory && mode == kListDirectoriesOnly) ||
+     (isDirectory && mode == kListFilesOnly))
     return;
 
   entry._isDirectory = isDirectory;
@@ -190,140 +135,69 @@ void WindowsFilesystemNode::addFile(AbstractFSList& list, ListMode mode,
   entry._isValid = true;
   entry._isPseudoRoot = false;
 
-  list.push_back(new WindowsFilesystemNode(entry));
+  list.push_back(wrap(new WindowsFilesystemNode(&entry)));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-char* WindowsFilesystemNode::toAscii(TCHAR* str)
+AbstractFilesystemNode* FilesystemNode::getRoot()
 {
-#ifndef UNICODE
-  return (char*)str;
-#else
-  static char asciiString[MAX_PATH];
-  WideCharToMultiByte(CP_ACP, 0, str, _tcslen(str) + 1, asciiString, sizeof(asciiString), NULL, NULL);
-  return asciiString;
-#endif
+  return new WindowsFilesystemNode();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const TCHAR* WindowsFilesystemNode::toUnicode(const char* str)
+AbstractFilesystemNode* FilesystemNode::getNodeForPath(const string& path)
 {
-#ifndef UNICODE
-  return (const TCHAR *)str;
-#else
-  static TCHAR unicodeString[MAX_PATH];
-  MultiByteToWideChar(CP_ACP, 0, str, strlen(str) + 1, unicodeString, sizeof(unicodeString) / sizeof(TCHAR));
-  return unicodeString;
-#endif
+  return new WindowsFilesystemNode(path);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 WindowsFilesystemNode::WindowsFilesystemNode()
 {
   _isDirectory = true;
-#ifndef _WIN32_WCE
+
   // Create a virtual root directory for standard Windows system
   _isValid = false;
   _path = "";
   _isPseudoRoot = true;
-#else
-  _displayName = "Root";
-  // No need to create a pseudo root directory on Windows CE
-  _isValid = true;
-  _path = "\\";
-  _isPseudoRoot = false;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-WindowsFilesystemNode::WindowsFilesystemNode(const string& p)
+WindowsFilesystemNode::WindowsFilesystemNode(const string& path)
 {
-  // Expand "~\" to the 'My Documents' directory
-  if ( p.length() >= 2 && p[0] == '~' && p[1] == '\\')
-  {
-    _path = myHomeFinder.getHomePath();
-    // Skip over the tilda.  We know that p contains at least
-    // two chars, so this is safe:
-    _path += p.c_str() + 1;
-  }
-  // Expand ".\" to the current directory
-  else if ( p.length() >= 2 && p[0] == '.' && p[1] == '\\')
-  {
-    char path[MAX_PATH];
-    GetCurrentDirectory(MAX_PATH, path);
-    _path = path;
-    // Skip over the tilda.  We know that p contains at least
-    // two chars, so this is safe:
-    _path += p.c_str() + 1;
-  }
-  else
-  {
-    assert(p.size() > 0);
-    _path = p;
-  }
-
+  _path = validatePath(path);
   _displayName = lastPathComponent(_path);
-
-  // Check whether it is a directory, and whether the file actually exists
-  DWORD fileAttribs = GetFileAttributes(toUnicode(_path.c_str()));
-
-  if (fileAttribs == INVALID_FILE_ATTRIBUTES)
-  {
-    _isDirectory = false;
-    _isValid = false;
-  }
-  else
-  {
-    _isDirectory = ((fileAttribs & FILE_ATTRIBUTE_DIRECTORY) != 0);
-    _isValid = true;
-
-    // Add a trailing slash, if necessary.
-    if (_isDirectory && _path.length() > 0 && _path[_path.length()-1] != '\\')
-      _path += '\\';
-  }
+  _isValid = true;
+  _isDirectory = true;
   _isPseudoRoot = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string WindowsFilesystemNode::getRelativePath() const
+WindowsFilesystemNode::WindowsFilesystemNode(const WindowsFilesystemNode* node)
 {
-  // If the path starts with the home directory, replace it with '~'
-  const string& home = myHomeFinder.getHomePath();
-  if(home != "")
-  {
-    // Windows file system not case sensitive
-    int len = home.length();
-    if(BSPF_strncasecmp(home.c_str(), _path.substr(0, len).c_str(), len) == 0)
-    {
-      string path = "~";
-      const char* offset = _path.c_str() + len;
-      if(*offset != '\\') path += '\\';
-      path += offset;
-      return path;
-    }
-  }
-  return _path;
+  _displayName = node->_displayName;
+  _isDirectory = node->_isDirectory;
+  _isValid = node->_isValid;
+  _isPseudoRoot = node->_isPseudoRoot;
+  _path = node->_path;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool WindowsFilesystemNode::
-    getChildren(AbstractFSList& myList, ListMode mode, bool hidden) const
+FSList WindowsFilesystemNode::listDir(ListMode mode) const
 {
   assert(_isDirectory);
 
-  //TODO: honor the hidden flag
+  FSList myList;
 
   if (_isPseudoRoot)
   {
-#ifndef _WIN32_WCE
     // Drives enumeration
     TCHAR drive_buffer[100];
     GetLogicalDriveStrings(sizeof(drive_buffer) / sizeof(TCHAR), drive_buffer);
 
-    for (TCHAR *current_drive = drive_buffer; *current_drive;
+    for (TCHAR *current_drive = drive_buffer; *current_drive; 
          current_drive += _tcslen(current_drive) + 1)
     {
-      WindowsFilesystemNode entry;
+      WindowsFilesystemNode entry;		
       char drive_name[2];
 
       drive_name[0] = toAscii(current_drive)[0];
@@ -333,9 +207,8 @@ bool WindowsFilesystemNode::
       entry._isValid = true;
       entry._isPseudoRoot = false;
       entry._path = toAscii(current_drive);
-      myList.push_back(new WindowsFilesystemNode(entry));
+      myList.push_back(wrap(new WindowsFilesystemNode(&entry)));
     }
-#endif
   }
   else
   {
@@ -347,27 +220,24 @@ bool WindowsFilesystemNode::
     sprintf(searchPath, "%s*", _path.c_str());
 
     handle = FindFirstFile(toUnicode(searchPath), &desc);
-
     if (handle == INVALID_HANDLE_VALUE)
-      return false;
+      return myList;
 
     addFile(myList, mode, _path.c_str(), &desc);
-
     while (FindNextFile(handle, &desc))
       addFile(myList, mode, _path.c_str(), &desc);
 
     FindClose(handle);
   }
 
-  return true;
+  return myList;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFilesystemNode* WindowsFilesystemNode::getParent() const
+AbstractFilesystemNode* WindowsFilesystemNode::parent() const
 {
-//  assert(_isValid || _isPseudoRoot);
-
-  if (!_isValid || _isPseudoRoot)
+  assert(_isValid || _isPseudoRoot);
+  if (_isPseudoRoot)
     return 0;
 
   WindowsFilesystemNode* p = new WindowsFilesystemNode();
@@ -376,6 +246,7 @@ AbstractFilesystemNode* WindowsFilesystemNode::getParent() const
     const char *start = _path.c_str();
     const char *end = lastPathComponent(_path);
 
+    p = new WindowsFilesystemNode();
     p->_path = string(start, end - start);
     p->_isValid = true;
     p->_isDirectory = true;
@@ -387,28 +258,22 @@ AbstractFilesystemNode* WindowsFilesystemNode::getParent() const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFilesystemNode* AbstractFilesystemNode::makeRootFileNode()
+bool AbstractFilesystemNode::fileExists(const string& path)
 {
-  return new WindowsFilesystemNode();
+  WIN32_FILE_ATTRIBUTE_DATA attr;
+  BOOL b = GetFileAttributesEx(path.c_str(), GetFileExInfoStandard, &attr);
+
+  return ((b != 0) && !(attr.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFilesystemNode* AbstractFilesystemNode::makeCurrentDirectoryFileNode()
+bool AbstractFilesystemNode::dirExists(const string& path)
 {
-  return new WindowsFilesystemNode(".\\");
-}
+  WIN32_FILE_ATTRIBUTE_DATA attr;
+  BOOL b = GetFileAttributesEx(path.c_str(), GetFileExInfoStandard, &attr);
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFilesystemNode* AbstractFilesystemNode::makeHomeDirectoryFileNode()
-{
-  return new WindowsFilesystemNode("~\\");
+  return ((b != 0) && (attr.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFilesystemNode* AbstractFilesystemNode::makeFileNodePath(const string& path)
-{
-  return new WindowsFilesystemNode(path);
-} 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool AbstractFilesystemNode::makeDir(const string& path)

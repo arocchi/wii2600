@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart4A50.cxx,v 1.13 2008-02-22 16:27:07 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -35,6 +35,11 @@ Cartridge4A50::Cartridge4A50(const uInt8* image, uInt32 size)
   else                    size = 131072;
   for(uInt32 slice = 0; slice < 131072 / size; ++slice)
     memcpy(myImage + (slice*size), image, size);
+
+  // Initialize RAM with random values
+  class Random random;
+  for(uInt32 i = 0; i < 32768; ++i)
+    myRAM[i] = random.next();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,11 +50,6 @@ Cartridge4A50::~Cartridge4A50()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge4A50::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 32768; ++i)
-    myRAM[i] = random.next();
-
   mySliceLow = mySliceMiddle = mySliceHigh = 0;
   myIsRomLow = myIsRomMiddle = myIsRomHigh = true;
 
@@ -120,7 +120,7 @@ uInt8 Cartridge4A50::peek(uInt16 address)
     else if((address & 0x1f00) == 0x1f00)      // 256B region from 0x1f00 - 0x1fff
     {
       value = myImage[(address & 0xff) + 0x1ff00];
-      if(!myBankLocked && ((myLastData & 0xe0) == 0x60) &&
+      if(((myLastData & 0xe0) == 0x60) &&
          ((myLastAddress >= 0x1000) || (myLastAddress < 0x200)))
         mySliceHigh = (mySliceHigh & 0xf0ff) | ((address & 0x8) << 8) |
                       ((address & 0x70) << 4);
@@ -166,7 +166,7 @@ void Cartridge4A50::poke(uInt16 address, uInt8 value)
     }
     else if((address & 0x1f00) == 0x1f00)      // 256B region at 0x1f00 - 0x1fff
     {
-      if(!myBankLocked && ((myLastData & 0xe0) == 0x60) &&
+      if(((myLastData & 0xe0) == 0x60) &&
          ((myLastAddress >= 0x1000) || (myLastAddress < 0x200)))
         mySliceHigh = (mySliceHigh & 0xf0ff) | ((address & 0x8) << 8) |
                       ((address & 0x70) << 4);
@@ -179,8 +179,6 @@ void Cartridge4A50::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge4A50::checkBankSwitch(uInt16 address, uInt8 value)
 {
-  if(myBankLocked) return;
-
   // This scheme contains so many hotspots that it's easier to just check
   // all of them
   if(((myLastData & 0xe0) == 0x60) &&      // Switch lower/middle/upper bank
@@ -283,39 +281,34 @@ void Cartridge4A50::checkBankSwitch(uInt16 address, uInt8 value)
 void Cartridge4A50::bank(uInt16)
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int Cartridge4A50::bank()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int Cartridge4A50::bankCount()
 {
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return 1;
+  return 1;  // TODO
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge4A50::patch(uInt16 address, uInt8 value)
 {
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return false;
+  return false;  // TODO
 } 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8* Cartridge4A50::getImage(int& size)
 {
-  size = 131072;
-  return &myImage[0];
+  size = 0;  // TODO
+  return 0;
 }
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge4A50::save(Serializer& out) const

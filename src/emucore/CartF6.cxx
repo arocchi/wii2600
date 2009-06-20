@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF6.cxx,v 1.15 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "Serializer.hxx"
@@ -28,7 +27,10 @@
 CartridgeF6::CartridgeF6(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 16384);
+  for(uInt32 addr = 0; addr < 16384; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,7 +72,7 @@ void CartridgeF6::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeF6::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -99,13 +101,13 @@ uInt8 CartridgeF6::peek(uInt16 address)
       break;
   }
 
-  return myImage[(myCurrentBank << 12) + address];
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF6::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -138,11 +140,11 @@ void CartridgeF6::poke(uInt16 address, uInt8)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF6::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -175,7 +177,8 @@ int CartridgeF6::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeF6::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

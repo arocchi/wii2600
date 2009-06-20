@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF8.hxx,v 1.12 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEF8_HXX
@@ -29,7 +29,7 @@ class System;
   are two 4K banks.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: CartF8.hxx,v 1.12 2008-02-06 13:45:21 stephena Exp $
 */
 class CartridgeF8 : public Cartridge
 {
@@ -38,9 +38,9 @@ class CartridgeF8 : public Cartridge
       Create a new cartridge using the specified image
 
       @param image     Pointer to the ROM image
-      @param startlow  Whether to use the lower or upper bank for startup
+      @param swapbanks Whether to swap the startup bank
     */
-    CartridgeF8(const uInt8* image, bool startlow = false);
+    CartridgeF8(const uInt8* image, bool swapbanks);
  
     /**
       Destructor

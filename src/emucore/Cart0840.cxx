@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -17,7 +17,6 @@
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "Cart0840.hxx"
@@ -26,7 +25,10 @@
 Cartridge0840::Cartridge0840(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -79,7 +81,7 @@ void Cartridge0840::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 Cartridge0840::peek(uInt16 address)
 {
-  address &= 0x1840;
+  address = address & 0x1840;
 
   // Switch banks if necessary
   switch(address)
@@ -112,7 +114,7 @@ uInt8 Cartridge0840::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge0840::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x1840;
+  address = address & 0x1840;
 
   // Switch banks if necessary
   switch(address)
@@ -143,11 +145,11 @@ void Cartridge0840::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge0840::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
 
   // Setup the page access methods for the current bank
@@ -179,7 +181,10 @@ int Cartridge0840::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge0840::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0fff)] = value;
+  address &= 0x0fff;
+  myImage[myCurrentBank * 4096] = value;
+  bank(myCurrentBank); // TODO: see if this is really necessary
+
   return true;
 }
 

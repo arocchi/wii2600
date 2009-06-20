@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Debugger.hxx,v 1.92 2008-03-23 17:43:21 stephena Exp $
 //============================================================================
 
 #ifndef DEBUGGER_HXX
@@ -24,7 +24,6 @@ class Console;
 class System;
 class CpuDebug;
 class RamDebug;
-class RiotDebug;
 class TIADebug;
 class TiaInfoWidget;
 class TiaOutputWidget;
@@ -48,6 +47,12 @@ class Expression;
 typedef map<string,Expression*> FunctionMap;
 typedef map<string,string> FunctionDefMap;
 
+// Constants for RAM area
+enum {
+  kRamStart = 0x80,
+  kRamSize = 128
+};
+
 /*
 // These will probably turn out to be unneeded, left for reference for now
 // pointer types for Debugger instance methods
@@ -64,7 +69,7 @@ typedef uInt16 (Debugger::*DEBUGGER_WORD_METHOD)();
   for all debugging operations in Stella (parser, 6502 debugger, etc).
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Debugger.hxx,v 1.92 2008-03-23 17:43:21 stephena Exp $
 */
 class Debugger : public DialogContainer
 {
@@ -97,7 +102,7 @@ class Debugger : public DialogContainer
     /**
       Initialize the video subsystem wrt this class.
     */
-    bool initializeVideo();
+    void initializeVideo();
 
     /**
       Inform this object of a console change.
@@ -139,11 +144,6 @@ class Debugger : public DialogContainer
     RamDebug& ramDebug() const { return *myRamDebug; }
 
     /**
-      The debugger subsystem responsible for all RIOT state
-    */
-    RiotDebug& riotDebug() const { return *myRiotDebug; }
-
-    /**
       The debugger subsystem responsible for all TIA state
     */
     TIADebug& tiaDebug() const { return *myTiaDebug; }
@@ -162,6 +162,17 @@ class Debugger : public DialogContainer
       Run the debugger command and return the result.
     */
     const string run(const string& command);
+
+    /**
+      Give the contents of the CPU registers and disassembly of
+      next instruction.
+    */
+    const string cpuState();
+
+    /**
+      Get contents of RIOT switch & timer registers
+    */
+    const string riotState();
 
     /**
       The current cycle count of the System.
@@ -192,7 +203,7 @@ class Debugger : public DialogContainer
     */
     int stringToValue(const string& stringval)
         { return myParser->decipher_arg(stringval); }
-    string valueToString(int value, BaseFormat outputBase = kBASE_DEFAULT);
+    const string valueToString(int value, BaseFormat outputBase = kBASE_DEFAULT);
 
     /** Convenience methods to convert to/from base values */
     static char* to_hex_4(int i)
@@ -237,37 +248,6 @@ class Debugger : public DialogContainer
       else if(d >= 'A' && d <= 'F') return d - 'A' + 10;
       else                          return -1;
     }
-
-    /* Convenience methods to get/set bit(s) in an 8-bit register */
-    static uInt8 set_bit(uInt8 input, uInt8 bit, bool on)
-    {
-      if(on)
-        return input | (1 << bit);
-      else
-        return input & ~(1 << bit);
-    }
-    static void set_bits(uInt8 reg, BoolArray& bits)
-    {
-      bits.clear();
-      for(int i = 0; i < 8; ++i)
-      {
-        if(reg & (1<<(7-i)))
-          bits.push_back(true);
-        else
-          bits.push_back(false);
-      }
-    }
-    static uInt8 get_bits(BoolArray& bits)
-    {
-      uInt8 result = 0x0;
-      for(int i = 0; i < 8; ++i)
-        if(bits[i])
-          result |= (1<<(7-i));
-      return result;
-    }
-
-    /* Invert given input if it differs from its previous value */
-    const string invIfChanged(int reg, int oldReg);
 
     /**
       This is used when we want the debugger from a class that can't
@@ -342,19 +322,29 @@ class Debugger : public DialogContainer
 
     void reloadROM();
 
-    // Set a bunch of RAM locations at once
+    /**
+      Return a formatted string containing the contents of the specified
+      device.
+    */
+    const string dumpRAM();
+    const string dumpTIA();
+
+    // set a bunch of RAM locations at once
     const string setRAM(IntArray& args);
 
     void reset();
     void autoLoadSymbols(string file);
     void clearAllBreakPoints();
 
+    void formatFlags(BoolArray& b, char *out);
     PromptWidget *prompt() { return myPrompt; }
     void addLabel(string label, int address);
 
     string getCartType();
     void saveState(int state);
     void loadState(int state);
+
+    const string invIfChanged(int reg, int oldReg);
 
   private:
     typedef multimap<string,string> ListFile;
@@ -364,10 +354,9 @@ class Debugger : public DialogContainer
     System*  mySystem;
 
     DebuggerParser* myParser;
-    CpuDebug*       myCpuDebug;
-    RamDebug*       myRamDebug;
-    RiotDebug*      myRiotDebug;
-    TIADebug*       myTiaDebug;
+    CpuDebug* myCpuDebug;
+    RamDebug* myRamDebug;
+    TIADebug* myTiaDebug;
 
     TiaInfoWidget*   myTiaInfo;
     TiaOutputWidget* myTiaOutput;

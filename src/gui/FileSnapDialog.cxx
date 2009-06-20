@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FileSnapDialog.cxx,v 1.17 2008-03-23 17:43:22 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,6 +22,7 @@
 #include "bspf.hxx"
 
 #include "BrowserDialog.hxx"
+#include "DialogContainer.hxx"
 #include "EditTextWidget.hxx"
 #include "FSNode.hxx"
 #include "LauncherDialog.hxx"
@@ -32,14 +33,14 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FileSnapDialog::FileSnapDialog(
       OSystem* osystem, DialogContainer* parent,
-      const GUI::Font& font, GuiObject* boss)
-  : Dialog(osystem, parent, 0, 0, 0, 0),
+      const GUI::Font& font, GuiObject* boss,
+      int x, int y, int w, int h)
+  : Dialog(osystem, parent, x, y, w, h),
     CommandSender(boss),
     myBrowser(NULL),
     myIsGlobal(boss != 0)
 {
   const int lineHeight   = font.getLineHeight(),
-            fontWidth    = font.getMaxCharWidth(),
             buttonWidth  = font.getStringWidth("Properties file:") + 20,
             buttonHeight = font.getLineHeight() + 4;
   const int vBorder = 8;
@@ -48,8 +49,8 @@ FileSnapDialog::FileSnapDialog(
   ButtonWidget* b;
 
   // Set real dimensions
-  _w = 52 * fontWidth + 8;
-  _h = 11 * (lineHeight + 4) + 10;
+//  _w = 50 * fontWidth + 10;
+//  _h = 11 * (lineHeight + 4) + 10;
 
   xpos = vBorder;  ypos = vBorder;
 
@@ -113,27 +114,11 @@ FileSnapDialog::FileSnapDialog(
                                   _w - xpos - 10, lineHeight, "");
   wid.push_back(mySnapPath);
 
-  // EEPROM directory
-  xpos = vBorder;  ypos += b->getHeight() + 3;
-  b = new ButtonWidget(this, font, xpos, ypos, buttonWidth, buttonHeight,
-                       "EEPROM path:", kChooseEEPROMDirCmd);
-  wid.push_back(b);
-  xpos += buttonWidth + 10;
-  myEEPROMPath = new EditTextWidget(this, font, xpos, ypos + 2,
-                                    _w - xpos - 10, lineHeight, "");
-  wid.push_back(myEEPROMPath);
-
   // Snapshot single or multiple saves
   xpos = 30;  ypos += b->getHeight() + 5;
-  mySnapSingle = new CheckboxWidget(this, font, xpos, ypos,
-                                    "Multiple snapshots");
-  wid.push_back(mySnapSingle);
-
-  // Snapshot in 1x mode (ignore scaling)
-  xpos += mySnapSingle->getWidth() + 20;
-  mySnap1x = new CheckboxWidget(this, font, xpos, ypos,
-                                "Snapshot in 1x mode");
-  wid.push_back(mySnap1x);
+  mySnapSingleCheckbox = new CheckboxWidget(this, font, xpos, ypos,
+                                            "Multiple snapshots");
+  wid.push_back(mySnapSingleCheckbox);
 
   // Add Defaults, OK and Cancel buttons
   b = new ButtonWidget(this, font, 10, _h - buttonHeight - 10,
@@ -152,7 +137,7 @@ FileSnapDialog::FileSnapDialog(
   }
 
   // Create file browser dialog
-  myBrowser = new BrowserDialog(this, font);
+  myBrowser = new BrowserDialog(this, font, 60, 20, 200, 200);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -164,73 +149,61 @@ FileSnapDialog::~FileSnapDialog()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FileSnapDialog::loadConfig()
 {
-  const Settings& settings = instance().settings();
-  myRomPath->setEditString(settings.getString("romdir"));
-  myStatePath->setEditString(settings.getString("statedir"));
-  myCheatFile->setEditString(settings.getString("cheatfile"));
-  myPaletteFile->setEditString(settings.getString("palettefile"));
-  myPropsFile->setEditString(settings.getString("propsfile"));
-  mySnapPath->setEditString(settings.getString("ssdir"));
-  myEEPROMPath->setEditString(settings.getString("eepromdir"));
-  mySnapSingle->setState(!settings.getBool("sssingle"));
-  mySnap1x->setState(settings.getBool("ss1x"));
+  myRomPath->setEditString(instance()->settings().getString("romdir"));
+  myStatePath->setEditString(instance()->stateDir());
+  myCheatFile->setEditString(instance()->cheatFile());
+  myPaletteFile->setEditString(instance()->paletteFile());
+  myPropsFile->setEditString(instance()->propertiesFile());
+  mySnapPath->setEditString(instance()->settings().getString("ssdir"));
+  mySnapSingleCheckbox->setState(!instance()->settings().getBool("sssingle"));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FileSnapDialog::saveConfig()
 {
-  instance().settings().setString("romdir", myRomPath->getEditString());
-  instance().settings().setString("statedir", myStatePath->getEditString());
-  instance().settings().setString("cheatfile", myCheatFile->getEditString());
-  instance().settings().setString("palettefile", myPaletteFile->getEditString());
-  instance().settings().setString("propsfile", myPropsFile->getEditString());
-  instance().settings().setString("ssdir", mySnapPath->getEditString());
-  instance().settings().setString("eepromdir", myEEPROMPath->getEditString());
-  instance().settings().setBool("sssingle", !mySnapSingle->getState());
-  instance().settings().setBool("ss1x", mySnap1x->getState());
+  instance()->settings().setString("romdir", myRomPath->getEditString());
+  instance()->settings().setString("statedir", myStatePath->getEditString());
+  instance()->settings().setString("cheatfile", myCheatFile->getEditString());
+  instance()->settings().setString("palettefile", myPaletteFile->getEditString());
+  instance()->settings().setString("propsfile", myPropsFile->getEditString());
+  instance()->settings().setString("ssdir", mySnapPath->getEditString());
+  instance()->settings().setBool("sssingle", !mySnapSingleCheckbox->getState());
 
   // Flush changes to disk and inform the OSystem
-  instance().settings().saveConfig();
-  instance().setConfigPaths();
+  instance()->settings().saveConfig();
+  instance()->setConfigPaths();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FileSnapDialog::setDefaults()
 {
-  FilesystemNode node;
-  string basedir = instance().baseDir();
-  if(basedir.compare(basedir.length()-1, 1, BSPF_PATH_SEPARATOR, 0, 1) != 0)
-    basedir.append(BSPF_PATH_SEPARATOR);
+  const string& basedir = instance()->baseDir();
+  const string& romdir = "roms";
+  const string& statedir = basedir + BSPF_PATH_SEPARATOR + "state";
+  const string& cheatfile = basedir + BSPF_PATH_SEPARATOR + "stella.cht";
+  const string& palettefile = basedir + BSPF_PATH_SEPARATOR + "stella.pal";
+  const string& propsfile = basedir + BSPF_PATH_SEPARATOR + "stella.pro";
+  const string& ssdir = basedir + BSPF_PATH_SEPARATOR;
 
-  node = FilesystemNode("~");
-  myRomPath->setEditString(node.getRelativePath());
+  myRomPath->setEditString(romdir);
+  myStatePath->setEditString(statedir);
+  myCheatFile->setEditString(cheatfile);
+  myPaletteFile->setEditString(palettefile);
+  myPropsFile->setEditString(propsfile);
 
-  const string& statedir = basedir + "state";
-  node = FilesystemNode(statedir);
-  myStatePath->setEditString(node.getRelativePath());
+  mySnapPath->setEditString(ssdir);
+  mySnapSingleCheckbox->setState(true);
+}
 
-  const string& cheatfile = basedir + "stella.cht";
-  node = FilesystemNode(cheatfile);
-  myCheatFile->setEditString(node.getRelativePath());
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FileSnapDialog::openBrowser(const string& title, const string& startpath,
+                                 FilesystemNode::ListMode mode, int cmd)
+{
+  parent()->addDialog(myBrowser);
 
-  const string& palettefile = basedir + "stella.pal";
-  node = FilesystemNode(palettefile);
-  myPaletteFile->setEditString(node.getRelativePath());
-
-  const string& propsfile = basedir + "stella.pro";
-  node = FilesystemNode(propsfile);
-  myPropsFile->setEditString(node.getRelativePath());
-
-  const string& eepromdir = basedir;
-  node = FilesystemNode(eepromdir);
-  myEEPROMPath->setEditString(node.getRelativePath());
-
-  const string& ssdir = basedir + "snapshots";
-  node = FilesystemNode(ssdir);
-  mySnapPath->setEditString(node.getRelativePath());
-
-  mySnapSingle->setState(true);
-  mySnap1x->setState(false);
+  myBrowser->setTitle(title);
+  myBrowser->setEmitSignal(cmd);
+  myBrowser->setStartPath(startpath, mode);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -251,86 +224,74 @@ void FileSnapDialog::handleCommand(CommandSender* sender, int cmd,
       break;
 
     case kChooseRomDirCmd:
-      myBrowser->show("Select ROM directory:", myRomPath->getEditString(),
-                      FilesystemNode::kListDirectoriesOnly, kRomDirChosenCmd);
+      openBrowser("Select ROM directory:", myRomPath->getEditString(),
+                  FilesystemNode::kListDirectoriesOnly, kRomDirChosenCmd);
       break;
 
     case kChooseStateDirCmd:
-      myBrowser->show("Select state directory:", myStatePath->getEditString(),
-                      FilesystemNode::kListDirectoriesOnly, kStateDirChosenCmd);
+      openBrowser("Select state directory:", myStatePath->getEditString(),
+                  FilesystemNode::kListDirectoriesOnly, kStateDirChosenCmd);
       break;
 
     case kChooseCheatFileCmd:
-      myBrowser->show("Select cheat file:", myCheatFile->getEditString(),
-                      FilesystemNode::kListAll, kCheatFileChosenCmd);
+      openBrowser("Select cheat file:", myCheatFile->getEditString(),
+                  FilesystemNode::kListAll, kCheatFileChosenCmd);
       break;
 
     case kChoosePaletteFileCmd:
-      myBrowser->show("Select palette file:", myPaletteFile->getEditString(),
-                      FilesystemNode::kListAll, kPaletteFileChosenCmd);
+      openBrowser("Select palette file:", myPaletteFile->getEditString(),
+                  FilesystemNode::kListAll, kPaletteFileChosenCmd);
       break;
 
     case kChoosePropsFileCmd:
-      myBrowser->show("Select properties file:", myPropsFile->getEditString(),
-                      FilesystemNode::kListAll, kPropsFileChosenCmd);
+      openBrowser("Select properties file:", myPropsFile->getEditString(),
+                  FilesystemNode::kListAll, kPropsFileChosenCmd);
       break;
 
     case kChooseSnapDirCmd:
-      myBrowser->show("Select snapshot directory:", mySnapPath->getEditString(),
-                      FilesystemNode::kListDirectoriesOnly, kSnapDirChosenCmd);
-      break;
-
-    case kChooseEEPROMDirCmd:
-      myBrowser->show("Select EEPROM directory:", myEEPROMPath->getEditString(),
-                      FilesystemNode::kListDirectoriesOnly, kEEPROMDirChosenCmd);
+      openBrowser("Select snapshot directory:", mySnapPath->getEditString(),
+                  FilesystemNode::kListDirectoriesOnly, kSnapDirChosenCmd);
       break;
 
     case kRomDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myRomPath->setEditString(dir.getRelativePath());
+      myRomPath->setEditString(dir.path());
       break;
     }
 
     case kStateDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myStatePath->setEditString(dir.getRelativePath());
+      myStatePath->setEditString(dir.path());
       break;
     }
 
     case kCheatFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myCheatFile->setEditString(dir.getRelativePath());
+      myCheatFile->setEditString(dir.path());
       break;
     }
 
     case kPaletteFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myPaletteFile->setEditString(dir.getRelativePath());
+      myPaletteFile->setEditString(dir.path());
       break;
     }
 
     case kPropsFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myPropsFile->setEditString(dir.getRelativePath());
+      myPropsFile->setEditString(dir.path());
       break;
     }
 
     case kSnapDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      mySnapPath->setEditString(dir.getRelativePath());
-      break;
-    }
-
-    case kEEPROMDirChosenCmd:
-    {
-      FilesystemNode dir(myBrowser->getResult());
-      myEEPROMPath->setEditString(dir.getRelativePath());
+      mySnapPath->setEditString(dir.path());
       break;
     }
 

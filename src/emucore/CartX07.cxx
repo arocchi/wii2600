@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: 
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "M6532.hxx"
@@ -28,7 +27,10 @@
 CartridgeX07::CartridgeX07(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 65536);
+  for(uInt32 addr = 0; addr < 65536; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -82,8 +84,7 @@ uInt8 CartridgeX07::peek(uInt16 address)
     value = mySystem->tia().peek(address);
 
   // Switch banks if necessary
-  if((address & 0x180f) == 0x080d)
-    bank((address & 0xf0) >> 4);
+  if((address & 0x180f) == 0x080d) bank((address & 0xf0) >> 4);
   else if((address & 0x1880) == 0)
   {
     if((myCurrentBank & 0xe) == 0xe)
@@ -104,8 +105,7 @@ void CartridgeX07::poke(uInt16 address, uInt8 value)
     mySystem->tia().poke(address, value);
 
   // Switch banks if necessary
-  if((address & 0x180f) == 0x080d)
-    bank((address & 0xf0) >> 4);
+  if((address & 0x180f) == 0x080d) bank((address & 0xf0) >> 4);
   else if((address & 0x1880) == 0)
   {
     if((myCurrentBank & 0xe) == 0xe)
@@ -116,12 +116,13 @@ void CartridgeX07::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeX07::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   // Remember what bank we're in
   myCurrentBank = (bank & 0x0f);
-  uInt32 offset = myCurrentBank << 12;
+  uInt32 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
+//  uInt16 mask = mySystem->pageMask();
 
   // Setup the page access methods for the current bank
   System::PageAccess access;
@@ -151,9 +152,12 @@ int CartridgeX07::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeX07::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address &= 0x0fff;
+  myImage[myCurrentBank * 4096] = value;
+  bank(myCurrentBank); // TODO: see if this is really necessary
   return true;
 } 
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8* CartridgeX07::getImage(int& size)

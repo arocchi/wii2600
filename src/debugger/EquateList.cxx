@@ -8,366 +8,24 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EquateList.cxx,v 1.27 2008-02-24 16:51:52 stephena Exp $
 //============================================================================
 
 #include <fstream>
-#include <sstream>
 
 #include "bspf.hxx"
+#include "Equate.hxx"
+#include "EquateList.hxx"
 #include "Debugger.hxx"
 
-#include "EquateList.hxx"
+// built in labels
+static Equate hardCodedEquates[] = {
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EquateList::EquateList()
-{
-  for(int i = 0; i < kSystemEquateSize; i++)
-  {
-    const Equate& e = ourSystemEquates[i];
-    mySystemAddresses.insert(make_pair(e.label, e));
-
-    // Certain hardcoded addresses have different labels in read and write
-    // mode; we use separate lists for those
-    if(e.flags & EQF_READ)
-      mySystemReadLabels.insert(make_pair(e.address, e));
-    if(e.flags & EQF_WRITE)
-      mySystemWriteLabels.insert(make_pair(e.address, e));
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EquateList::~EquateList()
-{
-  mySystemAddresses.clear();
-  mySystemReadLabels.clear();
-  mySystemWriteLabels.clear();
-
-  myUserAddresses.clear();
-  myUserLabels.clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void EquateList::addEquate(const string& label, uInt16 address)
-{
-  // First check if this already exists as a hard-coded equate
-  LabelToAddr::const_iterator iter = mySystemAddresses.find(label);
-  if(iter != mySystemAddresses.end() && iter->second.address == address)
-    return;
-
-  // Create a new user equate, and determine if its RAM or ROM
-  // For now, these are the only types we care about
-  // Technically, addresses above 0x1000 are ROM and are read-only
-  // However, somes ROMs have dedicated RAM mapped to those addresses
-  // as well, and we don't yet have an infrastructure to determine that,
-  // so the entire region is marked as read-write
-  equate_t flags = EQF_READ;
-#if 0
-  if(address >= 0x80 && address <= 0xff)
-    flags = EQF_RW;
-  else if((address & 0x1000) == 0x1000)
-    flags = EQF_RW;
-  else
-  { 
-    cerr << "label = " << label << ", address = " << hex << address << " discarded\n";
-    return;  // don't know what else to do for now
-  }
-#else
-  // The above section of code is deactivated until a better means of
-  // determining constants vs. addresses is found
-  flags = EQF_RW;
-#endif
-
-  removeEquate(label);
-
-  Equate e;
-  e.label = label;
-  e.address = address;
-  e.flags = flags;
-
-  myUserAddresses.insert(make_pair(label, e));
-  myUserLabels.insert(make_pair(address, e));
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool EquateList::removeEquate(const string& label)
-{
-  // Note that only user-defined equates can be removed
-  LabelToAddr::iterator iter = myUserAddresses.find(label);
-  if(iter != myUserAddresses.end())
-  {
-    // Erase the label
-    myUserAddresses.erase(iter);
-
-    // And also erase the address assigned to it
-    AddrToLabel::iterator iter2 = myUserLabels.find(iter->second.address);
-    if(iter2 != myUserLabels.end())
-      myUserLabels.erase(iter2);
-
-    return true;
-  }
-  return false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const string& EquateList::getLabel(uInt16 addr, bool isRead, int places)
-{
-  AddrToLabel::const_iterator iter;
-
-  // Is this a read or write?
-  // For now, there aren't separate read & write lists for user labels
-  AddrToLabel& systemLabels = isRead ? mySystemReadLabels : mySystemWriteLabels;
-
-  // Determine the type of address to access the correct list
-  addressType(addr);
-  switch(myAddressType)
-  {
-    case ADDR_TIA:
-      if((iter = systemLabels.find(addr&0x7f)) != systemLabels.end())
-        return iter->second.label;
-      else if((iter = myUserLabels.find(addr)) != myUserLabels.end())
-        return iter->second.label;
-      break;
-
-    case ADDR_RIOT:  // FIXME - add mirrors for RIOT
-      if((iter = systemLabels.find(addr)) != systemLabels.end())
-        return iter->second.label;
-      else if((iter = myUserLabels.find(addr)) != myUserLabels.end())
-        return iter->second.label;
-      break;
-
-    case ADDR_RAM:
-    case ADDR_ROM:
-      // These addresses can never be in the system labels list
-      if((iter = myUserLabels.find(addr)) != myUserLabels.end())
-        return iter->second.label;
-      break;
-  }
-
-  if(places > -1)
-  {
-    ostringstream buf;
-    buf << "$" << setw(places) << hex << addr;
-    return myCurrentLabel = buf.str();
-  }
-
-  return EmptyString;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int EquateList::getAddress(const string& label) const
-{
-  LabelToAddr::const_iterator iter;
-
-  if((iter = mySystemAddresses.find(label)) != mySystemAddresses.end())
-    return iter->second.address;
-  else if((iter = myUserAddresses.find(label)) != myUserAddresses.end())
-    return iter->second.address;
-  else
-    return -1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string EquateList::loadFile(const string& file)
-{
-  int pos = 0, lines = 0, curVal;
-  string curLabel;
-  char line[1024];
-
-  ifstream in(file.c_str());
-  if(!in.is_open())
-    return "Unable to read symbols from " + file;
-
-  myUserAddresses.clear();
-  myUserLabels.clear();
-
-  while( !in.eof() )
-  {
-    curVal = 0;
-    curLabel = "";
-
-    int got = in.get();
-
-    if(got == -1 || got == '\r' || got == '\n' || pos == 1023) {
-      line[pos] = '\0';
-      pos = 0;
-
-      if(strlen(line) > 0 && line[0] != '-')
-      {
-        curLabel = extractLabel(line);
-        if((curVal = extractValue(line)) < 0)
-          return "invalid symbol file";
-  
-        addEquate(curLabel, curVal);
-  
-        lines++;
-      }
-    }
-    else
-    {
-      line[pos++] = got;
-    }
-  }
-  in.close();
-
-  return "loaded " + file + " OK";
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool EquateList::saveFile(const string& file)
-{
-  // Only user-defined equates are saved; system equates are always
-  // available, so there's no need to save them
-  char buf[256];
-
-  ofstream out(file.c_str());
-  if(!out.is_open())
-    return false;
-
-  out << "--- Symbol List (sorted by symbol)" << endl;
-
-  LabelToAddr::const_iterator iter;
-  for(iter = myUserAddresses.begin(); iter != myUserAddresses.end(); iter++)
-  {
-    sprintf(buf, "%-24s %04x                  \n", iter->second.label.c_str(), iter->second.address);
-    out << buf;
-  }
-
-  out << "--- End of Symbol List." << endl;
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int EquateList::countCompletions(const char *in)
-{
-  myCompletions = myCompPrefix = "";
-  return countCompletions(in, mySystemAddresses) +
-         countCompletions(in, myUserAddresses);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int EquateList::countCompletions(const char *in, LabelToAddr& addresses)
-{
-  int count = 0;
-
-  LabelToAddr::iterator iter;
-  for(iter = addresses.begin(); iter != addresses.end(); iter++)
-  {
-    const char *l = iter->first.c_str();
-
-    if(BSPF_strncasecmp(l, in, strlen(in)) == 0)
-    {
-      if(myCompPrefix == "")
-        myCompPrefix += l;
-      else
-      {
-        int nonMatch = 0;
-        const char *c = myCompPrefix.c_str();
-        while(*c != '\0' && tolower(*c) == tolower(l[nonMatch]))
-        {
-          c++;
-          nonMatch++;
-        }
-        myCompPrefix.erase(nonMatch, myCompPrefix.length());
-      }
-
-      if(count++) myCompletions += "  ";
-        myCompletions += l;
-    }
-  }
-
-  return count;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string EquateList::extractLabel(char *c)
-{
-  string l = "";
-  while(*c != ' ')
-    l += *c++;
-
-  return l;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int EquateList::extractValue(char *c)
-{
-  while(*c != ' ')
-  {
-    if(*c == '\0')
-      return -1;
-    c++;
-  }
-
-  while(*c == ' ')
-  {
-    if(*c == '\0')
-      return -1;
-    c++;
-  }
-
-  int ret = 0;
-  for(int i=0; i<4; i++)
-  {
-    if(*c >= '0' && *c <= '9')
-      ret = (ret << 4) + (*c) - '0';
-    else if(*c >= 'a' && *c <= 'f')
-      ret = (ret << 4) + (*c) - 'a' + 10;
-    else
-      return -1;
-    c++;
-  }
-  return ret;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void EquateList::addressType(uInt16 addr)
-{
-  // These addresses were based on (and checked against) Kroko's 2600 memory
-  // map, found at http://www.qotile.net/minidig/docs/2600_mem_map.txt
-  myAddressType = ADDR_ROM;
-  if(addr % 0x2000 < 0x1000)
-  {
-    uInt16 z = addr & 0x00ff;
-    if(z < 0x80)
-      myAddressType = ADDR_TIA;
-    else
-    {
-      switch(addr & 0x0f00)
-      {
-        case 0x000:
-        case 0x100:
-        case 0x400:
-        case 0x500:
-        case 0x800:
-        case 0x900:
-        case 0xc00:
-        case 0xd00:
-          myAddressType = ADDR_RAM;
-          break;
-        case 0x200:
-        case 0x300:
-        case 0x600:
-        case 0x700:
-        case 0xa00:
-        case 0xb00:
-        case 0xe00:
-        case 0xf00:
-          myAddressType = ADDR_RIOT;
-          break;
-      }
-    }
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const EquateList::Equate EquateList::ourSystemEquates[kSystemEquateSize] = {
 // Standard $00-based TIA write locations:
   { "VSYNC",  0x00, EQF_WRITE },
   { "VBLANK", 0x01, EQF_WRITE },
@@ -416,53 +74,53 @@ const EquateList::Equate EquateList::ourSystemEquates[kSystemEquateSize] = {
   { "HMCLR",  0x2B, EQF_WRITE },
   { "CXCLR",  0x2C, EQF_WRITE },
 
-// Mirrored $40-based TIA write locations:
-  { "VSYNC.40",  0x40, EQF_WRITE },
-  { "VBLANK.40", 0x41, EQF_WRITE },
-  { "WSYNC.40",  0x42, EQF_WRITE },
-  { "RSYNC.40",  0x43, EQF_WRITE },
-  { "NUSIZ0.40", 0x44, EQF_WRITE },
-  { "NUSIZ1.40", 0x45, EQF_WRITE },
-  { "COLUP0.40", 0x46, EQF_WRITE },
-  { "COLUP1.40", 0x47, EQF_WRITE },
-  { "COLUPF.40", 0x48, EQF_WRITE },
-  { "COLUBK.40", 0x49, EQF_WRITE },
-  { "CTRLPF.40", 0x4A, EQF_WRITE },
-  { "REFP0.40",  0x4B, EQF_WRITE },
-  { "REFP1.40",  0x4C, EQF_WRITE },
-  { "PF0.40",    0x4D, EQF_WRITE },
-  { "PF1.40",    0x4E, EQF_WRITE },
-  { "PF2.40",    0x4F, EQF_WRITE },
-  { "RESP0.40",  0x50, EQF_WRITE },
-  { "RESP1.40",  0x51, EQF_WRITE },
-  { "RESM0.40",  0x52, EQF_WRITE },
-  { "RESM1.40",  0x53, EQF_WRITE },
-  { "RESBL.40",  0x54, EQF_WRITE },
-  { "AUDC0.40",  0x55, EQF_WRITE },
-  { "AUDC1.40",  0x56, EQF_WRITE },
-  { "AUDF0.40",  0x57, EQF_WRITE },
-  { "AUDF1.40",  0x58, EQF_WRITE },
-  { "AUDV0.40",  0x59, EQF_WRITE },
-  { "AUDV1.40",  0x5A, EQF_WRITE },
-  { "GRP0.40",   0x5B, EQF_WRITE },
-  { "GRP1.40",   0x5C, EQF_WRITE },
-  { "ENAM0.40",  0x5D, EQF_WRITE },
-  { "ENAM1.40",  0x5E, EQF_WRITE },
-  { "ENABL.40",  0x5F, EQF_WRITE },
-  { "HMP0.40",   0x60, EQF_WRITE },
-  { "HMP1.40",   0x61, EQF_WRITE },
-  { "HMM0.40",   0x62, EQF_WRITE },
-  { "HMM1.40",   0x63, EQF_WRITE },
-  { "HMBL.40",   0x64, EQF_WRITE },
-  { "VDELP0.40", 0x65, EQF_WRITE },
-  { "VDEL01.40", 0x66, EQF_WRITE },
-  { "VDELP1.40", 0x66, EQF_WRITE },
-  { "VDELBL.40", 0x67, EQF_WRITE },
-  { "RESMP0.40", 0x68, EQF_WRITE },
-  { "RESMP1.40", 0x69, EQF_WRITE },
-  { "HMOVE.40",  0x6A, EQF_WRITE },
-  { "HMCLR.40",  0x6B, EQF_WRITE },
-  { "CXCLR.40",  0x6C, EQF_WRITE },
+// Mirrored $30-based TIA write locations:
+  { "VSYNC.30",  0x30, EQF_WRITE },
+  { "VBLANK.30", 0x31, EQF_WRITE },
+  { "WSYNC.30",  0x32, EQF_WRITE },
+  { "RSYNC.30",  0x33, EQF_WRITE },
+  { "NUSIZ0.30", 0x34, EQF_WRITE },
+  { "NUSIZ1.30", 0x35, EQF_WRITE },
+  { "COLUP0.30", 0x36, EQF_WRITE },
+  { "COLUP1.30", 0x37, EQF_WRITE },
+  { "COLUPF.30", 0x38, EQF_WRITE },
+  { "COLUBK.30", 0x39, EQF_WRITE },
+  { "CTRLPF.30", 0x3A, EQF_WRITE },
+  { "REFP0.30",  0x3B, EQF_WRITE },
+  { "REFP1.30",  0x3C, EQF_WRITE },
+  { "PF0.30",    0x3D, EQF_WRITE },
+  { "PF1.30",    0x3E, EQF_WRITE },
+  { "PF2.30",    0x3F, EQF_WRITE },
+  { "RESP0.30",  0x40, EQF_WRITE },
+  { "RESP1.30",  0x41, EQF_WRITE },
+  { "RESM0.30",  0x42, EQF_WRITE },
+  { "RESM1.30",  0x43, EQF_WRITE },
+  { "RESBL.30",  0x44, EQF_WRITE },
+  { "AUDC0.30",  0x45, EQF_WRITE },
+  { "AUDC1.30",  0x46, EQF_WRITE },
+  { "AUDF0.30",  0x47, EQF_WRITE },
+  { "AUDF1.30",  0x48, EQF_WRITE },
+  { "AUDV0.30",  0x49, EQF_WRITE },
+  { "AUDV1.30",  0x4A, EQF_WRITE },
+  { "GRP0.30",   0x4B, EQF_WRITE },
+  { "GRP1.30",   0x4C, EQF_WRITE },
+  { "ENAM0.30",  0x4D, EQF_WRITE },
+  { "ENAM1.30",  0x4E, EQF_WRITE },
+  { "ENABL.30",  0x4F, EQF_WRITE },
+  { "HMP0.30",   0x50, EQF_WRITE },
+  { "HMP1.30",   0x51, EQF_WRITE },
+  { "HMM0.30",   0x52, EQF_WRITE },
+  { "HMM1.30",   0x53, EQF_WRITE },
+  { "HMBL.30",   0x54, EQF_WRITE },
+  { "VDELP0.30", 0x55, EQF_WRITE },
+  { "VDEL01.30", 0x56, EQF_WRITE },
+  { "VDELP1.30", 0x56, EQF_WRITE },
+  { "VDELBL.30", 0x57, EQF_WRITE },
+  { "RESMP0.30", 0x58, EQF_WRITE },
+  { "RESMP1.30", 0x59, EQF_WRITE },
+  { "HMOVE.30",  0x5A, EQF_WRITE },
+  { "HMCLR.30",  0x5B, EQF_WRITE },
+  { "CXCLR.30",  0x5C, EQF_WRITE },
 
 // Standard $00-based TIA read locations:
   { "CXM0P",  0x00, EQF_READ },
@@ -529,14 +187,296 @@ const EquateList::Equate EquateList::ourSystemEquates[kSystemEquateSize] = {
   { "INPT5.30",  0x3D, EQF_READ },
 
 // Standard RIOT locations (read, write, or both):
-  { "SWCHA",    0x280, EQF_RW    },
-  { "SWCHB",    0x282, EQF_RW    },
+  { "SWCHA",    0x280, EQF_READ | EQF_WRITE },
+  { "SWCHB",    0x282, EQF_READ | EQF_WRITE },
   { "SWACNT",   0x281, EQF_WRITE },
   { "SWBCNT",   0x283, EQF_WRITE },
   { "INTIM",    0x284, EQF_READ  },
-  { "TIMINT",   0x285, EQF_READ  },
   { "TIM1T",    0x294, EQF_WRITE },
   { "TIM8T",    0x295, EQF_WRITE },
   { "TIM64T",   0x296, EQF_WRITE },
-  { "T1024T",   0x297, EQF_WRITE }
+  { "TIM1024T", 0x297, EQF_WRITE }
 };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EquateList::EquateList()
+{
+  int size = sizeof(hardCodedEquates)/sizeof(struct Equate);
+
+  for(int i=0; i<size; i++)
+  {
+    Equate e = hardCodedEquates[i];
+
+    myFwdMap.insert(make_pair(e.label, e));
+    myRevMap.insert(make_pair(e.address, e));
+  }
+  calcSize();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EquateList::~EquateList()
+{
+  myFwdMap.clear();
+  myRevMap.clear();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int EquateList::calcSize()
+{
+  currentSize = myFwdMap.size();
+  return currentSize;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// DEPRECATED
+const string& EquateList::getLabel(int addr)
+{
+  return getLabel(addr, EQF_ANY);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const string& EquateList::getLabel(int addr, int flags)
+{
+  addrToLabel::const_iterator iter = myRevMap.find(addr);
+
+  if(iter != myRevMap.end())
+  {
+    // FIXME - until we fix the issue of correctly setting the equate
+    //         flags to something other than 'EQF_ANY' by default,
+    //         this comparison will almost always fail
+    if(1)//flags == EQF_ANY || iter->second.flags & flags)
+      return iter->second.label;
+  }
+  return EmptyString;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// DEPRECATED
+const char *EquateList::getFormatted(int addr, int places)
+{
+	return getFormatted(addr, places, EQF_ANY);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// returns either the label, or a formatted hex string
+// if no label found.
+const char *EquateList::getFormatted(int addr, int places, int flags)
+{
+  static char fmt[10], buf[255];
+  string res = getLabel(addr, flags);
+  if(res != "")
+    return res.c_str();
+
+  sprintf(fmt, "$%%0%dx", places);
+  //cerr << addr << ", " << fmt << ", " << places << endl;
+  sprintf(buf, fmt, addr);
+
+  return buf;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int EquateList::getAddress(const string& label)
+{
+  labelToAddr::const_iterator iter = myFwdMap.find(label);
+  if(iter == myFwdMap.end())
+    return -1;
+  else
+    return iter->second.address;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool EquateList::undefine(const string& label)
+{
+  labelToAddr::iterator iter = myFwdMap.find(label);
+  if(iter == myFwdMap.end())
+  {
+    return false;
+  }
+  else
+  {
+	 // FIXME: error check?
+    // FIXME: memory leak!
+    myRevMap.erase( myRevMap.find(iter->second.address) );
+    myFwdMap.erase(iter);
+    return true;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool EquateList::saveFile(const string& file)
+{
+  char buf[256];
+
+  ofstream out(file.c_str());
+  if(!out.is_open())
+    return false;
+
+  out << "--- Symbol List (sorted by symbol)" << endl;
+
+  labelToAddr::iterator iter;
+  for(iter = myFwdMap.begin(); iter != myFwdMap.end(); iter++)
+  {
+    sprintf(buf, "%-24s %04x                  \n", iter->second.label.c_str(), iter->second.address);
+    out << buf;
+  }
+
+  out << "--- End of Symbol List." << endl;
+
+  return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+string EquateList::loadFile(const string& file)
+{
+  int pos = 0, lines = 0, curVal;
+  string curLabel;
+  char line[1024];
+
+  ifstream in(file.c_str());
+  if(!in.is_open())
+    return "Unable to read symbols from " + file;
+
+  myFwdMap.clear();
+  myRevMap.clear();
+
+  while( !in.eof() )
+  {
+    curVal = 0;
+    curLabel = "";
+
+    int got = in.get();
+
+    if(got == -1 || got == '\r' || got == '\n' || pos == 1023) {
+      line[pos] = '\0';
+      pos = 0;
+
+      if(strlen(line) > 0 && line[0] != '-')
+      {
+        curLabel = extractLabel(line);
+        if((curVal = extractValue(line)) < 0)
+          return "invalid symbol file";
+  
+        addEquate(curLabel, curVal);
+  
+        lines++;
+      }
+    }
+    else
+    {
+      line[pos++] = got;
+    }
+  }
+  in.close();
+
+  calcSize();
+
+  return "loaded " + file + " OK";
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EquateList::addEquate(const string& label, int address)
+{
+  Equate e;
+  e.label = label;
+  e.address = address;
+  e.flags = EQF_ANY;   // FIXME - this should be specified as a parameter
+
+  undefine(label);
+  myFwdMap.insert(make_pair(label, e));
+  myRevMap.insert(make_pair(address, e));
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int EquateList::parse4hex(char *c)
+{
+  int ret = 0;
+  for(int i=0; i<4; i++)
+  {
+    if(*c >= '0' && *c <= '9')
+      ret = (ret << 4) + (*c) - '0';
+    else if(*c >= 'a' && *c <= 'f')
+      ret = (ret << 4) + (*c) - 'a' + 10;
+    else
+      return -1;
+    c++;
+  }
+
+  return ret;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int EquateList::extractValue(char *c)
+{
+  while(*c != ' ')
+  {
+    if(*c == '\0')
+      return -1;
+    c++;
+  }
+
+  while(*c == ' ')
+  {
+    if(*c == '\0')
+      return -1;
+    c++;
+  }
+
+  return parse4hex(c);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+string EquateList::extractLabel(char *c)
+{
+  string l = "";
+  while(*c != ' ')
+    l += *c++;
+
+  return l;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int EquateList::countCompletions(const char *in)
+{
+  int count = 0;
+  completions = compPrefix = "";
+
+  labelToAddr::iterator iter;
+  for(iter = myFwdMap.begin(); iter != myFwdMap.end(); iter++)
+  {
+    const char *l = iter->first.c_str();
+
+    if(BSPF_strncasecmp(l, in, strlen(in)) == 0)
+    {
+      if(compPrefix == "")
+        compPrefix += l;
+      else
+      {
+        int nonMatch = 0;
+        const char *c = compPrefix.c_str();
+        while(*c != '\0' && tolower(*c) == tolower(l[nonMatch]))
+        {
+          c++;
+          nonMatch++;
+        }
+        compPrefix.erase(nonMatch, compPrefix.length());
+      }
+
+      if(count++) completions += "  ";
+        completions += l;
+    }
+  }
+
+  return count;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char *EquateList::getCompletions()
+{
+  return completions.c_str();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char *EquateList::getCompletionPrefix()
+{
+  return compPrefix.c_str();
+}

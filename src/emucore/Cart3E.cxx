@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart3E.cxx,v 1.14 2008-02-06 13:45:20 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "Random.hxx"
 #include "System.hxx"
@@ -32,12 +31,17 @@ Cartridge3E::Cartridge3E(const uInt8* image, uInt32 size)
   myImage = new uInt8[mySize];
 
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, mySize);
+  for(uInt32 addr = 0; addr < mySize; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 
-  // This cart can address a 1024 byte bank of RAM @ 0x1000
-  // However, it may not be addressable all the time (it may be swapped out)
-  // so probably most of the time, the area will point to ROM instead
-  registerRamArea(0x1000, 1024, 0x00, 0x400);  // 1024 bytes RAM @ 0x1000
+  // Initialize RAM with random values
+  class Random random;
+  for(uInt32 i = 0; i < 32768; ++i)
+  {
+    myRam[i] = random.next();
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,11 +53,6 @@ Cartridge3E::~Cartridge3E()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3E::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 32768; ++i)
-    myRam[i] = random.next();
-
   // We'll map bank 0 into the first segment upon reset
   bank(0);
 }
@@ -69,15 +68,14 @@ void Cartridge3E::install(System& system)
   assert((0x1800 & mask) == 0);
 
   // Set the page accessing methods for the hot spots (for 100% emulation
-  // we need to chain any accesses below 0x40 to the TIA. Our poke() method
-  // does this via mySystem->tiaPoke(...), at least until we come up with a
-  // cleaner way to do it).
+  // I would need to chain any accesses below 0x40 to the TIA but for
+  // now I'll just forget about them)
   System::PageAccess access;
   for(uInt32 i = 0x00; i < 0x40; i += (1 << shift))
   {
-    access.device = this;
     access.directPeekBase = 0;
     access.directPokeBase = 0;
+    access.device = this;
     mySystem->setPageAccess(i >> shift, access);
   }
 
@@ -97,15 +95,14 @@ void Cartridge3E::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 Cartridge3E::peek(uInt16 address)
 {
-  // TODO - determine what really happens when you read from the write port
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   if(address < 0x0800)
   {
     if(myCurrentBank < 256)
-      return myImage[(address & 0x07FF) + (myCurrentBank << 11)];
+      return myImage[(address & 0x07FF) + myCurrentBank * 2048];
     else
-      return myRam[(address & 0x03FF) + ((myCurrentBank - 256) << 10)];
+      return myRam[(address & 0x03FF) + (myCurrentBank - 256) * 1024];
   }
   else
   {
@@ -116,7 +113,7 @@ uInt8 Cartridge3E::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3E::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary. Armin (Kroko) says there are no mirrored
   // hotspots.
@@ -139,12 +136,12 @@ void Cartridge3E::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3E::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   if(bank < 256)
   {
     // Make sure the bank they're asking for is reasonable
-    if(((uInt32)bank << 11) < uInt32(mySize))
+    if((uInt32)bank * 2048 < mySize)
     {
       myCurrentBank = bank;
     }
@@ -152,10 +149,10 @@ void Cartridge3E::bank(uInt16 bank)
     {
       // Oops, the bank they're asking for isn't valid so let's wrap it
       // around to a valid bank number
-      myCurrentBank = bank % (mySize >> 11);
+      myCurrentBank = bank % (mySize / 2048);
     }
   
-    uInt32 offset = myCurrentBank << 11;
+    uInt32 offset = myCurrentBank * 2048;
     uInt16 shift = mySystem->pageShift();
   
     // Setup the page access methods for the current bank
@@ -176,7 +173,7 @@ void Cartridge3E::bank(uInt16 bank)
     bank %= 32;
     myCurrentBank = bank + 256;
 
-    uInt32 offset = bank << 10;
+    uInt32 offset = bank * 1024;
     uInt16 shift = mySystem->pageShift();
     uInt32 address;
   
@@ -218,18 +215,18 @@ int Cartridge3E::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge3E::patch(uInt16 address, uInt8 value)
 {
-  address &= 0x0FFF;
-
+  address = address & 0x0FFF;
   if(address < 0x0800)
   {
     if(myCurrentBank < 256)
-      myImage[(address & 0x07FF) + (myCurrentBank << 11)] = value;
+      myImage[(address & 0x07FF) + myCurrentBank * 2048] = value;
     else
-      myRam[(address & 0x03FF) + ((myCurrentBank - 256) << 10)] = value;
+      myRam[(address & 0x03FF) + (myCurrentBank - 256) * 1024] = value;
   }
   else
+  {
     myImage[(address & 0x07FF) + mySize - 2048] = value;
-
+  }
   return true;
 } 
 

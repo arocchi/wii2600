@@ -1,3 +1,4 @@
+
 //============================================================================
 //
 //   SSSS    tt          lll  lll
@@ -8,12 +9,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventHandler.cxx,v 1.219 2008-03-22 17:35:02 stephena Exp $
 //============================================================================
 
 #include <sstream>
@@ -30,10 +31,8 @@
 #include "Launcher.hxx"
 #include "Menu.hxx"
 #include "OSystem.hxx"
-#include "Joystick.hxx"
 #include "Paddles.hxx"
 #include "PropsSet.hxx"
-#include "ListWidget.hxx"
 #include "ScrollBarWidget.hxx"
 #include "Settings.hxx"
 #include "Snapshot.hxx"
@@ -56,6 +55,8 @@
   }
 #endif
 
+#define JOY_DEADZONE 3200
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EventHandler::EventHandler(OSystem* osystem)
   : myOSystem(osystem),
@@ -63,6 +64,7 @@ EventHandler::EventHandler(OSystem* osystem)
     myOverlay(NULL),
     myState(S_NONE),
     myGrabMouseFlag(false),
+    myUseLauncherFlag(false),
     myAllowAllDirectionsFlag(false),
     myFryingFlag(false)
 {
@@ -114,14 +116,6 @@ EventHandler::EventHandler(OSystem* osystem)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EventHandler::~EventHandler()
 {
-  // Free strings created with strdup
-  for(uInt32 i = 0; i < kEmulActionListSize; ++i)
-    if(ourEmulActionList[i].key)
-      free(ourEmulActionList[i].key);
-  for(uInt32 i = 0; i < kMenuActionListSize; ++i)
-    if(ourMenuActionList[i].key)
-      free(ourMenuActionList[i].key);
-
   delete myEvent;
 
 #ifdef JOYSTICK_SUPPORT
@@ -151,11 +145,7 @@ void EventHandler::initialize()
 
   myGrabMouseFlag = myOSystem->settings().getBool("grabmouse");
 
-  Joystick::setDeadZone(myOSystem->settings().getInt("joydeadzone"));
   Paddles::setDigitalSpeed(myOSystem->settings().getInt("pspeed"));
-
-  // Set quick select delay when typing characters in listwidgets
-  ListWidget::setQuickSelectDelay(myOSystem->settings().getInt("listdelay"));
 
   // Set number of lines a mousewheel will scroll
   ScrollBarWidget::setWheelLines(myOSystem->settings().getInt("mwheel"));
@@ -165,8 +155,43 @@ void EventHandler::initialize()
 void EventHandler::reset(State state)
 {
   setEventState(state);
+
   myEvent->clear();
+
   myOSystem->state().reset();
+
+  if(myState == S_LAUNCHER)
+    myUseLauncherFlag = true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EventHandler::refreshDisplay(bool forceUpdate)
+{
+  switch(myState)
+  {
+    case S_EMULATE:
+    case S_PAUSE:
+      if(&myOSystem->frameBuffer())
+        myOSystem->frameBuffer().refresh();
+      break;
+
+    case S_MENU:     // fall through to next case
+    case S_CMDMENU:
+      if(&myOSystem->frameBuffer())
+        myOSystem->frameBuffer().refresh();
+    case S_LAUNCHER:
+    case S_DEBUGGER:
+      if(myOverlay)
+        myOverlay->refresh();
+      break;
+
+    default:
+      return;
+      break;
+  }
+
+  if(forceUpdate && &myOSystem->frameBuffer())
+    myOSystem->frameBuffer().update();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -326,7 +351,6 @@ void EventHandler::poll(uInt32 time)
         SDLKey key  = event.key.keysym.sym;
         SDLMod mod  = event.key.keysym.mod;
         uInt8 state = event.key.type == SDL_KEYDOWN ? 1 : 0;
-        bool handled = true;
 
         // An attempt to speed up event processing
         // All SDL-specific event actions are accessed by either
@@ -334,24 +358,31 @@ void EventHandler::poll(uInt32 time)
         if(kbdAlt(mod) && state)
         {
           // These keys work in all states
-          if(key == SDLK_RETURN)
+          switch(int(key))
           {
-            myOSystem->frameBuffer().toggleFullscreen();
+    #ifndef MAC_OSX
+            case SDLK_EQUALS:
+              myOSystem->frameBuffer().changeVidMode(+1);
+              break;
+
+            case SDLK_MINUS:
+              myOSystem->frameBuffer().changeVidMode(-1);
+              break;
+
+            case SDLK_RETURN:
+              myOSystem->frameBuffer().toggleFullscreen();
+              break;
+    #endif
+            case SDLK_g:
+              myOSystem->toggleFrameBuffer();
+              break;
           }
+
           // These only work when in emulation mode
-          else if(myState == S_EMULATE)
+          if(myState == S_EMULATE)
           {
             switch(int(key))
             {
-          #ifndef MAC_OSX
-              case SDLK_EQUALS:
-                myOSystem->frameBuffer().changeVidMode(+1);
-                break;
-
-              case SDLK_MINUS:
-                myOSystem->frameBuffer().changeVidMode(-1);
-                break;
-          #endif
               case SDLK_LEFTBRACKET:
                 myOSystem->sound().adjustVolume(-1);
                 break;
@@ -404,9 +435,6 @@ void EventHandler::poll(uInt32 time)
                 myOSystem->console().togglePhosphor();
                 break;
 
-              case SDLK_l:
-                myOSystem->frameBuffer().toggleFrameStats();
-                break;
 #if 0
 // FIXME - these will be removed when a UI is added for event recording
               case SDLK_e:  // Alt-e starts/stops event recording
@@ -433,57 +461,53 @@ void EventHandler::poll(uInt32 time)
 */
 ////////////////////////////////////////////////////////////////////////
 #endif
-              default:
-                handled = false;
-                break;
             }
           }
-          else
-            handled = false;
         }
         else if(kbdControl(mod) && state)
         {
           // These keys work in all states
-          if(key == SDLK_q)
+          switch(int(key))
           {
-            handleEvent(Event::Quit, 1);
+            case SDLK_q:
+              handleEvent(Event::Quit, 1);
+              break;
+
+  #ifdef MAC_OSX
+            case SDLK_h:
+            case SDLK_m:
+            case SDLK_SLASH:
+              handleMacOSXKeypress(int(key));
+              break;
+
+            case SDLK_EQUALS:
+              myOSystem->frameBuffer().changeVidMode(+1);
+              break;
+
+            case SDLK_MINUS:
+              myOSystem->frameBuffer().changeVidMode(-1);
+              break;
+
+            case SDLK_RETURN:
+              myOSystem->frameBuffer().toggleFullscreen();
+              break;
+  #endif
+            case SDLK_g:
+              // don't change grabmouse in fullscreen mode
+              if(!myOSystem->frameBuffer().fullScreen())
+              {
+                myGrabMouseFlag = !myGrabMouseFlag;
+                myOSystem->settings().setBool("grabmouse", myGrabMouseFlag);
+                myOSystem->frameBuffer().grabMouse(myGrabMouseFlag);
+              }
+              break;
           }
-          else if(key == SDLK_g)
-          {
-            // don't change grabmouse in fullscreen mode
-            if(!myOSystem->frameBuffer().fullScreen())
-            {
-              myGrabMouseFlag = !myGrabMouseFlag;
-              myOSystem->settings().setBool("grabmouse", myGrabMouseFlag);
-              myOSystem->frameBuffer().grabMouse(myGrabMouseFlag);
-            }
-          }
-        #ifdef MAC_OSX
-          else if(key == SDLK_RETURN)
-          {
-            myOSystem->frameBuffer().toggleFullscreen();
-          }
-        #endif
+
           // These only work when in emulation mode
-          else if(myState == S_EMULATE)
+          if(myState == S_EMULATE)
           {
             switch(int(key))
             {
-          #ifdef MAC_OSX
-              case SDLK_EQUALS:
-                myOSystem->frameBuffer().changeVidMode(+1);
-                break;
-
-              case SDLK_MINUS:
-                myOSystem->frameBuffer().changeVidMode(-1);
-                break;
-
-              case SDLK_h:
-              case SDLK_m:
-              case SDLK_SLASH:
-                handleMacOSXKeypress(int(key));
-                break;
-          #endif
               case SDLK_0:  // Ctrl-0 sets the mouse to paddle 0
                 setPaddleMode(0, true);
                 break;
@@ -540,20 +564,9 @@ void EventHandler::poll(uInt32 time)
                   myOSystem->frameBuffer().showMessage("Error saving properties");
                 break;
               }
-
-              default:
-                handled = false;
-                break;
             }
           }
-          else
-            handled = false;
         }
-        else
-          handled = false;
-
-        // Don't pass the key on if we've already taken care of it
-        if(handled) break;
 
         // Handle keys which switch eventhandler state
         // Arrange the logic to take advantage of short-circuit evaluation
@@ -600,7 +613,7 @@ void EventHandler::poll(uInt32 time)
         break;  // SDL_QUIT
 
       case SDL_VIDEOEXPOSE:
-        myOSystem->frameBuffer().refresh();
+        refreshDisplay();
         break;  // SDL_VIDEOEXPOSE
 
 #ifdef JOYSTICK_SUPPORT
@@ -760,6 +773,7 @@ void EventHandler::handleMouseMotionEvent(SDL_Event& event)
   else if(myOverlay)
   {
     int x = event.motion.x, y = event.motion.y;
+    myOSystem->frameBuffer().translateCoords(x, y);
     myOverlay->handleMouseMotionEvent(x, y, 0);
   }
 }
@@ -774,6 +788,7 @@ void EventHandler::handleMouseButtonEvent(SDL_Event& event, int state)
   {
     // Take window zooming into account
     Int32 x = event.button.x, y = event.button.y;
+    myOSystem->frameBuffer().translateCoords(x, y);
     MouseButton button;
 
     switch(event.button.button)
@@ -840,10 +855,8 @@ void EventHandler::handleJoyAxisEvent(int stick, int axis, int value)
       myEvent->set(Event::SARightAxis1Value, value);
       break;
     default:
-    {
       // Otherwise, we know the event is digital
-      int deadzone = Joystick::deadzone();
-      if(value > -deadzone && value < deadzone)
+      if(value > -JOY_DEADZONE && value < JOY_DEADZONE)
       {
         // Turn off both events, since we don't know exactly which one
         // was previously activated.
@@ -853,7 +866,6 @@ void EventHandler::handleJoyAxisEvent(int stick, int axis, int value)
       else
         handleEvent(value < 0 ? eventAxisNeg : eventAxisPos, 1);
       break;
-    }
   }
 #endif
 }
@@ -879,6 +891,16 @@ void EventHandler::handleJoyHatEvent(int stick, int hat, int value)
   else if(myOverlay != NULL)
     myOverlay->handleJoyHatEvent(stick, hat, value);
 #endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EventHandler::handleResizeEvent()
+{
+  // For now, only the overlay cares about resize events
+  // We don't know which one wants it, so we send it to all of them
+  // These events need to be sent even if the overlay isn't active
+  if(&myOSystem->launcher())
+    myOSystem->launcher().handleResizeEvent();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -931,15 +953,6 @@ void EventHandler::handleEvent(Event::Type event, int state)
       break;
     ////////////////////////////////////////////////////////////////////////
 
-#if 0
-    case Event::ConsoleReset:
-      if(state)
-      {
-        myOSystem->console().tia().frameReset();
-        myOSystem->frameBuffer().refresh();
-      }
-      break;
-#endif
     case Event::Fry:
       myFryingFlag = bool(state);
       return;
@@ -969,18 +982,14 @@ void EventHandler::handleEvent(Event::Type event, int state)
       return;
 
     case Event::LauncherMode:
-      if((myState == S_EMULATE || myState == S_CMDMENU) && state)
+      // ExitGame will only work when we've launched stella using the ROM
+      // launcher.  Otherwise, the only way to exit the main loop is to Quit.
+      if((myState == S_EMULATE || myState == S_CMDMENU) &&
+          myUseLauncherFlag && state)
       {
         myOSystem->settings().saveConfig();
-
-        // Go back to the launcher, or immediately quit
-        if(myOSystem->settings().getBool("uselauncher"))
-        {
-          myOSystem->deleteConsole();
-          myOSystem->createLauncher();
-        }
-        else
-          myOSystem->quit();
+        myOSystem->deleteConsole();
+        myOSystem->createLauncher();
       }
       return;
 
@@ -1087,7 +1096,8 @@ void EventHandler::setActionMappings(EventMode mode)
   for(int i = 0; i < listsize; ++i)
   {
     Event::Type event = list[i].event;
-    free(list[i].key);  list[i].key = NULL;
+    if(list[i].key)
+      free(list[i].key);
     list[i].key = strdup("None");
     string key = "";
     for(int j = 0; j < SDLK_LAST; ++j)   // key mapping
@@ -1193,7 +1203,8 @@ void EventHandler::setActionMappings(EventMode mode)
 
     if(key != "")
     {
-      free(list[i].key);  list[i].key = NULL;
+      if(list[i].key)
+        free(list[i].key);
       list[i].key = strdup(key.c_str());
     }
   }
@@ -1785,7 +1796,7 @@ void EventHandler::takeSnapshot()
 {
   // Figure out the correct snapshot name
   string filename;
-  string sspath = myOSystem->snapshotDir();
+  string sspath = myOSystem->settings().getString("ssdir");
 
   if(sspath.length() > 0)
     if(sspath.substr(sspath.length()-1) != BSPF_PATH_SEPARATOR)
@@ -1798,16 +1809,14 @@ void EventHandler::takeSnapshot()
     // Determine if the file already exists, checking each successive filename
     // until one doesn't exist
     filename = sspath + ".png";
-    FilesystemNode node(filename);
-    if(node.exists())
+    if(FilesystemNode::fileExists(filename))
     {
       ostringstream buf;
       for(uInt32 i = 1; ;++i)
       {
         buf.str("");
         buf << sspath << "_" << i << ".png";
-        FilesystemNode next(buf.str());
-        if(!next.exists())
+        if(!FilesystemNode::fileExists(buf.str()))
           break;
       }
       filename = buf.str();
@@ -1817,25 +1826,8 @@ void EventHandler::takeSnapshot()
     filename = sspath + ".png";
 
   // Now create a PNG snapshot
-  if(myOSystem->settings().getBool("ss1x"))
-  {
-    string msg = Snapshot::savePNG(myOSystem->frameBuffer(),
-                   myOSystem->console().tia(),
-                   myOSystem->console().properties(), filename);
-    myOSystem->frameBuffer().showMessage(msg);
-  }
-  else
-  {
-    // Make sure we have a 'clean' image, with no onscreen messages
-    myOSystem->frameBuffer().enableMessages(false);
-
-    string msg = Snapshot::savePNG(myOSystem->frameBuffer(),
-                   myOSystem->console().properties(), filename);
-
-    // Re-enable old messages
-    myOSystem->frameBuffer().enableMessages(true);
-    myOSystem->frameBuffer().showMessage(msg);
-  }
+  Snapshot::savePNG(myOSystem->frameBuffer(),
+                    myOSystem->console().properties(), filename);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1883,23 +1875,15 @@ bool EventHandler::enterDebugMode()
   if(myState == S_DEBUGGER)
     return false;
 
-  // Make sure debugger starts in a consistent state
-  // This absolutely *has* to come before we actually change to debugger
-  // mode, since it takes care of locking the debugger state, which will
-  // probably be modified below
-  myOSystem->debugger().setStartState();
   setEventState(S_DEBUGGER);
-  if(!myOSystem->createFrameBuffer())
-  {
-    myOSystem->debugger().setQuitState();
-    setEventState(S_EMULATE);
-    myOSystem->frameBuffer().showMessage("Debugger window too large");
-    return false;
-  }
+  myOSystem->createFrameBuffer();
   myOverlay->reStack();
   myOSystem->frameBuffer().setCursorState();
   myOSystem->sound().mute(true);
   myEvent->clear();
+
+  // Make sure debugger starts in a consistent state
+  myOSystem->debugger().setStartState();
 #else
   myOSystem->frameBuffer().showMessage("Debugger unsupported");
 #endif
@@ -1930,12 +1914,15 @@ void EventHandler::leaveDebugMode()
 void EventHandler::setEventState(State state)
 {
   myState = state;
-
   switch(myState)
   {
     case S_EMULATE:
       myOverlay = NULL;
       myOSystem->sound().mute(false);
+
+      // Controller types only make sense in Emulate mode
+      myController[0] = myOSystem->console().controller(Controller::Left).type();
+      myController[1] = myOSystem->console().controller(Controller::Right).type();
       break;
 
     case S_PAUSE:
@@ -1969,6 +1956,8 @@ void EventHandler::setEventState(State state)
   myOSystem->stateChanged(myState);
   if(&myOSystem->frameBuffer())
     myOSystem->frameBuffer().stateChanged(myState);
+
+  refreshDisplay();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2236,16 +2225,16 @@ EventHandler::ActionList EventHandler::ourEmulActionList[kEmulActionListSize] = 
   { Event::JoystickZeroLeft,            "P0 Joystick Left",            0 },
   { Event::JoystickZeroRight,           "P0 Joystick Right",           0 },
   { Event::JoystickZeroFire1,           "P0 Joystick Fire",            0 },
-  { Event::JoystickZeroFire2,           "P0 BoosterGrip Trigger",      0 },
-  { Event::JoystickZeroFire3,           "P0 BoosterGrip Booster",      0 },
+  { Event::JoystickZeroFire2,           "P0 Booster-Grip Trigger",     0 },
+  { Event::JoystickZeroFire3,           "P0 Booster-Grip Booster",     0 },
 
   { Event::JoystickOneUp,               "P1 Joystick Up",              0 },
   { Event::JoystickOneDown,             "P1 Joystick Down",            0 },
   { Event::JoystickOneLeft,             "P1 Joystick Left",            0 },
   { Event::JoystickOneRight,            "P1 Joystick Right",           0 },
   { Event::JoystickOneFire1,            "P1 Joystick Fire",            0 },
-  { Event::JoystickOneFire2,            "P1 BoosterGrip Trigger",      0 },
-  { Event::JoystickOneFire3,            "P1 BoosterGrip Booster",      0 },
+  { Event::JoystickOneFire2,            "P1 Booster-Grip Trigger",     0 },
+  { Event::JoystickOneFire3,            "P1 Booster-Grip Booster",     0 },
 
   { Event::PaddleZeroAnalog,            "Paddle 0 Analog",             0 },
   { Event::PaddleZeroDecrease,          "Paddle 0 Decrease",           0 },

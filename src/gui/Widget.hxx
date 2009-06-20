@@ -8,21 +8,21 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Widget.hxx,v 1.59 2008-02-06 13:45:24 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include "Dialog.hxx"
-
 #ifndef WIDGET_HXX
 #define WIDGET_HXX
+
+class Dialog;
 
 #include <assert.h>
 
@@ -67,7 +67,6 @@ enum {
   kDataGridWidget     = 'BGRI',
   kPromptWidget       = 'PROM',
   kRamWidget          = 'RAMW',
-  kRiotWidget         = 'RIOW',
   kRomListWidget      = 'ROML',
   kRomWidget          = 'ROMW',
   kTiaInfoWidget      = 'TIAI',
@@ -79,11 +78,16 @@ enum {
   kToggleWidget       = 'TOGL'
 };
 
+enum {
+  kButtonWidth  = 50,
+  kButtonHeight = 16
+};
+
 /**
   This is the base class for all widgets.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Widget.hxx,v 1.59 2008-02-06 13:45:24 stephena Exp $
 */
 class Widget : public GuiObject
 {
@@ -115,6 +119,8 @@ class Widget : public GuiObject
     void lostFocus();
     void addFocusWidget(Widget* w) { _focusList.push_back(w); }
 
+    virtual GUI::Rect getRect() const;
+
     /** Set/clear WIDGET_ENABLED flag and immediately redraw */
     void setEnabled(bool e);
 
@@ -133,10 +139,10 @@ class Widget : public GuiObject
 
     virtual const GUI::Font* font() { return _font; }
 
-    void setTextColor(uInt32 color)   { _textcolor = color;   }
-    void setTextColorHi(uInt32 color) { _textcolorhi = color; }
-    void setBGColor(uInt32 color)     { _bgcolor = color;     }
-    void setBGColorHi(uInt32 color)   { _bgcolorhi = color;   }
+    void setTextColor(int color)   { _textcolor = color;   }
+    void setTextColorHi(int color) { _textcolorhi = color; }
+    void setBGColor(int color)     { _bgcolor = color;     }
+    void setBGColorHi(int color)   { _bgcolorhi = color;   }
 
     virtual void loadConfig() {}
 
@@ -164,10 +170,10 @@ class Widget : public GuiObject
     bool       _hasFocus;
     int        _fontWidth;
     int        _fontHeight;
-    uInt32     _bgcolor;
-    uInt32     _bgcolorhi;
-    uInt32     _textcolor;
-    uInt32     _textcolorhi;
+    int        _bgcolor;
+    int        _bgcolorhi;
+    int        _textcolor;
+    int        _textcolorhi;
 
   public:
     static Widget* findWidgetInChain(Widget* start, int x, int y);
@@ -264,7 +270,7 @@ class CheckboxWidget : public ButtonWidget
     bool _fillRect;
     bool _drawBox;
 
-    uInt32 _fillColor;
+    int _fillColor;
 
   private:
     int _boxY;
@@ -283,12 +289,12 @@ class SliderWidget : public ButtonWidget
     void setValue(int value);
     int getValue() const      { return _value; }
 
-    void setMinValue(int value);
-    int  getMinValue() const      { return _valueMin; }
-    void setMaxValue(int value);
-    int  getMaxValue() const      { return _valueMax; }
-    void setStepValue(int value);
-    int  getStepValue() const     { return _stepValue; }
+    void  setMinValue(int value);
+    int getMinValue() const      { return _valueMin; }
+    void  setMaxValue(int value);
+    int getMaxValue() const      { return _valueMax; }
+    void  setStepValue(int value);
+    int getStepValue() const      { return _stepValue; }
 
     virtual void handleMouseMoved(int x, int y, int button);
     virtual void handleMouseDown(int x, int y, int button, int clickCount);

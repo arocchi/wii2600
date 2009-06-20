@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.cxx,v 1.25 2008-02-19 12:33:07 stephena Exp $
 //============================================================================
 
 #include <assert.h>
@@ -35,8 +35,7 @@ System::System(uInt16 n, uInt16 m)
     myM6502(0),
     myTIA(0),
     myCycles(0),
-    myDataBusState(0),
-    myDataBusLocked(false)
+    myDataBusState(0)
 {
   // Make sure the arguments are reasonable
   assert((1 <= m) && (m <= n) && (n <= 16));

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.hxx,v 1.64 2008-02-06 13:45:21 stephena Exp $
 //============================================================================
 
 #ifndef CONSOLE_HXX
@@ -22,9 +22,9 @@
 class Console;
 class Controller;
 class Event;
+class MediaSource;
 class Switches;
 class System;
-class TIA;
 
 #include "bspf.hxx"
 #include "Control.hxx"
@@ -36,24 +36,10 @@ class TIA;
 #include "Serializable.hxx"
 
 /**
-  Contains detailed info about a console.
-*/
-struct ConsoleInfo
-{
-  string BankSwitch;
-  string CartName;
-  string CartMD5;
-  string Control0;
-  string Control1;
-  string DisplayFormat;
-  string InitialFrameRate;
-};
-
-/**
   This class represents the entire game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Console.hxx,v 1.64 2008-02-06 13:45:21 stephena Exp $
 */
 class Console : public Serializable
 {
@@ -92,11 +78,11 @@ class Console : public Serializable
     }
 
     /**
-      Get the TIA for this console
+      Get the MediaSource for this console
 
-      @return The TIA
+      @return The mediasource
     */
-    TIA& tia() const { return *myTIA; }
+    MediaSource& mediaSource() const { return *myMediaSource; }
 
     /**
       Get the properties being used by the game
@@ -164,9 +150,9 @@ class Console : public Serializable
     void setProperties(const Properties& props);
 
     /**
-      Query detailed information about this console.
+      Query some information about this console.
     */
-    inline const ConsoleInfo& about() const { return myConsoleInfo; }
+    const string& about() const { return myAboutString; }
 
   public:
     /**
@@ -211,10 +197,8 @@ class Console : public Serializable
 
       @param full  Whether we want a full initialization,
                    or only reset certain attributes.
-
-      @return  False on any errors, else true
     */
-    bool initializeVideo(bool full = true);
+    void initializeVideo(bool full = true);
 
     /**
       Initialize the audio subsystem wrt this class.
@@ -242,16 +226,10 @@ class Console : public Serializable
     void changeHeight(int direction);
 
     /**
-      Sets the framerate of the console, which in turn communicates
-      this to all applicable subsystems.
-    */
-    void setFramerate(float framerate);
-
-    /**
       Returns the framerate based on a number of factors
       (whether 'framerate' is set, what display format is in use, etc)
     */
-    float getFramerate() const { return myFramerate; }
+    uInt32 getFramerate() const;
 
     /**
       Toggles the TIA bit specified in the method name.
@@ -264,12 +242,11 @@ class Console : public Serializable
     void togglePFBit() const { toggleTIABit(TIA::PF, "PF"); }
     void enableBits(bool enable) const;
 
-  private:
-    /**
-      Adds the left and right controllers to the console
-    */
-    void setControllers(const string& rommd5);
+#ifdef ATARIVOX_SUPPORT
+    AtariVox *atariVox() { return vox; }
+#endif
 
+  private:
     void toggleTIABit(TIA::TIABit bit, const string& bitname, bool show = true) const;
 
     /**
@@ -300,8 +277,8 @@ class Console : public Serializable
     // Pointer to the event object to use
     Event* myEvent;
 
-    // Pointer to the TIA object 
-    TIA* myTIA;
+    // Pointer to the media source object 
+    MediaSource* myMediaSource;
 
     // Properties for the game
     Properties myProperties;
@@ -319,18 +296,22 @@ class Console : public Serializable
     // A RIOT of my own! (...with apologies to The Clash...)
     M6532 *myRiot;
 
+#ifdef ATARIVOX_SUPPORT
+    AtariVox *vox;
+#endif
+
     // The currently defined display format (NTSC/PAL/SECAM)
     string myDisplayFormat;
 
     // The currently defined display framerate
-    float myFramerate;
+    uInt32 myFramerate;
 
     // Indicates whether an external palette was found and
     // successfully loaded
     bool myUserPaletteDefined;
 
-    // Contains detailed info about this console
-    ConsoleInfo myConsoleInfo;
+    // Contains info about this console in string format
+    string myAboutString;
 
     // Table of RGB values for NTSC, PAL and SECAM
     static uInt32 ourNTSCPalette[256];

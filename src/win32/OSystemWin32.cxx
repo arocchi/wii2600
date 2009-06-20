@@ -8,17 +8,21 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemWin32.cxx,v 1.23 2008-03-09 20:38:44 stephena Exp $
 //============================================================================
+
+#include <sstream>
+#include <fstream>
+#include <windows.h>
+#include <shlobj.h>
 
 #include "bspf.hxx"
 #include "FSNode.hxx"
-#include "HomeFinder.hxx"
 #include "OSystem.hxx"
 #include "OSystemWin32.hxx"
 
@@ -36,45 +40,28 @@
 OSystemWin32::OSystemWin32()
   : OSystem()
 {
-  string basedir = "";
+  string basedir = ".";
 
-  // Check if the base directory should be overridden
-  // Shouldn't normally be necessary, but is useful for those people that
-  // don't want to clutter their 'My Documents' folder
-  bool overrideBasedir = false;
-  FilesystemNode basedirfile("basedir.txt");
-  if(basedirfile.exists())
+  if(!FilesystemNode::fileExists("disable_profiles.txt"))
   {
-    ifstream in(basedirfile.getPath().c_str());
-    if(in && in.is_open())
+    /*
+       Use 'My Documents' folder for the Stella folder, which can be in many
+       different places depending on the version of Windows, as follows:
+
+        98: C:\My Documents
+        XP: C:\Document and Settings\USERNAME\My Documents\
+        Vista: C:\Users\USERNAME\Documents\
+
+       This function is guaranteed to return a valid 'My Documents'
+       folder (as much as Windows *can* make that guarantee) 
+    */
+    char configPath[256];
+    if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL|CSIDL_FLAG_CREATE,
+                                 NULL, 0, configPath)))
     {
-      getline(in, basedir);
-      in.close();
-
-      // trim leading and trailing spaces
-      size_t spos = basedir.find_first_not_of(" \t");
-      size_t epos = basedir.find_last_not_of(" \t");
-      if(spos != string::npos && epos != string::npos)
-        basedir = basedir.substr(spos, epos-spos+1);
-
-      if(basedir != "")  overrideBasedir = true;
+      strcat(configPath, "\\Stella");
+      basedir = configPath;
     }
-  }
-
-  // If basedir hasn't been specified, use the 'home' directory
-  if(!overrideBasedir)
-  {
-    HomeFinder homefinder;
-    FilesystemNode appdata(homefinder.getAppDataPath());
-    if(appdata.isDirectory())
-    {
-      basedir = appdata.getRelativePath();
-      if(basedir.length() > 1 && basedir[basedir.length()-1] != '\\')
-        basedir += '\\';
-      basedir += "Stella";
-    }
-    else
-      basedir = ".";  // otherwise, default to current directory
   }
 
   setBaseDir(basedir);
@@ -87,7 +74,7 @@ OSystemWin32::~OSystemWin32()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemWin32::getTicks() const
+uInt32 OSystemWin32::getTicks()
 {
   return (uInt32) SDL_GetTicks() * 1000;
 }

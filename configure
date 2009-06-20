@@ -27,6 +27,7 @@ _build_joystick=yes
 _build_cheats=yes
 _build_static=no
 _build_profile=no
+_build_atarivox=no
 
 # more defaults
 _ranlib=ranlib
@@ -191,6 +192,8 @@ Optional Features:
   --disable-joystick
   --enable-cheats        enable/disable cheatcode support [enabled]
   --disable-cheats
+  --enable-atarivox      enable/disable AtariVox support [disabled]
+  --disable-atarivox
   --enable-shared        build shared binary [enabled]
   --enable-static        build static binary (if possible) [disabled]
   --disable-static
@@ -229,6 +232,8 @@ for ac_option in $@; do
       --disable-joystick)       _build_joystick=no   ;;
       --enable-cheats)          _build_cheats=yes    ;;
       --disable-cheats)         _build_cheats=no     ;;
+      --enable-atarivox)        _build_atarivox=yes  ;;
+      --disable-atarivox)       _build_atarivox=no   ;;
       --enable-shared)          _build_static=no     ;;
       --enable-static)          _build_static=yes    ;;
       --disable-static)         _build_static=no     ;;
@@ -607,6 +612,14 @@ else
 	echo
 fi
 
+if test "$_build_atarivox" = yes ; then
+	echo_n "   AtariVox support enabled (not yet working)"
+	echo
+else
+	echo_n "   AtariVox support disabled (not yet working)"
+	echo
+fi
+
 if test "$_build_static" = yes ; then
 	echo_n "   Static binary enabled"
 	echo
@@ -638,6 +651,7 @@ DBG="$SRC/debugger"
 DBGGUI="$SRC/debugger/gui"
 YACC="$SRC/yacc"
 CHEAT="$SRC/cheat"
+ATARIVOX="$SRC/emucore/rsynth"
 
 INCLUDES="-I$CORE -I$CORE/m6502/src -I$CORE/m6502/src/bspf/src -I$COMMON -I$GUI"
 
@@ -709,6 +723,12 @@ if test "$_build_cheats" = yes ; then
 	DEFINES="$DEFINES -DCHEATCODE_SUPPORT"
 	MODULES="$MODULES $CHEAT"
 	INCLUDES="$INCLUDES -I$CHEAT"
+fi
+
+if test "$_build_atarivox" = yes ; then
+	DEFINES="$DEFINES -DATARIVOX_SUPPORT"
+	MODULES="$MODULES $ATARIVOX"
+	INCLUDES="$INCLUDES -I$ATARIVOX"
 fi
 
 if test "$_build_profile" = no ; then

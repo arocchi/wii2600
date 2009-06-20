@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart4K.cxx,v 1.13 2008-02-19 12:33:03 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "Cart4K.hxx"
@@ -26,7 +25,10 @@
 Cartridge4K::Cartridge4K(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 4096);
+  for(uInt32 addr = 0; addr < 4096; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
