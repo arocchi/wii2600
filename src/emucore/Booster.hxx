@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Booster.hxx,v 1.2 2005-02-13 19:17:02 stephena Exp $
 //============================================================================
 
 #ifndef BOOSTERGRIP_HXX
@@ -21,7 +21,6 @@
 
 #include "bspf.hxx"
 #include "Control.hxx"
-#include "Event.hxx"
 
 /**
   The standard Atari 2600 joystick controller fitted with the 
@@ -29,7 +28,7 @@
   on it (a booster and a trigger).
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Booster.hxx,v 1.2 2005-02-13 19:17:02 stephena Exp $
 */
 class BoosterGrip : public Controller
 {
@@ -37,11 +36,10 @@ class BoosterGrip : public Controller
     /**
       Create a new booster grip joystick plugged into the specified jack
 
-      @param jack   The jack the controller is plugged into
-      @param event  The event object to use for events
-      @param system The system using this controller
+      @param jack The jack the controller is plugged into
+      @param event The event object to use for events
     */
-    BoosterGrip(Jack jack, const Event& event, const System& system);
+    BoosterGrip(Jack jack, const Event& event);
 
     /**
       Destructor
@@ -50,17 +48,31 @@ class BoosterGrip : public Controller
 
   public:
     /**
-      Update the entire digital and analog pin state according to the
-      events currently set.
+      Read the value of the specified digital pin for this controller.
+
+      @param pin The pin of the controller jack to read
+      @return The state of the pin
     */
-    virtual void update();
+    virtual bool read(DigitalPin pin);
 
-  private:
-    // Pre-compute the events we care about based on given port
-    // This will eliminate test for left or right port in update()
-    Event::Type myUpEvent, myDownEvent, myLeftEvent, myRightEvent,
-                myFireEvent, myBoosterEvent, myTriggerEvent,
-                myXAxisValue, myYAxisValue;
+    /**
+      Read the resistance at the specified analog pin for this controller.
+      The returned value is the resistance measured in ohms.
+
+      @param pin The pin of the controller jack to read
+      @return The resistance at the specified pin
+    */
+    virtual Int32 read(AnalogPin pin);
+
+    /**
+      Write the given value to the specified digital pin for this
+      controller.  Writing is only allowed to the pins associated
+      with the PIA.  Therefore you cannot write to pin six.
+
+      @param pin The pin of the controller jack to write to
+      @param value The value to write to the pin
+    */
+    virtual void write(DigitalPin pin, bool value);
 };
-
 #endif
+

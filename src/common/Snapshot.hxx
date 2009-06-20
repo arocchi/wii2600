@@ -8,56 +8,58 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Snapshot.hxx,v 1.3 2005-02-13 19:17:02 stephena Exp $
 //============================================================================
 
 #ifndef SNAPSHOT_HXX
 #define SNAPSHOT_HXX
 
-class Properties;
 class FrameBuffer;
-class TIA;
 
-#include <fstream>
+#include <png.h>
 #include "bspf.hxx"
 
 class Snapshot
 {
   public:
     /**
-      Save the current TIA image to a PNG file using data from the Framebuffer.
-      Any postprocessing/filtering will be included.
+      Create a new shapshot class for taking snapshots in PNG format.
 
-      @param framebuffer The framebuffer containing the image data
-      @param props       The properties object containing info about the ROM
-      @param filename    The filename of the PNG file
+      @param framebuffer The SDL framebuffer containing the image data
     */
-    static string savePNG(const FrameBuffer& framebuffer, const Properties& props,
-                          const string& filename);
+    Snapshot(FrameBuffer& framebuffer);
 
     /**
-      Save the current TIA image to a PNG file using data directly from
-      the TIA framebuffer.  No filtering or scaling will be included.
-
-      @param framebuffer The framebuffer containing the image data
-      @param mediasrc    Source of the raw TIA data
-      @param props       The properties object containing info about the ROM
-      @param filename    The filename of the PNG file
+      The destructor.
     */
-    static string savePNG(const FrameBuffer& framebuffer, const TIA& tia,
-                          const Properties& props, const string& filename);
+    ~Snapshot();
+
+    /**
+      This routine saves the current frame buffer to a PNG file.
+
+      @param filename  The filename of the PNG file
+
+      @string  The resulting string to print to the framebuffer
+    */
+    string savePNG(string filename);
 
   private:
-    static string saveBufferToPNG(ofstream& out, uInt8* buffer,
-                                  uInt32 width, uInt32 height,
-                                  const Properties& props);
-    static void writePNGChunk(ofstream& out, const char* type, uInt8* data, int size);
-    static void writePNGText(ofstream& out, const string& key, const string& text);
+    static void png_write_data(png_structp ctx, png_bytep area, png_size_t size);
+
+    static void png_io_flush(png_structp ctx);
+
+    static void png_user_warn(png_structp ctx, png_const_charp str);
+
+    static void png_user_error(png_structp ctx, png_const_charp str);
+
+  private:
+    // The Framebuffer for the system
+    FrameBuffer& myFrameBuffer;
 };
 
 #endif

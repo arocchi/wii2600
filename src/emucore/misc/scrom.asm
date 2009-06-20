@@ -8,12 +8,12 @@
 ;;  SS  SS   tt   ee      ll   ll  aa  aa
 ;;   SSSS     ttt  eeeee llll llll  aaaaa
 ;;
-;; Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+;; Copyright (c) 1995-2002 by Bradford W. Mott
 ;;
 ;; See the file "license" for information on usage and redistribution of
 ;; this file, and for a DISCLAIMER OF ALL WARRANTIES.
 ;;
-;; $Id: scrom.asm,v 1.3 2005-06-16 01:11:29 stephena Exp $
+;; $Id: scrom.asm,v 1.2 2002-04-05 02:18:23 bwmott Exp $
 ;;============================================================================
 ;; 
 ;; This file contains a "dummy" Supercharger BIOS for Stella.  It is based
@@ -124,17 +124,6 @@ mlclr2  STY $81,X
 ;;
 ;; Display the "emulated" Supercharger loading progress bar
 ;;
-;; Check if we should skip the loading progress bar
-;;  Note that the following code seems to never do a jump
-;;  However, the comparison value can be patched outside this code
-;;
-        LDA #$FF
-        CMP #$00         ; patch this value to $FF outside ROM to do a jump
-        BNE startbars
-        JMP skipbars
-
-;; Otherwise we display them
-startbars:
         LDA #$00
         STA GRP0
         STA GRP1
@@ -225,7 +214,6 @@ clear:
         STY $81,x
         DEX
         BPL clear
-skipbars:
 
 ;;
 ;; Setup value to be stored in the bank switching control register
@@ -236,7 +224,9 @@ skipbars:
 ;;
 ;; Initialize A, X, Y, and SP registers
 ;;
-        LDA #$9a  ;; This is patched outside the ROM to a random value
+        LDA $80
+        EOR $FE
+        EOR $FF
         LDX #$FF
         LDY #$00
         TXS

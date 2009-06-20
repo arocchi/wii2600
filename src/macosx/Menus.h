@@ -4,47 +4,44 @@
    Mark Grebe <atarimac@cox.net>
    
 */
-/* $Id$ */
+/* $Id: Menus.h,v 1.4 2005-02-18 05:31:47 markgrebe Exp $ */
 
 #import <Cocoa/Cocoa.h>
 
 @interface Menus : NSObject {
-    IBOutlet id preferencesMenuItem;
-    IBOutlet id openMenuItem;
-    IBOutlet id restartMenuItem;
-    IBOutlet id savePropsMenuItem;
-    IBOutlet id screenBiggerMenuItem;
-    IBOutlet id screenSmallerMenuItem;
-    IBOutlet id fullScreenMenuItem;
-    IBOutlet id togglePalletteMenuItem;
-    IBOutlet id ntscPalMenuItem;
-    IBOutlet id increaseXStartMenuItem;
-    IBOutlet id decreaseXStartMenuItem;
-    IBOutlet id increaseYStartMenuItem;
-    IBOutlet id decreaseYStartMenuItem;
-    IBOutlet id increaseWidthMenuItem;
-    IBOutlet id decreaseWidthMenuItem;
-    IBOutlet id increaseHeightMenuItem;
-    IBOutlet id decreaseHeightMenuItem;
-    IBOutlet id mousePaddle0MenuItem;
-    IBOutlet id mousePaddle1MenuItem;
-    IBOutlet id mousePaddle2MenuItem;
-    IBOutlet id mousePaddle3MenuItem;
-    IBOutlet id grabMouseMenuItem;
-    IBOutlet id increaseVolumeMenuItem;
-    IBOutlet id decreaseVolumeMenuItem;
+    IBOutlet id limitSpeedMenu;
+    IBOutlet id paddlesMenu;
+	IBOutlet id filterMenu;
+	IBOutlet id videoModeMatrix;
+	IBOutlet id volumeSlider;
+	IBOutlet id aspectRatioField;
+	IBOutlet id romDirField;
+	int openGlEnabled;
+	int gameMenusEnabled;
 }
 
 + (Menus *)sharedInstance;
-- (void)pushKeyEvent:(int)key:(bool)shift:(bool)cmd;
-- (IBAction)paddleChange:(id) sender;
+- (NSString *) browseDir;
+- (void)setSpeedLimitMenu:(int)limit;
+- (void)initVideoMenu:(int)openGl;
+- (void)setPaddleMenu:(int)number;
+- (void)prefsStart;
+- (void)enableGameMenus;
+- (void)pushKeyEvent:(int)key:(bool)shift;
+- (IBAction) paddleChange:(id) sender;
+- (IBAction) prefsOK:(id) sender;
+- (IBAction) romdirSelect:(id) sender;
+- (IBAction)prefsMenu:(id)sender;
 - (IBAction)biggerScreen:(id)sender;
 - (IBAction)smallerScreen:(id)sender;
 - (IBAction)fullScreen:(id)sender;
 - (IBAction)openCart:(id)sender;
 - (IBAction)restartGame:(id)sender;
+- (IBAction)speedLimit:(id)sender;
+- (IBAction)pauseGame:(id)sender;
 - (IBAction)ntscPalMode:(id)sender;
 - (IBAction)togglePallette:(id)sender;
+- (IBAction)toggleGlFilter:(id)sender;
 - (IBAction)grabMouse:(id)sender;
 - (IBAction)xStartPlus:(id)sender;
 - (IBAction)xStartMinus:(id)sender;
@@ -54,14 +51,5 @@
 - (IBAction)widthMinus:(id)sender;
 - (IBAction)heightPlus:(id)sender;
 - (IBAction)heightMinus:(id)sender;
-- (IBAction)doPrefs:(id)sender;
-- (IBAction)volumePlus:(id)sender;
-- (IBAction)volumeMinus:(id)sender;
-- (IBAction)saveProps:(id)sender;
-- (void)setEmulationMenus;
-- (void)setLauncherMenus;
-- (void)setOptionsMenus;
-- (void)setCommandMenus;
-- (void)setDebuggerMenus;
 
 @end

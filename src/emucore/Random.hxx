@@ -8,18 +8,16 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Random.hxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 //============================================================================
 
 #ifndef RANDOM_HXX
 #define RANDOM_HXX
-
-class OSystem;
 
 #include "bspf.hxx"
 
@@ -29,10 +27,19 @@ class OSystem;
   linear congruential generator.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Random.hxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 */
 class Random
 {
+  public:
+    /**
+      Class method which allows you to set the seed that'll be used
+      for created new instances of this class
+
+      @param value The value to seed the random number generator with
+    */
+    static void seed(uInt32 value);
+
   public:
     /**
       Create a new random number generator
@@ -47,22 +54,16 @@ class Random
     */
     uInt32 next();
 
-    /**
-      Class method which sets the OSystem in use; the constructor will
-      use this to reseed the random number generator every time a new
-      instance is created
-
-      @param system  The system currently in use
-    */
-    static void setSystem(const OSystem* system) { ourSystem = system; }
-
   private:
     // Indicates the next random number
     uInt32 myValue;
 
   private:
-    // Set the OSystem we're using
-    static const OSystem* ourSystem;
-};
+    // Seed to use for creating new random number generators
+    static uInt32 ourSeed;
 
+    // Indicates if seed has been set or not
+    static bool ourSeeded;
+};
 #endif
+

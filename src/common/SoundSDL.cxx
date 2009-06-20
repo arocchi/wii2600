@@ -8,183 +8,102 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.cxx,v 1.8 2005-02-13 19:17:02 stephena Exp $
 //============================================================================
-
-#ifdef SOUND_SUPPORT
 
 #include <sstream>
 #include <cassert>
 #include <cmath>
 #include <SDL.h>
 
-#include "TIASnd.hxx"
+#include "TIASound.h"
+#include "Console.hxx"
 #include "FrameBuffer.hxx"
 #include "Serializer.hxx"
 #include "Deserializer.hxx"
 #include "Settings.hxx"
 #include "System.hxx"
-#include "OSystem.hxx"
-
-#include "Console.hxx"
-#include "AtariVox.hxx"
-#ifdef SPEAKJET_EMULATION
-  #include "SpeakJet.hxx"
-#endif
-
 #include "SoundSDL.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SoundSDL::SoundSDL(OSystem* osystem)
-  : Sound(osystem),
-    myIsEnabled(osystem->settings().getBool("sound")),
-    myIsInitializedFlag(false),
-    myLastRegisterSetCycle(0),
-    myDisplayFrameRate(60.0),
-    myNumChannels(1),
-    myFragmentSizeLogBase2(0),
-    myIsMuted(false),
-    myVolume(100)
+SoundSDL::SoundSDL(uInt32 fragsize)
+    : myIsInitializedFlag(false),
+      myFragmentSizeLogBase2(0),
+      myIsMuted(false),
+      myVolume(100)
 {
+  if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+  {
+    cerr << "WARNING: Couldn't initialize SDL audio system! " << endl;
+    cerr << "         " << SDL_GetError() << endl;
+    return;
+  }
+  else
+  {
+    SDL_AudioSpec desired;
+    desired.freq = 31400;
+    desired.format = AUDIO_U8;
+    desired.channels = 1;
+    desired.samples = fragsize;
+    desired.callback = callback;
+    desired.userdata = (void*)this;
+
+    if(SDL_OpenAudio(&desired, &myHardwareSpec) < 0)
+    {
+      cerr << "WARNING: Couldn't open SDL audio system! " << endl;
+      cerr << "         " << SDL_GetError() << endl;
+      return;
+    }
+
+    // Make sure the sample buffer isn't to big (if it is the sound code
+    // will not work so we'll need to disable the audio support)
+    if(((float)myHardwareSpec.samples / (float)myHardwareSpec.freq) >= 0.25)
+    {
+      cerr << "WARNING: Sound device doesn't support realtime audio! Make ";
+      cerr << "sure a sound" << endl;
+      cerr << "         server isn't running.  Audio is disabled." << endl;
+
+      SDL_CloseAudio();
+      return;
+    }
+
+    myIsInitializedFlag = true;
+    myIsMuted = false;
+    myFragmentSizeLogBase2 = log((double)myHardwareSpec.samples) / log(2.0);
+
+/*
+    cerr << "Freq: " << (int)myHardwareSpec.freq << endl;
+    cerr << "Format: " << (int)myHardwareSpec.format << endl;
+    cerr << "Channels: " << (int)myHardwareSpec.channels << endl;
+    cerr << "Silence: " << (int)myHardwareSpec.silence << endl;
+    cerr << "Samples: " << (int)myHardwareSpec.samples << endl;
+    cerr << "Size: " << (int)myHardwareSpec.size << endl;
+*/
+
+    // Now initialize the TIASound object which will actually generate sound
+    Tia_sound_init(31400, myHardwareSpec.freq);
+
+    // And start the SDL sound subsystem ...
+    SDL_PauseAudio(0);
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SoundSDL::~SoundSDL()
 {
   // Close the SDL audio system if it's initialized
-  close();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::setEnabled(bool state)
-{
-  myIsEnabled = state;
-  myOSystem->settings().setBool("sound", state);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::open()
-{
-  // Check whether to start the sound subsystem
-  if(!myIsEnabled)
-  {
-    close();
-    if(myOSystem->settings().getBool("showinfo"))
-      cout << "Sound disabled." << endl << endl;
-    return;
-  }
-
-  // Make sure the sound queue is clear
-  myRegWriteQueue.clear();
-  myTIASound.reset();
-
-  if(SDL_WasInit(SDL_INIT_AUDIO) == 0)
-  {
-    myIsInitializedFlag = false;
-    myIsMuted = false;
-    myLastRegisterSetCycle = 0;
-
-    if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
-    {
-      cerr << "WARNING: Couldn't initialize SDL audio system! " << endl;
-      cerr << "         " << SDL_GetError() << endl;
-      return;
-    }
-    else
-    {
-      uInt32 fragsize = myOSystem->settings().getInt("fragsize");
-      Int32 frequency = myOSystem->settings().getInt("freq");
-      Int32 tiafreq   = myOSystem->settings().getInt("tiafreq");
-
-      SDL_AudioSpec desired;
-      desired.freq   = frequency;
-    #ifndef GP2X
-      desired.format = AUDIO_U8;
-    #else
-      desired.format = AUDIO_U16;
-    #endif
-      desired.channels = myNumChannels;
-      desired.samples  = fragsize;
-      desired.callback = callback;
-      desired.userdata = (void*)this;
-
-      if(SDL_OpenAudio(&desired, &myHardwareSpec) < 0)
-      {
-        cerr << "WARNING: Couldn't open SDL audio system! " << endl;
-        cerr << "         " << SDL_GetError() << endl;
-        return;
-      }
-
-      // Make sure the sample buffer isn't to big (if it is the sound code
-      // will not work so we'll need to disable the audio support)
-      if(((float)myHardwareSpec.samples / (float)myHardwareSpec.freq) >= 0.25)
-      {
-        cerr << "WARNING: Sound device doesn't support realtime audio! Make ";
-        cerr << "sure a sound" << endl;
-        cerr << "         server isn't running.  Audio is disabled." << endl;
-
-        SDL_CloseAudio();
-        return;
-      }
-
-      myIsInitializedFlag = true;
-      myIsMuted = false;
-      myFragmentSizeLogBase2 = log((double)myHardwareSpec.samples) / log(2.0);
-
-		/*
-        cerr << "Freq: " << (int)myHardwareSpec.freq << endl;
-        cerr << "Format: " << (int)myHardwareSpec.format << endl;
-        cerr << "Channels: " << (int)myHardwareSpec.channels << endl;
-        cerr << "Silence: " << (int)myHardwareSpec.silence << endl;
-        cerr << "Samples: " << (int)myHardwareSpec.samples << endl;
-        cerr << "Size: " << (int)myHardwareSpec.size << endl;
-		  */
-
-      // Now initialize the TIASound object which will actually generate sound
-      myTIASound.outputFrequency(myHardwareSpec.freq);
-      myTIASound.tiaFrequency(tiafreq);
-      myTIASound.channels(myHardwareSpec.channels);
-
-      bool clipvol = myOSystem->settings().getBool("clipvol");
-      myTIASound.clipVolume(clipvol);
-
-      // Adjust volume to that defined in settings
-      myVolume = myOSystem->settings().getInt("volume");
-      setVolume(myVolume);
-
-      // Show some info
-      if(myOSystem->settings().getBool("showinfo"))
-        cout << "Sound enabled:"  << endl
-             << "  Volume     : " << myVolume << endl
-             << "  Frag size  : " << fragsize << endl
-             << "  Frequency  : " << myHardwareSpec.freq << endl
-             << "  Format     : " << myHardwareSpec.format << endl
-             << "  TIA Freq.  : " << tiafreq << endl
-             << "  Channels   : " << myNumChannels << endl
-             << "  Clip volume: " << (int)clipvol << endl << endl;
-    }
-  }
-
-  // And start the SDL sound subsystem ...
   if(myIsInitializedFlag)
   {
-    SDL_PauseAudio(0);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::close()
-{
-  if(myIsInitializedFlag)
-  {
+    SDL_PauseAudio(1);
     SDL_CloseAudio();
-    myIsInitializedFlag = false;
   }
+
+  myIsInitializedFlag = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -219,7 +138,6 @@ void SoundSDL::reset()
     SDL_PauseAudio(1);
     myIsMuted = false;
     myLastRegisterSetCycle = 0;
-    myTIASound.reset();
     myRegWriteQueue.clear();
     SDL_PauseAudio(0);
   }
@@ -232,10 +150,9 @@ void SoundSDL::setVolume(Int32 percent)
   {
     if((percent >= 0) && (percent <= 100))
     {
-      myOSystem->settings().setInt("volume", percent);
       SDL_LockAudio();
       myVolume = percent;
-      myTIASound.volume(percent);
+      Tia_volume(percent);
       SDL_UnlockAudio();
     }
   }
@@ -264,27 +181,8 @@ void SoundSDL::adjustVolume(Int8 direction)
   message = "Volume set to ";
   message += strval.str();
 
-  myOSystem->frameBuffer().showMessage(message);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::adjustCycleCounter(Int32 amount)
-{
-  myLastRegisterSetCycle += amount;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::setChannels(uInt32 channels)
-{
-  if(channels == 1 || channels == 2)
-    myNumChannels = channels;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::setFrameRate(float framerate)
-{
-  // FIXME - should we clear out the queue or adjust the values in it?
-  myDisplayFrameRate = framerate;
+  myConsole->frameBuffer().showMessage(message);
+  myConsole->settings().setInt("volume", percent);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -297,12 +195,9 @@ void SoundSDL::set(uInt16 addr, uInt8 value, Int32 cycle)
   double delta = (((double)(cycle - myLastRegisterSetCycle)) / 
       (1193191.66666667));
 
-  // Now, adjust the time based on the frame rate the user has selected. For
-  // the sound to "scale" correctly, we have to know the games real frame 
-  // rate (e.g., 50 or 60) and the currently emulated frame rate. We use these
-  // values to "scale" the time before the register change occurs.
-// FIXME - this always results in 1.0, so we don't really need it
-//  delta = delta * (myDisplayFrameRate / myOSystem->frameRate());
+  // Now, adjust the time based on the frame rate the user has selected
+  delta = delta * (myDisplayFrameRate / (double)myConsole->frameRate());
+
   RegWrite info;
   info.addr = addr;
   info.value = value;
@@ -319,21 +214,19 @@ void SoundSDL::set(uInt16 addr, uInt8 value, Int32 cycle)
 void SoundSDL::processFragment(uInt8* stream, Int32 length)
 {
   if(!myIsInitializedFlag)
+  {
     return;
-
-  uInt32 channels = myHardwareSpec.channels;
-  length = length / channels;
+  }
 
   // If there are excessive items on the queue then we'll remove some
-  if(myRegWriteQueue.duration() > 
-      (myFragmentSizeLogBase2 / myDisplayFrameRate))
+  if(myRegWriteQueue.duration() > (myFragmentSizeLogBase2 / myDisplayFrameRate))
   {
     double removed = 0.0;
     while(removed < ((myFragmentSizeLogBase2 - 1) / myDisplayFrameRate))
     {
       RegWrite& info = myRegWriteQueue.front();
       removed += info.delta;
-      myTIASound.set(info.addr, info.value);
+      Update_tia_sound(info.addr, info.value);
       myRegWriteQueue.dequeue();
     }
 //    cout << "Removed Items from RegWriteQueue!" << endl;
@@ -348,9 +241,7 @@ void SoundSDL::processFragment(uInt8* stream, Int32 length)
     {
       // There are no more pending TIA sound register updates so we'll
       // use the current settings to finish filling the sound fragment
-//    myTIASound.process(stream + (uInt32)position, length - (uInt32)position);
-      myTIASound.process(stream + ((uInt32)position * channels),
-          length - (uInt32)position);
+      Tia_process(stream + (uInt32)position, length - (uInt32)position);
 
       // Since we had to fill the fragment we'll reset the cycle counter
       // to zero.  NOTE: This isn't 100% correct, however, it'll do for
@@ -365,7 +256,7 @@ void SoundSDL::processFragment(uInt8* stream, Int32 length)
       // update the sound buffer to the point of the next register update
       RegWrite& info = myRegWriteQueue.front();
 
-      // How long will the remaining samples in the fragment take to play
+      // How long will the remaing samples in the fragment take to play
       double duration = remaining / (double)myHardwareSpec.freq;
 
       // Does the register update occur before the end of the fragment?
@@ -376,19 +267,15 @@ void SoundSDL::processFragment(uInt8* stream, Int32 length)
         if(info.delta > 0.0)
         {
           // Process the fragment upto the next TIA register write.  We
-          // round the count passed to process up if needed.
+          // round the count passed to Tia_process up if needed.
           double samples = (myHardwareSpec.freq * info.delta);
-//        myTIASound.process(stream + (uInt32)position, (uInt32)samples +
-//            (uInt32)(position + samples) - 
-//            ((uInt32)position + (uInt32)samples));
-          myTIASound.process(stream + ((uInt32)position * channels),
-              (uInt32)samples + (uInt32)(position + samples) - 
+          Tia_process(stream + (uInt32)position, (uInt32)samples +
+              (uInt32)(position + samples) - 
               ((uInt32)position + (uInt32)samples));
-
           position += samples;
           remaining -= samples;
         }
-        myTIASound.set(info.addr, info.value);
+        Update_tia_sound(info.addr, info.value);
         myRegWriteQueue.dequeue();
       }
       else
@@ -396,9 +283,7 @@ void SoundSDL::processFragment(uInt8* stream, Int32 length)
         // The next register update occurs in the next fragment so finish
         // this fragment with the current TIA settings and reduce the register
         // update delay by the corresponding amount of time
-//      myTIASound.process(stream + (uInt32)position, length - (uInt32)position);
-        myTIASound.process(stream + ((uInt32)position * channels),
-            length - (uInt32)position);
+        Tia_process(stream + (uInt32)position, length - (uInt32)position);
         info.delta -= duration;
         break;
       }
@@ -411,27 +296,6 @@ void SoundSDL::callback(void* udata, uInt8* stream, int len)
 {
   SoundSDL* sound = (SoundSDL*)udata;
   sound->processFragment(stream, (Int32)len);
-
-#ifdef SPEAKJET_EMULATION
-//  cerr << "SoundSDL::callback(): len==" << len << endl;
-
-  // See if we need sound from the AtariVox
-  AtariVox *vox = sound->myOSystem->console().atariVox();
-  if(vox)
-  {
-    // If so, mix 'em together (this is a crappy way to mix audio streams...)
-    uInt8 *s = stream;
-    for(int i=0; i<len/OUTPUT_BUFFER_SIZE; i++)
-    {
-      int count;
-      uInt8 *voxSamples = vox->getSpeakJet()->getSamples(&count);
-      if(!count)
-        break;
-      SDL_MixAudio(s, voxSamples, OUTPUT_BUFFER_SIZE, SDL_MIX_MAXVOLUME);
-      s += OUTPUT_BUFFER_SIZE;
-    }
-  }
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -445,14 +309,14 @@ bool SoundSDL::load(Deserializer& in)
       return false;
 
     uInt8 reg1 = 0, reg2 = 0, reg3 = 0, reg4 = 0, reg5 = 0, reg6 = 0;
-    reg1 = (uInt8) in.getByte();
-    reg2 = (uInt8) in.getByte();
-    reg3 = (uInt8) in.getByte();
-    reg4 = (uInt8) in.getByte();
-    reg5 = (uInt8) in.getByte();
-    reg6 = (uInt8) in.getByte();
+    reg1 = (uInt8) in.getLong();
+    reg2 = (uInt8) in.getLong();
+    reg3 = (uInt8) in.getLong();
+    reg4 = (uInt8) in.getLong();
+    reg5 = (uInt8) in.getLong();
+    reg6 = (uInt8) in.getLong();
 
-    myLastRegisterSetCycle = (Int32) in.getInt();
+    myLastRegisterSetCycle = (Int32) in.getLong();
 
     // Only update the TIA sound registers if sound is enabled
     // Make sure to empty the queue of previous sound fragments
@@ -460,12 +324,7 @@ bool SoundSDL::load(Deserializer& in)
     {
       SDL_PauseAudio(1);
       myRegWriteQueue.clear();
-      myTIASound.set(0x15, reg1);
-      myTIASound.set(0x16, reg2);
-      myTIASound.set(0x17, reg3);
-      myTIASound.set(0x18, reg4);
-      myTIASound.set(0x19, reg5);
-      myTIASound.set(0x1a, reg6);
+      Tia_set_registers(reg1, reg2, reg3, reg4, reg5, reg6);
       SDL_PauseAudio(0);
     }
   }
@@ -496,23 +355,16 @@ bool SoundSDL::save(Serializer& out)
 
     // Only get the TIA sound registers if sound is enabled
     if(myIsInitializedFlag)
-    {
-      reg1 = myTIASound.get(0x15);
-      reg2 = myTIASound.get(0x16);
-      reg3 = myTIASound.get(0x17);
-      reg4 = myTIASound.get(0x18);
-      reg5 = myTIASound.get(0x19);
-      reg6 = myTIASound.get(0x1a);
-    }
+      Tia_get_registers(&reg1, &reg2, &reg3, &reg4, &reg5, &reg6);
 
-    out.putByte((char)reg1);
-    out.putByte((char)reg2);
-    out.putByte((char)reg3);
-    out.putByte((char)reg4);
-    out.putByte((char)reg5);
-    out.putByte((char)reg6);
+    out.putLong(reg1);
+    out.putLong(reg2);
+    out.putLong(reg3);
+    out.putLong(reg4);
+    out.putLong(reg5);
+    out.putLong(reg6);
 
-    out.putInt(myLastRegisterSetCycle);
+    out.putLong(myLastRegisterSetCycle);
   }
   catch(char *msg)
   {
@@ -530,11 +382,11 @@ bool SoundSDL::save(Serializer& out)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SoundSDL::RegWriteQueue::RegWriteQueue(uInt32 capacity)
-  : myCapacity(capacity),
-    myBuffer(0),
-    mySize(0),
-    myHead(0),
-    myTail(0)
+    : myCapacity(capacity),
+      myBuffer(0),
+      mySize(0),
+      myHead(0),
+      myTail(0)
 {
   myBuffer = new RegWrite[myCapacity];
 }
@@ -614,5 +466,3 @@ void SoundSDL::RegWriteQueue::grow()
   delete[] myBuffer;
   myBuffer = buffer;
 }
-
-#endif  // SOUND_SUPPORT

@@ -1,3 +1,4 @@
+
 Please distribute this file with the SDL runtime environment:
 
 The Simple DirectMedia Layer (SDL for short) is a cross-platfrom library
@@ -9,3 +10,4 @@ http://www.libsdl.org/
 
 This library is distributed under the terms of the GNU LGPL license:
 http://www.gnu.org/copyleft/lesser.html
+

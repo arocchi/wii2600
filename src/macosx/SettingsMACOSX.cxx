@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1999 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsMACOSX.cxx,v 1.3 2005-02-18 01:05:23 markgrebe Exp $
 //============================================================================
 
 #include <cassert>
@@ -27,24 +27,57 @@
 #include "bspf.hxx"
 #include "Console.hxx"
 #include "EventHandler.hxx"
-#include "Version.hxx"
+#include "StellaEvent.hxx"
 
 #include "Settings.hxx"
 #include "SettingsMACOSX.hxx"
 
 extern "C" {
-  void prefsSetString(char *key, char *value);
-  void prefsGetString(char *key, char *value);
-  void prefsSave(void);
+void prefsSetString(char *key, char *value);
+void prefsGetString(char *key, char *value);
+void prefsSave(void);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SettingsMACOSX::SettingsMACOSX(OSystem* osystem)
-  : Settings(osystem)
+SettingsMACOSX::SettingsMACOSX()
 {
-  setInternal("video", "gl");        // Use opengl mode by default
-  setInternal("gl_lib", "libGL.so"); // Try this one first, then let the system decide
-  setInternal("gl_vsync", "true");   // OSX almost always supports vsync; let's use it
+  char workingDir[FILENAME_MAX];
+  
+  // First set variables that the parent class needs
+  myBaseDir = "./";
+  string stelladir = myBaseDir;
+
+  myStateDir = stelladir + "state/";
+  if(access(myStateDir.c_str(), R_OK|W_OK|X_OK) != 0 )
+    mkdir(myStateDir.c_str(), 0777);
+
+  string userPropertiesFile   = stelladir + "stella.pro";
+//  mySystemPropertiesFile = stelladir + "stella.pro";
+  string userConfigFile       = "";
+//  mySystemConfigFile     = "";
+
+  // Set up the names of the input and output config files
+  myConfigOutputFile = userConfigFile;
+  if (fileExists(userConfigFile))
+     myConfigInputFile = userConfigFile;
+  else
+     myConfigInputFile = "";
+	 
+  myPropertiesOutputFile = userPropertiesFile;
+  if(fileExists(userPropertiesFile))
+     myPropertiesInputFile = userPropertiesFile;
+// Êelse if(fileExists(systemPropertiesFile)
+// Ê ÊmyPropertiesInputFile = systemPropertiesFile;
+  else
+     myPropertiesInputFile = "";	 
+
+  // Now create MacOSX specific settings
+#ifdef SNAPSHOT_SUPPORT
+  set("ssdir", "./");
+#endif
+  getwd(workingDir);
+  set("romdir", workingDir);
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -53,30 +86,48 @@ SettingsMACOSX::~SettingsMACOSX()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void SettingsMACOSX::usage(string& message)
+{
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SettingsMACOSX::loadConfig()
 {
   string key, value;
-  char cvalue[2048];
+  char cvalue[1024];
   
-  // Read key/value pairs from the plist file
-  const SettingsArray& settings = getInternalSettings();
-  for(unsigned int i = 0; i < settings.size(); ++i)
-  {
-    prefsGetString((char *) settings[i].key.c_str(), cvalue);
-    if(cvalue[0] != 0)
-      setInternal(settings[i].key, cvalue, i, true);
-  }
+  // Write out each of the key and value pairs
+  for(uInt32 i = 0; i < mySize; ++i)
+	{
+	prefsGetString((char *) mySettings[i].key.c_str(),cvalue);
+	if (cvalue[0] != 0)
+		mySettings[i].value.assign(cvalue);
+	}
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SettingsMACOSX::saveConfig()
 {
   // Write out each of the key and value pairs
-  const SettingsArray& settings = getInternalSettings();
-  for(unsigned int i = 0; i < settings.size(); ++i)
-  {
-    prefsSetString((char *) settings[i].key.c_str(),
-                   (char *) settings[i].value.c_str());
-  }
-  prefsSave();
+  for(uInt32 i = 0; i < mySize; ++i)
+    if(mySettings[i].save)
+		{
+		prefsSetString((char *) mySettings[i].key.c_str(), 
+					   (char *) mySettings[i].value.c_str());
+		}
+   prefsSave();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+string SettingsMACOSX::stateFilename(const string& md5, uInt32 state)
+{
+  ostringstream buf;
+  buf << myStateDir << md5 << ".st" << state;
+  return  buf.str();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool SettingsMACOSX::fileExists(const string& filename)
+{
+  return (access(filename.c_str(), F_OK|W_OK) == 0);
 }

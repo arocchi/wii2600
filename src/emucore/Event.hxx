@@ -8,32 +8,30 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Event.hxx,v 1.5 2004-06-04 12:22:12 stephena Exp $
 //============================================================================
 
 #ifndef EVENT_HXX
 #define EVENT_HXX
 
-#include "bspf.hxx"
-
 class Event;
+
+#include "bspf.hxx"
 
 /**
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Event.hxx,v 1.5 2004-06-04 12:22:12 stephena Exp $
 */
 class Event
 {
   public:
     /**
-      Enumeration of all possible events in Stella, including both
-      console and controller event types as well as events that aren't
-      technically part of the emulation core
+      Enumeration of console and controller event types
     */
     enum Type
     {
@@ -43,15 +41,18 @@ class Event
       ConsoleRightDifficultyA, ConsoleRightDifficultyB,
       ConsoleSelect, ConsoleReset,
 
-      JoystickZeroUp, JoystickZeroDown, JoystickZeroLeft, JoystickZeroRight,
-        JoystickZeroFire1, JoystickZeroFire2, JoystickZeroFire3,
-      JoystickOneUp, JoystickOneDown, JoystickOneLeft, JoystickOneRight,
-        JoystickOneFire1, JoystickOneFire2, JoystickOneFire3,
+      JoystickZeroUp, JoystickZeroDown, JoystickZeroLeft,
+      JoystickZeroRight, JoystickZeroFire,
+      JoystickOneUp, JoystickOneDown, JoystickOneLeft,
+      JoystickOneRight, JoystickOneFire,
 
-      PaddleZeroDecrease, PaddleZeroIncrease, PaddleZeroAnalog, PaddleZeroFire,
-      PaddleOneDecrease, PaddleOneIncrease, PaddleOneAnalog, PaddleOneFire,
-      PaddleTwoDecrease, PaddleTwoIncrease, PaddleTwoAnalog, PaddleTwoFire,
-      PaddleThreeDecrease, PaddleThreeIncrease, PaddleThreeAnalog, PaddleThreeFire,
+      BoosterGripZeroTrigger, BoosterGripZeroBooster,
+      BoosterGripOneTrigger, BoosterGripOneBooster,
+
+      PaddleZeroResistance, PaddleZeroFire,
+      PaddleOneResistance, PaddleOneFire,
+      PaddleTwoResistance, PaddleTwoFire,
+      PaddleThreeResistance, PaddleThreeFire,
 
       KeyboardZero1, KeyboardZero2, KeyboardZero3,
       KeyboardZero4, KeyboardZero5, KeyboardZero6,
@@ -62,18 +63,13 @@ class Event
       KeyboardOne4, KeyboardOne5, KeyboardOne6,
       KeyboardOne7, KeyboardOne8, KeyboardOne9,
       KeyboardOneStar, KeyboardOne0, KeyboardOnePound,
-  
-      SALeftAxis0Value, SALeftAxis1Value,
-      SARightAxis0Value, SARightAxis1Value,
 
-      MouseAxisXValue, MouseAxisYValue, MouseButtonValue,
-
-      ChangeState, LoadState, SaveState, TakeSnapshot, Quit,
-      PauseMode, MenuMode, CmdMenuMode, DebuggerMode, LauncherMode,
-      Fry, VolumeDecrease, VolumeIncrease,
-
-      UIUp, UIDown, UILeft, UIRight, UIHome, UIEnd, UIPgUp, UIPgDown,
-      UISelect, UINavPrev, UINavNext, UIOK, UICancel,
+      DrivingZeroClockwise, DrivingZeroCounterClockwise, DrivingZeroValue, 
+	  DrivingZeroFire,
+      DrivingOneClockwise, DrivingOneCounterClockwise, DrivingOneValue,
+	  DrivingOneFire,
+	  
+      ChangeState, LoadState, SaveState, TakeSnapshot, Pause, Quit,
 
       LastType
     };
@@ -100,11 +96,6 @@ class Event
     */
     virtual void set(Type type, Int32 value);
 
-    /**
-      Clears the event array (resets to initial state)
-    */
-    virtual void clear();
-
   protected:
     // Number of event types there are
     const Int32 myNumberOfTypes;
@@ -112,5 +103,5 @@ class Event
     // Array of values associated with each event type
     Int32 myValues[LastType];
 };
-
 #endif
+

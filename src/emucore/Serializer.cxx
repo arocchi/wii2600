@@ -8,19 +8,27 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Serializer.cxx,v 1.3 2004-04-04 02:03:15 stephena Exp $
 //============================================================================
+
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "Serializer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Serializer::Serializer(void)
 {
+  TruePattern = 0xfab1fab2;
+  FalsePattern = 0xbad1bad2;
+
+  myStream = (ofstream*) 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,46 +38,32 @@ Serializer::~Serializer(void)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Serializer::open(const string& fileName)
+bool Serializer::open(string& fileName)
 {
   close();
-  myStream.open(fileName.c_str(), ios::out | ios::binary);
+  myStream = new ofstream(fileName.c_str(), ios::out | ios::binary);
 
-  return isOpen();
+  return (myStream && myStream->is_open());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Serializer::close(void)
 {
-  myStream.close();
-  myStream.clear();
+  if(myStream)
+  {
+    if(myStream->is_open())
+      myStream->close();
+
+    delete myStream;
+    myStream = (ofstream*) 0;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Serializer::isOpen(void)
+void Serializer::putLong(long value)
 {
-  return myStream.is_open();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Serializer::putByte(char value)
-{
-  char buf[1];
-  buf[0] = value;
-  myStream.write(buf, 1);
-  if(myStream.bad())
-    throw "Serializer: file write failed";
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Serializer::putInt(int value)
-{
-  unsigned char buf[4];
-  for(int i = 0; i < 4; ++i)
-    buf[i] = (value >> (i<<3)) & 0xff;
-
-  myStream.write((char*)buf, 4);
-  if(myStream.bad())
+  myStream->write(reinterpret_cast<char *> (&value), sizeof (long));
+  if(myStream->bad())
     throw "Serializer: file write failed";
 }
 
@@ -77,15 +71,19 @@ void Serializer::putInt(int value)
 void Serializer::putString(const string& str)
 {
   int len = str.length();
-  putInt(len);
-  myStream.write(str.data(), (streamsize)len);
+  putLong(len);
+  myStream->write(str.data(), len);
 
-  if(myStream.bad())
+  if(myStream->bad())
     throw "Serializer: file write failed";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Serializer::putBool(bool b)
 {
-  putByte(b ? TruePattern: FalsePattern);
+  long l = b ? TruePattern: FalsePattern;
+  putLong(l);
+
+  if(myStream->bad ())
+    throw "Serializer: file write failed";
 }
