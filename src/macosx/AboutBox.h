@@ -4,7 +4,7 @@
    Mark Grebe <atarimac@cox.net>
    
 */
-/* $Id$ */
+/* $Id: AboutBox.h,v 1.1.1.1 2004-06-16 02:30:30 markgrebe Exp $ */
 
 
 #import <Cocoa/Cocoa.h>
@@ -23,6 +23,8 @@
 
 + (AboutBox *)sharedInstance;
 - (IBAction)showPanel:(id)sender;
-- (void)OK:(id)sender;
+- (void)scrollCredits;
+- (void)clicked;
+- (void)doubleClicked;
 
 @end

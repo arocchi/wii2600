@@ -8,25 +8,35 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Random.cxx,v 1.1.1.1 2001-12-27 19:54:23 bwmott Exp $
 //============================================================================
 
 #include <time.h>
-#include "OSystem.hxx"
 #include "Random.hxx"
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Random::seed(uInt32 value)
+{
+  ourSeed = value;
+  ourSeeded = true;
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Random::Random()
 {
-  if(ourSystem)
-    myValue = ourSystem->getTicks();
-  else
-    myValue = (uInt32)time(0);
+  // If we haven't been seeded then seed ourself
+  if(!ourSeeded)
+  {
+    ourSeed = (uInt32)time(0);
+    ourSeeded = true;
+  }
+
+  myValue = ourSeed;
 }
  
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -36,4 +46,8 @@ uInt32 Random::next()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const OSystem* Random::ourSystem = NULL;
+uInt32 Random::ourSeed = 0;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool Random::ourSeeded = false;
+

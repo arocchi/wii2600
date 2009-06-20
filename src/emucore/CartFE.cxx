@@ -8,30 +8,40 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartFE.cxx,v 1.2 2002-05-13 19:17:32 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
-#include "System.hxx"
+#include <assert.h>
 #include "CartFE.hxx"
+#include "System.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeFE::CartridgeFE(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeFE::~CartridgeFE()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeFE::name() const
+{
+  return "CartridgeFE";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -73,44 +83,7 @@ void CartridgeFE::poke(uInt16, uInt8)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeFE::bank(uInt16 b)
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeFE::bank()
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeFE::bankCount()
-{
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeFE::patch(uInt16 address, uInt8 value)
-{
-  myImage[(address & 0x0FFF) + (((address & 0x2000) == 0) ? 4096 : 0)] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeFE::getImage(int& size)
-{
-  size = 8192;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeFE::save(Serializer& out) const
+bool CartridgeFE::save(Serializer& out)
 {
   string cart = name();
 
@@ -118,7 +91,7 @@ bool CartridgeFE::save(Serializer& out) const
   {
     out.putString(cart);
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -142,7 +115,7 @@ bool CartridgeFE::load(Deserializer& in)
     if(in.getString() != cart)
       return false;
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
