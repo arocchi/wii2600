@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ToggleWidget.cxx,v 1.7 2008-02-06 13:45:20 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -32,8 +32,7 @@ ToggleWidget::ToggleWidget(GuiObject* boss, const GUI::Font& font,
     _cols(cols),
     _currentRow(0),
     _currentCol(0),
-    _selectedItem(0),
-    _editable(true)
+    _selectedItem(0)
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS |
            WIDGET_WANTS_RAWDATA;
@@ -69,9 +68,6 @@ void ToggleWidget::handleMouseDown(int x, int y, int button, int clickCount)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ToggleWidget::handleMouseUp(int x, int y, int button, int clickCount)
 {
-  if (!isEnabled() || !_editable)
-    return;
-
   // If this was a double click and the mouse is still over the selected item,
   // send the double click command
   if (clickCount == 2 && (_selectedItem == findItem(x, y)))
@@ -99,8 +95,8 @@ int ToggleWidget::findItem(int x, int y)
 bool ToggleWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all mod keys
-  if(instance().eventHandler().kbdControl(modifiers) ||
-     instance().eventHandler().kbdAlt(modifiers))
+  if(instance()->eventHandler().kbdControl(modifiers) ||
+     instance()->eventHandler().kbdAlt(modifiers))
     return true;
 
   bool handled = true;
@@ -189,7 +185,7 @@ bool ToggleWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   {
     _selectedItem = _currentRow*_cols + _currentCol;
 
-    if(toggle && _editable)
+    if(toggle)
     {
       _stateList[_selectedItem] = !_stateList[_selectedItem];
       _changedList[_selectedItem] = !_changedList[_selectedItem];

@@ -8,21 +8,21 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: AtariVox.hxx,v 1.10 2008-03-31 00:59:30 stephena Exp $
 //============================================================================
 
 #ifndef ATARIVOX_HXX
 #define ATARIVOX_HXX
 
-class SerialPort;
-class MT24LC256;
+class SpeakJet;
 
 #include "Control.hxx"
+#include "SerialPort.hxx"
 
 /**
   Richard Hutchinson's AtariVox "controller": A speech synthesizer and
@@ -32,7 +32,7 @@ class MT24LC256;
   driver code.
 
   @author  B. Watson
-  @version $Id$
+  @version $Id: AtariVox.hxx,v 1.10 2008-03-31 00:59:30 stephena Exp $
 */
 class AtariVox : public Controller
 {
@@ -40,16 +40,10 @@ class AtariVox : public Controller
     /**
       Create a new AtariVox controller plugged into the specified jack
 
-      @param jack       The jack the controller is plugged into
-      @param event      The event object to use for events
-      @param system     The system using this controller
-      @param port       The serial port object
-      @param portname   Name of the port used for reading and writing
-      @param eepromfile The file containing the EEPROM data
+      @param jack The jack the controller is plugged into
+      @param event The event object to use for events
     */
-    AtariVox(Jack jack, const Event& event, const System& system,
-             const SerialPort& port, const string& portname,
-             const string& eepromfile);
+    AtariVox(Jack jack, const Event& event, const SerialPort& port);
 
     /**
       Destructor
@@ -57,14 +51,6 @@ class AtariVox : public Controller
     virtual ~AtariVox();
 
   public:
-    /**
-      Read the value of the specified digital pin for this controller.
-
-      @param pin The pin of the controller jack to read
-      @return The state of the pin
-    */
-    virtual bool read(DigitalPin pin);
-
     /**
       Write the given value to the specified digital pin for this
       controller.  Writing is only allowed to the pins associated
@@ -79,29 +65,34 @@ class AtariVox : public Controller
       Update the entire digital and analog pin state according to the
       events currently set.
     */
-    virtual void update() { }
+    virtual void update();
 
-    /**
-      Notification method invoked by the system right before the
-      system resets its cycle counter to zero.  It may be necessary 
-      to override this method for devices that remember cycle counts.
-    */
-    virtual void systemCyclesReset();
-
-    virtual string about() const;
+#ifdef SPEAKJET_EMULATION
+    SpeakJet* getSpeakJet() { return mySpeakJet; }
+#endif
 
   private:
    void clockDataIn(bool value);
    void shiftIn(bool value);
 
   private:
+    // How far off (in CPU cycles) can each write occur from when it's
+    // supposed to happen? Eventually, this will become a user-settable
+    // property... or it may turn out to be unnecessary.
+    enum { TIMING_SLOP = 0 };
+
     // Instance of an real serial port on the system
     // Assuming there's a real AtariVox attached, we can send SpeakJet
     // bytes directly to it
-    SerialPort& mySerialPort;
+    SerialPort* mySerialPort;
 
-    // The EEPROM used in the AtariVox
-    MT24LC256* myEEPROM;
+#ifdef SPEAKJET_EMULATION
+    // Instance of SpeakJet which will actually do the talking for us.
+    SpeakJet *mySpeakJet;
+#endif
+
+    // State of the output pins
+    uInt8 myPinState;
 
     // How many bits have been shifted into the shift register?
     uInt8 myShiftCount;
@@ -117,9 +108,6 @@ class AtariVox : public Controller
     // driver code sends data at 62 CPU cycles per bit, which is
     // "close enough".
     uInt32 myLastDataWriteCycle;
-
-    // Holds information concerning serial port usage
-    string myAboutString;
 };
 
 #endif

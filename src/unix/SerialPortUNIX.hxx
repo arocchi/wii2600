@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPortUNIX.hxx,v 1.2 2008-04-09 17:19:16 stephena Exp $
 //============================================================================
 
 #ifndef SERIALPORT_UNIX_HXX
@@ -26,7 +26,7 @@
   it seems to be Linux-only, and reading isn't actually supported at all.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: SerialPortUNIX.hxx,v 1.2 2008-04-09 17:19:16 stephena Exp $
 */
 class SerialPortUNIX : public SerialPort
 {
@@ -38,9 +38,14 @@ class SerialPortUNIX : public SerialPort
       Open the given serial port with the specified attributes.
 
       @param device  The name of the port
+      @param baud    Baud rate
+      @param data    Number of data bits
+      @param stop    Number of stop bits
+      @param parity  Type of parity bit (0=none, 1=odd, 2=even)
+
       @return  False on any errors, else true
     */
-    bool openPort(const string& device);
+    bool openPort(const string& device, int baud, int data, int stop, int parity);
 
     /**
       Close a previously opened serial port.
@@ -53,11 +58,7 @@ class SerialPortUNIX : public SerialPort
       @param data  The byte to write to the port
       @return  True if a byte was written, else false
     */
-    bool writeByte(const uInt8* data);
-
-  private:
-    // File descriptor for serial connection
-    int myHandle;
+    bool writeByte(const uInt8 data);
 };
 
 #endif

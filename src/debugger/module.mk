@@ -8,7 +8,6 @@ MODULE_OBJS := \
 	src/debugger/PackedBitArray.o \
 	src/debugger/CpuDebug.o \
 	src/debugger/RamDebug.o \
-	src/debugger/RiotDebug.o \
 	src/debugger/TIADebug.o
 
 MODULE_DIRS += \

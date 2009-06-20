@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart4A50.cxx,v 1.14 2008-03-28 23:29:13 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -35,6 +35,11 @@ Cartridge4A50::Cartridge4A50(const uInt8* image, uInt32 size)
   else                    size = 131072;
   for(uInt32 slice = 0; slice < 131072 / size; ++slice)
     memcpy(myImage + (slice*size), image, size);
+
+  // Initialize RAM with random values
+  class Random random;
+  for(uInt32 i = 0; i < 32768; ++i)
+    myRAM[i] = random.next();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,11 +50,6 @@ Cartridge4A50::~Cartridge4A50()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge4A50::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 32768; ++i)
-    myRAM[i] = random.next();
-
   mySliceLow = mySliceMiddle = mySliceHigh = 0;
   myIsRomLow = myIsRomMiddle = myIsRomHigh = true;
 
@@ -283,14 +283,12 @@ void Cartridge4A50::checkBankSwitch(uInt16 address, uInt8 value)
 void Cartridge4A50::bank(uInt16)
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int Cartridge4A50::bank()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 0;
 }
 
@@ -298,16 +296,13 @@ int Cartridge4A50::bank()
 int Cartridge4A50::bankCount()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool Cartridge4A50::patch(uInt16 address, uInt8 value)
 {
-  // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
-  return false;
+  return false;  // TODO
 } 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Switches.hxx,v 1.6 2008-02-06 13:45:22 stephena Exp $
 //============================================================================
 
 #ifndef SWITCHES_HXX
@@ -29,15 +29,10 @@ class Properties;
   This class represents the console switches of the game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Switches.hxx,v 1.6 2008-02-06 13:45:22 stephena Exp $
 */
 class Switches : public Serializable
 {
-  /**
-    Riot debug class needs special access to the underlying controller state
-  */
-  friend class RiotDebug;
-
   public:
     /**
       Create a new set of switches using the specified events and

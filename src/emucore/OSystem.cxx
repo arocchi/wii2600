@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystem.cxx,v 1.121 2008-03-31 00:59:30 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -36,10 +36,10 @@
 #include "SerialPort.hxx"
 #if defined(UNIX)
   #include "SerialPortUNIX.hxx"
-#elif defined(WIN32)
-  #include "SerialPortWin32.hxx"
-#elif defined(MAC_OSX)
-  #include "SerialPortMACOSX.hxx"
+//#elif defined(WIN32)
+//  #include "SerialPortWin32.hxx"
+//#elif defined(MAC_OSX)
+//  #include "SerialPortMACOSX.hxx"
 #endif
 
 #include "FSNode.hxx"
@@ -53,12 +53,10 @@
 #include "Launcher.hxx"
 #include "Font.hxx"
 #include "StellaFont.hxx"
-#include "StellaMediumFont.hxx"
 #include "StellaLargeFont.hxx"
 #include "ConsoleFont.hxx"
 #include "Widget.hxx"
 #include "Console.hxx"
-#include "Random.hxx"
 #include "StateManager.hxx"
 
 #include "OSystem.hxx"
@@ -82,7 +80,6 @@ OSystem::OSystem()
     myStateManager(NULL),
     myQuitLoop(false),
     myRomFile(""),
-    myRomMD5(""),
     myFeatures(""),
     myFont(NULL),
     myConsoleFont(NULL)
@@ -142,9 +139,7 @@ OSystem::~OSystem()
   delete myCommandMenu;
   delete myLauncher;
   delete myFont;
-  delete mySmallFont;
   delete myConsoleFont;
-  delete myLauncherFont;
 
   // Remove any game console that is currently attached
   deleteConsole();
@@ -180,47 +175,19 @@ bool OSystem::create()
   // Get relevant information about the video hardware
   // This must be done before any graphics context is created, since
   // it may be needed to initialize the size of graphical objects
-  if(!queryVideoHardware())
-    return false;
+  queryVideoHardware();
 
-  ////////////////////////////////////////////////////////////////////
   // Create fonts to draw text
-  // NOTE: the logic determining appropriate font sizes is done here,
-  //       so that the UI classes can just use the font they expect,
-  //       and not worry about it
-  //       This logic should also take into account the size of the
-  //       framebuffer, and try to be intelligent about font sizes
-  //       We can probably add ifdefs to take care of corner cases,
-  //       but that means we've failed to abstract it enough ...
-  ////////////////////////////////////////////////////////////////////
-  bool smallScreen = myDesktopWidth < 640 || myDesktopHeight < 480;
-
-  // This font is used in a variety of situations when a really small
-  // font is needed; we let the specific widget/dialog decide when to
-  // use it
-  mySmallFont = new GUI::Font(GUI::stellaDesc);
-
-  // The console font is always the same size (for now at least)
+  // TODO - this should be configurable, and also depend on the minimum
+  //        size of the launcher and maximum size of the TIA window
+  //        The logic must be taken care of here, so the GUI classes
+  //        can just create the interface and not worry about checking
+  myFont         = new GUI::Font(GUI::stellaDesc);
   myConsoleFont  = new GUI::Font(GUI::consoleDesc);
-
-  // The general font used in all UI elements
-  // This is determined by the size of the framebuffer
-  myFont = new GUI::Font(smallScreen ? GUI::stellaDesc : GUI::stellaMediumDesc);
-
-  // The font used by the ROM launcher
-  // Normally, this is configurable by the user, except in the case of
-  // very small screens
-  if(!smallScreen)
-  {    
-    if(mySettings->getString("launcherfont") == "small")
-      myLauncherFont = new GUI::Font(GUI::consoleDesc);
-    else if(mySettings->getString("launcherfont") == "medium")
-      myLauncherFont = new GUI::Font(GUI::stellaMediumDesc);
-    else
-      myLauncherFont = new GUI::Font(GUI::stellaLargeDesc);
-  }
-  else
+  if(mySettings->getString("launcherfont") == "small")
     myLauncherFont = new GUI::Font(GUI::stellaDesc);
+  else
+    myLauncherFont = new GUI::Font(GUI::stellaLargeDesc);
 
   // Create the event handler for the system
   myEventHandler = new EventHandler(this);
@@ -253,17 +220,14 @@ bool OSystem::create()
   // a real serial port on the system
 #if defined(UNIX)
   mySerialPort = new SerialPortUNIX();
-#elif defined(WIN32)
-  mySerialPort = new SerialPortWin32();
-#elif defined(MAC_OSX)
-  mySerialPort = new SerialPortMACOSX();
+//#elif defined(WIN32)
+//  mySerialPort = new SerialPortWin32();
+//#elif defined(MAC_OSX)
+//  mySerialPort = new SerialPortMACOSX();
 #else
   // Create an 'empty' serial port
   mySerialPort = new SerialPort();
 #endif
-
-  // Let the random class know about us; it needs access to getTicks()
-  Random::setSystem(this);
 
   return true;
 }
@@ -271,53 +235,34 @@ bool OSystem::create()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystem::setConfigPaths()
 {
-  // Paths are saved with special characters preserved ('~' or '.')
-  // We do some error checking here, so the rest of the codebase doesn't
-  // have to worry about it
-  FilesystemNode node;
-  string s;
+  myStateDir = mySettings->getString("statedir");
+  if(myStateDir == "")
+    myStateDir = myBaseDir + BSPF_PATH_SEPARATOR + "state";
+  if(!FilesystemNode::dirExists(myStateDir))
+    FilesystemNode::makeDir(myStateDir);
+  mySettings->setString("statedir", myStateDir);
 
-  s = mySettings->getString("statedir");
-  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "state";
-  node = FilesystemNode(s);
-  myStateDir = node.getPath();
-  mySettings->setString("statedir", node.getRelativePath());
-  if(!node.isDirectory())
-    AbstractFilesystemNode::makeDir(myStateDir);
+  mySnapshotDir = mySettings->getString("ssdir");
+  if(mySnapshotDir == "")
+    mySnapshotDir = myBaseDir + BSPF_PATH_SEPARATOR + "snapshots";
+  if(!FilesystemNode::dirExists(mySnapshotDir))
+    FilesystemNode::makeDir(mySnapshotDir);
+  mySettings->setString("ssdir", mySnapshotDir);
 
-  s = mySettings->getString("ssdir");
-  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "snapshots";
-  node = FilesystemNode(s);
-  mySnapshotDir = node.getPath();
-  mySettings->setString("ssdir", node.getRelativePath());
-  if(!node.isDirectory())
-    AbstractFilesystemNode::makeDir(mySnapshotDir);
+  myCheatFile = mySettings->getString("cheatfile");
+  if(myCheatFile == "")
+    myCheatFile = myBaseDir + BSPF_PATH_SEPARATOR + "stella.cht";
+  mySettings->setString("cheatfile", myCheatFile);
 
-  s = mySettings->getString("eepromdir");
-  if(s == "") s = myBaseDir;
-  node = FilesystemNode(s);
-  myEEPROMDir = node.getPath();
-  mySettings->setString("eepromdir", node.getRelativePath());
-  if(!node.isDirectory())
-    AbstractFilesystemNode::makeDir(myEEPROMDir);
+  myPaletteFile = mySettings->getString("palettefile");
+  if(myPaletteFile == "")
+    myPaletteFile = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pal";
+  mySettings->setString("palettefile", myPaletteFile);
 
-  s = mySettings->getString("cheatfile");
-  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.cht";
-  node = FilesystemNode(s);
-  myCheatFile = node.getPath();
-  mySettings->setString("cheatfile", node.getRelativePath());
-
-  s = mySettings->getString("palettefile");
-  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pal";
-  node = FilesystemNode(s);
-  myPaletteFile = node.getPath();
-  mySettings->setString("palettefile", node.getRelativePath());
-
-  s = mySettings->getString("propsfile");
-  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pro";
-  node = FilesystemNode(s);
-  myPropertiesFile = node.getPath();
-  mySettings->setString("propsfile", node.getRelativePath());
+  myPropertiesFile = mySettings->getString("propsfile");
+  if(myPropertiesFile == "")
+    myPropertiesFile = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pro";
+  mySettings->setString("propsfile", myPropertiesFile);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -326,46 +271,43 @@ void OSystem::setUIPalette()
   int palette = mySettings->getInt("uipalette") - 1;
   if(palette < 0 || palette >= kNumUIPalettes) palette = 0;
   myFrameBuffer->setUIPalette(&ourGUIColors[palette][0]);
-  myFrameBuffer->refresh();
+  myEventHandler->refreshDisplay();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystem::setBaseDir(const string& basedir)
 {
-  FilesystemNode node(basedir);
-  myBaseDir = node.getPath();
-  if(!node.isDirectory())
-    AbstractFilesystemNode::makeDir(myBaseDir);
+  myBaseDir = basedir;
+  if(!FilesystemNode::dirExists(myBaseDir))
+    FilesystemNode::makeDir(myBaseDir);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystem::setConfigFile(const string& file)
-{
-  FilesystemNode node(file);
-  myConfigFile = node.getPath();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystem::setFramerate(float framerate)
+void OSystem::setFramerate(uInt32 framerate)
 {
   myDisplayFrameRate = framerate;
-  myTimePerFrame = (uInt32)(1000000.0 / myDisplayFrameRate);
+  myTimePerFrame = (uInt32)(1000000.0 / (double)myDisplayFrameRate);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool OSystem::createFrameBuffer()
+bool OSystem::createFrameBuffer(bool showmessage)
 {
-  // There is only ever one FrameBuffer created per run of Stella
-  // Due to the multi-surface nature of the FrameBuffer, repeatedly
-  // creating and destroying framebuffer objects causes crashes which
-  // are far too invasive to fix right now
-  // Besides, how often does one really switch between software and
-  // OpenGL rendering modes, and even when they do, does it really
-  // need to be dynamic?
-
-  bool firstTime = (myFrameBuffer == NULL);
-  if(firstTime)
+  // Check if we can re-use the current framebuffer
+  bool changeBuffer = (myFrameBuffer == NULL);
+  if(!changeBuffer)
+  {
+    if((mySettings->getString("video") == "soft" &&
+        myFrameBuffer->type() != kSoftBuffer) ||
+       (mySettings->getString("video") == "gl" &&
+        myFrameBuffer->type() != kGLBuffer))
+      changeBuffer = true;
+  }
+  // Now we only create when absolutely necessary
+  if(changeBuffer)
+  {
+    delete myFrameBuffer;
     myFrameBuffer = MediaFactory::createVideo(this);
+  }
 
   // Re-initialize the framebuffer to current settings
   switch(myEventHandler->state())
@@ -374,58 +316,70 @@ bool OSystem::createFrameBuffer()
     case EventHandler::S_PAUSE:
     case EventHandler::S_MENU:
     case EventHandler::S_CMDMENU:
-      if(!myConsole->initializeVideo())
-        goto fallback;
+      myConsole->initializeVideo();
       break;  // S_EMULATE, S_PAUSE, S_MENU, S_CMDMENU
 
     case EventHandler::S_LAUNCHER:
-      if(!myLauncher->initializeVideo())
-        goto fallback;
+      myLauncher->initializeVideo();
       break;  // S_LAUNCHER
 
 #ifdef DEBUGGER_SUPPORT
     case EventHandler::S_DEBUGGER:
-      if(!myDebugger->initializeVideo())
-        goto fallback;
+      myDebugger->initializeVideo();
       break;  // S_DEBUGGER
 #endif
 
-    default:  // Should never happen
-      cerr << "ERROR: Unknown emulation state in createFrameBuffer()" << endl;
+    default:
       break;
   }
 
-  // The following only need to be done once
-  if(firstTime)
-  {
-    // Setup the SDL joysticks (must be done after FrameBuffer is created)
-    myEventHandler->setupJoysticks();
+  // Setup the SDL joysticks (must be done after FrameBuffer is created)
+  if(changeBuffer) myEventHandler->setupJoysticks();
 
-    // Update the UI palette
-    setUIPalette();
+  // Let the system know that we've possibly resized the display
+  if(changeBuffer) myEventHandler->handleResizeEvent();
+
+  // Update the UI palette
+  setUIPalette();
+
+  if(showmessage)
+  {
+    switch(myFrameBuffer->type())
+    {
+      case kSoftBuffer:
+        myFrameBuffer->showMessage("Software mode");
+        break;
+      case kGLBuffer:
+        myFrameBuffer->showMessage("OpenGL mode");
+        break;
+    }
   }
 
   return true;
+}
 
-  // GOTO are normally considered evil, unless well documented :)
-  // If initialization of video system fails while in OpenGL mode,
-  // attempt to fallback to software mode
-fallback:
-  if(myFrameBuffer && myFrameBuffer->type() == kGLBuffer)
-  {
-    cerr << "ERROR: OpenGL mode failed, fallback to software" << endl;
-    delete myFrameBuffer; myFrameBuffer = NULL;
-    mySettings->setString("video", "soft");
-    bool ret = createFrameBuffer();
-    if(ret)
-    {
-      setFramerate(60);
-      myFrameBuffer->showMessage("OpenGL mode failed, fallback to software", kMiddleCenter);
-    }
-    return ret;
-  }
-  else
-    return false;
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void OSystem::toggleFrameBuffer()
+{
+#ifdef DISPLAY_OPENGL
+  // First figure out which mode to switch to
+  string video = mySettings->getString("video");
+  if(video == "soft")
+    video = "gl";
+  else if(video == "gl")
+    video = "soft";
+  else   // a driver that doesn't exist was requested, so use software mode
+    video = "soft";
+
+  // Update the settings and create the framebuffer
+  mySettings->setString("video", video);
+  createFrameBuffer(true);  // show onscreen message, re-initialize framebuffer
+
+  // The palette and phosphor info for the framebuffer will be lost
+  // when a new framebuffer is created; we must restore it
+  if(myConsole)
+    myConsole->initializeVideo(false);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -457,74 +411,60 @@ bool OSystem::createConsole(const string& romfile, const string& md5sum)
     }
   }
   else
-  {
     myRomFile = romfile;
-    myRomMD5  = md5sum;
 
-    // Each time a new console is loaded, we simulate a cart removal
-    // Some carts need knowledge of this, as they behave differently
-    // based on how many power-cycles they've been through since plugged in
-    mySettings->setInt("romloadcount", 0);
-  }
-
-  // Create an instance of the 2600 game console
-  myConsole = openConsole(myRomFile, myRomMD5);
-  if(myConsole)
+  // Open the cartridge image and read it in
+  uInt8* image;
+  int size = -1;
+  string md5 = md5sum;
+  if(openROM(myRomFile, md5, &image, &size))
   {
-  #ifdef CHEATCODE_SUPPORT
-    myCheatManager->loadCheats(myRomMD5);
-  #endif
-    bool audiofirst = mySettings->getBool("audiofirst");
-    //////////////////////////////////////////////////////////////////////////
-    // For some reason, ATI video drivers for OpenGL in Win32 cause problems
-    // if the sound isn't initialized before the video
-    // According to the SDL documentation, it shouldn't matter what order the
-    // systems are initialized, but apparently it *does* matter
-    // For now, I'll just reverse the ordering, as suggested by 'zagon' at
-    // http://www.atariage.com/forums/index.php?showtopic=126090&view=findpost&p=1648693
-    // Hopefully it won't break anything else
-    //////////////////////////////////////////////////////////////////////////
-    if(audiofirst)  myConsole->initializeAudio();
-    myEventHandler->reset(EventHandler::S_EMULATE);
-    if(!createFrameBuffer())  // Takes care of initializeVideo()
+    // Get all required info for creating a valid console
+    Cartridge* cart = (Cartridge*) NULL;
+    Properties props;
+    if(queryConsoleInfo(image, size, md5, &cart, props))
     {
-      cerr << "ERROR: Couldn't create framebuffer for console" << endl;
-      myEventHandler->reset(EventHandler::S_LAUNCHER);
-      return false;
+      // Create an instance of the 2600 game console
+      myConsole = new Console(this, cart, props);
+    #ifdef CHEATCODE_SUPPORT
+      myCheatManager->loadCheats(md5);
+    #endif
+      myEventHandler->reset(EventHandler::S_EMULATE);
+      createFrameBuffer(false);  // Takes care of initializeVideo()
+      myConsole->initializeAudio();
+    #ifdef DEBUGGER_SUPPORT
+      myDebugger->setConsole(myConsole);
+      myDebugger->initialize();
+    #endif
+
+      if(showmessage)
+        myFrameBuffer->showMessage("New console created");
+      if(mySettings->getBool("showinfo"))
+        cout << "Game console created:" << endl
+             << "  ROM file:  " << myRomFile << endl
+             << myConsole->about() << endl;
+
+      // Update the timing info for a new console run
+      resetLoopTiming();
+
+      myFrameBuffer->setCursorState();
+      retval = true;
     }
-    if(!audiofirst)  myConsole->initializeAudio();
-  #ifdef DEBUGGER_SUPPORT
-    myDebugger->setConsole(myConsole);
-    myDebugger->initialize();
-  #endif
-
-    if(showmessage)
-      myFrameBuffer->showMessage("New console created");
-    if(mySettings->getBool("showinfo"))
-      cout << "Game console created:" << endl
-           << "  ROM file: " << myRomFile << endl << endl
-           << getROMInfo(myConsole) << endl;
-
-    // Update the timing info for a new console run
-    resetLoopTiming();
-
-    myFrameBuffer->setCursorState();
-    retval = true;
+    else
+    {
+      cerr << "ERROR: Couldn't create console for " << myRomFile << " ..." << endl;
+      retval = false;
+    }
   }
   else
   {
-    cerr << "ERROR: Couldn't create console for " << myRomFile << endl;
+    cerr << "ERROR: Couldn't open " << myRomFile << " ..." << endl;
     retval = false;
   }
 
-  // Also check if certain virtual buttons should be held down
-  // These must be checked each time a new console is being created
-  if(mySettings->getBool("holdreset"))
-    myEventHandler->handleEvent(Event::ConsoleReset, 1);
-  if(mySettings->getBool("holdselect"))
-    myEventHandler->handleEvent(Event::ConsoleSelect, 1);
-  if(mySettings->getBool("holdbutton0"))
-    myEventHandler->handleEvent(Event::JoystickZeroFire1, 1);
+  // Free the image since we don't need it any longer
+  if(size != -1)
+    delete[] image;
 
   return retval;
 }
@@ -553,139 +493,25 @@ void OSystem::deleteConsole()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool OSystem::createLauncher()
+void OSystem::createLauncher()
 {
   myEventHandler->reset(EventHandler::S_LAUNCHER);
-  if(!createFrameBuffer())
-  {
-    cerr << "ERROR: Couldn't create launcher" << endl;
-    return false;
-  }
+  createFrameBuffer(false);
   myLauncher->reStack();
   myFrameBuffer->setCursorState();
-  myFrameBuffer->refresh();
+  myEventHandler->refreshDisplay();
 
   setFramerate(60);
   resetLoopTiming();
-
-  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string OSystem::getROMInfo(const string& romfile)
+bool OSystem::openROM(const string& rom, string& md5, uInt8** image, int* size)
 {
-  string md5, result = "";
-  Console* console = openConsole(romfile, md5);
-  if(console)
-  {
-    result = getROMInfo(console);
-    delete console;
-  }
-  else
-    result = "ERROR: Couldn't get ROM info for " + romfile + " ...";
-
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string OSystem::MD5FromFile(const string& filename)
-{
-  string md5 = "";
-
-  uInt8* image = 0;
-  uInt32 size  = 0;
-  if((image = openROM(filename, md5, size)) != 0)
-    if(image != 0 && size > 0)
-      delete[] image;
-
-  return md5;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Console* OSystem::openConsole(const string& romfile, string& md5)
-{
-#define CMDLINE_PROPS_UPDATE(cl_name, prop_name) \
-  s = mySettings->getString(cl_name);            \
-  if(s != "") props.set(prop_name, s);
-
-  Console* console = (Console*) NULL;
-
-  // Open the cartridge image and read it in
-  uInt8* image = 0;
-  uInt32 size  = 0;
-  if((image = openROM(romfile, md5, size)) != 0)
-  {
-    // Get a valid set of properties, including any entered on the commandline
-    // For initial creation of the Cart, we're only concerned with the BS type
-    Properties props;
-    myPropSet->getMD5(md5, props);
-    string s = "";
-    CMDLINE_PROPS_UPDATE("bs", Cartridge_Type);
-    CMDLINE_PROPS_UPDATE("type", Cartridge_Type);
-
-    // Now create the cartridge
-    string id, cartmd5 = md5, type = props.get(Cartridge_Type);
-    Cartridge* cart =
-      Cartridge::create(image, size, cartmd5, id, type, *mySettings);
-
-    // It's possible that the cart created was from a piece of the image,
-    // and that the md5 (and hence the cart) has changed
-    if(props.get(Cartridge_MD5) != cartmd5)
-    {
-      string name = props.get(Cartridge_Name);
-      if(!myPropSet->getMD5(cartmd5, props))
-      {
-        // Cart md5 wasn't found, so we create a new props for it
-        props.set(Cartridge_MD5, cartmd5);
-        props.set(Cartridge_Name, name+id);
-        myPropSet->insert(props, false);
-      }
-    }
-
-    CMDLINE_PROPS_UPDATE("channels", Cartridge_Sound);
-    CMDLINE_PROPS_UPDATE("ld", Console_LeftDifficulty);
-    CMDLINE_PROPS_UPDATE("rd", Console_RightDifficulty);
-    CMDLINE_PROPS_UPDATE("tv", Console_TelevisionType);
-    CMDLINE_PROPS_UPDATE("sp", Console_SwapPorts);
-    CMDLINE_PROPS_UPDATE("lc", Controller_Left);
-    CMDLINE_PROPS_UPDATE("rc", Controller_Right);
-    s = mySettings->getString("bc");
-    if(s != "") { props.set(Controller_Left, s); props.set(Controller_Right, s); }
-    CMDLINE_PROPS_UPDATE("cp", Controller_SwapPaddles);
-    CMDLINE_PROPS_UPDATE("format", Display_Format);
-    CMDLINE_PROPS_UPDATE("ystart", Display_YStart);
-    CMDLINE_PROPS_UPDATE("height", Display_Height);
-    CMDLINE_PROPS_UPDATE("pp", Display_Phosphor);
-    CMDLINE_PROPS_UPDATE("ppblend", Display_PPBlend);
-
-    // Finally, create the cart with the correct properties
-    if(cart)
-      console = new Console(this, cart, props);
-  }
-  else
-    cerr << "ERROR: Couldn't open " << romfile << endl;
-
-  // Free the image since we don't need it any longer
-  if(image != 0 && size > 0)
-    delete[] image;
-
-  return console;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
-{
-  // This method has a documented side-effect:
-  // It not only loads a ROM and creates an array with its contents,
-  // but also adds a properties entry if the one for the ROM doesn't
-  // contain a valid name
-
-  uInt8* image = 0;
-
   // Try to open the file as a zipped archive
   // If that fails, we assume it's just a gzipped or normal data file
   unzFile tz;
-  if((tz = unzOpen(file.c_str())) != NULL)
+  if((tz = unzOpen(rom.c_str())) != NULL)
   {
     if(unzGoToFirstFile(tz) == UNZ_OK)
     {
@@ -705,12 +531,8 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
           // Grab 3-character extension
           char* ext = filename + strlen(filename) - 4;
 
-          if(!BSPF_strcasecmp(ext, ".a26") || !BSPF_strcasecmp(ext, ".bin") ||
-             !BSPF_strcasecmp(ext, ".rom"))
-          {
-            file = filename;
+          if(!BSPF_strcasecmp(ext, ".bin") || !BSPF_strcasecmp(ext, ".a26"))
             break;
-          }
         }
 
         // Scan the next file in the zip
@@ -722,34 +544,34 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
       if(ufo.uncompressed_size <= 0)
       {
         unzClose(tz);
-        return image;
+        return false;
       }
-      size  = ufo.uncompressed_size;
-      image = new uInt8[size];
+      *size  = ufo.uncompressed_size;
+      *image = new uInt8[*size];
 
       // We don't have to check for any return errors from these functions,
       // since if there are, 'image' will not contain a valid ROM and the
       // calling method can take of it
       unzOpenCurrentFile(tz);
-      unzReadCurrentFile(tz, image, size);
+      unzReadCurrentFile(tz, *image, *size);
       unzCloseCurrentFile(tz);
       unzClose(tz);
     }
     else
     {
       unzClose(tz);
-      return image;
+      return false;
     }
   }
   else
   {
     // Assume the file is either gzip'ed or not compressed at all
-    gzFile f = gzopen(file.c_str(), "rb");
+    gzFile f = gzopen(rom.c_str(), "rb");
     if(!f)
-      return image;
+      return false;
 
-    image = new uInt8[MAX_ROM_SIZE];
-    size = gzread(f, image, MAX_ROM_SIZE);
+    *image = new uInt8[MAX_ROM_SIZE];
+    *size = gzread(f, *image, MAX_ROM_SIZE);
     gzclose(f);
   }
 
@@ -757,40 +579,144 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
   // Now we make sure that the file has a valid properties entry
   // To save time, only generate an MD5 if we really need one
   if(md5 == "")
-    md5 = MD5(image, size);
+    md5 = MD5(*image, *size);
 
   // Some games may not have a name, since there may not
   // be an entry in stella.pro.  In that case, we use the rom name
   // and reinsert the properties object
   Properties props;
-  if(!myPropSet->getMD5(md5, props))
+  myPropSet->getMD5(md5, props);
+
+  string name = props.get(Cartridge_Name);
+  if(name == "Untitled")
   {
     // Get the filename from the rom pathname
-    string::size_type pos = file.find_last_of("/\\");
-    if(pos != string::npos)  file = file.substr(pos+1);
-
-    props.set(Cartridge_MD5, md5);
-    props.set(Cartridge_Name, file);
-    myPropSet->insert(props, false);
+    string::size_type pos = rom.find_last_of(BSPF_PATH_SEPARATOR);
+    if(pos+1 != string::npos)
+    {
+      name = rom.substr(pos+1);
+      props.set(Cartridge_MD5, md5);
+      props.set(Cartridge_Name, name);
+      myPropSet->insert(props, false);
+    }
   }
 
-  return image;
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string OSystem::getROMInfo(const Console* console)
+bool OSystem::isValidRomName(const string& filename, string& extension)
 {
-  const ConsoleInfo& info = console->about();
+  string::size_type idx = filename.find_last_of('.');
+  if(idx != string::npos)
+  {
+    extension = filename.substr(idx+1);
+    return BSPF_strncasecmp(extension.c_str(), "bin", 3) == 0 ||
+           BSPF_strncasecmp(extension.c_str(), "a26", 3) == 0 ||
+           BSPF_strncasecmp(extension.c_str(), "zip", 3) == 0 ||
+           BSPF_strncasecmp(extension.c_str(), "rom", 3) == 0 ||
+           BSPF_strncasecmp(extension.c_str(), "gz", 2)  == 0 ;
+  }
+  return false;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+string OSystem::MD5FromFile(const string& filename)
+{
+  uInt8* image;
+  int size = -1;
+  string md5 = "";
+
+  if(openROM(filename, md5, &image, &size))
+    if(size != -1)
+      delete[] image;
+
+  return md5;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+string OSystem::getROMInfo(const string& romfile)
+{
   ostringstream buf;
 
-  buf << "  Cart Name:       " << info.CartName << endl
-      << "  Cart MD5:        " << info.CartMD5 << endl
-      << "  Controller 0:    " << info.Control0 << endl
-      << "  Controller 1:    " << info.Control1 << endl
-      << "  Display Format:  " << info.DisplayFormat << endl
-      << "  Bankswitch Type: " << info.BankSwitch << endl;
+  // Open the cartridge image and read it in
+  uInt8* image;
+  int size = -1;
+  string md5;
+  if(openROM(romfile, md5, &image, &size))
+  {
+    // Get all required info for creating a temporary console
+    Cartridge* cart = (Cartridge*) NULL;
+    Properties props;
+    if(queryConsoleInfo(image, size, md5, &cart, props))
+    {
+      Console* console = new Console(this, cart, props);
+      if(console)
+        buf << console->about();
+      else
+        buf << "ERROR: Couldn't get ROM info for " << romfile << " ..." << endl;
+
+      delete console;
+    }
+    else
+      buf << "ERROR: Couldn't open " << romfile << " ..." << endl;
+  }
+  // Free the image and console since we don't need it any longer
+  if(size != -1)
+    delete[] image;
 
   return buf.str();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool OSystem::queryConsoleInfo(const uInt8* image, uInt32 size,
+                               const string& md5,
+                               Cartridge** cart, Properties& props)
+{
+  // Get a valid set of properties, including any entered on the commandline
+  string s;
+  myPropSet->getMD5(md5, props);
+
+  s = mySettings->getString("bs");
+  if(s != "") props.set(Cartridge_Type, s);
+  s = mySettings->getString("type");
+  if(s != "") props.set(Cartridge_Type, s);
+  s = mySettings->getString("channels");
+  if(s != "") props.set(Cartridge_Sound, s);
+  s = mySettings->getString("ld");
+  if(s != "") props.set(Console_LeftDifficulty, s);
+  s = mySettings->getString("rd");
+  if(s != "") props.set(Console_RightDifficulty, s);
+  s = mySettings->getString("tv");
+  if(s != "") props.set(Console_TelevisionType, s);
+  s = mySettings->getString("sp");
+  if(s != "") props.set(Console_SwapPorts, s);
+  s = mySettings->getString("lc");
+  if(s != "") props.set(Controller_Left, s);
+  s = mySettings->getString("rc");
+  if(s != "") props.set(Controller_Right, s);
+  s = mySettings->getString("bc");
+  if(s != "") { props.set(Controller_Left, s); props.set(Controller_Right, s); }
+  s = mySettings->getString("cp");
+  if(s != "") props.set(Controller_SwapPaddles, s);
+  s = mySettings->getString("format");
+  if(s != "") props.set(Display_Format, s);
+  s = mySettings->getString("ystart");
+  if(s != "") props.set(Display_YStart, s);
+  s = mySettings->getString("height");
+  if(s != "") props.set(Display_Height, s);
+  s = mySettings->getString("pp");
+  if(s != "") props.set(Display_Phosphor, s);
+  s = mySettings->getString("ppblend");
+  if(s != "") props.set(Display_PPBlend, s);
+  s = mySettings->getString("hmove");
+  if(s != "") props.set(Emulation_HmoveBlanks, s);
+
+  *cart = Cartridge::create(image, size, props, *mySettings);
+  if(!*cart)
+    return false;
+
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -866,60 +792,33 @@ void OSystem::stateChanged(EventHandler::State state)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystem::mainLoop()
 {
-  if(mySettings->getString("timing") == "sleep")
+  for(;;)
   {
-    // Sleep-based wait: good for CPU, bad for graphical sync
-    for(;;)
-    {
-      myTimingInfo.start = getTicks();
-      myEventHandler->poll(myTimingInfo.start);
-      if(myQuitLoop) break;  // Exit if the user wants to quit
-      myFrameBuffer->update();
-      myTimingInfo.current = getTicks();
-      myTimingInfo.virt += myTimePerFrame;
+    myTimingInfo.start = getTicks();
+    myEventHandler->poll(myTimingInfo.start);
+    if(myQuitLoop) break;  // Exit if the user wants to quit
+    myFrameBuffer->update();
+    myTimingInfo.current = getTicks();
+    myTimingInfo.virt += myTimePerFrame;
 
-      if(myTimingInfo.current < myTimingInfo.virt)
-        SDL_Delay((myTimingInfo.virt - myTimingInfo.current) / 1000);
+    if(myTimingInfo.current < myTimingInfo.virt)
+      SDL_Delay((myTimingInfo.virt - myTimingInfo.current) / 1000);
 
-      myTimingInfo.totalTime += (getTicks() - myTimingInfo.start);
-      myTimingInfo.totalFrames++;
-    }
-  }
-  else
-  {
-    // Busy-wait: bad for CPU, good for graphical sync
-    for(;;)
-    {
-      myTimingInfo.start = getTicks();
-      myEventHandler->poll(myTimingInfo.start);
-      if(myQuitLoop) break;  // Exit if the user wants to quit
-      myFrameBuffer->update();
-      myTimingInfo.virt += myTimePerFrame;
-
-      while(getTicks() < myTimingInfo.virt)
-        ;  // busy-wait
-
-      myTimingInfo.totalTime += (getTicks() - myTimingInfo.start);
-      myTimingInfo.totalFrames++;
-    }
+    myTimingInfo.totalTime += (getTicks() - myTimingInfo.start);
+    myTimingInfo.totalFrames++;
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool OSystem::queryVideoHardware()
+void OSystem::queryVideoHardware()
 {
-  // Go ahead and open the video hardware; we're going to need it eventually
-  if(SDL_WasInit(SDL_INIT_VIDEO) == 0)
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
-      return false;
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+    return;
 
   // First get the maximum windowed desktop resolution
   const SDL_VideoInfo* info = SDL_GetVideoInfo();
   myDesktopWidth  = info->current_w;
   myDesktopHeight = info->current_h;
-
-  // Various parts of the codebase assume a minimum screen size of 320x240
-  assert(myDesktopWidth >= 320 && myDesktopHeight >= 240);
 
   // Then get the valid fullscreen modes
   // If there are any errors, just use the desktop resolution
@@ -947,8 +846,6 @@ bool OSystem::queryVideoHardware()
       myResolutions.insert_at(0, r);  // insert in opposite (of descending) order
     }
   }
-
-  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1016,5 +913,6 @@ OSystem::OSystem(const OSystem& osystem)
 OSystem& OSystem::operator = (const OSystem&)
 {
   assert(false);
+
   return *this;
 }

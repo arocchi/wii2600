@@ -8,16 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartUA.cxx,v 1.13 2008-03-28 23:29:13 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "CartUA.hxx"
@@ -26,7 +25,10 @@
 CartridgeUA::CartridgeUA(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 8192);
+  for(uInt32 addr = 0; addr < 8192; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,7 +72,7 @@ void CartridgeUA::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeUA::peek(uInt16 address)
 {
-//  address &= 0x1FFF;  TODO - is this needed here?
+  address = address & 0x1FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -102,7 +104,7 @@ uInt8 CartridgeUA::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeUA::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x1FFF;
+  address = address & 0x1FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -134,8 +136,9 @@ void CartridgeUA::bank(uInt16 bank)
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
+//  uInt16 mask = mySystem->pageMask();
 
   // Setup the page access methods for the current bank
   System::PageAccess access;
@@ -165,7 +168,9 @@ int CartridgeUA::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeUA::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address &= 0x0fff;
+  myImage[myCurrentBank * 4096] = value;
+  bank(myCurrentBank); // TODO: see if this is really necessary
   return true;
 } 
 

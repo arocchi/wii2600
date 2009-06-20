@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FileSnapDialog.hxx,v 1.10 2008-03-12 19:42:36 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -38,7 +38,8 @@ class FileSnapDialog : public Dialog, public CommandSender
 {
   public:
     FileSnapDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font, GuiObject* boss);
+                   const GUI::Font& font, GuiObject* boss,
+                   int x, int y, int w, int h);
     ~FileSnapDialog();
 
     void handleCommand(CommandSender* sender, int cmd, int data, int id);
@@ -48,6 +49,9 @@ class FileSnapDialog : public Dialog, public CommandSender
     void saveConfig();
     void setDefaults();
 
+    void openBrowser(const string& title, const string& startpath,
+                     FilesystemNode::ListMode mode, int cmd);
+
   private:
     enum {
       kChooseRomDirCmd      = 'LOrm', // rom select
@@ -56,12 +60,10 @@ class FileSnapDialog : public Dialog, public CommandSender
       kChoosePaletteFileCmd = 'LOpf', // palette file (stella.pal)
       kChoosePropsFileCmd   = 'LOpr', // properties file (stella.pro)
       kChooseSnapDirCmd     = 'LOsn', // snapshot dir
-      kChooseEEPROMDirCmd   = 'LOee', // eeprom dir
       kStateDirChosenCmd    = 'LOsc', // state dir changed
       kCheatFileChosenCmd   = 'LOcc', // cheatfile changed
       kPaletteFileChosenCmd = 'LOpc', // palette file changed
-      kPropsFileChosenCmd   = 'LOrc', // properties file changed
-      kEEPROMDirChosenCmd   = 'LOec'  // eeprom dir changed
+      kPropsFileChosenCmd   = 'LOrc'  // properties file changed
     };
 
     BrowserDialog* myBrowser;
@@ -69,13 +71,11 @@ class FileSnapDialog : public Dialog, public CommandSender
     // Config paths
     EditTextWidget* myRomPath;
     EditTextWidget* myStatePath;
-    EditTextWidget* myEEPROMPath;
     EditTextWidget* myCheatFile;
     EditTextWidget* myPaletteFile;
     EditTextWidget* myPropsFile;
     EditTextWidget* mySnapPath;
-    CheckboxWidget* mySnapSingle;
-    CheckboxWidget* mySnap1x;
+    CheckboxWidget* mySnapSingleCheckbox;
 
     // Indicates if this dialog is used for global (vs. in-game) settings
     bool myIsGlobal;

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CpuWidget.hxx,v 1.4 2008-02-06 13:45:20 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -48,35 +48,8 @@ class CpuWidget : public Widget, public CommandSender
     void fillGrid();
 
   private:
-    // ID's for the various widgets
-    // We need ID's, since there are more than one of several types of widgets
-    enum {
-      kPCRegID,
-      kCpuRegID
-    };
-
-    enum {
-      kPCRegAddr,
-      kSPRegAddr,
-      kARegAddr,
-      kXRegAddr,
-      kYRegAddr
-    };
-
-    enum {
-      kPSRegN = 0,
-      kPSRegV = 1,
-      kPSRegB = 3,
-      kPSRegD = 4,
-      kPSRegI = 5,
-      kPSRegZ = 6,
-      kPSRegC = 7
-    };
-
     DataGridWidget*  myPCGrid;
     DataGridWidget*  myCpuGrid;
-    DataGridWidget*  myCpuGridDecValue;
-    DataGridWidget*  myCpuGridBinValue;
     ToggleBitWidget* myPSRegister;
     EditTextWidget*  myPCLabel;
 };

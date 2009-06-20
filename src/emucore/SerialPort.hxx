@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPort.hxx,v 1.2 2008-04-09 17:19:15 stephena Exp $
 //============================================================================
 
 #ifndef SERIALPORT_HXX
@@ -23,11 +23,11 @@
 
 /**
   This class provides an interface for a standard serial port.
-  For now, this is used when connecting a real AtariVox device,
-  and as such it always uses 19200, 8n1, no flow control.
+  For now, this used when connecting a real AtariVox device,
+  but it may be used for other devices in the future.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: SerialPort.hxx,v 1.2 2008-04-09 17:19:15 stephena Exp $
 */
 class SerialPort
 {
@@ -39,9 +39,15 @@ class SerialPort
       Open the given serial port with the specified attributes.
 
       @param device  The name of the port
+      @param baud    Baud rate
+      @param data    Number of data bits
+      @param stop    Number of stop bits
+      @param parity  Type of parity bit (0=none, 1=odd, 2=even)
+
       @return  False on any errors, else true
     */
-    virtual bool openPort(const string& device) { return false; }
+    virtual bool openPort(const string& device, int baud, int data,
+                          int stop, int parity) { return false; }
 
     /**
       Close a previously opened serial port.
@@ -54,7 +60,7 @@ class SerialPort
       @param data  Destination for the byte read from the port
       @return  True if a byte was read, else false
     */
-    virtual bool readByte(uInt8* data) { return false; }
+    virtual bool readByte(uInt8& data) { return false; }
 
     /**
       Write a byte to the serial port.
@@ -62,7 +68,7 @@ class SerialPort
       @param data  The byte to write to the port
       @return  True if a byte was written, else false
     */
-    virtual bool writeByte(const uInt8* data) { return false; }
+    virtual bool writeByte(const uInt8 data) { return false; }
 };
 
 #endif

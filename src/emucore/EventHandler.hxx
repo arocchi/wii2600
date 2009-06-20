@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventHandler.hxx,v 1.110 2008-03-30 15:01:38 stephena Exp $
 //============================================================================
 
 #ifndef EVENTHANDLER_HXX
@@ -61,7 +61,7 @@ enum EventMode {
   mapping can take place.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: EventHandler.hxx,v 1.110 2008-03-30 15:01:38 stephena Exp $
 */
 class EventHandler
 {
@@ -172,6 +172,14 @@ class EventHandler
     void reset(State state);
 
     /**
+      Refresh display according to the current state
+
+      @param forceUpdate  Do a framebuffer update right away, instead
+                          of waiting for the next frame
+    */
+    void refreshDisplay(bool forceUpdate = false);
+
+    /**
       This method indicates that the system should terminate.
     */
     void quit() { handleEvent(Event::Quit, 1); }
@@ -212,6 +220,11 @@ class EventHandler
     bool enterDebugMode();
     void leaveDebugMode();
     void takeSnapshot();
+
+    /**
+      Send a resize event to the handler.
+    */
+    void handleResizeEvent();
 
     /**
       Send an event directly to the event handler.
@@ -486,6 +499,9 @@ class EventHandler
 
     // Indicates which paddle the mouse currently emulates
     Int8 myPaddleMode;
+
+    // Type of device on each controller port (based on ROM properties)
+    Controller::Type myController[2];
 
     // Holds static strings for the remap menu (emulation and menu events)
     static ActionList ourEmulActionList[kEmulActionListSize];

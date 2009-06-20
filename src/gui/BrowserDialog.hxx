@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: BrowserDialog.hxx,v 1.13 2008-02-06 13:45:23 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -36,14 +36,16 @@ class GameList;
 class BrowserDialog : public Dialog, public CommandSender
 {
   public:
-    BrowserDialog(GuiObject* boss, const GUI::Font& font);
+    BrowserDialog(GuiObject* boss, const GUI::Font& font,
+                  int x, int y, int w, int h);
+
     virtual ~BrowserDialog();
 
     const FilesystemNode& getResult() { return _node; }
 
-    /** Place the browser window onscreen, using the given attributes */
-    void show(const string& title, const string& startpath,
-              FilesystemNode::ListMode mode, int cmd);
+    void setTitle(const string& title) { _title->setLabel(title); }
+    void setEmitSignal(int cmd) { _cmd = cmd; }
+    void setStartPath(const string& startpath, FilesystemNode::ListMode mode);
 
   protected:
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
@@ -51,9 +53,8 @@ class BrowserDialog : public Dialog, public CommandSender
 
   private:
     enum {
-      kChooseCmd  = 'CHOS',
-      kGoUpCmd    = 'GOUP',
-      kBaseDirCmd = 'BADR'
+      kChooseCmd = 'CHOS',
+      kGoUpCmd   = 'GOUP'
     };
 
     int	_cmd;
@@ -62,7 +63,6 @@ class BrowserDialog : public Dialog, public CommandSender
     StaticTextWidget* _currentPath;
     StaticTextWidget* _title;
     ButtonWidget*     _goUpButton;
-    ButtonWidget*     _basedirButton;
 
     FilesystemNode _node;
     GameList*      _nodeList;
