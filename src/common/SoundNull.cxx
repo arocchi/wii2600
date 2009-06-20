@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundNull.cxx,v 1.9 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #include "Serializer.hxx"
@@ -27,7 +27,7 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SoundNull::SoundNull(OSystem* osystem)
-  : Sound(osystem)
+    : Sound(osystem)
 {
   // Show some info
   if(myOSystem->settings().getBool("showinfo"))

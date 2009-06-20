@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: mainSDL.cxx,v 1.86 2009-01-11 19:10:40 stephena Exp $
 //============================================================================
 
 #include <SDL.h>
@@ -62,15 +62,13 @@
 OSystem* theOSystem = (OSystem*) NULL;
 
 // Does general Cleanup in case any operation failed (or at end of program)
-int Cleanup()
+void Cleanup()
 {
   if(theOSystem)
     delete theOSystem;
 
   if(SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
     SDL_Quit();
-
-  return 0;
 }
 
 
@@ -110,11 +108,7 @@ int main(int argc, char* argv[])
 
   // Create the full OSystem after the settings, since settings are
   // probably needed for defaults
-  if(!theOSystem->create())
-  {
-    cout << "ERROR: Couldn't create OSystem" << endl;
-    return Cleanup();
-  }
+  theOSystem->create();
 
   // Check to see if the user requested info about a specific ROM,
   // or the list of internal ROMs
@@ -122,7 +116,8 @@ int main(int argc, char* argv[])
   if(theOSystem->settings().getBool("listrominfo"))
   {
     theOSystem->propSet().print();
-    return Cleanup();
+    Cleanup();
+    return 0;
   }
   else if(theOSystem->settings().getBool("rominfo"))
   {
@@ -131,12 +126,14 @@ int main(int argc, char* argv[])
     else
       cout << "ERROR: ROM doesn't exist" << endl;
 
-    return Cleanup();
+    Cleanup();
+    return 0;
   }
   else if(theOSystem->settings().getBool("help"))
   {
     theOSystem->settings().usage();
-    return Cleanup();
+    Cleanup();
+    return 0;
   }
 
   // Request that the SDL window be centered, if possible
@@ -157,17 +154,14 @@ int main(int argc, char* argv[])
   //   the ROM actually exists, use it to create a new console.
   // If not, use the built-in ROM launcher.  In this case, we enter 'launcher'
   //   mode and let the main event loop take care of opening a new console/ROM.
-  if(argc == 1 || romfile == "" || !romnode.exists() || romnode.isDirectory())
+  FilesystemNode node(romfile);
+
+  if(argc == 1 || romfile == "" || !romnode.exists())
   {
-    if(theOSystem->settings().getBool("uselauncher"))
+    if(!theOSystem->createLauncher())
     {
-      if(!theOSystem->createLauncher())
-        return Cleanup();
-    }
-    else
-    {
-      theOSystem->settings().usage();
-      return Cleanup();
+      Cleanup();
+      return 0;
     }
   }
   else if(theOSystem->createConsole(romfile))
@@ -176,10 +170,21 @@ int main(int argc, char* argv[])
     {
       for(int i = 0; i < 30; ++i)  theOSystem->frameBuffer().update();
       theOSystem->eventHandler().takeSnapshot();
-      return Cleanup();
+      Cleanup();
+      return 0;
     }
 
+    if(theOSystem->settings().getBool("holdreset"))
+      theOSystem->eventHandler().handleEvent(Event::ConsoleReset, 1);
+
+    if(theOSystem->settings().getBool("holdselect"))
+      theOSystem->eventHandler().handleEvent(Event::ConsoleSelect, 1);
+
+    if(theOSystem->settings().getBool("holdbutton0"))
+      theOSystem->eventHandler().handleEvent(Event::JoystickZeroFire1, 1);
+
 #ifdef DEBUGGER_SUPPORT
+
     // Set up any breakpoint that was on the command line
     // (and remove the key from the settings, so they won't get set again)
     const string& initBreak = theOSystem->settings().getString("break");
@@ -196,7 +201,10 @@ int main(int argc, char* argv[])
 #endif
   }
   else
-    return Cleanup();
+  {
+    Cleanup();
+    return 0;
+  }
 
   // Swallow any spurious events in the queue
   // These are normally caused by joystick/mouse jitter
@@ -207,5 +215,6 @@ int main(int argc, char* argv[])
   theOSystem->mainLoop();
 
   // Cleanup time ...
-  return Cleanup();
+  Cleanup();
+  return 0;
 }

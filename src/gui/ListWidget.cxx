@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ListWidget.cxx,v 1.54 2009-01-05 22:05:35 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -32,7 +32,7 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
-                       int x, int y, int w, int h, bool quickSelect)
+                       int x, int y, int w, int h)
   : EditableWidget(boss, font, x, y, 16, 16),
     _rows(0),
     _cols(0),
@@ -42,7 +42,6 @@ ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
     _currentKeyDown(0),
     _editMode(false),
     _caretInverse(true),
-    _quickSelect(quickSelect),
     _quickSelectTime(0)
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS;
@@ -210,6 +209,17 @@ int ListWidget::findItem(int x, int y) const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+static bool matchingCharsIgnoringCase(string s, string pattern)
+{
+  // Make the strings uppercase so we can compare them
+  transform(s.begin(), s.end(), s.begin(), (int(*)(int)) toupper);
+  transform(pattern.begin(), pattern.end(), pattern.begin(), (int(*)(int)) toupper);
+
+  // Make sure that if the pattern is found, it occurs at the start of 's'
+  return (s.find(pattern, 0) == string::size_type(0));
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all Alt-mod keys
@@ -219,8 +229,7 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   bool handled = true;
   int oldSelectedItem = _selectedItem;
 
-  if (!_editMode && _quickSelect &&
-      ((isalnum((char)ascii)) || isspace((char)ascii)))
+  if (!_editMode && isalnum((char)ascii))
   {
     // Quick selection mode: Go to first list item starting with this key
     // (or a substring accumulated from the last couple key presses).
@@ -241,8 +250,8 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
     int newSelectedItem = 0;
     for (StringList::const_iterator i = _list.begin(); i != _list.end(); ++i)
     {
-      if(BSPF_strncasecmp((*i).c_str(), _quickSelectStr.c_str(),
-         _quickSelectStr.length()) == 0)
+      const bool match = matchingCharsIgnoringCase(*i, _quickSelectStr);
+      if (match)
       {
         _selectedItem = newSelectedItem;
         break;

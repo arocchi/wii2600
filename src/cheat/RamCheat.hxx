@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RamCheat.hxx,v 1.6 2009-01-01 18:13:34 stephena Exp $
 //============================================================================
 
 #ifndef RAM_CHEAT_HXX

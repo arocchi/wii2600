@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherDialog.cxx,v 1.102 2009-01-16 14:57:52 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -27,7 +27,6 @@
 #include "ContextMenu.hxx"
 #include "DialogContainer.hxx"
 #include "Dialog.hxx"
-#include "EditTextWidget.hxx"
 #include "FSNode.hxx"
 #include "GameList.hxx"
 #include "MD5.hxx"
@@ -64,11 +63,10 @@ LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
 {
   const GUI::Font& font = instance().launcherFont();
 
-  const int fontWidth = font.getMaxCharWidth(),
-            fontHeight = font.getFontHeight(),
-            bwidth  = (_w - 2 * 10 - 8 * (4 - 1)) / 4,
-            bheight = font.getLineHeight() + 4;
-  int xpos = 0, ypos = 0, lwidth = 0, lwidth2 = 0, fwidth = 0;
+  const int fontHeight  = font.getFontHeight();
+  const int bwidth  = (_w - 2 * 10 - 8 * (4 - 1)) / 4;
+  const int bheight = font.getLineHeight() + 4;
+  int xpos = 0, ypos = 0, lwidth = 0;
   WidgetArray wid;
 
   // Show game name
@@ -77,22 +75,16 @@ LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
   new StaticTextWidget(this, font, xpos, ypos, lwidth, fontHeight,
                        "Select an item from the list ...", kTextAlignLeft);
 
-  lwidth2 = font.getStringWidth("XXXX items found");
-  xpos = _w - lwidth2 - 10;
+  lwidth = font.getStringWidth("XXXX items found");
+  xpos = _w - lwidth - 10;
   myRomCount = new StaticTextWidget(this, font, xpos, ypos,
-                                    lwidth2, fontHeight,
+                                    lwidth, fontHeight,
                                     "", kTextAlignRight);
 
-  // Add filter that can narrow the results shown in the listing
-  // It has to fit between both labels
-  fwidth = BSPF_min(15 * fontWidth, xpos - 20 - lwidth);
-  xpos -= fwidth + 5;
-  myPattern = new EditTextWidget(this, font, xpos, ypos,
-                                 fwidth, fontHeight, "");
-
   // Add list with game titles
-  // Before we add the list, we need to know the size of the RomInfoWidget
   xpos = 10;  ypos += fontHeight + 5;
+
+  // Before we add the list, we need to know the size of the RomInfoWidget
   int romWidth = 0;
   int romSize = instance().settings().getInt("romviewer");
   if(romSize > 1 && w >= 1000 && h >= 760)
@@ -106,7 +98,6 @@ LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
   myList->setNumberingMode(kListNumberingOff);
   myList->setEditable(false);
   wid.push_back(myList);
-  wid.push_back(myPattern);  // Add after the list for tab order
 
   // Add ROM info area (if enabled)
   if(romWidth > 0)
@@ -266,7 +257,7 @@ void LauncherDialog::updateListing()
   myPrevDirButton->setEnabled(myCurrentNode.hasParent());
 
   // Show current directory
-  myDir->setLabel(myCurrentNode.getRelativePath());
+  myDir->setLabel(myCurrentNode.getPath());
 
   // Now fill the list widget with the contents of the GameList
   StringList l;
@@ -339,11 +330,6 @@ void LauncherDialog::loadDirListing()
         continue;
     }
 
-    // Skip over files that don't match the pattern in the 'pattern' textbox
-    if(!isDir && myPattern->getEditString() != "" &&
-       !matchPattern(name, myPattern->getEditString()))
-      continue;
-
     myGameList->appendGame(name, files[idx].getPath(), "", isDir);
   }
 
@@ -401,49 +387,6 @@ void LauncherDialog::setListFilters()
   const string& exts = instance().settings().getString("launcherexts");
   myRomExts.clear();
   LauncherFilterDialog::parseExts(myRomExts, exts);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool LauncherDialog::matchPattern(const string& s, const string& pattern)
-{
-  // This method is modelled after strcasestr, which we don't use
-  // because it isn't guaranteed to be available everywhere
-  // The strcasestr uses the KMP algorithm when the comparisons
-  // reach a certain point, but since we'll be dealing with relatively
-  // short strings, I think the overhead of building a KMP table
-  // each time would be slower than the brute force method used here
-  const char* haystack = s.c_str();
-  const char* needle = pattern.c_str();
-
-  unsigned char b = tolower((unsigned char) *needle);
-
-  needle++;
-  for (;; haystack++)
-  {
-    if (*haystack == '\0')  /* No match */
-      return false;
-
-    /* The first character matches */
-    if (tolower ((unsigned char) *haystack) == b)
-    {
-      const char* rhaystack = haystack + 1;
-      const char* rneedle = needle;
-
-      for (;; rhaystack++, rneedle++)
-      {
-        if (*rneedle == '\0')   /* Found a match */
-          return true;
-        if (*rhaystack == '\0') /* No match */
-          return false;
-
-        /* Nothing in this round */
-        if (tolower ((unsigned char) *rhaystack)
-            != tolower ((unsigned char) *rneedle))
-          break;
-      }
-    }
-  }
-  return false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -557,12 +500,6 @@ void LauncherDialog::handleCommand(CommandSender* sender, int cmd,
 
     case kCMenuItemSelectedCmd:
       handleContextMenu();
-      break;
-
-    case kEditAcceptCmd:
-    case kEditChangedCmd:
-      // The updateListing() method knows what to do when the text changes
-      updateListing();
       break;
 
     default:

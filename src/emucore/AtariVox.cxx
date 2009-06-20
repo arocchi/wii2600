@@ -13,8 +13,12 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: AtariVox.cxx,v 1.21 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
+
+#ifdef SPEAKJET_EMULATION
+  #include "SpeakJet.hxx"
+#endif
 
 #include "MT24LC256.hxx"
 #include "SerialPort.hxx"
@@ -26,16 +30,21 @@ AtariVox::AtariVox(Jack jack, const Event& event, const System& system,
                    const SerialPort& port, const string& portname,
                    const string& eepromfile)
   : Controller(jack, event, system, Controller::AtariVox),
-    mySerialPort((SerialPort&)port),
+    mySerialPort((SerialPort*)&port),
     myEEPROM(NULL),
     myShiftCount(0),
     myShiftRegister(0),
     myLastDataWriteCycle(0)
 {
-  if(mySerialPort.openPort(portname))
+#ifndef SPEAKJET_EMULATION
+  if(mySerialPort->openPort(portname))
     myAboutString = " (using serial port \'" + portname + "\')";
   else
     myAboutString = " (invalid serial port \'" + portname + "\')";
+#else
+  mySpeakJet = new SpeakJet();
+  myAboutString = " (emulating SpeakJet device)";
+#endif
 
   myEEPROM = new MT24LC256(eepromfile, system);
 
@@ -48,7 +57,11 @@ AtariVox::AtariVox(Jack jack, const Event& event, const System& system,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 AtariVox::~AtariVox()
 {
-  mySerialPort.closePort();
+#ifndef SPEAKJET_EMULATION
+  mySerialPort->closePort();
+#else
+  delete mySpeakJet;
+#endif
   delete myEEPROM;
 }
 
@@ -145,7 +158,11 @@ void AtariVox::clockDataIn(bool value)
       else
       {
         uInt8 data = ((myShiftRegister >> 1) & 0xff);
-        mySerialPort.writeByte(&data);
+    #ifndef SPEAKJET_EMULATION
+        mySerialPort->writeByte(&data);
+    #else
+        mySpeakJet->write(data);
+    #endif
       }
       myShiftRegister = 0;
     }

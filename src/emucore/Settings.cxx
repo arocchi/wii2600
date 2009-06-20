@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Settings.cxx,v 1.158 2009-01-16 21:46:30 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -40,13 +40,11 @@ Settings::Settings(OSystem* osystem)
 
   // OpenGL specific options
   setInternal("gl_filter", "nearest");
-  setInternal("gl_aspectn", "100");
-  setInternal("gl_aspectp", "100");
+  setInternal("gl_aspect", "100");
   setInternal("gl_fsmax", "false");
   setInternal("gl_lib", "libGL.so");
   setInternal("gl_vsync", "false");
   setInternal("gl_texrect", "false");
-//  setInternal("gl_accel", "true");
 
   // Framebuffer-related options
   setInternal("tia_filter", "zoom2x");
@@ -57,13 +55,6 @@ Settings::Settings(OSystem* osystem)
   setInternal("palette", "standard");
   setInternal("colorloss", "false");
   setInternal("timing", "sleep");
-
-  // TV filter options
-  setInternal("tv_tex", "off");
-  setInternal("tv_bleed", "off");
-  setInternal("tv_noise", "off");
-//  setInternal("tv_curve", "false");  // not yet implemented
-  setInternal("tv_phos", "false");
 
   // Sound options
   setInternal("sound", "true");
@@ -94,10 +85,8 @@ Settings::Settings(OSystem* osystem)
   setInternal("cheatfile", "");
   setInternal("palettefile", "");
   setInternal("propsfile", "");
-  setInternal("eepromdir", "");
 
   // ROM browser options
-  setInternal("uselauncher", "true");
   setInternal("launcherres", "640x480");
   setInternal("launcherfont", "medium");
   setInternal("launcherexts", "allfiles");
@@ -116,9 +105,6 @@ Settings::Settings(OSystem* osystem)
   setInternal("tiafloat", "true");
   setInternal("avoxport", "");
   setInternal("stats", "false");
-  setInternal("audiofirst", "true");
-  setInternal("fastscbios", "false");
-  setExternal("romloadcount", "0");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -228,37 +214,46 @@ void Settings::validate()
   int i;
 
   s = getString("video");
-  if(s != "soft" && s != "gl")  setInternal("video", "soft");
+  if(s != "soft" && s != "gl")
+    setInternal("video", "soft");
 
   s = getString("timing");
-  if(s != "sleep" && s != "busy")  setInternal("timing", "sleep");
+  if(s != "sleep" && s != "busy")
+    setInternal("timing", "sleep");
 
 #ifdef DISPLAY_OPENGL
   s = getString("gl_filter");
-  if(s != "linear" && s != "nearest")  setInternal("gl_filter", "nearest");
+  if(s != "linear" && s != "nearest")
+    setInternal("gl_filter", "nearest");
 
-  i = getInt("gl_aspectn");
-  if(i < 80 || i > 120)  setInternal("gl_aspectn", "100");
-  i = getInt("gl_aspectp");
-  if(i < 80 || i > 120)  setInternal("gl_aspectp", "100");
+  i = getInt("gl_aspect");
+  if(i < 80 || i > 100)
+    setInternal("gl_aspect", "100");
 #endif
 
 #ifdef SOUND_SUPPORT
   i = getInt("volume");
-  if(i < 0 || i > 100)    setInternal("volume", "100");
+  if(i < 0 || i > 100)
+    setInternal("volume", "100");
   i = getInt("freq");
-  if(i < 0 || i > 48000)  setInternal("freq", "31400");
+  if(i < 0 || i > 48000)
+    setInternal("freq", "31400");
   i = getInt("tiafreq");
-  if(i < 0 || i > 48000)  setInternal("tiafreq", "31400");
+  if(i < 0 || i > 48000)
+    setInternal("tiafreq", "31400");
 #endif
 
   i = getInt("joydeadzone");
-  if(i < 0)        setInternal("joydeadzone", "0");
-  else if(i > 29)  setInternal("joydeadzone", "29");
+  if(i < 0)
+    setInternal("joydeadzone", "0");
+  else if(i > 29)
+    setInternal("joydeadzone", "29");
 
   i = getInt("pspeed");
-  if(i < 1)        setInternal("pspeed", "1");
-  else if(i > 15)  setInternal("pspeed", "15");
+  if(i < 1)
+    setInternal("pspeed", "1");
+  else if(i > 15)
+    setInternal("pspeed", "15");
 
   s = getString("palette");
   if(s != "standard" && s != "z26" && s != "user")
@@ -269,20 +264,10 @@ void Settings::validate()
     setInternal("launcherfont", "medium");
 
   i = getInt("romviewer");
-  if(i < 0)       setInternal("romviewer", "0");
-  else if(i > 2)  setInternal("romviewer", "2");
-
-  s = getString("tv_tex");
-  if(s != "normal" && s != "stag")
-    setInternal("tv_tex", "off");
-
-  s = getString("tv_bleed");
-  if(s != "low" && s != "medium" && s != "high")
-    setInternal("tv_bleed", "off");
-
-  s = getString("tv_noise");
-  if(s != "low" && s != "medium" && s != "high")
-    setInternal("tv_noise", "off");
+  if(i < 0)
+    setInternal("romviewer", "0");
+  else if(i > 2)
+    setInternal("romviewer", "2");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -307,24 +292,10 @@ void Settings::usage()
     << "  -gl_filter    <type>         Type is one of the following:\n"
     << "                 nearest         Normal scaling (GL_NEAREST)\n"
     << "                 linear          Blurred scaling (GL_LINEAR)\n"
-    << "  -gl_aspectn   <number>       Scale the TIA width by the given percentage in NTSC mode\n"
-    << "  -gl_aspectp   <number>       Scale the TIA width by the given percentage in PAL mode\n"
+    << "  -gl_aspect    <number>       Scale the width by the given percentage\n"
     << "  -gl_fsmax     <1|0>          Stretch GL image in fullscreen emulation mode\n"
     << "  -gl_vsync     <1|0>          Enable synchronize to vertical blank interrupt\n"
     << "  -gl_texrect   <1|0>          Enable GL_TEXTURE_RECTANGLE extension\n"
-//    << "  -gl_accel     <1|0>          Enable SDL_GL_ACCELERATED_VISUAL\n"
-    << "  -tv_tex       <off|type>     OpenGL TV texturing, type is one of the following:\n"
-    << "                 normal         Aligned in a grid\n"
-    << "                 stag           Aligned in a staggered grid\n"
-    << "  -tv_bleed     <off|type>     OpenGL TV color bleed, type is one of the following:\n"
-    << "                 low            \n"
-    << "                 medium         \n"
-    << "                 high           \n"
-    << "  -tv_noise     <off|type>     OpenGL TV RF noise emulation, type is one of the following:\n"
-    << "                 low            \n"
-    << "                 medium         \n"
-    << "                 high           \n"
-    << "  -tv_phos      <1|0>          OpenGL TV phosphor burn-off\n"
     << endl
   #endif
     << "  -tia_filter   <filter>       Use the specified filter in emulation mode\n"
@@ -355,20 +326,17 @@ void Settings::usage()
     << "  -sa1          <left|right>   Stelladaptor 1 emulates specified joystick port\n"
     << "  -sa2          <left|right>   Stelladaptor 2 emulates specified joystick port\n"
     << "  -autoslot     <1|0>          Automatically switch to next save slot when state saving\n"
-    << "  -audiofirst   <1|0>          Initial audio before video (required for some ATI video cards)\n"
-    << "  -fastscbios   <1|0>          Disable Supercharger BIOS progress loading bars\n"
     << "  -ssdir        <path>         The directory to save snapshot files to\n"
     << "  -sssingle     <1|0>          Generate single snapshot instead of many\n"
-    << "  -ss1x         <1|0>          Generate TIA snapshot in 1x mode (ignore scaling/effects)\n"
+    << "  -ss1x         <1|0>          Generate TIA snapshot in 1x mode (ignore scaling)\n"
     << endl
     << "  -rominfo      <rom>          Display detailed information for the given ROM\n"
     << "  -listrominfo                 Display contents of stella.pro, one line per ROM entry\n"
-    << "  -uselauncher  <1|0>          Use the built-in ROM launcher\n"
     << "  -launcherres  <WxH>          The resolution to use in ROM launcher mode\n"
     << "  -launcherfont <small|medium| Use the specified font in the ROM launcher\n"
     << "                 large>\n"
     << "  -launcherexts <allfiles|     Show files with the given extensions in ROM launcher\n"
-    << "                 allroms|        (exts is a ':' separated list of extensions)\n"
+    << "                 allroms|        (exts is a ':' separated list of extensions\n"
     << "                 exts\n"
     << "  -romviewer    <0|1|2>        Show ROM info viewer at given zoom level in ROM launcher (0 for off)\n"
     << "  -uipalette    <1|2>          Used the specified palette for UI elements\n"
@@ -378,7 +346,6 @@ void Settings::usage()
     << "  -cheatfile    <file>         Full pathname of cheatfile database\n"
     << "  -palettefile  <file>         Full pathname of user-defined palette file\n"
     << "  -propsfile    <file>         Full pathname of ROM properties file\n"
-    << "  -eepromdir    <dir>          Directory in which to save EEPROM files\n"
     << "  -avoxport     <name>         The name of the serial port where an AtariVox is connected\n"
     << "  -help                        Show the text you're now reading\n"
   #ifdef DEBUGGER_SUPPORT
@@ -411,6 +378,7 @@ void Settings::usage()
     << "   -height      <arg>          Sets the 'Display.Height' property\n"
     << "   -pp          <arg>          Sets the 'Display.Phosphor' property\n"
     << "   -ppblend     <arg>          Sets the 'Display.PPBlend' property\n"
+    << "   -hmove       <arg>          Sets the 'Emulation.HmoveBlanks' property\n"
   #endif
     << endl;
 #endif

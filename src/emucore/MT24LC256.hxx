@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: MT24LC256.hxx,v 1.7 2009-01-01 18:13:36 stephena Exp $
 //============================================================================
 
 #ifndef MT24LC256_HXX
@@ -30,7 +30,7 @@ class System;
   (aka Supercat) for the bulk of this code.
 
   @author  Stephen Anthony & J. Payson
-  @version $Id$
+  @version $Id: MT24LC256.hxx,v 1.7 2009-01-01 18:13:36 stephena Exp $
 */
 class MT24LC256
 {
@@ -116,5 +116,5 @@ class MT24LC256
     // Assignment operator isn't supported by this class so make it private
     MT24LC256& operator = (const MT24LC256&);
 };
-
 #endif
+

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventHandler.cxx,v 1.239 2009-01-16 16:38:06 stephena Exp $
 //============================================================================
 
 #include <sstream>
@@ -931,15 +931,6 @@ void EventHandler::handleEvent(Event::Type event, int state)
       break;
     ////////////////////////////////////////////////////////////////////////
 
-#if 0
-    case Event::ConsoleReset:
-      if(state)
-      {
-        myOSystem->console().tia().frameReset();
-        myOSystem->frameBuffer().refresh();
-      }
-      break;
-#endif
     case Event::Fry:
       myFryingFlag = bool(state);
       return;
@@ -972,15 +963,8 @@ void EventHandler::handleEvent(Event::Type event, int state)
       if((myState == S_EMULATE || myState == S_CMDMENU) && state)
       {
         myOSystem->settings().saveConfig();
-
-        // Go back to the launcher, or immediately quit
-        if(myOSystem->settings().getBool("uselauncher"))
-        {
-          myOSystem->deleteConsole();
-          myOSystem->createLauncher();
-        }
-        else
-          myOSystem->quit();
+        myOSystem->deleteConsole();
+        myOSystem->createLauncher();
       }
       return;
 
@@ -1820,7 +1804,7 @@ void EventHandler::takeSnapshot()
   if(myOSystem->settings().getBool("ss1x"))
   {
     string msg = Snapshot::savePNG(myOSystem->frameBuffer(),
-                   myOSystem->console().tia(),
+                   myOSystem->console().mediaSource(),
                    myOSystem->console().properties(), filename);
     myOSystem->frameBuffer().showMessage(msg);
   }

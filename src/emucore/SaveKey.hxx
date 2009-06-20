@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SaveKey.hxx,v 1.3 2009-01-01 18:13:37 stephena Exp $
 //============================================================================
 
 #ifndef SAVEKEY_HXX
@@ -31,13 +31,13 @@ class MT24LC256;
   driver code.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: SaveKey.hxx,v 1.3 2009-01-01 18:13:37 stephena Exp $
 */
 class SaveKey : public Controller
 {
   public:
     /**
-      Create a new SaveKey controller plugged into the specified jack
+      Create a new AtariVox controller plugged into the specified jack
 
       @param jack       The jack the controller is plugged into
       @param event      The event object to use for events

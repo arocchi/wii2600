@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBuffer.hxx,v 1.115 2009-01-10 18:52:55 stephena Exp $
 //============================================================================
 
 #ifndef FRAMEBUFFER_HXX
@@ -83,15 +83,15 @@ enum {
 
 
 /**
-  This class encapsulates all video buffers and is the basis for the video
+  This class encapsulates the MediaSource and is the basis for the video
   display in Stella.  All graphics ports should derive from this class for
   platform-specific video stuff.
 
-  The TIA is drawn here, and all GUI elements (ala ScummVM, which are drawn
-  into FBSurfaces), are in turn drawn here as well.
+  All GUI elements (ala ScummVM) are drawn into FBSurfaces, which are in
+  turn drawn here as well.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBuffer.hxx,v 1.115 2009-01-10 18:52:55 stephena Exp $
 */
 class FrameBuffer
 {
@@ -118,7 +118,7 @@ class FrameBuffer
 
     /**
       Updates the display, which depending on the current mode could mean
-      drawing the TIA, any pending menus, etc.
+      drawing the mediasource, any pending menus, etc.
     */
     void update();
 
@@ -192,7 +192,7 @@ class FrameBuffer
 
     /**
       Toggles between fullscreen and window mode.
-      Grabmouse activated when in fullscreen mode.
+      Grabmouse activated when in fullscreen mode.  
     */
     void toggleFullscreen();
 
@@ -247,7 +247,7 @@ class FrameBuffer
     const StringMap& supportedTIAFilters(const string& type);
 
     /**
-      Get the TIA pixel associated with the given TIA buffer index.
+      Get the TIA pixel associated with the given MediaSrc index.
     */
     uInt32 tiaPixel(uInt32 idx) const;
 
@@ -269,11 +269,6 @@ class FrameBuffer
       Informs the Framebuffer of a change in EventHandler state.
     */
     void stateChanged(EventHandler::State state);
-
-    /**
-      Get the zoom level.
-    */
-    uInt32 getZoomLevel() { return myZoomLevel; }
 
   //////////////////////////////////////////////////////////////////////
   // The following methods are system-specific and must be implemented
@@ -388,10 +383,10 @@ class FrameBuffer
     virtual FBSurface* createSurface(int w, int h, bool useBase = false) const = 0;
 
     /**
-      This method should be called anytime the TIA needs to be redrawn
+      This method should be called anytime the MediaSource needs to be redrawn
       to the screen (full indicating that a full redraw is required).
     */
-    virtual void drawTIA(bool full) = 0;
+    virtual void drawMediaSource(bool full) = 0;
 
     /**	 
       This method is called after any drawing is done (per-frame).	 
@@ -417,9 +412,6 @@ class FrameBuffer
     SDL_Surface* myScreen;
 
     // SDL initialization flags
-    // This is set by the base FrameBuffer class, and read by the derived classes
-    // If a FrameBuffer is successfully created, the derived classes must modify
-    // it to point to the actual flags used by the SDL_Surface
     uInt32 mySDLFlags;
 
     // Indicates if the entire frame need to redrawn
@@ -433,19 +425,11 @@ class FrameBuffer
 
     // TIA palettes for normal and phosphor modes
     // 'myDefPalette' also contains the UI palette
-    // The '24' version of myDefPalette is used in 24-bit colour mode,
-    // eliminating having to deal with endian and shift issues
-    // Phosphor mode doesn't have a corresponding '24' mode, since it
-    // would require a 192KB lookup table
     Uint32 myDefPalette[256+kNumColors];
     Uint32 myAvgPalette[256][256];
-    Uint8 myDefPalette24[256+kNumColors][3];
 
     // Names of the TIA filters that can be used for this framebuffer
     StringMap myTIAFilters;
-
-    // Holds the zoom level being used
-    uInt32 myZoomLevel;
 
   private:
     /**
@@ -512,8 +496,7 @@ class FrameBuffer
         uInt32 size() const;
 
         void previous();
-        const FrameBuffer::VideoMode current(const Settings& settings,
-                                             bool isFullscreen) const;
+        const FrameBuffer::VideoMode current(const Settings& settings) const;
         void next();
 
         void setByGfxMode(GfxID id);
@@ -580,7 +563,7 @@ class FrameBuffer
   FrameBuffer type.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBuffer.hxx,v 1.115 2009-01-10 18:52:55 stephena Exp $
 */
 // Text alignment modes for drawString()
 enum TextAlignment {

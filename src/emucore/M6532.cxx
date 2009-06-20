@@ -13,20 +13,18 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6532.cxx,v 1.30 2009-01-01 18:13:36 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <iostream>
-
+#include <assert.h>
 #include "Console.hxx"
+#include "M6532.hxx"
 #include "Random.hxx"
 #include "Switches.hxx"
 #include "System.hxx"
 #include "Serializer.hxx"
 #include "Deserializer.hxx"
-
-#include "M6532.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6532::M6532(const Console& console)

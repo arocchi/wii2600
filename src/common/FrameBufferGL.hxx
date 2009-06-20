@@ -1,8 +1,8 @@
 //============================================================================
 //
-//   SSSS    tt          lll  lll
-//  SS  SS   tt           ll   ll
-//  SS     tttttt  eeee   ll   ll   aaaa
+//   SSSS    tt          lll  lll       
+//  SS  SS   tt           ll   ll        
+//  SS     tttttt  eeee   ll   ll   aaaa 
 //   SSSS    tt   ee  ee  ll   ll      aa
 //      SS   tt   eeeeee  ll   ll   aaaaa  --  "An Atari 2600 VCS Emulator"
 //  SS  SS   tt   ee      ll   ll  aa  aa
@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBufferGL.hxx,v 1.71 2009-01-15 23:07:29 stephena Exp $
 //============================================================================
 
 #ifndef FRAMEBUFFER_GL_HXX
@@ -35,7 +35,7 @@ class FBSurfaceGL;
   This class implements an SDL OpenGL framebuffer.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBufferGL.hxx,v 1.71 2009-01-15 23:07:29 stephena Exp $
 */
 class FrameBufferGL : public FrameBuffer
 {
@@ -60,14 +60,6 @@ class FrameBufferGL : public FrameBuffer
       @param library  The filename of the OpenGL library
     */
     static bool loadLibrary(const string& library);
-
-    /**
-      Return version of the OpenGL library found by the OSystem
-      (0 indicates that the libary was not loaded successfully).
-      This will not return a valid version number until setVidMode()
-      has been called at least once.
-    */
-    static float glVersion() { return myGLVersion; }
 
     //////////////////////////////////////////////////////////////////////
     // The following are derived from public methods in FrameBuffer.hxx
@@ -146,10 +138,10 @@ class FrameBufferGL : public FrameBuffer
     FBSurface* createSurface(int w, int h, bool useBase = false) const;
 
     /**
-      This method should be called anytime the TIA needs to be redrawn
+      This method should be called anytime the MediaSource needs to be redrawn
       to the screen (full indicating that a full redraw is required).
     */
-    void drawTIA(bool full);
+    void drawMediaSource(bool full);
 
     /**
       This method is called to provide information about the FrameBuffer.
@@ -164,13 +156,8 @@ class FrameBufferGL : public FrameBuffer
   private:
     bool loadFuncs();
 
-    /**
-      Enable/disable texture effect.
-    */
-    void enableTexture(bool enable);
-
   private:
-    // The lower-most base surface (will always be a TIA surface,
+    // The lower-most base surface (will always be a TIA surface, 
     // since Dialog surfaces are allocated by the Dialog class directly).
     FBSurfaceGL* myTiaSurface;
 
@@ -192,30 +179,6 @@ class FrameBufferGL : public FrameBuffer
     // Indicates that the texture has been modified, and should be redrawn
     bool myDirtyFlag;
 
-    // Indicates whether or not color bleed filter is enabled
-    bool myUseBleed;
-
-    // Indicates the quality of the color bleed filter to use
-    int myBleedQuality;
-
-    // Indicates whether or not color texture filter is enabled
-    bool myUseTexture;
-
-    // Indicates whetehr or not color texture filter is staggered
-    bool myTextureStag;
-
-    // Indicates whether or not the noise filter is enabled
-    bool myUseNoise;
-
-    // Indicates the quality of the noise filter to use
-    int myNoiseQuality;
-
-    // Indicates whether or not the phosphor filter is enabled
-    bool myUseGLPhosphor;
-
-    // Indicates the OpenGL version found (0 indicates none)
-    static float myGLVersion;
-
     // Indicates if the OpenGL library has been properly loaded
     static bool myLibraryLoaded;
 };
@@ -224,7 +187,7 @@ class FrameBufferGL : public FrameBuffer
   A surface suitable for OpenGL rendering mode.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBufferGL.hxx,v 1.71 2009-01-15 23:07:29 stephena Exp $
 */
 class FBSurfaceGL : public FBSurface
 {
@@ -233,8 +196,7 @@ class FBSurfaceGL : public FBSurface
   public:
     FBSurfaceGL(FrameBufferGL& buffer,
                 uInt32 baseWidth, uInt32 baseHeight,
-                uInt32 scaleWidth, uInt32 scaleHeight,
-                bool allowFiltering = false);
+                uInt32 scaleWidth, uInt32 scaleHeight);
     virtual ~FBSurfaceGL();
 
     void hLine(uInt32 x, uInt32 y, uInt32 x2, uInt32 color);
@@ -259,54 +221,6 @@ class FBSurfaceGL : public FBSurface
   private:
     void setFilter(const string& name);
 
-    /**
-      This method generates an OpenGL shader program from a fragment shader.
-
-      @param fragment The filename of the fragment shader (not including location)
-
-      @return The generated shader program
-    */
-    enum ShaderType {
-      SHADER_BLEED, SHADER_TEX, SHADER_NOISE, SHADER_PHOS, SHADER_TEXNOISE
-    };
-    GLuint genShader(ShaderType type);
-
-    /**
-      This method performs the final steps of rendering a single texture filter:
-      passing the previously rendered screen to the given program and drawing
-      to the screen. It does not include setting the program through
-      p_glUseProgram() because this needs to be done before the custom program
-      variables are set.
-
-      @param program     The program to use to render the filter
-      @param firstRender True if this is the first render for this frame, false if not
-    */
-    void renderTexture(GLuint program, bool firstRender);
-
-    /**
-      This method performs the final steps of rendering a two-texture filter:
-      passing the previously rendered screen to the given program and drawing
-      the previous texture and mask texture to the screen. It does not include
-      setting the program through p_glUseProgram() because this needs to be
-      done before the mask texture and custom program variables are set.
-
-      @param program     The program to use to render the filter
-      @param firstRender True if this is the first render for this frame, false if not
-    */
-    void renderTwoTexture(GLuint program, bool firstRender);
-
-    /**
-      This method performs the final steps of rendering a three-texture filter:
-      passing the previously rendered screen to the given program and drawing
-      the previous texture and two mask textures to the screen. It does not include
-      setting the program through p_glUseProgram() because this needs to be
-      done before the mask texture and custom program variables are set.
-
-      @param program     The program to use to render the filter
-      @param firstRender True if this is the first render for this frame, false if not
-    */
-    void renderThreeTexture(GLuint program, bool firstRender);
-
     inline void* pixels() const { return myTexture->pixels; }
     inline uInt32 pitch() const { return myPitch;           }
 
@@ -328,43 +242,9 @@ class FBSurfaceGL : public FBSurface
     GLsizei myTexHeight;
     GLfloat myTexCoord[4];
 
-    // The filter texture is what is used to hold data from screen after one
-    // filter has been used. Needed since more than one filter is being used.
-    // The size and texture coordinates are also used for the other filter
-    // textures: mySubMaskTexID and myNoiseTexID
-    GLuint myFilterTexID;
-    GLsizei myFilterTexWidth;
-    GLsizei myFilterTexHeight;
-    GLfloat myFilterTexCoord[4];
-
-    // The subpixel texture used for the texture filter
-    GLuint mySubMaskTexID;
-    // The noise textures used for the noise filter
-    GLuint* myNoiseMaskTexID;
-    // The past texture used for the phosphor filter
-    GLuint myPhosphorTexID;
-
-    // Surface for the subpixel texture filter mask
-    SDL_Surface* mySubpixelTexture;
-    // Surfaces for noise filter mask (array of pointers)
-    SDL_Surface** myNoiseTexture;
-
     uInt32 myXOrig, myYOrig, myWidth, myHeight;
     bool mySurfaceIsDirty;
     uInt32 myPitch;
-
-    // OpenGL shader programs
-    GLuint myBleedProgram;         // Shader for color bleed filter
-    GLuint myTextureProgram;       // Shader for color texture filter
-    GLuint myNoiseProgram;         // Shader for noise filter
-    GLuint myPhosphorProgram;      // Shader for the phosphor filter
-    GLuint myTextureNoiseProgram;  // Shader for both color texture and noise filters
-
-    // Used to save the number of noise textures to use at game launch
-    int myNoiseNum;
-
-    // Specifies whether the TV filters can be applied to this surface
-    bool myTvFiltersEnabled;
 };
 
 #endif  // DISPLAY_OPENGL

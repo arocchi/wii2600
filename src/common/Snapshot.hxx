@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Snapshot.hxx,v 1.15 2009-01-03 22:57:12 stephena Exp $
 //============================================================================
 
 #ifndef SNAPSHOT_HXX
@@ -21,7 +21,7 @@
 
 class Properties;
 class FrameBuffer;
-class TIA;
+class MediaSource;
 
 #include <fstream>
 #include "bspf.hxx"
@@ -42,15 +42,16 @@ class Snapshot
 
     /**
       Save the current TIA image to a PNG file using data directly from
-      the TIA framebuffer.  No filtering or scaling will be included.
+      the MediaSource/TIA.  No filtering or scaling will be included.
 
       @param framebuffer The framebuffer containing the image data
       @param mediasrc    Source of the raw TIA data
       @param props       The properties object containing info about the ROM
       @param filename    The filename of the PNG file
     */
-    static string savePNG(const FrameBuffer& framebuffer, const TIA& tia,
-                          const Properties& props, const string& filename);
+    static string savePNG(const FrameBuffer& framebuffer,
+                          const MediaSource& mediasrc, const Properties& props,
+                          const string& filename);
 
   private:
     static string saveBufferToPNG(ofstream& out, uInt8* buffer,

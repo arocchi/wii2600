@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RomInfoWidget.cxx,v 1.17 2009-01-16 16:38:06 stephena Exp $
 //============================================================================
 
 #include <cstring>
@@ -289,7 +289,8 @@ bool RomInfoWidget::parseIDATChunk(FBSurface* surface, int width, int height,
   mySurface->setHeight(sh);
 
   // Decompress the image, and scale it correctly
-  uInt32 ipitch = width * 3 + 1;   // bytes per line of the actual PNG image
+  uInt32 ipitch = width * 3 + 1,  // bytes per line of the actual PNG image
+         spitch = sw * 3;         // bytes per line of the surface/line
   uLongf bufsize = ipitch * height;
   uInt8* buffer = new uInt8[bufsize];
   uInt32* line  = new uInt32[ipitch];
@@ -322,7 +323,7 @@ bool RomInfoWidget::parseIDATChunk(FBSurface* surface, int width, int height,
       // Then fill the surface with those bytes
       uInt32 ystride = myZoomLevel;
       while(ystride--)
-        surface->drawPixels(line, 0, srow++, sw);
+        surface->drawPixels(line, 0, srow++, spitch);
     }
     delete[] buffer;
     delete[] line;

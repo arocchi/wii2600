@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherFilterDialog.cxx,v 1.1 2009-01-05 19:44:29 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -58,7 +58,7 @@ LauncherFilterDialog::LauncherFilterDialog(GuiObject* boss, const GUI::Font& fon
   items.clear();
   items.push_back("All files", "allfiles");
   items.push_back("All roms", "allroms");
-  items.push_back("ROMs ending with", "__EXTS");
+  items.push_back("ROMs ending with", "EXTENSIONS");
   myFileType =
     new PopUpWidget(this, font, xpos, ypos, pwidth, lineHeight, items,
                     "Show: ", lwidth, kFileTypeChanged);
@@ -132,10 +132,10 @@ bool LauncherFilterDialog::isValidRomName(const string& name,
   string::size_type idx = name.find_last_of('.');
   if(idx != string::npos)
   {
-    const char* ext = name.c_str() + idx + 1;
+    string ext = name.substr(idx+1);
 
     for(uInt32 i = 0; i < exts.size(); ++i)
-      if(BSPF_strcasecmp(ext, exts[i].c_str()) == 0)
+      if(ext == exts[i])
         return true;
   }
 
@@ -148,16 +148,11 @@ bool LauncherFilterDialog::isValidRomName(const string& name, string& ext)
   string::size_type idx = name.find_last_of('.');
   if(idx != string::npos)
   {
-    const char* e = name.c_str() + idx + 1;
+    ext = name.substr(idx+1);
 
     for(uInt32 i = 0; i < 5; ++i)
-    {
-      if(BSPF_strcasecmp(e, ourRomTypes[1][i]) == 0)
-      {
-        ext = e;
+      if(ext == ourRomTypes[1][i])
         return true;
-      }
-    }
   }
   return false;
 }
@@ -209,7 +204,7 @@ void LauncherFilterDialog::handleFileTypeChange(const string& type)
 
   if(enable)
   {
-    myFileType->setSelected("__EXTS", "");
+    myFileType->setSelected("EXTENSIONS", "");
 
     // Since istringstream swallows whitespace, we have to make the
     // delimiters be spaces
@@ -263,3 +258,4 @@ const char* LauncherFilterDialog::ourRomTypes[2][5] = {
   { ".a26", ".bin", ".rom", ".zip", ".gz" },
   { "a26", "bin", "rom", "zip", "gz" }
 };
+

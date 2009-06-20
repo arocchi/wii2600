@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FileSnapDialog.cxx,v 1.29 2009-01-16 21:46:31 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -49,7 +49,7 @@ FileSnapDialog::FileSnapDialog(
 
   // Set real dimensions
   _w = 52 * fontWidth + 8;
-  _h = 11 * (lineHeight + 4) + 10;
+  _h = 10 * (lineHeight + 4) + 10;
 
   xpos = vBorder;  ypos = vBorder;
 
@@ -113,16 +113,6 @@ FileSnapDialog::FileSnapDialog(
                                   _w - xpos - 10, lineHeight, "");
   wid.push_back(mySnapPath);
 
-  // EEPROM directory
-  xpos = vBorder;  ypos += b->getHeight() + 3;
-  b = new ButtonWidget(this, font, xpos, ypos, buttonWidth, buttonHeight,
-                       "EEPROM path:", kChooseEEPROMDirCmd);
-  wid.push_back(b);
-  xpos += buttonWidth + 10;
-  myEEPROMPath = new EditTextWidget(this, font, xpos, ypos + 2,
-                                    _w - xpos - 10, lineHeight, "");
-  wid.push_back(myEEPROMPath);
-
   // Snapshot single or multiple saves
   xpos = 30;  ypos += b->getHeight() + 5;
   mySnapSingle = new CheckboxWidget(this, font, xpos, ypos,
@@ -171,7 +161,6 @@ void FileSnapDialog::loadConfig()
   myPaletteFile->setEditString(settings.getString("palettefile"));
   myPropsFile->setEditString(settings.getString("propsfile"));
   mySnapPath->setEditString(settings.getString("ssdir"));
-  myEEPROMPath->setEditString(settings.getString("eepromdir"));
   mySnapSingle->setState(!settings.getBool("sssingle"));
   mySnap1x->setState(settings.getBool("ss1x"));
 }
@@ -185,7 +174,6 @@ void FileSnapDialog::saveConfig()
   instance().settings().setString("palettefile", myPaletteFile->getEditString());
   instance().settings().setString("propsfile", myPropsFile->getEditString());
   instance().settings().setString("ssdir", mySnapPath->getEditString());
-  instance().settings().setString("eepromdir", myEEPROMPath->getEditString());
   instance().settings().setBool("sssingle", !mySnapSingle->getState());
   instance().settings().setBool("ss1x", mySnap1x->getState());
 
@@ -197,38 +185,21 @@ void FileSnapDialog::saveConfig()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FileSnapDialog::setDefaults()
 {
-  FilesystemNode node;
-  string basedir = instance().baseDir();
-  if(basedir.compare(basedir.length()-1, 1, BSPF_PATH_SEPARATOR, 0, 1) != 0)
-    basedir.append(BSPF_PATH_SEPARATOR);
+  const string& basedir = instance().baseDir(false);  // get relative basedir
+  const string& romdir = "~";
+  const string& statedir = basedir + BSPF_PATH_SEPARATOR + "state";
+  const string& cheatfile = basedir + BSPF_PATH_SEPARATOR + "stella.cht";
+  const string& palettefile = basedir + BSPF_PATH_SEPARATOR + "stella.pal";
+  const string& propsfile = basedir + BSPF_PATH_SEPARATOR + "stella.pro";
+  const string& ssdir = basedir + BSPF_PATH_SEPARATOR + "snapshots";
 
-  node = FilesystemNode("~");
-  myRomPath->setEditString(node.getRelativePath());
+  myRomPath->setEditString(romdir);
+  myStatePath->setEditString(statedir);
+  myCheatFile->setEditString(cheatfile);
+  myPaletteFile->setEditString(palettefile);
+  myPropsFile->setEditString(propsfile);
 
-  const string& statedir = basedir + "state";
-  node = FilesystemNode(statedir);
-  myStatePath->setEditString(node.getRelativePath());
-
-  const string& cheatfile = basedir + "stella.cht";
-  node = FilesystemNode(cheatfile);
-  myCheatFile->setEditString(node.getRelativePath());
-
-  const string& palettefile = basedir + "stella.pal";
-  node = FilesystemNode(palettefile);
-  myPaletteFile->setEditString(node.getRelativePath());
-
-  const string& propsfile = basedir + "stella.pro";
-  node = FilesystemNode(propsfile);
-  myPropsFile->setEditString(node.getRelativePath());
-
-  const string& eepromdir = basedir;
-  node = FilesystemNode(eepromdir);
-  myEEPROMPath->setEditString(node.getRelativePath());
-
-  const string& ssdir = basedir + "snapshots";
-  node = FilesystemNode(ssdir);
-  mySnapPath->setEditString(node.getRelativePath());
-
+  mySnapPath->setEditString(ssdir);
   mySnapSingle->setState(true);
   mySnap1x->setState(false);
 }
@@ -280,57 +251,45 @@ void FileSnapDialog::handleCommand(CommandSender* sender, int cmd,
                       FilesystemNode::kListDirectoriesOnly, kSnapDirChosenCmd);
       break;
 
-    case kChooseEEPROMDirCmd:
-      myBrowser->show("Select EEPROM directory:", myEEPROMPath->getEditString(),
-                      FilesystemNode::kListDirectoriesOnly, kEEPROMDirChosenCmd);
-      break;
-
     case kRomDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myRomPath->setEditString(dir.getRelativePath());
+      myRomPath->setEditString(dir.getPath());
       break;
     }
 
     case kStateDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myStatePath->setEditString(dir.getRelativePath());
+      myStatePath->setEditString(dir.getPath());
       break;
     }
 
     case kCheatFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myCheatFile->setEditString(dir.getRelativePath());
+      myCheatFile->setEditString(dir.getPath());
       break;
     }
 
     case kPaletteFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myPaletteFile->setEditString(dir.getRelativePath());
+      myPaletteFile->setEditString(dir.getPath());
       break;
     }
 
     case kPropsFileChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      myPropsFile->setEditString(dir.getRelativePath());
+      myPropsFile->setEditString(dir.getPath());
       break;
     }
 
     case kSnapDirChosenCmd:
     {
       FilesystemNode dir(myBrowser->getResult());
-      mySnapPath->setEditString(dir.getRelativePath());
-      break;
-    }
-
-    case kEEPROMDirChosenCmd:
-    {
-      FilesystemNode dir(myBrowser->getResult());
-      myEEPROMPath->setEditString(dir.getRelativePath());
+      mySnapPath->setEditString(dir.getPath());
       break;
     }
 

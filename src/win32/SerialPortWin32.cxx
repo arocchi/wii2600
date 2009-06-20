@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPortWin32.cxx,v 1.5 2009-01-01 18:13:39 stephena Exp $
 //============================================================================
 
 #include <windows.h>
@@ -30,7 +30,6 @@ SerialPortWin32::SerialPortWin32()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SerialPortWin32::~SerialPortWin32()
 {
-  closePort();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherDialog.hxx,v 1.40 2009-01-05 19:44:29 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -34,7 +34,6 @@ class GlobalPropsDialog;
 class LauncherFilterDialog;
 class OSystem;
 class Properties;
-class EditTextWidget;
 class RomInfoWidget;
 class StaticTextWidget;
 class StringListWidget;
@@ -79,7 +78,6 @@ class LauncherDialog : public Dialog
     void loadRomInfo();
     void handleContextMenu();
     void setListFilters();
-    bool matchPattern(const string& s, const string& pattern);
 
   private:
     ButtonWidget* myStartButton;
@@ -91,7 +89,6 @@ class LauncherDialog : public Dialog
     StaticTextWidget* myDirLabel;
     StaticTextWidget* myDir;
     StaticTextWidget* myRomCount;
-    EditTextWidget*   myPattern;
     GameList*         myGameList;
 
     OptionsDialog*    myOptions;

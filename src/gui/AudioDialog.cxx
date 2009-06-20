@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: AudioDialog.cxx,v 1.31 2009-01-04 22:27:43 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -166,7 +166,6 @@ void AudioDialog::saveConfig()
   Settings& settings = instance().settings();
 
   // Volume
-  settings.setInt("volume", myVolumeSlider->getValue());
   instance().sound().setVolume(myVolumeSlider->getValue());
 
   // Fragsize

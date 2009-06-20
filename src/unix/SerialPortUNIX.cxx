@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPortUNIX.cxx,v 1.6 2009-01-01 18:13:39 stephena Exp $
 //============================================================================
 
 #include <sys/types.h>
@@ -37,7 +37,6 @@ SerialPortUNIX::SerialPortUNIX()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SerialPortUNIX::~SerialPortUNIX()
 {
-  closePort();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -63,10 +62,7 @@ bool SerialPortUNIX::openPort(const string& device)
 void SerialPortUNIX::closePort()
 {
   if(myHandle)
-  {
     close(myHandle);
-    myHandle = 0;
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

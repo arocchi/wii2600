@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameInfoDialog.hxx,v 1.37 2009-01-04 22:27:44 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -85,6 +85,7 @@ class GameInfoDialog : public Dialog, public CommandSender
     PopUpWidget*      myPhosphor;
     SliderWidget*     myPPBlend;
     StaticTextWidget* myPPBlendLabel;
+    PopUpWidget*      myHmoveBlanks;
 
     enum {
       kLeftCChanged    = 'LCch',

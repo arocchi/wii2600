@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: VideoDialog.hxx,v 1.29 2009-01-06 23:02:18 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -23,13 +23,12 @@
 #define VIDEO_DIALOG_HXX
 
 class CommandSender;
-class CheckboxWidget;
 class DialogContainer;
 class EditTextWidget;
 class PopUpWidget;
 class SliderWidget;
 class StaticTextWidget;
-class TabWidget;
+class CheckboxWidget;
 
 #include "OSystem.hxx"
 #include "Dialog.hxx"
@@ -50,9 +49,6 @@ class VideoDialog : public Dialog
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
   private:
-    TabWidget* myTab;
-
-    // General options
     EditTextWidget*   myRenderer;
     PopUpWidget*      myRendererPopup;
     PopUpWidget*      myTIAFilterPopup;
@@ -60,10 +56,8 @@ class VideoDialog : public Dialog
     PopUpWidget*      myFSResPopup;
     PopUpWidget*      myFrameTimingPopup;
     PopUpWidget*      myGLFilterPopup;
-    SliderWidget*     myNAspectRatioSlider;
-    StaticTextWidget* myNAspectRatioLabel;
-    SliderWidget*     myPAspectRatioSlider;
-    StaticTextWidget* myPAspectRatioLabel;
+    SliderWidget*     myAspectRatioSlider;
+    StaticTextWidget* myAspectRatioLabel;
 
     SliderWidget*     myFrameRateSlider;
     StaticTextWidget* myFrameRateLabel;
@@ -72,23 +66,11 @@ class VideoDialog : public Dialog
     CheckboxWidget*   myGLStretchCheckbox;
     CheckboxWidget*   myUseVSyncCheckbox;
     CheckboxWidget*   myCenterCheckbox;
-    CheckboxWidget*   myGrabmouseCheckbox;
-    CheckboxWidget*   myFastSCBiosCheckbox;
-
-    // TV effects options
-    PopUpWidget*	  myTexturePopup;
-    PopUpWidget*      myBleedPopup;
-    PopUpWidget*      myNoisePopup;
-    CheckboxWidget*   myPhosphorCheckbox;
-
-    StaticTextWidget* myGLVersionInfo;
-    StaticTextWidget* myGLTexRectInfo;
 
     enum {
-      kNAspectRatioChanged = 'VDan',
-      kPAspectRatioChanged = 'VDap',
-      kFrameRateChanged    = 'VDfr',
-      kFullScrChanged      = 'VDfs'
+      kAspectRatioChanged = 'VDar',
+      kFrameRateChanged   = 'VDfr',
+      kFullScrChanged     = 'VDfs'
     };
 };
 

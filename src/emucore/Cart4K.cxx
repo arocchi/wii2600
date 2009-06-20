@@ -13,11 +13,10 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart4K.cxx,v 1.14 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "Cart4K.hxx"
@@ -26,7 +25,10 @@
 Cartridge4K::Cartridge4K(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 4096);
+  for(uInt32 addr = 0; addr < 4096; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

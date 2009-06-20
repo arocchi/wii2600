@@ -10,7 +10,7 @@
 	<br><br>
 	<center><h2><b>A multi-platform Atari 2600 VCS emulator</b></h2></center>
 
-	<center><h4><b>Release 2.8.1</b></h4></center>
+	<center><h4><b>Release 2.7</b></h4></center>
 	<br><br>
 
 	<center><h2><b>User's Guide</b></h2></center>
@@ -40,7 +40,7 @@
 
 	<br><br><br>
 
-	<center><b>February 1999 - June 2009</b></center>
+	<center><b>February 1999 - January 2009</b></center>
 	<center><b>The Stella Team</b></center>
 	<center><b><a href="http://stella.sourceforge.net">Stella Homepage</a></b></center>
 
@@ -222,6 +222,106 @@
 	DS and Playstation Portable (among others).
 	</p>
 
+	<h2><b>New in Release 2.7</b></h2>
+
+	<ul>
+<li>Totally reworked the built-in UI to be font-sensitive and use higher-resolution
+    fonts.  Stella now requires a minimum screen size of 640x480.
+    If used in a resolution smaller than that, the fonts will be reduced
+    accordingly.  Related to this, switching between software and OpenGL
+    rendering now requires an application restart.</li>
+
+<li>Added three different sized fonts (small, medium, large) which can be
+    used in the ROM launcher.</li>
+
+<li>Added ability to temporarily override ROM properties from the UI.  This
+    is tied to a right mouse button context menu in the ROM launcher, and
+    is very useful when you want to use a set of properties for all
+    subsequent ROMs without having to manually change each one.</li>
+
+<li>Added ability to filter the files shown in the ROM launcher.  Currently,
+    the choices are 'all files', 'all roms', or 'roms ending with a certain
+    extension'.  This functionality is tied to a right mouse button context
+    menu in the ROM launcher.  Extensions can also be set with the
+    '-launcherexts' commandline argument.</li>
+
+<li>Added ability to reload the listing in the ROM launcher, either from
+    a right mouse button context menu or pressing the Control/Cmd-R key.</li>
+
+<li>Made the ROM info viewer in the ROM launcher configurable to show
+    snapshots in 1x or 2x mode.</li>
+
+<li>Made the delay between consecutive keys being recognized as one word
+    configurable in the ROM launcher.  This is useful if you find that you
+    have to press keys too quickly to jump to a specific ROM.  This can be
+    set in the UI or using the '-listdelay' commandline argument.</li>
+
+<li>Updated internal ROM properties database to ROM-Hunter version 4
+    (thanks go to RomHunter for his tireless research in this area).</li>
+
+<li>Expanded the statistics overlay for the TIA image to also show
+    Display Format and Bankswitch type information.</li>
+
+<li>Added '-ss1x' commandline argument and associated UI item, used to
+    generate snapshots in 1x mode, independent of the filtering/scaling
+    currently in use.</li>
+
+<li>Various path textboxes in the UI now recognize './' (or '.\') to mean
+    the current directory and '~/' (or '~\') to mean your home directory
+    (for Windows, home directory will be your 'My Documents' folder).</li>
+
+<li>Large speedup in loading directories with many files in the ROM launcher.</li>
+
+<li>Fixed reset issue in 3E, 4A50, AR, CV, E7, F4SC, F6SC, F8SC, FASC and MC
+    ROMs; the internal RAM wasn't being randomized after the initial reset.</li>
+
+<li>M6532/RIOT RAM is now randomized at every reset, not just when the
+    emulation starts.</li>
+
+<li>Fixed bug in _diff pseudo-registers in the debugger; they were actually
+    defined backwards.</li>
+
+<li>Added fix for 'Challenge/Surfers Delight' ROM; the startup bank was
+    incorrect.  Combined with the new 'Override Properties' functionality,
+    you can now play both games directly from the UI (no need to use the
+    commandline).</li>
+
+<li>Fixed paddle issue with Activision Casino ROM; the last card in game 4
+    can now be reached.</li>
+
+<li>Added new pseudo-registers to the debugger, useful for conditional
+    breakpoints (_fcount, _cclocks, _vsync, _vblank).</li>
+
+<li>Added 'timing' commandline argument functionality to the UI, so you no
+    longer need to use the commandline to set it.</li>
+
+<li>Size restrictions on the TIA image are now strictly enforced.  The
+    maximum height of a 1x TIA image is now 256 lines.</li>
+
+<li>Added a new setting to the 'fullres' option named 'auto'.  Using
+    'auto' will let Stella decide the best videomode to use in fullscreen.</li>
+
+<li>Changed 'gl_fsmax' option to mean 'scale TIA image in fullscreen'.  It
+    will have no effect on UI modes.</li>
+
+<li>Changed 'gl_aspect' option to range 80-100 (previously, it was 50-100).</li>
+
+<li>Removed 'ui_zoom' and 'tia_zoom' options, replacing them with
+    'tia_filter' (which can be zoom1x, zoom2x, etc).  There is no equivalent
+    for ui_zoom, since the UI can no longer be scaled.</li>
+
+<li>Added experimental 64-bit version for Vista64 (may also work on WinXP64).
+    This hasn't been extensively tested, and is probably quite a bit slower
+    than the 32-bit version.</li>
+
+<li>OSX port now requires at least 10.3 and XCode 3.0 to compile.  Sorry,
+    but I no longer have access to older systems to compile for 10.2.</li>
+
+<li>Huge updates to the documentation, particularly concerning the debugger.
+    Many features that have been in Stella for a while are now documented for
+    the first time.</li>
+	</ul>
+
 	<p>
 	<h2><b>Features</b></h2>
 
@@ -246,7 +346,7 @@
 			<a href="http://www.richard.hutchinson.dsl.pipex.com/new_page_5.htm">
 			AtariVox</a> device connected to your PC using a USB adaptor</li>
 		<li>Supports EEPROM emulation for AtariVox and SaveKey controllers</li>
-		<li>Supports all known bankswitching schemes (let us know if there's one we missed)</li>
+		<li>Supports almost all known bankswitching schemes (let us know if there's one we missed)</li>
 		<li>Supports cartridge autodetection for almost all bankswitching schemes</li>
 		<li>Supports Supercharger single-load and multi-load games</li>
 		<li>Supports property file for setting the properties associated with games</li>
@@ -256,9 +356,6 @@
 			some games</li>
 		<li>TIA emulation supports full collision checking</li>
 		<li>Built-in extensive debugger</li>
-		<li>Emulation of CRT TV systems with OpenGL shaders, including texturing,
-			colour bleed, RF noise, and phosphor burn-off</li>
-		<li>Built-in ROM database with information compiled by RomHunter</li>
 	</ul>
 
 
@@ -283,7 +380,6 @@
 		<li>15 bit color minimum; 16 bit color graphics card highly recommended</li>
 		<li>SDL version 1.2.10 or greater, latest version highly recommended</li>
 		<li>Latest version of the zlib library</li>
-		<li>CRT emulation effects require OpenGL 2.0 with GLSL (GL shading language) support</li>
 		<li>Joysticks or gamepads are highly recommended</li>
 		<li>Mouse or Stelladaptor with real paddles required for paddle emulation</li>
 		<li>Some ROM images (See <a href="http://www.atariage.com">AtariAge</a> for more information)</li>
@@ -546,7 +642,6 @@
 					<tr><td>Palette file</td><td>specifies location of user palette</td><td>-palettefile</td></tr>
 					<tr><td>Properties file </td><td>specifies location of external stella.pro database</td><td>-propsfile</td></tr>
 					<tr><td>Snapshot path</td><td>specifies where to load/save snapshots</td><td>-ssdir</td></tr>
-					<tr><td>EEPROM path</td><td>specifies location of EEPROM files</td><td>-eepromdir</td></tr>
 					<tr><td>Multiple snapshots</td><td>whether to overwrite old snapshots</td><td>-sssingle</td></tr>
 					<tr><td>Snapshot in 1x mode</td><td>save snapshot in 1x mode, without filtering</td><td>-ss1x</td></tr>
 				</table>
@@ -559,13 +654,9 @@
 	but for Windows it means your 'My Documents' folder.</p>
 
 	<p>Selecting a new path for an item is done by clicking the appropriate button(s)
-	(in this case, 'Rom path' was selected), which will show a browser as follows:</p>
+	(in this case, 'Rom path' was selected).  Note that although the rom path
+	was '~/src/stella', it expands to '/home/stephena/src/stella' in the browser:</p>
 	<p><img src="graphics/rom_browser.png"></p>
-
-	<p>The browser should be self-explanatory.  The 'Go Up' button moves to the parent
-	folder (if it exists), and the 'Base Dir' button moves to the base directory where,
-	by default, all Stella-related files are stored.  Click 'Choose' to select an item,
-	or 'Cancel' to exit the browser.</p>
 
 	<p>Once you've changed your settings, you can start emulation by selecting a ROM
 	and pressing 'Enter' or clicking 'Select', or double-clicking a ROM.  Note that
@@ -615,12 +706,11 @@
 		</tr>
 
 		<tr>
-			<td><pre>-gl_aspectn &lt;number&gt;<br>-gl_aspectp &lt;number&gt;</pre></td>
+			<td><pre>-gl_aspect &lt;number&gt;</pre></td>
 			<td>OpenGL mode only. Specify the amount (as a percentage) to scale the
-				TIA image width in NTSC and PAL mode. Since many video modes do not
-				use square pixels, you can reduce width until the pixels appear square.
-				Allowable values are 80 - 120; I find 85 - 90 gives the most authentic
-				look for NTSC, and 105 - 110 for PAL.</td>
+				image width. Since many video modes do not use square pixels, you can
+				reduce width until the pixels appear square.  Allowable values are
+				80 - 100; I find 85 - 90 gives the most authentic look.</td>
 		</tr>
 
 		<tr>
@@ -638,43 +728,6 @@
 			<td><pre>-gl_texrect &lt;1|0&gt;</pre></td>
 			<td>OpenGL mode only. Enable GL_TEXTURE_RECTANGLE extension.  This causes
 				problems for some people using ATI video cards.</td>
-		</tr>
-<!--
-		<tr>
-			<td><pre>-gl_accel &lt;1|0&gt;</pre></td>
-			<td>OpenGL mode only. Use SDL_GL_ACCELERATED_VISUAL hint when creating
-				the SDL window.  This causes problems for some people using ATI
-				video cards, in which case it should be set to false.</td>
-		</tr>
--->
-		<tr>
-			<td><pre>-tv_tex &lt;off|normal|stag&gt;</pre></td>
-			<td>OpenGL 2.0 mode only. Enable TV texturing.  The GL_TEXTURE_RECTANGLE
-				extension must be disabled for this to work correctly.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-tv_bleed &lt;off|low|medium|high&gt;</pre></td>
-			<td>OpenGL 2.0 mode only. Enable TV colour bleed emulation.  A fast
-				video card with at least 128MB RAM is required to use 'high'.
-				The GL_TEXTURE_RECTANGLE extension must be disabled for this to
-				work correctly.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-tv_noise &lt;off|low|medium|high&gt;</pre></td>
-			<td>OpenGL 2.0 mode only. Enable TV radio frequency noise emulation.
-				A fast video card with at least 128MB RAM is required to use 'high'.
-				The GL_TEXTURE_RECTANGLE extension must be disabled for this to
-				work correctly.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-tv_phos &lt;1|0&gt;</pre></td>
-			<td>OpenGL 2.0 mode only. Enable phosphor effect of TV image.  This
-				is in addition to the currently emulated software phosphor
-				effect.  The GL_TEXTURE_RECTANGLE extension must be disabled
-				for this to work correctly.</td>
 		</tr>
 
 		<tr>
@@ -776,7 +829,7 @@
 		</tr>
 
 		<tr>
-			<td><pre>-showinfo &lt;1|0&gt;</pre></td>
+			<td><pre>-showinfo &lt;0|1&gt;</pre></td>
 			<td>Shows some game info on the commandline while Stella is running.</td>
 		</tr>
 
@@ -810,31 +863,18 @@
 		</tr>
 
 		<tr>
-			<td><pre>-audiofirst &lt;1|0&gt;</pre></td>
-			<td>Initialize the audio subsystem before video when emulating a
-				ROM.  This seems to be required when using ATI video cards
-				in OpenGL mode in Windows.  Since it doesn't hurt other
-				systems, the default is 1.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-fastscbios &lt;1|0&gt;</pre></td>
-			<td>Disable Supercharger BIOS progress loading bars.</td>
-		</tr>
-
-		<tr>
 			<td><pre>-ssdir &lt;path&gt;</pre></td>
 			<td>The directory to save snapshot files to.</td>
 		</tr>
 
 		<tr>
-			<td><pre>-sssingle &lt;1|0&gt;</pre></td>
+			<td><pre>-sssingle &lt;0|1&gt;</pre></td>
 			<td>Generate single snapshot instead of many, overwriting
 				any previous snapshots.</td>
 		</tr>
 
 		<tr>
-			<td><pre>-ss1x &lt;1|0&gt;</pre></td>
+			<td><pre>-ss1x &lt;0|1&gt;</pre></td>
 			<td>Ignore any scaling applied to the TIA image, and save
 				snapshot in unscaled (1x) mode.</td>
 		</tr>
@@ -849,13 +889,6 @@
 			<td><pre>-listrominfo</pre></td>
 			<td>Prints relevant contents of the Stella ROM database, one ROM per line,
 				and then exit Stella.  This can be used for external frontends.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-uselauncher &lt;1|0&gt;</pre></td>
-			<td>Use the built-in ROM launcher.  If disabled, launching Stella will
-				simply print a help message, and exiting a ROM will completely
-				exit the program.</td>
 		</tr>
 
 		<tr>
@@ -923,11 +956,6 @@
 		<tr>
 			<td><pre>-propsfile &lt;file&gt;</pre></td>
 			<td>Set the full pathname of the ROM properties file.</td>
-		</tr>
-
-		<tr>
-			<td><pre>-eepromdir &lt;dir&gt;</pre></td>
-			<td>Set the directory in which to save EEPROM files.</td>
 		</tr>
 
 		<tr>
@@ -1077,6 +1105,11 @@
 			<td>Set "Display.PPBlend" property, used for phosphor effect (0-100).
 				Default is 77.</td>
 		</tr>
+
+		<tr>
+			<td><pre>-hmove &lt;Yes|No&gt;</pre></td>
+			<td>Set "Emulation.HmoveBlanks" property.</td>
+		</tr>
 	</table>
 
 	<p>
@@ -1123,33 +1156,13 @@
 					<tr><td>FS Res</td><td>resolution for fullscreen mode</td><td>-fullres</td></tr>
 					<tr><td>Timing (*)</td><td>how to wait between frames (requires restart)</td><td>-timing</td></tr>
 					<tr><td>GL Filter</td><td>OpenGL filter mode</td><td>-gl_filter</td></tr>
-					<tr><td>GL Aspect (N)</td><td>OpenGL width of TIA image in NTSC mode</td><td>-gl_aspectn</td></tr>
-					<tr><td>GL Aspect (P)</td><td>OpenGL width of TIA image in PAL mode</td><td>-gl_aspectp</td></tr>
+					<tr><td>GL Aspect</td><td>OpenGL width of window</td><td>-gl_aspect</td></tr>
 					<tr><td>Framerate</td><td>frames per second in emulation mode</td><td>-framerate</td></tr>
 					<tr><td>Fullscreen mode</td><td>self-explanatory</td><td>-fullscreen</td></tr>
 					<tr><td>PAL color-loss</td><td>use PAL color-loss effect</td><td>-colorloss</td></tr>
 					<tr><td>GL FS Stretch</td><td>stretch fullscreen OpenGL in emulation mode</td><td>-gl_fsmax</td></tr>
 					<tr><td>GL VSync</td><td>enable OpenGL vertical synchronization</td><td>-gl_vsync</td></tr>
-					<tr><td>Grab mouse</td><td>keep mouse in SDL window</td><td>-grabmouse</td></tr>
 					<tr><td>Center window (*)</td><td>attempt to center SDL window (requires restart)</td><td>-center</td></tr>
-					<tr><td>Fast SC/AR BIOS</td><td>Skip progress loading bars for SuperCharger ROMs</td><td>-fastscbios</td></tr>
-				</table>
-			</td>
-		</tr>
-	</table>
-	<br>
-	<p><b>Video Settings</b> dialog (TV Effects):</p>
-	<table border="5" cellpadding="2" frame="box" rules="none">
-		<tr>
-			<td><img src="graphics/options_video_tv.png"></td>
-			<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-			<td valign="top">
-				<table border="1" cellpadding="4">
-					<tr><th>Item</th><th>Brief description</th><th>For more information,<br>see Commandline</th></tr>
-					<tr><td>TV Color Texture</td><td>emulate TV pixel texturing</td><td>-tv_tex</td></tr>
-					<tr><td>TV Color Bleed</td><td>emulate TV color bleed</td><td>-tv_bleed</td></tr>
-					<tr><td>TV Image Noise</td><td>emulate TV RF image noise</td><td>-tv_noise</td></tr>
-					<tr><td>TV Phosphor Burn-off</td><td>emulate TV phosphor mixing</td><td>-tv_phos</td></tr>
 				</table>
 			</td>
 		</tr>
@@ -1940,8 +1953,7 @@
 		</tr>
 
 		<tr>
-			<td>Reload current ROM (singlecart ROM, TIA mode)<br>
-				Load next game in ROM (multicart ROM, TIA mode)</td>
+			<td>Reload current ROM (TIA mode)</td>
 			<td>Control + r</td>
 			<td>Cmd + r</td>
 		</tr>
@@ -2109,16 +2121,6 @@
 	<p>ROM info viewer in 2x mode, UI sized 1400x900, large launcher font:</p>
 	<img src="graphics/rominfo_2x_small.png">
 
-	<p>The text box in the upper right corner can be used to narrow down the
-	results in the ROM listing.  When this box is empty, all files are shown
-	(subject to the restrictions from the filtering option, explained below).
-	Typing characters here where show only those files that match that
-	pattern.  For example, typing 'Activision' will show only files that
-	contain the word 'Activision' in their name.  This is very useful for
-	quickly finding a group of related ROMs.  Note that the search is not
-	case sensitive, so you don't need to worry about capital or lower-case
-	letters.</p>
-
 	<p>The ROM launcher also contains a context menu, selected by clicking the
 	right mouse button anywhere in the current window.  This context menu
 	contains the following items:</p>
@@ -2270,11 +2272,8 @@
 	This is very useful in the testing stages of creating a new game, since
 	writing to a real EEPROM many times will eventually wear it out.</p>
 
-	<p>The location of the EEPROM files are configurable through the
-	'<i>-eepromdir</i>' commandline argument and within the application itself
-	(see <b>Section 5 - <a href="#Starting">Starting a Game</a></b>).  If the
-	path for these files hasn't been set, the default location will depend on the
-	version of Stella, as follows:</p>
+	<p>The EEPROM files have a special name/location depending on which
+	version of Stella you use, which are currently not configurable:</p>
 
 	<p><table cellpadding="5" border="1">
 		<tr>
@@ -2289,14 +2288,8 @@
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%APPDATA%\Stella\atarivox_eeprom.dat<br>
-				%APPDATA%\Stella\savekey_eeprom.dat</i>&nbsp;&nbsp;&nbsp;
-				<b>OR</b><br>
-				<i>_BASEDIR_\atarivox_eeprom.dat<br>
-					_BASEDIR_\savekey_eeprom.dat<br></i>
-					(if a file named 'basedir.txt' exists in the application
-					directory containing the full pathname for _BASEDIR_)
-			</td>
+			<td><i>%MY_DOCUMENTS%\Stella\atarivox_eeprom.dat<br>
+				%MY_DOCUMENTS%\Stella\savekey_eeprom.dat</i></td>
 		</tr>
 	</table>
 
@@ -2331,15 +2324,15 @@
 		frames per second, bankswitch and display formats, etc.  The following shows
 		an example of this information:
 		<p><img src="graphics/developer_stats.png"></p>
-		<p>The two lines of output describe the following:
+		<p>The three lines of output describe the following:
 		<ol>
-			<li>Number of scanlines in current frame, associated framerate, and
-				resulting display format.  Note that the framerate shown is the
-				<i>internal</i>, virtual framerate (it's calculated from the
-				number of scanlines).  If the '*' character is present, it means
+			<li>Number of scanlines in current frame, and associated framerate.  Note
+				that the framerate shown is the <i>internal</i>, virtual  framerate
+				(it's calculated from the number of scanlines).</li>
+			<li>Display format.  If the characters 'AUTO =&gt;' are present, it means
 				the display format was auto-detected as shown.  For the given example,
 				the format was auto-detected as 'NTSC'.</li>
-			<li>Cartridge information.  If the '*' character is present,
+			<li>Cartridge information.  If the characters 'AUTO =&gt;' are present,
 				it means the bankswitch format was auto-detected as shown.  The item
 				in round brackets indicates ROM size.  For the given example,
 				the bankswitch type was auto-detected as 4K, and the file size was
@@ -2410,12 +2403,7 @@
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%APPDATA%\Stella\stella.ini</i>&nbsp;&nbsp;&nbsp;
-				<b>OR</b><br>
-				<i>_BASEDIR_\stella.ini</i>&nbsp;&nbsp;&nbsp;
-					(if a file named 'basedir.txt' exists in the application
-					directory containing the full pathname for _BASEDIR_)
-			</td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.ini</i></td>
 		</tr>
 	</table>
 
@@ -2512,12 +2500,7 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%APPDATA%\Stella\stella.cht</i>&nbsp;&nbsp;&nbsp;
-				<b>OR</b><br>
-				<i>_BASEDIR_\stella.cht</i>&nbsp;&nbsp;&nbsp;
-					(if a file named 'basedir.txt' exists in the application
-					directory containing the full pathname for _BASEDIR_)
-			</td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.cht</i></td>
 		</tr>
 	</table>
 	<p>Stella will require a restart for changes to this file to take effect.</p>
@@ -2624,26 +2607,21 @@ Ms Pac-Man (Stella extended codes):
 			The value of this property must be either <b>Auto-detect</b> or one of the following
 			(for more information about bank-switching see Kevin Horton's 2600 bankswitching
 			document or the documentation in each cartridges source code file).  Types marked
-			as (&#185;) do not currently have reliable auto-detection, those marked as (&#178;)
-			are not fully supported in the debugger:
+			as (*) do not currently have reliable auto-detection, or may not be fully
+			supported in the debugger:
 			<table cellpadding="2" border="1">
 				<tr><th>&nbsp;Type&nbsp;</th><th>Description</th></tr>
-				<tr><td>0840 </td><td>8K ECONObanking </td></tr>
-				<tr><td>4IN1 &#185;</td><td>8-32K Multicart (4 games) </td></tr>
-				<tr><td>8IN1 &#185;</td><td>16-64K Multicart (8 games) </td></tr>
-				<tr><td>32IN1 &#185;</td><td>64-128K Multicart (32 games) </td></tr>
+				<tr><td>0840 (*)</td><td>8K ECONObanking </td></tr>
 				<tr><td>2K </td><td>2K Atari </td></tr>
 				<tr><td>3E </td><td>32K Tigervision </td></tr>
 				<tr><td>3F </td><td>512K Tigervision </td></tr>
-				<tr><td>4A50 &#185;&#178;</td><td>64K 4A50 + ram </td></tr>
+				<tr><td>4A50 (*)</td><td>64K 4A50 + ram </td></tr>
 				<tr><td>4K </td><td>4K Atari </td></tr>
-				<tr><td>AR &#178;</td><td>Supercharger </td></tr>
+				<tr><td>AR </td><td>Supercharger </td></tr>
 				<tr><td>CV </td><td>Commavid extra ram </td></tr>
-				<tr><td>DPC &#178;</td><td>Pitfall II </td></tr>
+				<tr><td>DPC </td><td>Pitfall II </td></tr>
 				<tr><td>E0 </td><td>8K Parker Bros </td></tr>
 				<tr><td>E7 </td><td>16K M-network </td></tr>
-				<tr><td>EF </td><td>64K Homestar Runner </td></tr>
-				<tr><td>EFSC </td><td>64K Homestar Runner + ram</td></tr>
 				<tr><td>F4 </td><td>32K Atari </td></tr>
 				<tr><td>F4SC </td><td>32K Atari + ram </td></tr>
 				<tr><td>F6 </td><td>16K Atari </td></tr>
@@ -2653,10 +2631,10 @@ Ms Pac-Man (Stella extended codes):
 				<tr><td>FASC </td><td>CBS RAM Plus </td></tr>
 				<tr><td>FE </td><td>8K Decathlon </td></tr>
 				<tr><td>MB </td><td>Dynacom Megaboy </td></tr>
-				<tr><td>MC &#185;&#178;</td><td>C. Wilkson Megacart </td></tr>
-				<tr><td>SB </td><td>128-256k SUPERbanking </td></tr>
+				<tr><td>MC </td><td>C. Wilkson Megacart </td></tr>
+				<tr><td>SB (*)</td><td>128-256k SUPERbanking </td></tr>
 				<tr><td>UA </td><td>8K UA Ltd. </td></tr>
-				<tr><td>X07 &#185;&#178;</td><td>64K AtariAge </td></tr>
+				<tr><td>X07 (*)</td><td>64K AtariAge </td></tr>
 			</table></td>
 		</tr>
 
@@ -2745,11 +2723,17 @@ Ms Pac-Man (Stella extended codes):
 			phosphor effect.  The value must be <i>n</i> such that 0 &lt;= <i>n</i>
 			&lt;= 100.  The default value is 77.</td>
 		</tr>
+
+		<tr>
+			<td VALIGN="TOP"><i>Emulation.HmoveBlanks:&nbsp;(*)</i></td>
+			<td>Indicates whether the TIA HMOVE blank bug should be emulated or not.
+			The value must be <b>Yes</b> or <b>No</b>.</td>
+		</tr>
 	</table>
-<!--
+
 	<p><b>Note:</b> Items marked as '*' are deprecated, and will probably be
 	removed in a future release.</p>
--->
+
 	<p>The name of the properties file is configurable through the
 	'<i>-propsfile</i>' commandline argument and within the	application itself
 	(see <b>Section 5 - <a href="#Starting">Starting a Game</a></b>).  If the
@@ -2767,13 +2751,7 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%APPDATA%\Stella\stella.pro</i>&nbsp;&nbsp;&nbsp;
-				<b>OR</b><br>
-				<i>_BASEDIR_\stella.pro</i>&nbsp;&nbsp;&nbsp;
-					(if a file named 'basedir.txt' exists in the application
-					directory containing the full pathname for _BASEDIR_)
-			</td>
-
+			<td><i>%MY_DOCUMENTS%\Stella\stella.pro</i></td>
 		</tr>
 	</table>
 	<p>Stella will require a restart for changes to this file to take effect.</p>
@@ -2836,12 +2814,7 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%APPDATA%\Stella\stella.pal</i>&nbsp;&nbsp;&nbsp;
-				<b>OR</b><br>
-				<i>_BASEDIR_\stella.pal</i>&nbsp;&nbsp;&nbsp;
-					(if a file named 'basedir.txt' exists in the application
-					directory containing the full pathname for _BASEDIR_)
-			</td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.pal</i></td>
 		</tr>
 	</table>
 	<p>Note that to actually use the external palette, the palette file must
@@ -2860,27 +2833,17 @@ Ms Pac-Man (Stella extended codes):
 	then a number of people from around the world have contributed to the project.
 	Some people have provided technical help while others have offered suggestions
 	and praise.  The Stella Team is grateful for all the help and support it has
-	received over the years.  The following is an incomplete list of the people who have
-	played a part in bringing Stella to you.  If I've missed someone, please let
-	me know.</p>
+        received over the years.  The following is an incomplete list of the people who have
+	played a part in bringing Stella to you:</p>
 
 	<table CELLSPACING="15">
 		<tr>
-			<td VALIGN="TOP">Ant<br>
-			(<a href="http://aqfl.net">http://aqfl.net</a>)</td>
-			<td>Provided much feedback and testing which eventually led to a fix
-			for the infamouse ATI OpenGL 'red screen' issue</td>
-		</tr>
-
-		<tr>
-			<td VALIGN="TOP">Stephen&nbsp;Anthony<br>
-			(<a href="http://minbar.org">http://minbar.org</a>)</td>
+			<td VALIGN="TOP">Stephen&nbsp;Anthony</td>
 			<td>Ported Stella 1.1 to SDL.  Added extra command line options to X11/SDL
 			versions.  Added INI file support, faster startup, snapshot support,
 			and pause functionality to core.  Converted Stella 1.1 manual to HTML.
 			Ported codebase to SDL for Windows/MacOSX.  Added OpenGL support and
-			Stelladaptor support. Current maintainer for the Linux, OSX and Windows
-			versions.</td>
+			Stelladaptor support. Current maintainer for the Linux and Windows versions.</td>
 		</tr>
 
 		<tr>
@@ -2896,14 +2859,6 @@ Ms Pac-Man (Stella extended codes):
 		<tr>
 			<td VALIGN="TOP">Alexander&nbsp;Bilstein</td>
 			<td>Provided "A Brief History of the Atari 2600" for this manual</td>
-		</tr>
-
-		<tr>
-			<td VALIGN="TOP">Ian&nbsp;Bogost and the Georgia&nbsp;Tech&nbsp;Atari&nbsp;Team<br>
-			(<a href="http://www.bogost.com/games/a_television_simulator.shtml">CRT Simulation Project</a>)</td>
-			<td>Contributed code for the 'CRT simulation' OpenGL filters.  The Winter 2009
-			team members are Edward Booth, Michael Cook, Justin Dobbs, William Rowland
-			and Prince Yang.</td>
 		</tr>
 
 		<tr>
@@ -2942,10 +2897,9 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 
 		<tr>
-			<td VALIGN="TOP">Mark&nbsp;Grebe<br>
-			(<a href="http://www.atarimac.com">http://www.atarimac.com</a>)</td>
+			<td VALIGN="TOP">Mark&nbsp;Grebe</td>
 			<td>Author of the Macintosh OSX version of Stella starting with the
-			1.4 release until release 2.4.  Helped with Stelladaptor support.</td>
+			1.4 release.  Helped with Stelladaptor support.</td>
 		</tr>
 
 		<tr>
@@ -2972,11 +2926,6 @@ Ms Pac-Man (Stella extended codes):
 		<tr>
 			<td VALIGN="TOP">Thomas&nbsp;Jentzsch</td>
 			<td>Provided updated NTSC palette and many ideas</td>
-		</tr>
-
-		<tr>
-			<td VALIGN="TOP">Andrew&nbsp;Kator<br>(<a href="http://www.katorlegaz.com">http://www.katorlegaz.com</a>)</td>
-			<td>Provided PHP and CSS code for a major update to the Stella website</td>
 		</tr>
 
 		<tr>
@@ -3036,11 +2985,6 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 
 		<tr>
-			<td VALIGN="TOP">RomHunter<br>(<a href="http://www.atarimania.com/roms-MENU-2.html">RomHunter ROMs</a>)</td>
-			<td>Provides an updated database of ROM information on a regular basis</td>
-		</tr>
-
-		<tr>
 			<td VALIGN="TOP">John&nbsp;Saeger</td>
 			<td>Participated in a helpful discussion on understanding the TIA's
 			RESPx multi-sprite trick</td>
@@ -3060,12 +3004,6 @@ Ms Pac-Man (Stella extended codes):
 			<td VALIGN="TOP">Jason&nbsp;Scott</td>
 			<td>Organizer of the property file archive for early versions of
 			Stella; now he's helping with the web site</td>
-		</tr>
-
-		<tr>
-			<td VALIGN="TOP">Seagtgruff</td>
-			<td>Provided test ROMs which finally fixed all remaining issues with
-			ADC/SBC opcode decimal mode emulation</td>
 		</tr>
 
 		<tr>
