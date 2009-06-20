@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TiaInfoWidget.cxx,v 1.3 2005-09-06 22:25:40 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -30,71 +30,63 @@
 #include "TiaInfoWidget.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TiaInfoWidget::TiaInfoWidget(GuiObject* boss, const GUI::Font& font,
-                             int x, int y)
-  : Widget(boss, font, x, y, 16, 16),
+TiaInfoWidget::TiaInfoWidget(GuiObject* boss, int x, int y)
+  : Widget(boss, x, y, 16, 16),
     CommandSender(boss)
 {
-  _type = kTiaInfoWidget;
-
-  x += 5;
+  const GUI::Font& font = instance()->consoleFont();
   const int lineHeight = font.getLineHeight();
-  int xpos = x, ypos = y, lwidth = font.getStringWidth("F. Cyc:");
+  int xpos = x, ypos = y, lwidth = 45;
 
   // Add frame info
   xpos = x;  ypos = y + 10;
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "Frame:", kTextAlignLeft);
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "Frame:", kTextAlignLeft);
   xpos += lwidth;
-  myFrameCount = new EditTextWidget(boss, font, xpos, ypos-2, 45, lineHeight, "");
+  myFrameCount = new EditTextWidget(boss, xpos, ypos-2, 45, lineHeight, "");
+  myFrameCount->setFont(font);
   myFrameCount->setEditable(false);
 
-  xpos = x;  ypos += lineHeight + 5;
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "F. Cyc:", kTextAlignLeft);
+  xpos = x;  ypos += kLineHeight + 5;
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "F. Cycles:", kTextAlignLeft);
   xpos += lwidth;
-  myFrameCycles = new EditTextWidget(boss, font, xpos, ypos-2, 45, lineHeight, "");
+  myFrameCycles = new EditTextWidget(boss, xpos, ypos-2, 45, lineHeight, "");
+  myFrameCycles->setFont(font);
   myFrameCycles->setEditable(false);
 
-  xpos = x + 10;  ypos += lineHeight + 8;
-  myVSync = new CheckboxWidget(boss, font, xpos, ypos-3, "VSync", 0);
+  xpos = x + 10;  ypos += kLineHeight + 5;
+  myVSync = new CheckboxWidget(boss, instance()->font(), xpos, ypos-3, "VSync", 0);
   myVSync->setEditable(false);
 
-  xpos = x + 10;  ypos += lineHeight + 5;
-  myVBlank = new CheckboxWidget(boss, font, xpos, ypos-3, "VBlank", 0);
+  xpos = x + 10;  ypos += kLineHeight + 5;
+  myVBlank = new CheckboxWidget(boss, instance()->font(), xpos, ypos-3, "VBlank", 0);
   myVBlank->setEditable(false);
 
-  xpos = x + lwidth + myFrameCycles->getWidth() + 5;  ypos = y + 10;
-  lwidth = font.getStringWidth("Pixel Pos:");
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "Scanline:", kTextAlignLeft);
-
-  myScanlineCount = new EditTextWidget(boss, font, xpos+lwidth, ypos-2, 30,
-                                       lineHeight, "");
+  xpos = x + 100;  ypos = y + 10;
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "Scanline:", kTextAlignLeft);
+  xpos += lwidth;
+  myScanlineCount = new EditTextWidget(boss, xpos, ypos-2, 30, lineHeight, "");
+  myScanlineCount->setFont(font);
   myScanlineCount->setEditable(false);
 
-  ypos += lineHeight + 5;
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "S. Cyc:", kTextAlignLeft);
-
-  myScanlineCycles = new EditTextWidget(boss, font, xpos+lwidth, ypos-2, 30,
-                                        lineHeight, "");
+  xpos = x + 100;  ypos += kLineHeight + 5;
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "S. Cycles:", kTextAlignLeft);
+  xpos += lwidth;
+  myScanlineCycles = new EditTextWidget(boss, xpos, ypos-2, 30, lineHeight, "");
+  myScanlineCycles->setFont(font);
   myScanlineCycles->setEditable(false);
 
-  ypos += lineHeight + 5;
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "Pixel Pos:", kTextAlignLeft);
-
-  myPixelPosition = new EditTextWidget(boss, font, xpos+lwidth, ypos-2, 30,
-                                       lineHeight, "");
+  xpos = x + 100;  ypos += kLineHeight + 5;
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "Pixel Pos:", kTextAlignLeft);
+  xpos += lwidth;
+  myPixelPosition = new EditTextWidget(boss, xpos, ypos-2, 30, lineHeight, "");
+  myPixelPosition->setFont(font);
   myPixelPosition->setEditable(false);
 
-  ypos += lineHeight + 5;
-  new StaticTextWidget(boss, font, xpos, ypos, lwidth, lineHeight,
-                       "Color Clk:", kTextAlignLeft);
-
-  myColorClocks = new EditTextWidget(boss, font, xpos+lwidth, ypos-2, 30,
-                                     lineHeight, "");
+  xpos = x + 100;  ypos += kLineHeight + 5;
+  new StaticTextWidget(boss, xpos, ypos, lwidth, kLineHeight, "Color Clk:", kTextAlignLeft);
+  xpos += lwidth;
+  myColorClocks = new EditTextWidget(boss, xpos, ypos-2, 30, lineHeight, "");
+  myColorClocks->setFont(font);
   myColorClocks->setEditable(false);
 
   // Calculate actual dimensions
@@ -121,7 +113,7 @@ void TiaInfoWidget::handleCommand(CommandSender* sender, int cmd, int data, int 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TiaInfoWidget::loadConfig()
 {
-  Debugger& dbg = instance().debugger();
+  Debugger& dbg = instance()->debugger();
   TIADebug& tia = dbg.tiaDebug();
 
   myFrameCount->setEditString(dbg.valueToString(tia.frameCount(), kBASE_10));

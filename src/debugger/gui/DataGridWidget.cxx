@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DataGridWidget.cxx,v 1.5 2006-01-15 20:46:19 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -30,10 +30,8 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DataGridWidget::DataGridWidget(GuiObject* boss, const GUI::Font& font,
                                int x, int y, int cols, int rows,
-                               int colchars, int bits, BaseFormat base,
-                               bool useScrollbar)
-  : EditableWidget(boss, font, x, y,
-                   cols*(colchars * font.getMaxCharWidth() + 8) + 1,
+                               int colchars, int bits, BaseFormat base)
+  : EditableWidget(boss, x, y, cols*(colchars * font.getMaxCharWidth() + 8) + 1,
                    font.getLineHeight()*rows + 1),
     _rows(rows),
     _cols(cols),
@@ -44,11 +42,11 @@ DataGridWidget::DataGridWidget(GuiObject* boss, const GUI::Font& font,
     _bits(bits),
     _base(base),
     _selectedItem(0),
-    _opsWidget(NULL),
-    _scrollBar(NULL)
+    _opsWidget(NULL)
 {
-  _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS |
-           WIDGET_WANTS_RAWDATA;
+  setFont(font);
+
+  _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS;
   _type = kDataGridWidget;
   _editMode = false;
 
@@ -61,22 +59,11 @@ DataGridWidget::DataGridWidget(GuiObject* boss, const GUI::Font& font,
   // Make sure hilite list contains all false values
   _hiliteList.clear();
   int size = _rows * _cols;
-  while(size--)
+  while((int)_hiliteList.size() < size)
     _hiliteList.push_back(false);
 
   // Set lower and upper bounds to sane values
   setRange(0, 1 << bits);
-
-  // Add a scrollbar if necessary
-  if(useScrollbar)
-  {
-    _scrollBar = new ScrollBarWidget(boss, font, _x + _w, _y, kScrollBarWidth, _h);
-    _scrollBar->setTarget(this);
-    _scrollBar->_numEntries = 1;
-    _scrollBar->_currentPos = 0;
-    _scrollBar->_entriesPerPage = 1;
-    _scrollBar->_wheel_lines = 1;
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -103,15 +90,15 @@ cerr << "alist.size() = "     << alist.size()
   _valueStringList.clear();
   _changedList.clear();
 
-  _addrList    = alist;
-  _valueList   = vlist;
-  _changedList = changed;
+  _addrList     = alist;
+  _valueList    = vlist;
+  _changedList  = changed;
 
   // An efficiency thing
   string temp;
   for(int i = 0; i < size; ++i)
   {
-    temp = instance().debugger().valueToString(_valueList[i], _base);
+    temp = instance()->debugger().valueToString(_valueList[i], _base);
     _valueStringList.push_back(temp);
   }
 
@@ -131,8 +118,9 @@ cerr << "_addrList.size() = "     << _addrList.size()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::setList(int a, int v, bool c)
+void DataGridWidget::setList(const int a, const int v, const bool c)
 {
+  // Convenience method for when the datagrid contains only one value
   IntArray alist, vlist;
   BoolArray changed;
 
@@ -144,57 +132,46 @@ void DataGridWidget::setList(int a, int v, bool c)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::setHiliteList(const BoolArray& hilitelist)
+void DataGridWidget::setHiliteList(const IntArray& hilitelist)
 {
-  assert(hilitelist.size() == uInt32(_rows * _cols));
+  // We can't assume this given list contains the exact number of
+  // items in this DataGrid, so we make sure
   _hiliteList.clear();
-  _hiliteList = hilitelist;
+  int size = _rows * _cols;
+  while((int)_hiliteList.size() < size)
+    _hiliteList.push_back(false);
+
+  // Now fill it with the addresses/positions given in 'hilitelist'
+  for(unsigned int i = 0; i < hilitelist.size(); ++i)
+  {
+    int pos = hilitelist[i];
+    if(pos >= 0 && pos <= size)
+      _hiliteList[pos] = true;
+  }
 
   setDirty(); draw();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::setNumRows(int rows)
-{
-  if(_scrollBar)
-    _scrollBar->_numEntries = rows;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DataGridWidget::setSelectedValue(int value)
 {
-  setValue(_selectedItem, value, _valueList[_selectedItem] != value);
-}
+  // Correctly format the data for viewing
+  _editString = instance()->debugger().valueToString(value, _base);
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::setValue(int position, int value)
-{
-  setValue(position, value, _valueList[position] != value);
-}
+  _valueStringList[_selectedItem] = _editString;
+  _changedList[_selectedItem] = (_valueList[_selectedItem] != value);
+  _valueList[_selectedItem] = value;
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::setValue(int position, int value, bool changed)
-{
-  if(position >= 0 && uInt32(position) < _valueList.size())
-  {
-    // Correctly format the data for viewing
-    _editString = instance().debugger().valueToString(value, _base);
+  sendCommand(kDGItemDataChangedCmd, _selectedItem, _id);
 
-    _valueStringList[position] = _editString;
-    _changedList[position] = changed;
-    _valueList[position] = value;
-
-    sendCommand(kDGItemDataChangedCmd, position, _id);
-
-    setDirty(); draw();
-  }
+  setDirty(); draw();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DataGridWidget::setRange(int lower, int upper)
 {
-  _lowerBound = BSPF_max(0, lower);
-  _upperBound = BSPF_min(1 << _bits, upper);
+  _lowerBound = MAX(0, lower);
+  _upperBound = MIN(1 << _bits, upper);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -239,12 +216,6 @@ void DataGridWidget::handleMouseUp(int x, int y, int button, int clickCount)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DataGridWidget::handleMouseWheel(int x, int y, int direction)
-{
-  _scrollBar->handleMouseWheel(x, y, direction);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int DataGridWidget::findItem(int x, int y)
 {
   int row = (y - 1) / _rowHeight;
@@ -260,8 +231,8 @@ int DataGridWidget::findItem(int x, int y)
 bool DataGridWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all mod keys
-  if(instance().eventHandler().kbdControl(modifiers) ||
-     instance().eventHandler().kbdAlt(modifiers))
+  if(instance()->eventHandler().kbdControl(modifiers) ||
+     instance()->eventHandler().kbdAlt(modifiers))
     return true;
 
   bool handled = true;
@@ -346,9 +317,7 @@ bool DataGridWidget::handleKeyDown(int ascii, int keycode, int modifiers)
         break;
 
       case 256+24:  // pageup
-        if(instance().eventHandler().kbdShift(modifiers) && _scrollBar)
-          handleMouseWheel(0, 0, -1);
-        else if (_currentRow > 0)
+        if (_currentRow > 0)
         {
           _currentRow = 0;
           dirty = true;
@@ -356,9 +325,7 @@ bool DataGridWidget::handleKeyDown(int ascii, int keycode, int modifiers)
         break;
 
       case 256+25:	// pagedown
-        if(instance().eventHandler().kbdShift(modifiers) && _scrollBar)
-          handleMouseWheel(0, 0, +1);
-        else if (_currentRow < (int) _rows - 1)
+        if (_currentRow < (int) _rows - 1)
         {
           _currentRow = _rows - 1;
           dirty = true;
@@ -476,8 +443,8 @@ void DataGridWidget::handleCommand(CommandSender* sender, int cmd,
   switch (cmd)
   {
     case kSetPositionCmd:
-      // Chain access; pass to parent
-      sendCommand(kSetPositionCmd, data, _id);
+      if (_selectedItem != (int)data)
+        _selectedItem = data;
       break;
 
     case kDGZeroCmd:
@@ -514,17 +481,17 @@ void DataGridWidget::handleCommand(CommandSender* sender, int cmd,
 void DataGridWidget::drawWidget(bool hilite)
 {
 //cerr << "DataGridWidget::drawWidget\n";
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
   int row, col, deltax;
   string buffer;
 
   // Draw the internal grid and labels
   int linewidth = _cols * _colWidth;
   for (row = 0; row <= _rows; row++)
-    s.hLine(_x, _y + (row * _rowHeight), _x + linewidth, kColor);
+    fb.hLine(_x, _y + (row * _rowHeight), _x + linewidth, kColor);
   int lineheight = _rows * _rowHeight;
   for (col = 0; col <= _cols; col++)
-    s.vLine(_x + (col * _colWidth), _y, _y + lineheight, kColor);
+    fb.vLine(_x + (col * _colWidth), _y, _y + lineheight, kColor);
 
   // Draw the list items
   for (row = 0; row < _rows; row++)
@@ -538,7 +505,7 @@ void DataGridWidget::drawWidget(bool hilite)
       // Draw the selected item inverted, on a highlighted background.
       if (_currentRow == row && _currentCol == col &&
           _hasFocus && !_editMode)
-        s.fillRect(x - 4, y - 2, _colWidth+1, _rowHeight+1, kTextColorHi);
+        fb.fillRect(x - 4, y - 2, _colWidth+1, _rowHeight+1, kTextColorHi);
 
       if (_selectedItem == pos && _editMode)
       {
@@ -546,28 +513,29 @@ void DataGridWidget::drawWidget(bool hilite)
         adjustOffset();
         deltax = -_editScrollOffset;
 
-        s.drawString(_font, buffer, x, y, _colWidth, kTextColor,
-                     kTextAlignLeft, deltax, false);
+        fb.drawString(_font, buffer, x, y, _colWidth, kTextColor,
+                      kTextAlignLeft, deltax, false);
       }
       else
       {
         buffer = _valueStringList[pos];
         deltax = 0;
 
-        uInt32 color = kTextColor;
+        OverlayColor color = kTextColor;
+
         if(_changedList[pos])
         {
-          s.fillRect(x - 3, y - 1, _colWidth-1, _rowHeight-1, kDbgChangedColor);
+          fb.fillRect(x - 3, y - 1, _colWidth-1, _rowHeight-1, kTextColorEm);
 
           if(_hiliteList[pos])
-            color = kDbgColorHi;
+            color = kHiliteColor;
           else
-            color = kDbgChangedTextColor;
+            color = kTextColorHi;
         }
         else if(_hiliteList[pos])
-          color = kDbgColorHi;
+          color = kHiliteColor;
 
-        s.drawString(_font, buffer, x, y, _colWidth, color);
+        fb.drawString(_font, buffer, x, y, _colWidth, color);
       }
     }
   }
@@ -575,10 +543,6 @@ void DataGridWidget::drawWidget(bool hilite)
   // Only draw the caret while editing, and if it's in the current viewport
   if(_editMode)
     drawCaret();
-
-  // Draw the scrollbar
-  if(_scrollBar)
-    _scrollBar->recalc();  // takes care of the draw
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -615,7 +579,7 @@ void DataGridWidget::endEditMode()
   _editMode = false;
 
   // Update the both the string representation and the real data
-  int value = instance().debugger().stringToValue(_editString);
+  int value = instance()->debugger().stringToValue(_editString);
   if(value < _lowerBound || value >= _upperBound)
   {
     abortEditMode();

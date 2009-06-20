@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TabWidget.hxx,v 1.11 2005-12-21 01:50:16 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,11 +22,15 @@
 #ifndef TAB_WIDGET_HXX
 #define TAB_WIDGET_HXX
 
+#include "GuiUtils.hxx"
+#include "Widget.hxx"
+#include "Command.hxx"
+#include "Array.hxx"
 #include "bspf.hxx"
 
-#include "Array.hxx"
-#include "Command.hxx"
-#include "Widget.hxx"
+enum {
+  kTabHeight = 16
+};
 
 class TabWidget : public Widget, public CommandSender
 {
@@ -34,12 +38,11 @@ class TabWidget : public Widget, public CommandSender
     string title;
     Widget* firstWidget;
     Widget* parentWidget;
-    bool enabled;
   };
   typedef Common::Array<Tab> TabList;
 
   public:
-    TabWidget(GuiObject* boss, const GUI::Font& font, int x, int y, int w, int h);
+    TabWidget(GuiObject* boss, int x, int y, int w, int h);
     ~TabWidget();
 
     virtual int getChildY() const;
@@ -55,20 +58,14 @@ class TabWidget : public Widget, public CommandSender
     //void removeTab(int tabID);
 // Setting the active tab:
     void setActiveTab(int tabID, bool show = false);
-    void disableTab(int tabID);
     void activateTabs();
     void cycleTab(int direction);
 // setActiveTab changes the value of _firstWidget. This means Widgets added afterwards
 // will be added to the active tab.
     void setParentWidget(int tabID, Widget* parent);
 
-    int getTabWidth()  { return _tabWidth;  }
-    int getTabHeight() { return _tabHeight; }
-    int getActiveTab() { return _activeTab; }
-
     virtual void handleMouseDown(int x, int y, int button, int clickCount);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
-    virtual bool handleEvent(Event::Type event);
 
     virtual void loadConfig();
 
@@ -79,19 +76,12 @@ class TabWidget : public Widget, public CommandSender
   protected:
     TabList _tabs;
     int     _tabWidth;
-    int     _tabHeight;
     int     _activeTab;
     bool    _firstTime;
 
-    enum {
-      kTabLeftOffset = 4,
-      kTabSpacing = 2,
-      kTabPadding = 3
-    };
-
   private:
     void box(int x, int y, int width, int height,
-             uInt32 colorA, uInt32 colorB, bool omitBottom);
+             OverlayColor colorA, OverlayColor colorB, bool omitBottom);
 
     void updateActiveTab();
 };

@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.hxx,v 1.12 2005-12-09 19:09:49 stephena Exp $
 //============================================================================
 
 #ifndef SYSTEM_HXX
@@ -21,14 +21,14 @@
 
 class Device;
 class M6502;
-class M6532;
 class TIA;
 class NullDevice;
+class Serializer;
+class Deserializer;
 
 #include "bspf.hxx"
 #include "Device.hxx"
 #include "NullDev.hxx"
-#include "Serializable.hxx"
 
 /**
   This class represents a system consisting of a 6502 microprocessor
@@ -47,9 +47,9 @@ class NullDevice;
         dynamic code for that page of memory.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: System.hxx,v 1.12 2005-12-09 19:09:49 stephena Exp $
 */
-class System : public Serializable
+class System
 {
   public:
     /**
@@ -74,6 +74,23 @@ class System : public Serializable
     void reset();
 
     /**
+      Saves the current state of this system class to the given Serializer.
+
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
+    */
+    bool save(Serializer& out);
+
+    /**
+      Loads the current state of this system class from the given Deserializer.
+
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
+    */
+    bool load(Deserializer& in);
+
+  public:
+    /**
       Attach the specified device and claim ownership of it.  The device 
       will be asked to install itself.
 
@@ -90,20 +107,34 @@ class System : public Serializable
     void attach(M6502* m6502);
 
     /**
-      Attach the specified processor and claim ownership of it.  The
-      processor will be asked to install itself.
-
-      @param m6532 The 6532 microprocessor to attach to the system
-    */
-    void attach(M6532* m6532);
-
-    /**
       Attach the specified TIA device and claim ownership of it.  The device 
       will be asked to install itself.
 
       @param tia The TIA device to attach to the system
     */
     void attach(TIA* tia);
+
+    /**
+      Saves the current state of Stella to the given file.  Calls
+      save on every device and CPU attached to this system.
+
+      @param md5sum   MD5 of the current ROM
+      @param out      The serializer device to save to
+
+      @return  False on any errors, else true
+    */
+    bool saveState(const string& md5sum, Serializer& out);
+
+    /**
+      Loads the current state of Stella from the given file.  Calls
+      load on every device and CPU attached to this system.
+
+      @param md5sum   MD5 of the current ROM
+      @param in       The deserializer device to load from
+
+      @return  False on any errors, else true
+    */
+    bool loadState(const string& md5sum, Deserializer& in);
 
   public:
     /**
@@ -115,17 +146,6 @@ class System : public Serializable
     M6502& m6502()
     {
       return *myM6502;
-    }
-
-    /**
-      Answer the 6532 processor attached to the system.  If a
-      processor has not been attached calling this function will fail.
-
-      @return The attached 6532 microprocessor
-    */
-    M6532& m6532()
-    {
-      return *myM6532;
     }
 
     /**
@@ -217,10 +237,7 @@ class System : public Serializable
 
       @return the data bus state
     */  
-    inline uInt8 getDataBusState() const
-    {
-      return myDataBusState;
-    }
+    uInt8 getDataBusState() const;
 
     /**
       Get the byte at the specified address.  No masking of the
@@ -298,29 +315,6 @@ class System : public Serializable
     */
     const PageAccess& getPageAccess(uInt16 page);
  
-    /**
-      Save the current state of this system to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this system from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "System"; }
-
   private:
     // Mask to apply to an address before accessing memory
     const uInt16 myAddressMask;
@@ -346,9 +340,6 @@ class System : public Serializable
     // 6502 processor attached to the system or the null pointer
     M6502* myM6502;
 
-    // 6532 processor attached to the system or the null pointer
-    M6532* myM6532;
-
     // TIA device attached to the system or the null pointer
     TIA* myTIA;
 
@@ -373,5 +364,11 @@ class System : public Serializable
     // Assignment operator isn't supported by this class so make it private
     System& operator = (const System&);
 };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+inline uInt8 System::getDataBusState() const
+{
+  return myDataBusState;
+}
 
 #endif

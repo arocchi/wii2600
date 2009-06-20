@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cheat.hxx,v 1.3 2005-12-18 18:37:01 stephena Exp $
 //============================================================================
 
 #ifndef CHEAT_HXX
@@ -35,7 +35,7 @@ class Cheat
       if(name == "") myName = code;
       myName = StringList::removePattern(myName, "\":");
     }
-    virtual ~Cheat() { }
+    virtual ~Cheat()     { }
 
     bool enabled() const { return myEnabled; }
     const string& name() const { return myName; }

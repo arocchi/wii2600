@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherDialog.cxx,v 1.38 2006-01-15 16:31:01 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -21,178 +21,122 @@
 
 #include <sstream>
 
-#include "bspf.hxx"
-
-#include "BrowserDialog.hxx"
-#include "ContextMenu.hxx"
-#include "DialogContainer.hxx"
-#include "Dialog.hxx"
-#include "EditTextWidget.hxx"
-#include "FSNode.hxx"
-#include "GameList.hxx"
-#include "MD5.hxx"
-#include "OptionsDialog.hxx"
-#include "GlobalPropsDialog.hxx"
-#include "LauncherFilterDialog.hxx"
 #include "OSystem.hxx"
-#include "Props.hxx"
-#include "PropsSet.hxx"
-#include "RomInfoWidget.hxx"
 #include "Settings.hxx"
-#include "StringList.hxx"
-#include "StringListWidget.hxx"
+#include "PropsSet.hxx"
+#include "Props.hxx"
+#include "MD5.hxx"
+#include "FSNode.hxx"
 #include "Widget.hxx"
-
+#include "StringListWidget.hxx"
+#include "Dialog.hxx"
+#include "DialogContainer.hxx"
+#include "GuiUtils.hxx"
+#include "BrowserDialog.hxx"
+#include "ProgressDialog.hxx"
+#include "LauncherOptionsDialog.hxx"
 #include "LauncherDialog.hxx"
 
+#include "bspf.hxx"
+
+/////////////////////////////////////////
+// TODO - make this dialog font sensitive
+/////////////////////////////////////////
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
                                int x, int y, int w, int h)
-  : Dialog(osystem, parent, x, y, w, h, true),  // use base surface
+  : Dialog(osystem, parent, x, y, w, h),
     myStartButton(NULL),
-    myPrevDirButton(NULL),
     myOptionsButton(NULL),
+    myReloadButton(NULL),
     myQuitButton(NULL),
     myList(NULL),
     myGameList(NULL),
-    myRomInfoWidget(NULL),
-    myMenu(NULL),
-    myGlobalProps(NULL),
-    myFilters(NULL),
+    myProgressBar(NULL),
     mySelectedItem(0)
 {
-  const GUI::Font& font = instance().launcherFont();
-
-  const int fontWidth = font.getMaxCharWidth(),
-            fontHeight = font.getFontHeight(),
-            bwidth  = (_w - 2 * 10 - 8 * (4 - 1)) / 4,
-            bheight = font.getLineHeight() + 4;
-  int xpos = 0, ypos = 0, lwidth = 0, lwidth2 = 0, fwidth = 0;
+  const GUI::Font& font = instance()->font();
+  const int fontHeight = font.getFontHeight();
   WidgetArray wid;
 
   // Show game name
-  lwidth = font.getStringWidth("Select an item from the list ...");
-  xpos += 10;  ypos += 8;
-  new StaticTextWidget(this, font, xpos, ypos, lwidth, fontHeight,
-                       "Select an item from the list ...", kTextAlignLeft);
+  new StaticTextWidget(this, 10, 8, 200, fontHeight,
+                       "Select a game from the list ...", kTextAlignLeft);
 
-  lwidth2 = font.getStringWidth("XXXX items found");
-  xpos = _w - lwidth2 - 10;
-  myRomCount = new StaticTextWidget(this, font, xpos, ypos,
-                                    lwidth2, fontHeight,
+  myRomCount = new StaticTextWidget(this, _w - 100, 8, 90, fontHeight,
                                     "", kTextAlignRight);
 
-  // Add filter that can narrow the results shown in the listing
-  // It has to fit between both labels
-  fwidth = BSPF_min(15 * fontWidth, xpos - 20 - lwidth);
-  xpos -= fwidth + 5;
-  myPattern = new EditTextWidget(this, font, xpos, ypos,
-                                 fwidth, fontHeight, "");
+  // Add four buttons at the bottom
+  const int border = 10;
+  const int space = 8;
+  const int buttons = 4;
+  const int width = (_w - 2 * border - space * (buttons - 1)) / buttons;
+  int xpos = border;
+
+#ifndef MAC_OSX
+  myStartButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Play", kStartCmd, 'S');
+  myStartButton->setEditable(true);
+  wid.push_back(myStartButton);
+    xpos += space + width;
+  myOptionsButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Options", kOptionsCmd, 'O');
+  myOptionsButton->setEditable(true);
+  wid.push_back(myOptionsButton);
+    xpos += space + width;
+  myReloadButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Reload", kReloadCmd, 'R');
+  myReloadButton->setEditable(true);
+  wid.push_back(myReloadButton);
+    xpos += space + width;
+  myQuitButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Quit", kQuitCmd, 'Q');
+  myQuitButton->setEditable(true);
+  wid.push_back(myQuitButton);
+    xpos += space + width;
+  mySelectedItem = 0;  // Highlight 'Play' button
+#else
+  myQuitButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Quit", kQuitCmd, 'Q');
+  myQuitButton->setEditable(true);
+  wid.push_back(myQuitButton);
+    xpos += space + width;
+  myOptionsButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Options", kOptionsCmd, 'O');
+  myOptionsButton->setEditable(true);
+  wid.push_back(myOptionsButton);
+    xpos += space + width;
+  myReloadButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Reload", kReloadCmd, 'R');
+  myReloadButton->setEditable(true);
+  wid.push_back(myReloadButton);
+    xpos += space + width;
+  myStartButton = new ButtonWidget(this, xpos, _h - 24, width, 16, "Start", kStartCmd, 'Q');
+  myStartButton->setEditable(true);
+  wid.push_back(myStartButton);
+    xpos += space + width;
+  mySelectedItem = 3;  // Highlight 'Play' button
+#endif
 
   // Add list with game titles
-  // Before we add the list, we need to know the size of the RomInfoWidget
-  xpos = 10;  ypos += fontHeight + 5;
-  int romWidth = 0;
-  int romSize = instance().settings().getInt("romviewer");
-  if(romSize > 1 && w >= 1000 && h >= 760)
-    romWidth = 660;
-  else if(romSize > 0 && w >= 640 && h >= 480)
-    romWidth = 365;
-
-  int listWidth = _w - (romWidth > 0 ? romWidth+5 : 0) - 20;
-  myList = new StringListWidget(this, font, xpos, ypos,
-                                listWidth, _h - 28 - bheight - 2*fontHeight);
+  // The list isn't added to focus objects, but is instead made 'sticky'
+  // This means it will act as if it were focused (wrt how it's drawn), but
+  // won't actually be able to lose focus
+  myList = new StringListWidget(this, instance()->font(),
+                                10, 24, _w - 20, _h - 24 - 26 - 10 - 10);
   myList->setNumberingMode(kListNumberingOff);
   myList->setEditable(false);
-  wid.push_back(myList);
-  wid.push_back(myPattern);  // Add after the list for tab order
-
-  // Add ROM info area (if enabled)
-  if(romWidth > 0)
-  {
-    xpos += myList->getWidth() + 5;
-    myRomInfoWidget =
-      new RomInfoWidget(this, romWidth < 660 ? instance().smallFont() : instance().consoleFont(),
-                        xpos, ypos, romWidth, myList->getHeight());
-  }
+  myList->setFlags(WIDGET_STICKY_FOCUS);
 
   // Add note textwidget to show any notes for the currently selected ROM
-  xpos = 10;
-  xpos += 5;  ypos += myList->getHeight() + 4;
-  lwidth = font.getStringWidth("Note:");
-  myDirLabel = new StaticTextWidget(this, font, xpos, ypos, lwidth, fontHeight,
-                                    "Dir:", kTextAlignLeft);
-  xpos += lwidth + 5;
-  myDir = new StaticTextWidget(this, font, xpos, ypos,
-                                _w - xpos - 10, fontHeight,
+  new StaticTextWidget(this, 20, _h - 43, 30, fontHeight, "Note:", kTextAlignLeft);
+  myNote = new StaticTextWidget(this, 50, _h - 43, w - 70, fontHeight,
                                 "", kTextAlignLeft);
 
-  // Add four buttons at the bottom
-  xpos = 10;  ypos += myDir->getHeight() + 4;
-#ifndef MAC_OSX
-  myStartButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                  "Select", kStartCmd);
-  wid.push_back(myStartButton);
-    xpos += bwidth + 8;
-  myPrevDirButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                      "Go Up", kPrevDirCmd);
-  wid.push_back(myPrevDirButton);
-    xpos += bwidth + 8;
-  myOptionsButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                     "Options", kOptionsCmd);
-  wid.push_back(myOptionsButton);
-    xpos += bwidth + 8;
-  myQuitButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                  "Quit", kQuitCmd);
-  wid.push_back(myQuitButton);
-    xpos += bwidth + 8;
-#else
-  myQuitButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                  "Quit", kQuitCmd);
-  wid.push_back(myQuitButton);
-    xpos += bwidth + 8;
-  myOptionsButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                     "Options", kOptionsCmd);
-  wid.push_back(myOptionsButton);
-    xpos += bwidth + 8;
-  myPrevDirButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                      "Go Up", kPrevDirCmd);
-  wid.push_back(myPrevDirButton);
-    xpos += bwidth + 8;
-  myStartButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
-                                   "Select", kStartCmd);
-  wid.push_back(myStartButton);
-    xpos += bwidth + 8;
-#endif
-  mySelectedItem = 0;  // Highlight 'Rom Listing'
-
-  // Create an options dialog, similar to the in-game one
-  myOptions = new OptionsDialog(osystem, parent, this, true);  // not in game mode
+  // Create the launcher options dialog, where you can change ROM
+  // and snapshot paths
+  myOptions = new LauncherOptionsDialog(osystem, parent, this,
+                                        20, 60, _w - 40, _h - 120);
 
   // Create a game list, which contains all the information about a ROM that
   // the launcher needs
   myGameList = new GameList();
 
   addToFocusList(wid);
-
-  // Create context menu for ROM list options
-  StringMap l;
-  l.push_back("Override properties", "override");
-  l.push_back("Filter listing", "filter");
-  l.push_back("Reload listing", "reload");
-  myMenu = new ContextMenu(this, osystem->font(), l);
-
-  // Create global props dialog, which is used to temporarily overrride
-  // ROM properties
-  myGlobalProps = new GlobalPropsDialog(this, osystem->font());
-
-  // Create dialog whereby the files shown in the ROM listing can be
-  // customized
-  myFilters = new LauncherFilterDialog(this, osystem->font());
-
-  // Figure out which filters are needed for the ROM listing
-  setListFilters();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -200,27 +144,6 @@ LauncherDialog::~LauncherDialog()
 {
   delete myOptions;
   delete myGameList;
-  delete myMenu;
-  delete myGlobalProps;
-  delete myFilters;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string LauncherDialog::selectedRomMD5()
-{
-  string extension;
-  int item = myList->getSelected();
-  if(item < 0 || myGameList->isDir(item) ||
-     !LauncherFilterDialog::isValidRomName(myGameList->name(item), extension))
-    return "";
-
-  // Make sure we have a valid md5 for this ROM
-  if(myGameList->md5(item) == "")
-  {
-    const string& md5 = instance().MD5FromFile(myGameList->path(item));
-    myGameList->setMd5(item, md5);
-  }
-  return myGameList->md5(item);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -229,44 +152,58 @@ void LauncherDialog::loadConfig()
   // Assume that if the list is empty, this is the first time that loadConfig()
   // has been called (and we should reload the list).
   if(myList->getList().isEmpty())
-  {
-    myPrevDirButton->setEnabled(false);
-    myCurrentNode = FilesystemNode(instance().settings().getString("romdir"));
-    if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
-      myCurrentNode = FilesystemNode("~");
-
     updateListing();
-  }
-  Dialog::setFocus(getFocusList()[mySelectedItem]);
 
-  if(myRomInfoWidget)
-    myRomInfoWidget->loadConfig();
+  Dialog::setFocus(getFocusList()[mySelectedItem]);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void LauncherDialog::enableButtons(bool enable)
 {
   myStartButton->setEnabled(enable);
-  myPrevDirButton->setEnabled(enable);
   myOptionsButton->setEnabled(enable);
+  myReloadButton->setEnabled(enable);
   myQuitButton->setEnabled(enable);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::updateListing()
+void LauncherDialog::updateListing(bool fullReload)
 {
+  enableButtons(false);
+
   // Start with empty list
   myGameList->clear();
-  myDir->setLabel("");
 
-  string romdir = instance().settings().getString("romdir");
-  loadDirListing();
+  string romdir = instance()->settings().getString("romdir");
+  string cacheFile = instance()->cacheFile();
 
-  // Only hilite the 'up' button if there's a parent directory
-  myPrevDirButton->setEnabled(myCurrentNode.hasParent());
+  // If this is the first time using Stella, the romdir won't be set.
+  // In that case, display the options dialog, and don't let Stella proceed
+  // until the options are set.
+  if(romdir == "")
+  {
+    myOptionsButton->setEnabled(true);
+    myQuitButton->setEnabled(true);
+    parent()->addDialog(myOptions);
+    return;
+  }
 
-  // Show current directory
-  myDir->setLabel(myCurrentNode.getRelativePath());
+  // Figure out if the ROM dir has changed since we last accessed it.
+  // If so, we do a full reload from disk (takes quite some time).
+  // Otherwise, we can use the cache file (which is much faster).
+  string currentModTime = FilesystemNode::modTime(romdir);
+  string oldModTime = instance()->settings().getString("modtime");
+/*
+cerr << "old:     \'" << oldModTime     << "\'\n"
+     << "current: \'" << currentModTime << "\'\n"
+     << endl;
+*/
+  if(currentModTime != oldModTime)  // romdir has changed
+    loadListFromDisk();
+  else if(FilesystemNode::fileExists(cacheFile) && !fullReload)
+    loadListFromCache();
+  else  // we have no other choice
+    loadListFromDisk();
 
   // Now fill the list widget with the contents of the GameList
   StringList l;
@@ -277,291 +214,260 @@ void LauncherDialog::updateListing()
 
   // Indicate how many files were found
   ostringstream buf;
-  buf << (myGameList->size() - 1) << " items found";
+  buf << myGameList->size() << " files found";
   myRomCount->setLabel(buf.str());
 
+  enableButtons(true);
+
   // Restore last selection
-  int selected = -1;
   if(!myList->getList().isEmpty())
   {
-    string lastrom = instance().settings().getString("lastrom");
+    string lastrom = instance()->settings().getString("lastrom");
     if(lastrom == "")
-      selected = 0;
+      myList->setSelected(0);
     else
     {
       unsigned int itemToSelect = 0;
       StringList::const_iterator iter;
-      for(iter = myList->getList().begin(); iter != myList->getList().end();
-          ++iter, ++itemToSelect)	 
+      for (iter = myList->getList().begin(); iter != myList->getList().end();
+           ++iter, ++itemToSelect)
       {
-        if(lastrom == *iter)
+        if (lastrom == *iter)
         {
-          selected = itemToSelect;
+          myList->setSelected(itemToSelect);
           break;
         }
       }
       if(itemToSelect > myList->getList().size())
-        selected = 0;
+        myList->setSelected(0);
     }
   }
-  myList->setSelected(selected);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::loadDirListing()
+void LauncherDialog::loadListFromDisk()
 {
-  if(!myCurrentNode.isDirectory())
-    return;
+  string romdir = instance()->settings().getString("romdir");
+  FilesystemNode dir(romdir);
+  FSList files = dir.listDir(FilesystemNode::kListAll);
 
-  FSList files;
-  myCurrentNode.getChildren(files, FilesystemNode::kListAll);
+  // Create a progress dialog box to show the progress of processing
+  // the ROMs, since this is usually a time-consuming operation
+  ProgressDialog progress(this, instance()->font(),
+                          "Loading ROM's from disk ...");
+  progress.setRange(0, files.size() - 1, 10);
 
-  // Add '[..]' to indicate previous folder
-  if(myCurrentNode.hasParent())
-    myGameList->appendGame(" [..]", "", "", true);
-
-  // Now add the directory entries
-  for(unsigned int idx = 0; idx < files.size(); idx++)
+  // Create a entry for the GameList for each file
+  Properties props;
+  string path = dir.path(), rom, md5, name, note;
+  for (unsigned int idx = 0; idx < files.size(); idx++)
   {
-    string name = files[idx].getDisplayName();
-    bool isDir = files[idx].isDirectory();
+    rom = path + files[idx].displayName();
 
-    // Honour the filtering settings
-    // Showing only certain ROM extensions is determined by the extension
-    // that we want - if there are no extensions, it implies show all files
-    // In this way, showing all files is on the 'fast code path'
-    if(isDir)
-      name = " [" + name + "]";
-    else if(myRomExts.size() > 0)
-    {
-      // Skip over those names we've filtered out
-      if(!LauncherFilterDialog::isValidRomName(name, myRomExts))
-        continue;
-    }
+    // Calculate the MD5 so we can get the rest of the info
+    // from the PropertiesSet (stella.pro)
+    md5 = MD5FromFile(rom);
+    instance()->propSet().getMD5(md5, props);
+    name = props.get("Cartridge.Name");
+    note = props.get("Cartridge.Note");
 
-    // Skip over files that don't match the pattern in the 'pattern' textbox
-    if(!isDir && myPattern->getEditString() != "" &&
-       !matchPattern(name, myPattern->getEditString()))
-      continue;
+    // Indicate that this ROM doesn't have a properties entry
+    myGameList->appendGame(rom, name, note);
 
-    myGameList->appendGame(name, files[idx].getPath(), "", isDir);
+    // Update the progress bar, indicating one more ROM has been processed
+    progress.setProgress(idx);
   }
+  progress.done();
 
   // Sort the list by rom name (since that's what we see in the listview)
   myGameList->sortByName();
+
+  // And create a cache file, so that the next time Stella starts,
+  // we don't have to do this time-consuming operation again
+  createListCache();
+
+  // Finally, update the modification time so we don't have to needlessly
+  // call this method again
+  string currentModTime = FilesystemNode::modTime(romdir);
+  instance()->settings().setString("modtime", currentModTime);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::loadRomInfo()
+void LauncherDialog::loadListFromCache()
 {
-  if(!myRomInfoWidget) return;
-  int item = myList->getSelected();
-  if(item < 0) return;
-
-  string extension;
-  if(!myGameList->isDir(item) &&
-     LauncherFilterDialog::isValidRomName(myGameList->name(item), extension))
+  string cacheFile = instance()->cacheFile();
+  ifstream in(cacheFile.c_str());
+  if(!in)
   {
-    // Make sure we have a valid md5 for this ROM
-    if(myGameList->md5(item) == "")
-      myGameList->setMd5(item, instance().MD5FromFile(myGameList->path(item)));
-
-    // Get the properties for this entry
-    Properties props;
-    instance().propSet().getMD5(myGameList->md5(item), props);
-
-    myRomInfoWidget->setProperties(props);
+    loadListFromDisk();
+    return;
   }
-  else
-    myRomInfoWidget->clearProperties();
+
+  // It seems terribly ugly that we need to use char arrays
+  // instead of strings.  Or maybe I don't know the correct way ??
+  char buf[2048];
+  string line, rom, name, note;
+  string::size_type pos1, pos2;  // The locations of the two '|' characters
+
+  // Keep reading until all lines have been inspected
+  while(!in.eof())
+  {
+    in.getline(buf, 2048);
+    line = buf;
+
+    // Now split the line into three parts
+    pos1 = line.find("|", 0);
+    if(pos1 == string::npos) continue;
+    pos2 = line.find("|", pos1+1);
+    if(pos2 == string::npos) continue;
+
+    rom  = line.substr(0, pos1);
+    name = line.substr(pos1+1, pos2-pos1-1);
+    note = line.substr(pos2+1);
+
+    // Add this game to the list
+    // We don't do sorting, since it's assumed to be done by loadListFromDisk()
+    myGameList->appendGame(rom, name, note);
+  }    
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::handleContextMenu()
+void LauncherDialog::createListCache()
 {
-  const string& cmd = myMenu->getSelectedTag();
+  string cacheFile = instance()->cacheFile();
+  ofstream out(cacheFile.c_str());
 
-  if(cmd == "override")
+  // Write the gamelist to the cachefile (sorting is already done)
+  for (int i = 0; i < (int) myGameList->size(); ++i)
   {
-    parent().addDialog(myGlobalProps);
+    out << myGameList->rom(i)  << "|"
+        << myGameList->name(i) << "|"
+        << myGameList->note(i)
+        << endl;
   }
-  else if(cmd == "filter")
-  {
-    parent().addDialog(myFilters);
-  }
-  else if(cmd == "reload")
-  {
-    updateListing();
-  }
+  out.close();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::setListFilters()
+string LauncherDialog::MD5FromFile(const string& path)
 {
-  const string& exts = instance().settings().getString("launcherexts");
-  myRomExts.clear();
-  LauncherFilterDialog::parseExts(myRomExts, exts);
-}
+  uInt8* image;
+  int size = -1;
+  string md5 = "";
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool LauncherDialog::matchPattern(const string& s, const string& pattern)
-{
-  // This method is modelled after strcasestr, which we don't use
-  // because it isn't guaranteed to be available everywhere
-  // The strcasestr uses the KMP algorithm when the comparisons
-  // reach a certain point, but since we'll be dealing with relatively
-  // short strings, I think the overhead of building a KMP table
-  // each time would be slower than the brute force method used here
-  const char* haystack = s.c_str();
-  const char* needle = pattern.c_str();
+  if(instance()->openROM(path, md5, &image, &size))
+    if(size != -1)
+      delete[] image;
 
-  unsigned char b = tolower((unsigned char) *needle);
-
-  needle++;
-  for (;; haystack++)
-  {
-    if (*haystack == '\0')  /* No match */
-      return false;
-
-    /* The first character matches */
-    if (tolower ((unsigned char) *haystack) == b)
-    {
-      const char* rhaystack = haystack + 1;
-      const char* rneedle = needle;
-
-      for (;; rhaystack++, rneedle++)
-      {
-        if (*rneedle == '\0')   /* Found a match */
-          return true;
-        if (*rhaystack == '\0') /* No match */
-          return false;
-
-        /* Nothing in this round */
-        if (tolower ((unsigned char) *rhaystack)
-            != tolower ((unsigned char) *rneedle))
-          break;
-      }
-    }
-  }
-  return false;
+  return md5;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void LauncherDialog::handleKeyDown(int ascii, int keycode, int modifiers)
 {
-  // Grab the key before passing it to the actual dialog and check for
-  // Control-R (reload ROM listing)
-  if(instance().eventHandler().kbdControl(modifiers) && keycode == 'r')
-    updateListing();
-  else
-    Dialog::handleKeyDown(ascii, keycode, modifiers);
+  // Only detect the cursor keys, otherwise pass to base class
+  switch(ascii)
+  {
+    case kCursorLeft:
+      mySelectedItem--;
+      if(mySelectedItem < 0) mySelectedItem = 3;
+      Dialog::setFocus(getFocusList()[mySelectedItem]);
+      break;
+
+    case kCursorRight:
+      mySelectedItem++;
+      if(mySelectedItem > 3) mySelectedItem = 0;
+      Dialog::setFocus(getFocusList()[mySelectedItem]);
+      break;
+
+    case ' ':  // Used to activate currently focused button
+    case '\n':
+    case '\r':
+      Dialog::handleKeyDown(ascii, keycode, modifiers);
+      break;
+
+    default:
+      if(!myList->handleKeyDown(ascii, keycode, modifiers))
+        Dialog::handleKeyDown(ascii, keycode, modifiers);
+      break;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void LauncherDialog::handleMouseDown(int x, int y, int button, int clickCount)
+void LauncherDialog::handleJoyAxis(int stick, int axis, int value)
 {
-  // Grab right mouse button for context menu, send left to base class
-  if(button == 2)
+  if(!parent()->joymouse())
+    return;
+
+  // We make the (hopefully) valid assumption that all joysticks
+  // treat axis the same way.  Eventually, we may need to remap
+  // these actions of this assumption is invalid.
+  // TODO - make this work better with analog axes ...
+  int key = -1;
+  if(axis % 2 == 0)  // x-direction
   {
-    // Add menu at current x,y mouse location
-    myMenu->show(x + getAbsX(), y + getAbsY());
+    if(value < 0)
+      key = kCursorLeft;
+    else if(value > 0)
+      key = kCursorRight;
   }
-  else
-    Dialog::handleMouseDown(x, y, button, clickCount);
+  else   // y-direction
+  {
+    if(value < 0)
+      key = kCursorUp;
+    else if(value > 0)
+      key = kCursorDown;
+  }
+
+  if(key != -1)
+    handleKeyDown(key, 0, 0);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void LauncherDialog::handleCommand(CommandSender* sender, int cmd,
                                    int data, int id)
 {
+  int item;
+
   switch (cmd)
   {
     case kStartCmd:
     case kListItemActivatedCmd:
     case kListItemDoubleClickedCmd:
-    {
-      int item = myList->getSelected();
+      item = myList->getSelected();
       if(item >= 0)
       {
-        const string& rom = myGameList->path(item);
-        const string& md5 = myGameList->md5(item);
-        string extension;
+        string s = myList->getSelectedString();
 
-        // Directory's should be selected (ie, enter them and redisplay)
-        if(myGameList->isDir(item))
+        // Make sure the console creation actually succeeded
+        if(instance()->createConsole(myGameList->rom(item)))
         {
-          if(myGameList->name(item) == " [..]")
-            myCurrentNode = myCurrentNode.getParent();
-		  else
-            myCurrentNode = FilesystemNode(rom);
-          updateListing();
-        }
-        else
-        {
-          if(LauncherFilterDialog::isValidRomName(rom, extension))
-          {
-            if(instance().createConsole(rom, md5))
-            {
-            #if !defined(GP2X)   // Quick GP2X hack to spare flash-card saves
-              instance().settings().setString("lastrom", myList->getSelectedString());
-            #endif
-            }
-            else
-              instance().frameBuffer().showMessage(
-                  "Error creating console (screen too small)", kMiddleCenter);
-          }
-          else
-            instance().frameBuffer().showMessage("Not a valid ROM file", kMiddleCenter);
+          instance()->settings().setString("lastrom", s);
+          close();
         }
       }
       break;
-    }
 
     case kOptionsCmd:
-      parent().addDialog(myOptions);
+      parent()->addDialog(myOptions);
       break;
 
-    case kPrevDirCmd:
-      myCurrentNode = myCurrentNode.getParent();
-      updateListing();
+    case kReloadCmd:
+      updateListing(true);  // force a reload from disk
       break;
 
     case kListSelectionChangedCmd:
-      loadRomInfo();
+      item = myList->getSelected();
+      if(item >= 0)
+        myNote->setLabel(myGameList->note(item));
       break;
 
     case kQuitCmd:
       close();
-      instance().eventHandler().quit();
+      instance()->eventHandler().quit();
       break;
 
     case kRomDirChosenCmd:
-      myCurrentNode = FilesystemNode(instance().settings().getString("romdir"));
-      if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
-        myCurrentNode = FilesystemNode("~");
-      updateListing();
-      break;
-
-    case kSnapDirChosenCmd:
-      // Stub just in case we need it
-      break;
-
-    case kReloadRomDirCmd:
-      updateListing();
-      break;
-
-    case kReloadFiltersCmd:
-      setListFilters();
-      updateListing();
-      break;
-
-    case kCMenuItemSelectedCmd:
-      handleContextMenu();
-      break;
-
-    case kEditAcceptCmd:
-    case kEditChangedCmd:
-      // The updateListing() method knows what to do when the text changes
       updateListing();
       break;
 

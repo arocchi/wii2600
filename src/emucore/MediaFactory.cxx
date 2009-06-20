@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: MediaFactory.cxx,v 1.3 2006-01-19 00:45:12 stephena Exp $
 //============================================================================
 
 ////////////////////////////////////////////////////////////////////
@@ -23,19 +23,17 @@
 #include "MediaFactory.hxx"
 
 #include "OSystem.hxx"
-#include "Settings.hxx"
 
 #include "FrameBuffer.hxx"
+#include "FrameBufferSoft.hxx"
 #ifdef DISPLAY_OPENGL
   #include "FrameBufferGL.hxx"
 #endif
 
-#if defined(GP2X)
-  #include "FrameBufferGP2X.hxx"
+#if defined(PSP)
+  #include "FrameBufferPSP.hxx"
 #elif defined (_WIN32_WCE)
   #include "FrameBufferWinCE.hxx"
-#else
-  #include "FrameBufferSoft.hxx"
 #endif
 
 #include "Sound.hxx"
@@ -52,13 +50,14 @@
 FrameBuffer* MediaFactory::createVideo(OSystem* osystem)
 {
   FrameBuffer* fb = (FrameBuffer*) NULL;
+  const string& type = osystem->settings().getString("video");
 
   // OpenGL mode *may* fail, so we check for it first
 #ifdef DISPLAY_OPENGL
-  if(osystem->settings().getString("video") == "gl")
+  if(type == "gl")
   {
     const string& gl_lib = osystem->settings().getString("gl_lib");
-    if(FrameBufferGL::loadLibrary(gl_lib))
+    if(FrameBufferGL::loadFuncs(gl_lib))
       fb = new FrameBufferGL(osystem);
   }
 #endif
@@ -67,8 +66,8 @@ FrameBuffer* MediaFactory::createVideo(OSystem* osystem)
   // software framebuffer
   if(!fb)
   {
-   #if defined (GP2X)
-    fb = new FrameBufferGP2X(osystem);
+   #if defined (PSP)
+    fb = new FrameBufferPSP(osystem);
    #elif defined (_WIN32_WCE)
     fb = new FrameBufferWinCE(osystem);
    #else
@@ -78,6 +77,16 @@ FrameBuffer* MediaFactory::createVideo(OSystem* osystem)
 
   // This should never happen
   assert(fb != NULL);
+  switch(fb->type())
+  {
+    case kSoftBuffer:
+      osystem->settings().setString("video", "soft");
+      break;
+
+    case kGLBuffer:
+      osystem->settings().setString("video", "gl");
+      break;
+  }
 
   return fb;
 }

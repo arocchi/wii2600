@@ -8,26 +8,30 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF4.cxx,v 1.7 2005-12-17 01:23:07 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
+#include <assert.h>
+#include <iostream>
+#include "CartF4.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartF4.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeF4::CartridgeF4(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 32768);
+  for(uInt32 addr = 0; addr < 32768; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -36,10 +40,16 @@ CartridgeF4::~CartridgeF4()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeF4::name() const
+{
+  return "CartridgeF4";
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF4::reset()
 {
-  // Upon reset we switch to bank 0
-  bank(0);
+  // Upon reset we switch to bank 7
+  bank(7);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -62,14 +72,14 @@ void CartridgeF4::install(System& system)
     mySystem->setPageAccess(i >> shift, access);
   }
 
-  // Install pages for bank 0
-  bank(0);
+  // Install pages for bank 7
+  bank(7);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeF4::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if((address >= 0x0FF4) && (address <= 0x0FFB))
@@ -77,13 +87,13 @@ uInt8 CartridgeF4::peek(uInt16 address)
     bank(address - 0x0FF4);
   }
 
-  return myImage[(myCurrentBank << 12) + address];
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF4::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if((address >= 0x0FF4) && (address <= 0x0FFB))
@@ -93,13 +103,21 @@ void CartridgeF4::poke(uInt16 address, uInt8)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool CartridgeF4::patch(uInt16 address, uInt8 value)
+{
+	address = address & 0x0FFF;
+	myImage[myCurrentBank * 4096 + address] = value;
+	return true;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF4::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -118,33 +136,17 @@ void CartridgeF4::bank(uInt16 bank)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF4::bank()
-{
+int CartridgeF4::bank() {
   return myCurrentBank;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF4::bankCount()
-{
+int CartridgeF4::bankCount() {
   return 8;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF4::patch(uInt16 address, uInt8 value)
-{
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeF4::getImage(int& size)
-{
-  size = 32768;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF4::save(Serializer& out) const
+bool CartridgeF4::save(Serializer& out)
 {
   string cart = name();
 
@@ -153,7 +155,7 @@ bool CartridgeF4::save(Serializer& out) const
     out.putString(cart);
     out.putInt(myCurrentBank);
   }
-  catch(const char* msg)
+  catch(char* msg)
   {
     cerr << msg << endl;
     return false;
@@ -181,7 +183,7 @@ bool CartridgeF4::load(Deserializer& in)
 
     myCurrentBank = (uInt16)in.getInt();
   }
-  catch(const char* msg)
+  catch(char* msg)
   {
     cerr << msg << endl;
     return false;
@@ -196,4 +198,11 @@ bool CartridgeF4::load(Deserializer& in)
   bank(myCurrentBank);
 
   return true;
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* CartridgeF4::getImage(int& size) {
+  size = 32768;
+  return &myImage[0];
 }

@@ -8,13 +8,17 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsWin32.cxx,v 1.21 2006-01-14 21:36:29 stephena Exp $
 //============================================================================
+
+#include <sstream>
+#include <fstream>
+#include <direct.h>
 
 #include "bspf.hxx"
 #include "Settings.hxx"
@@ -24,11 +28,10 @@
 SettingsWin32::SettingsWin32(OSystem* osystem)
   : Settings(osystem)
 {
-  setInternal("gl_lib", "opengl32.dll");
-  // Anything less than this usually causes sound skipping
-  setInternal("fragsize", "2048");
-  // Most Windows systems work better without this
-  setInternal("romdir", "c:\\");
+  set("fragsize", "2048");     // Anything less than this usually causes sound skipping
+  set("video", "hard");        // Use software mode with hardware surface
+  set("dirtyrects", "false");  // Most Windows systems work better without this
+  set("gl_lib", "opengl32.dll");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

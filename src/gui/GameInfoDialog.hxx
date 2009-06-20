@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameInfoDialog.hxx,v 1.14 2006-01-11 01:17:11 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -28,33 +28,33 @@ class EditTextWidget;
 class PopUpWidget;
 class StaticTextWidget;
 class TabWidget;
-class SliderWidget;
+class Properties;
 
 #include "Array.hxx"
 #include "Dialog.hxx"
 #include "Command.hxx"
-#include "Props.hxx"
-#include "StringList.hxx"
+
+// Structure used for cartridge and controller types
+struct PropType {
+  string name;
+  string comparitor;
+};
 
 class GameInfoDialog : public Dialog, public CommandSender
 {
   public:
-    GameInfoDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font, GuiObject* boss);
-    virtual ~GameInfoDialog();
+    GameInfoDialog(OSystem* osystem, DialogContainer* parent, GuiObject* boss,
+                   int x, int y, int w, int h);
+    ~GameInfoDialog();
 
-  protected:
+    void setGameProfile(Properties& props) { myGameProperties = &props; }
+
     void loadConfig();
     void saveConfig();
     void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
   private:
-    void setDefaults();
-    void loadView();
-
-  private:
     TabWidget* myTab;
-    ButtonWidget* myCancelButton;
 
     // Cartridge properties
     EditTextWidget*   myName;
@@ -70,37 +70,29 @@ class GameInfoDialog : public Dialog, public CommandSender
     PopUpWidget* myLeftDiff;
     PopUpWidget* myRightDiff;
     PopUpWidget* myTVType;
+    PopUpWidget* mySwapPorts;
 
     // Controller properties
-    PopUpWidget* myP0Controller;
-    PopUpWidget* myP1Controller;
-    PopUpWidget* mySwapPaddles;
-    PopUpWidget* myLeftPort;
-    PopUpWidget* myRightPort;
+    PopUpWidget* myLeftController;
+    PopUpWidget* myRightController;
 
     // Display properties
-    PopUpWidget*      myFormat;
-    EditTextWidget*   myYStart;
-    EditTextWidget*   myHeight;
-    PopUpWidget*      myPhosphor;
-    SliderWidget*     myPPBlend;
-    StaticTextWidget* myPPBlendLabel;
+    PopUpWidget*    myFormat;
+    EditTextWidget* myXStart;
+    EditTextWidget* myWidth;
+    EditTextWidget* myYStart;
+    EditTextWidget* myHeight;
+    PopUpWidget*    myPhosphor;
+    PopUpWidget*    myHmoveBlanks;
 
-    enum {
-      kLeftCChanged    = 'LCch',
-      kRightCChanged   = 'RCch',
-      kPhosphorChanged = 'PPch',
-      kPPBlendChanged  = 'PBch'
-    };
+    /** Game properties for currently loaded ROM */
+    Properties* myGameProperties;
 
-    // Game properties for currently loaded ROM
-    Properties myGameProperties;
+    /** Holds static strings for Cartridge type */
+    static const PropType ourCartridgeList[21];
 
-    // Indicates that we've got a valid properties entry
-    bool myPropertiesLoaded;
-
-    // Indicates that the default properties have been loaded
-    bool myDefaultsSelected;
+    /** Holds static strings for Controller type */
+    static const PropType ourControllerList[5];
 };
 
 #endif

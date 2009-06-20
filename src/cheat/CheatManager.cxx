@@ -8,20 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CheatManager.cxx,v 1.7 2006-01-11 01:17:08 stephena Exp $
 //============================================================================
 
 #include <sstream>
 
 #include "OSystem.hxx"
-#include "Console.hxx"
 #include "Cheat.hxx"
-#include "Settings.hxx"
 #include "CheetahCheat.hxx"
 #include "BankRomCheat.hxx"
 #include "RamCheat.hxx"
@@ -30,9 +28,7 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CheatManager::CheatManager(OSystem* osystem)
-  : myOSystem(osystem),
-    myCurrentCheat(""),
-    myListIsDirty(false)
+  : myOSystem(osystem)
 {
 }
 
@@ -130,8 +126,8 @@ void CheatManager::addOneShot(const string& name, const string& code)
   if(!cheat)
     return;
 
-  // Evaluate this cheat once, and then immediately delete it
-  cheat->evaluate();
+  // Enable this cheat once, and then immediately delete it
+  cheat->enable();
   delete cheat;
 }
 
@@ -232,7 +228,7 @@ void CheatManager::enable(const string& code, bool enable)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CheatManager::loadCheatDatabase()
 {
-  const string& cheatfile = myOSystem->cheatFile();
+  string cheatfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR + "stella.cht";
   ifstream in(cheatfile.c_str(), ios::in);
   if(!in)
     return;
@@ -264,16 +260,12 @@ void CheatManager::loadCheatDatabase()
   }
 
   in.close();
-  myListIsDirty = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CheatManager::saveCheatDatabase()
 {
-  if(!myListIsDirty)
-    return;
-
-  const string& cheatfile = myOSystem->cheatFile();
+  string cheatfile = myOSystem->baseDir() + BSPF_PATH_SEPARATOR + "stella.cht";
   ofstream out(cheatfile.c_str(), ios::out);
   if(!out)
     return;
@@ -291,22 +283,17 @@ void CheatManager::saveCheatDatabase()
 void CheatManager::loadCheats(const string& md5sum)
 {
   clear();
-  myCurrentCheat = "";
 
   // Set up any cheatcodes that was on the command line
   // (and remove the key from the settings, so they won't get set again)
   string cheats = myOSystem->settings().getString("cheat");
   if(cheats != "")
-    myOSystem->settings().setString("cheat", "");
+    myOSystem->settings().setString("cheat", "", false);
 
   CheatCodeMap::iterator iter = myCheatMap.find(md5sum);
   if(iter == myCheatMap.end() && cheats == "")
     return;
 
-  // Remember the cheats for this ROM
-  myCurrentCheat = iter->second;
-
-  // Parse the cheat list, constructing cheats and adding them to the manager
   parse(iter->second + cheats);
 }
 
@@ -323,25 +310,15 @@ void CheatManager::saveCheats(const string& md5sum)
       cheats << ",";
   }
 
-  bool changed = cheats.str() != myCurrentCheat;
+  CheatCodeMap::iterator iter = myCheatMap.find(md5sum);
 
-  // Only update the list if absolutely necessary
-  if(changed)
-  {
-    CheatCodeMap::iterator iter = myCheatMap.find(md5sum);
+  // Erase old entry
+  if(iter != myCheatMap.end())
+    myCheatMap.erase(iter);
 
-    // Erase old entry and add a new one only if it's changed
-    if(iter != myCheatMap.end())
-      myCheatMap.erase(iter);
-
-    // Add new entry only if there are any cheats defined
-    if(cheats.str() != "")
-      myCheatMap.insert(make_pair(md5sum, cheats.str()));
-  }
-
-  // Update the dirty flag
-  myListIsDirty = myListIsDirty || changed;
-  clear();
+  // Add new entry only if there are any cheats defined
+  if(cheats.str() != "")
+    myCheatMap.insert(make_pair(md5sum, cheats.str()));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: VideoDialog.hxx,v 1.10 2005-10-18 18:49:46 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -23,73 +23,51 @@
 #define VIDEO_DIALOG_HXX
 
 class CommandSender;
-class CheckboxWidget;
 class DialogContainer;
-class EditTextWidget;
 class PopUpWidget;
 class SliderWidget;
 class StaticTextWidget;
-class TabWidget;
+class CheckboxWidget;
 
 #include "OSystem.hxx"
 #include "Dialog.hxx"
 #include "bspf.hxx"
 
+enum {
+  kRendererChanged    = 'VDrd',
+  kAspectRatioChanged = 'VDar',
+  kFrameRateChanged   = 'VDfr',
+  kZoomChanged        = 'VDzm'
+};
+
 class VideoDialog : public Dialog
 {
   public:
-    VideoDialog(OSystem* osystem, DialogContainer* parent, const GUI::Font& font);
+    VideoDialog(OSystem* osystem, DialogContainer* parent,
+                int x, int y, int w, int h);
     ~VideoDialog();
+
+  protected:
+    PopUpWidget*      myDirtyPopup;
+    PopUpWidget*      myRendererPopup;
+    PopUpWidget*      myFilterPopup;
+    SliderWidget*     myAspectRatioSlider;
+    StaticTextWidget* myAspectRatioLabel;
+    PopUpWidget*      myPalettePopup;
+    SliderWidget*     myFrameRateSlider;
+    StaticTextWidget* myFrameRateLabel;
+    SliderWidget*     myZoomSlider;
+    StaticTextWidget* myZoomLabel;
+    CheckboxWidget*   myFullscreenCheckbox;
+    CheckboxWidget*   myUseDeskResCheckbox;
 
   private:
     void loadConfig();
     void saveConfig();
     void setDefaults();
 
-    void handleFullscreenChange(bool enable);
+    void handleRendererChange(int item);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
-
-  private:
-    TabWidget* myTab;
-
-    // General options
-    EditTextWidget*   myRenderer;
-    PopUpWidget*      myRendererPopup;
-    PopUpWidget*      myTIAFilterPopup;
-    PopUpWidget*      myTIAPalettePopup;
-    PopUpWidget*      myFSResPopup;
-    PopUpWidget*      myFrameTimingPopup;
-    PopUpWidget*      myGLFilterPopup;
-    SliderWidget*     myNAspectRatioSlider;
-    StaticTextWidget* myNAspectRatioLabel;
-    SliderWidget*     myPAspectRatioSlider;
-    StaticTextWidget* myPAspectRatioLabel;
-
-    SliderWidget*     myFrameRateSlider;
-    StaticTextWidget* myFrameRateLabel;
-    CheckboxWidget*   myFullscreenCheckbox;
-    CheckboxWidget*   myColorLossCheckbox;
-    CheckboxWidget*   myGLStretchCheckbox;
-    CheckboxWidget*   myUseVSyncCheckbox;
-    CheckboxWidget*   myCenterCheckbox;
-    CheckboxWidget*   myGrabmouseCheckbox;
-    CheckboxWidget*   myFastSCBiosCheckbox;
-
-    // TV effects options
-    PopUpWidget*	  myTexturePopup;
-    PopUpWidget*      myBleedPopup;
-    PopUpWidget*      myNoisePopup;
-    CheckboxWidget*   myPhosphorCheckbox;
-
-    StaticTextWidget* myGLVersionInfo;
-    StaticTextWidget* myGLTexRectInfo;
-
-    enum {
-      kNAspectRatioChanged = 'VDan',
-      kPAspectRatioChanged = 'VDap',
-      kFrameRateChanged    = 'VDfr',
-      kFullScrChanged      = 'VDfs'
-    };
 };
 
 #endif

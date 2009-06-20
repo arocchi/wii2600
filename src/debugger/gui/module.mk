@@ -5,7 +5,6 @@ MODULE_OBJS := \
 	src/debugger/gui/CpuWidget.o \
 	src/debugger/gui/PromptWidget.o \
 	src/debugger/gui/RamWidget.o \
-	src/debugger/gui/RiotWidget.o \
 	src/debugger/gui/RomWidget.o \
 	src/debugger/gui/RomListWidget.o \
 	src/debugger/gui/TiaWidget.o \
@@ -13,6 +12,7 @@ MODULE_OBJS := \
 	src/debugger/gui/TiaOutputWidget.o \
 	src/debugger/gui/TiaZoomWidget.o \
 	src/debugger/gui/ColorWidget.o \
+	src/debugger/gui/ContextMenu.o \
 	src/debugger/gui/DataGridOpsWidget.o \
 	src/debugger/gui/DataGridWidget.o \
 	src/debugger/gui/DebuggerDialog.o \

@@ -8,86 +8,80 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventMappingWidget.cxx,v 1.11 2006-01-19 00:45:13 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include <sstream>
+#include "OSystem.hxx"
+#include "Widget.hxx"
+#include "StringListWidget.hxx"
+#include "GuiUtils.hxx"
+#include "Event.hxx"
+#include "EventHandler.hxx"
+#include "EventMappingWidget.hxx"
 
 #include "bspf.hxx"
 
-#include "EventHandler.hxx"
-#include "Event.hxx"
-#include "OSystem.hxx"
-#include "StringListWidget.hxx"
-#include "Widget.hxx"
-
-#include "EventMappingWidget.hxx"
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EventMappingWidget::EventMappingWidget(GuiObject* boss, const GUI::Font& font,
-                                       int x, int y, int w, int h,
-                                       const StringList& actions, EventMode mode)
-  : Widget(boss, font, x, y, w, h),
+EventMappingWidget::EventMappingWidget(GuiObject* boss, int x, int y, int w, int h)
+  : Widget(boss, x, y, w, h),
     CommandSender(boss),
-    myEventMode(mode),
     myActionSelected(-1),
     myRemapStatus(false),
     myFirstTime(true)
 {
-  const int fontHeight   = font.getFontHeight(),
-            lineHeight   = font.getLineHeight(),
-            buttonWidth  = font.getStringWidth("Defaults") + 10,
-            buttonHeight = font.getLineHeight() + 4;
+  const GUI::Font& font = instance()->font();
+  const int fontHeight = font.getFontHeight(),
+            lineHeight = font.getLineHeight();
   int xpos = 5, ypos = 5;
 
   myActionsList = new StringListWidget(boss, font, xpos, ypos,
-                                       _w - buttonWidth - 20, _h - 3*lineHeight);
+                                       _w - 70, _h - 3*lineHeight);
   myActionsList->setTarget(this);
   myActionsList->setNumberingMode(kListNumberingOff);
   myActionsList->setEditable(false);
-  myActionsList->setList(actions);
+  myActionsList->setFlags(WIDGET_NODRAW_FOCUS);
   addFocusWidget(myActionsList);
 
   // Add remap, erase, cancel and default buttons
-  xpos += myActionsList->getWidth() + 5;  ypos += 5;
-  myMapButton = new ButtonWidget(boss, font, xpos, ypos,
-                                 buttonWidth, buttonHeight,
+  xpos += myActionsList->getWidth() + 15;  ypos += 5;
+  myMapButton = new ButtonWidget(boss, xpos, ypos, 50, 16,
                                  "Map", kStartMapCmd);
   myMapButton->setTarget(this);
-  addFocusWidget(myMapButton);
-  ypos += lineHeight + 10;
-  myEraseButton = new ButtonWidget(boss, font, xpos, ypos,
-                                   buttonWidth, buttonHeight,
+  ypos += 20;
+  myEraseButton = new ButtonWidget(boss, xpos, ypos, 50, 16,
                                    "Erase", kEraseCmd);
   myEraseButton->setTarget(this);
-  addFocusWidget(myEraseButton);
-  ypos += lineHeight + 10;
-  myCancelMapButton = new ButtonWidget(boss, font, xpos, ypos,
-                                       buttonWidth, buttonHeight,
+  ypos += 20;
+  myCancelMapButton = new ButtonWidget(boss, xpos, ypos, 50, 16,
                                        "Cancel", kStopMapCmd);
   myCancelMapButton->setTarget(this);
   myCancelMapButton->clearFlags(WIDGET_ENABLED);
-  addFocusWidget(myCancelMapButton);
-  ypos += lineHeight + 30;
-  myDefaultsButton = new ButtonWidget(boss, font, xpos, ypos,
-                                      buttonWidth, buttonHeight,
+  ypos += 30;
+  myDefaultsButton = new ButtonWidget(boss, xpos, ypos, 50, 16,
                                       "Defaults", kDefaultsCmd);
   myDefaultsButton->setTarget(this);
-  addFocusWidget(myDefaultsButton);
 
   // Show message for currently selected event
   xpos = 10;  ypos = 5 + myActionsList->getHeight() + 3;
-  myKeyMapping  = new StaticTextWidget(boss, font, xpos, ypos, _w - 20, fontHeight,
+  myKeyMapping  = new StaticTextWidget(boss, xpos, ypos, _w - 20, fontHeight,
                                        "Action: ", kTextAlignLeft);
   myKeyMapping->setFlags(WIDGET_CLEARBG);
+
+  // Get actions names
+  StringList l;
+
+  for(int i = 0; i < kActionListSize; ++i)
+    l.push_back(EventHandler::ourActionList[i].action);
+
+  myActionsList->setList(l);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -98,6 +92,7 @@ EventMappingWidget::~EventMappingWidget()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EventMappingWidget::loadConfig()
 {
+//cerr << "EventMappingWidget::loadConfig()\n";
   if(myFirstTime)
   {
     myActionsList->setSelected(0);
@@ -131,16 +126,15 @@ void EventMappingWidget::startRemapping()
   myCancelMapButton->setEnabled(true);
 
   // And show a message indicating which key is being remapped
-  ostringstream buf;
-  buf << "Select action for '"
-      << instance().eventHandler().actionAtIndex(myActionSelected, myEventMode)
-      << "' event";	 	
-  myKeyMapping->setTextColor(kTextColorEm);
-  myKeyMapping->setLabel(buf.str());
+  string buf = "Select action for '" +
+               EventHandler::ourActionList[ myActionSelected ].action +
+               "' event";	 	
+  myKeyMapping->setColor(kTextColorEm);
+  myKeyMapping->setLabel(buf);
 
-  // Make sure that this widget receives all raw data, before any
-  // pre-processing occurs
-  myActionsList->setFlags(WIDGET_WANTS_RAWDATA);
+  // Make sure that this widget receives all events,
+  // and they aren't handled anywhere else
+  myActionsList->setFlags(WIDGET_WANTS_EVENTS|WIDGET_WTALL_EVENTS);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -149,9 +143,8 @@ void EventMappingWidget::eraseRemapping()
   if(myActionSelected < 0)
     return;
 
-  Event::Type event =
-    instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-  instance().eventHandler().eraseMapping(event, myEventMode);
+  Event::Type event = EventHandler::ourActionList[ myActionSelected ].event;
+  instance()->eventHandler().eraseMapping(event);
 
   drawKeyMapping();
 }
@@ -178,7 +171,7 @@ void EventMappingWidget::stopRemapping()
   }
 
   // Widget is now free to process events normally
-  myActionsList->clearFlags(WIDGET_WANTS_RAWDATA);
+  myActionsList->clearFlags(WIDGET_WANTS_EVENTS|WIDGET_WTALL_EVENTS);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -186,11 +179,9 @@ void EventMappingWidget::drawKeyMapping()
 {
   if(myActionSelected >= 0)
   {
-    ostringstream buf;
-    buf << "Action: "
-        << instance().eventHandler().keyAtIndex(myActionSelected, myEventMode);
-    myKeyMapping->setTextColor(kTextColor);
-    myKeyMapping->setLabel(buf.str());
+    string buf = "Action: " + EventHandler::ourActionList[ myActionSelected ].key;
+    myKeyMapping->setColor(kTextColor);
+    myKeyMapping->setLabel(buf);
   }
 }
 
@@ -200,9 +191,8 @@ bool EventMappingWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   // Remap keys in remap mode
   if(myRemapStatus && myActionSelected >= 0)
   {
-    Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addKeyMapping(event, myEventMode, keycode))
+    Event::Type event = EventHandler::ourActionList[ myActionSelected ].event;
+    if(instance()->eventHandler().addKeyMapping(event, keycode))
       stopRemapping();
   }
   return true;
@@ -214,9 +204,8 @@ void EventMappingWidget::handleJoyDown(int stick, int button)
   // Remap joystick buttons in remap mode
   if(myRemapStatus && myActionSelected >= 0)
   {
-    Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyMapping(event, myEventMode, stick, button))
+    Event::Type event = EventHandler::ourActionList[ myActionSelected ].event;
+    if(instance()->eventHandler().addJoyMapping(event, stick, button))
       stopRemapping();
   }
 }
@@ -227,33 +216,22 @@ void EventMappingWidget::handleJoyAxis(int stick, int axis, int value)
   // Remap joystick axes in remap mode
   if(myRemapStatus && myActionSelected >= 0)
   {
-    Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyAxisMapping(event, myEventMode,
-                                                    stick, axis, value))
+    Event::Type event = EventHandler::ourActionList[ myActionSelected ].event;
+    if(instance()->eventHandler().addJoyAxisMapping(event, stick, axis, value))
       stopRemapping();
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool EventMappingWidget::handleJoyHat(int stick, int hat, int value)
+void EventMappingWidget::handleJoyHat(int stick, int hat, int value)
 {
-  bool result = false;
-
   // Remap joystick hats in remap mode
   if(myRemapStatus && myActionSelected >= 0)
   {
-    Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyHatMapping(event, myEventMode,
-                                                   stick, hat, value))
-    {
+    Event::Type event = EventHandler::ourActionList[ myActionSelected ].event;
+    if(instance()->eventHandler().addJoyHatMapping(event, stick, hat, value))
       stopRemapping();
-      result = true;
-    }
   }
-
-  return result;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -296,7 +274,7 @@ void EventMappingWidget::handleCommand(CommandSender* sender, int cmd,
       break;
 
     case kDefaultsCmd:
-      instance().eventHandler().setDefaultMapping(myEventMode);
+      instance()->eventHandler().setDefaultMapping();
       drawKeyMapping();
       break;
   }

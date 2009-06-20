@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Serializer.cxx,v 1.9 2005-12-29 21:16:28 stephena Exp $
 //============================================================================
 
 #include "Serializer.hxx"
@@ -52,16 +52,6 @@ bool Serializer::isOpen(void)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Serializer::putByte(char value)
-{
-  char buf[1];
-  buf[0] = value;
-  myStream.write(buf, 1);
-  if(myStream.bad())
-    throw "Serializer: file write failed";
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Serializer::putInt(int value)
 {
   unsigned char buf[4];
@@ -87,5 +77,5 @@ void Serializer::putString(const string& str)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Serializer::putBool(bool b)
 {
-  putByte(b ? TruePattern: FalsePattern);
+  putInt(b ? TruePattern: FalsePattern);
 }

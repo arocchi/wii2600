@@ -8,46 +8,45 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputTextDialog.cxx,v 1.10 2005-12-20 19:05:16 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include "bspf.hxx"
-
-#include "Dialog.hxx"
-#include "DialogContainer.hxx"
-#include "EditTextWidget.hxx"
-#include "GuiObject.hxx"
 #include "OSystem.hxx"
 #include "Widget.hxx"
-
+#include "EditTextWidget.hxx"
+#include "Dialog.hxx"
+#include "GuiObject.hxx"
+#include "GuiUtils.hxx"
 #include "InputTextDialog.hxx"
+
+#include "bspf.hxx"
+
+enum {
+  kAcceptCmd = 'ACPT'
+};
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 InputTextDialog::InputTextDialog(GuiObject* boss, const GUI::Font& font,
-                                 const StringList& labels)
-  : Dialog(&boss->instance(), &boss->parent(), 0, 0, 16, 16),
+                                 const StringList& labels, int x, int y)
+  : Dialog(boss->instance(), boss->parent(), x, y, 16, 16),
     CommandSender(boss),
-    myEnableCenter(false),
-    myErrorFlag(false),
-    myXOrig(0),
-    myYOrig(0)
+    myErrorFlag(false)
 {
   const int fontWidth  = font.getMaxCharWidth(),
             fontHeight = font.getFontHeight(),
             lineHeight = font.getLineHeight();
   unsigned int xpos, ypos, i, lwidth = 0, maxIdx = 0;
-  WidgetArray wid;
 
   // Calculate real dimensions
-  _w = fontWidth * 30;
+  _w = fontWidth * 25;
   _h = lineHeight * 4 + labels.size() * (lineHeight + 5);
 
   // Determine longest label
@@ -62,77 +61,46 @@ InputTextDialog::InputTextDialog(GuiObject* boss, const GUI::Font& font,
   lwidth = font.getStringWidth(labels[maxIdx]);
 
   // Create editboxes for all labels
+  WidgetArray wid;
   ypos = lineHeight;
   for(i = 0; i < labels.size(); ++i)
   {
     xpos = 10;
-    new StaticTextWidget(this, font, xpos, ypos,
-                         lwidth, fontHeight,
-                         labels[i], kTextAlignLeft);
+    StaticTextWidget* t = 
+      new StaticTextWidget(this, xpos, ypos,
+                           lwidth, fontHeight,
+                           labels[i], kTextAlignLeft);
+    t->setFont(font);
 
     xpos += lwidth + fontWidth;
-    EditTextWidget* w = new EditTextWidget(this, font, xpos, ypos,
+    EditTextWidget* w = new EditTextWidget(this, xpos, ypos,
                                            _w - xpos - 10, lineHeight, "");
+    w->setFont(font);
     wid.push_back(w);
 
     myInput.push_back(w);
     ypos += lineHeight + 5;
   }
-
-  xpos = 10;
-  myTitle = new StaticTextWidget(this, font, xpos, ypos, _w - 2*xpos, fontHeight,
-                                 "", kTextAlignCenter);
-  myTitle->setTextColor(kTextColorEm);
-
   addToFocusList(wid);
 
-  // Add OK and Cancel buttons
-  wid.clear();
-  addOKCancelBGroup(wid, font);
-  addBGroupToFocusList(wid);
+  xpos = 10;
+  myTitle = new StaticTextWidget(this, xpos, ypos, _w - 2*xpos, fontHeight,
+                                 "", kTextAlignCenter);
+  myTitle->setColor(kTextColorEm);
+
+#ifndef MAC_OSX
+  addButton(_w - 2 * (kButtonWidth + 10), _h - 24, "OK", kAcceptCmd, 0);
+  addButton(_w - (kButtonWidth+10), _h - 24, "Cancel", kCloseCmd, 0);
+#else
+  addButton(_w - 2 * (kButtonWidth + 10), _h - 24, "Cancel", kCloseCmd, 0);
+  addButton(_w - (kButtonWidth+10), _h - 24, "OK", kAcceptCmd, 0);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 InputTextDialog::~InputTextDialog()
 {
   myInput.clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void InputTextDialog::show()
-{
-  myEnableCenter = true;
-  parent().addDialog(this);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void InputTextDialog::show(uInt32 x, uInt32 y)
-{
-  myXOrig = x;
-  myYOrig = y;
-  myEnableCenter = false;
-  parent().addDialog(this);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void InputTextDialog::center()
-{
-  if(!myEnableCenter)
-  {
-    // Make sure the menu is exactly where it should be, in case the image
-    // offset has changed
-    const GUI::Rect& image = instance().frameBuffer().imageRect();
-    uInt32 x = image.x() + myXOrig;
-    uInt32 y = image.y() + myYOrig;
-    uInt32 tx = image.x() + image.width();
-    uInt32 ty = image.y() + image.height();
-    if(x + _w > tx) x -= (x + _w - tx);
-    if(y + _h > ty) y -= (y + _h - ty);
-
-    surface().setPos(x, y);
-  }
-  else
-    Dialog::center();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -169,9 +137,9 @@ void InputTextDialog::setFocus(int idx)
 void InputTextDialog::handleCommand(CommandSender* sender, int cmd,
                                     int data, int id)
 {
-  switch(cmd)
+  switch (cmd)
   {
-    case kOKCmd:
+    case kAcceptCmd:
     case kEditAcceptCmd:
     {
       // Send a signal to the calling class that a selection has been made

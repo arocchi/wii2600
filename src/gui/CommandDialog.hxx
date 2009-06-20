@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CommandDialog.hxx,v 1.4 2006-01-04 01:24:17 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -36,7 +36,11 @@ class CommandDialog : public Dialog
     ~CommandDialog();
 
   protected:
+    virtual void handleKeyDown(int ascii, int keycode, int modifiers);
+    virtual void handleJoyAxis(int stick, int axis, int value);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
+
+    virtual bool wantsEvents() { return true; }
 
   private:
     int mySelectedItem;

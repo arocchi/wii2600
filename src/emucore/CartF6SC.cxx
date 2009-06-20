@@ -8,29 +8,37 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF6SC.cxx,v 1.10 2005-12-17 01:23:07 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
+#include <assert.h>
+#include "CartF6SC.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartF6SC.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeF6SC::CartridgeF6SC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 16384);
+  for(uInt32 addr = 0; addr < 16384; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 
-  // This cart contains 128 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 128, 0x80, 0x00);
+  // Initialize RAM with random values
+  class Random random;
+  for(uInt32 i = 0; i < 128; ++i)
+  {
+    myRAM[i] = random.next();
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -39,13 +47,14 @@ CartridgeF6SC::~CartridgeF6SC()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeF6SC::name() const
+{
+  return "CartridgeF6SC";
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF6SC::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 128; ++i)
-    myRAM[i] = random.next();
-
   // Upon reset we switch to bank 0
   bank(0);
 }
@@ -95,7 +104,7 @@ void CartridgeF6SC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeF6SC::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -124,22 +133,16 @@ uInt8 CartridgeF6SC::peek(uInt16 address)
       break;
   }
   
-  // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
-  // Thanks to Kroko of AtariAge for this advice and code idea
-  if(address < 0x0080)  // Write port is at 0xF000 - 0xF080 (128 bytes)
-  {
-    if(myBankLocked) return 0;
-    else return myRAM[address] = 0;
-  }  
-  else
-    return myImage[(myCurrentBank << 12) + address];
+  // NOTE: This does not handle accessing RAM, however, this function
+  // should never be called for RAM because of the way page accessing
+  // has been setup
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF6SC::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -174,13 +177,21 @@ void CartridgeF6SC::poke(uInt16 address, uInt8)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool CartridgeF6SC::patch(uInt16 address, uInt8 value)
+{
+	address = address & 0x0FFF;
+	myImage[myCurrentBank * 4096 + address] = value;
+	return true;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF6SC::bank(uInt16 bank)
 { 
-  if(myBankLocked) return;
+  if(bankLocked) return;
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -199,33 +210,17 @@ void CartridgeF6SC::bank(uInt16 bank)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF6SC::bank()
-{
+int CartridgeF6SC::bank() {
   return myCurrentBank;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeF6SC::bankCount()
-{
+int CartridgeF6SC::bankCount() {
   return 4;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF6SC::patch(uInt16 address, uInt8 value)
-{
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeF6SC::getImage(int& size)
-{
-  size = 16384;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeF6SC::save(Serializer& out) const
+bool CartridgeF6SC::save(Serializer& out)
 {
   string cart = name();
 
@@ -238,10 +233,10 @@ bool CartridgeF6SC::save(Serializer& out) const
     // The 128 bytes of RAM
     out.putInt(128);
     for(uInt32 i = 0; i < 128; ++i)
-      out.putByte((char)myRAM[i]);
+      out.putInt(myRAM[i]);
 
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -270,9 +265,9 @@ bool CartridgeF6SC::load(Deserializer& in)
     // The 128 bytes of RAM
     uInt32 limit = (uInt32) in.getInt();
     for(uInt32 i = 0; i < limit; ++i)
-      myRAM[i] = (uInt8) in.getByte();
+      myRAM[i] = (uInt8) in.getInt();
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -287,4 +282,10 @@ bool CartridgeF6SC::load(Deserializer& in)
   bank(myCurrentBank);
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* CartridgeF6SC::getImage(int& size) {
+  size = 16384;
+  return &myImage[0];
 }

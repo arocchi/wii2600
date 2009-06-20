@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemGP2X.cxx,v 1.1 2006-01-08 02:28:03 stephena Exp $
 // Modified on 2006/01/06 by Alex Zaballa for use on GP2X
 //============================================================================
 
@@ -41,14 +41,18 @@
   setBaseDir()
   setStateDir()
   setPropertiesDir()
-  setConfigFile()
+  setConfigFiles()
   setCacheFile()
+
+  And for initializing the following variables:
+
+  myDriverList (a StringList)
 
   See OSystem.hxx for a further explanation
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemGP2X::OSystemGP2X() : OSystem()
+OSystemGP2X::OSystemGP2X()
 {
   // GP2X needs all config files in exec directory
   
@@ -57,24 +61,121 @@ OSystemGP2X::OSystemGP2X() : OSystem()
   free(currdir);
   setBaseDir(basedir);
   
-  setConfigFile(basedir + "/stellarc");
+  string statedir = basedir + "/state";
+  setStateDir(statedir);
+  
+  setPropertiesDir(basedir, basedir);
 
-  setCacheFile(basedir + "/stella.cache");
+  string userPropertiesFile   = basedir + "/user.pro";
+  string systemPropertiesFile = basedir + "/stella.pro";
+  setConfigFiles(userPropertiesFile, systemPropertiesFile);
 
-  // Set event arrays to a known state
-  myPreviousEvents = new uInt8[8];  memset(myPreviousEvents, 0, 8);
-  myCurrentEvents  = new uInt8[8];  memset(myCurrentEvents, 0, 8);
+  string userConfigFile   = basedir + "/stellarc";
+  string systemConfigFile = statedir + "/stellarc";
+  setConfigFiles(userConfigFile, systemConfigFile);
+
+  string cacheFile = basedir + "/stella.cache";
+  setCacheFile(cacheFile);
+
+  // No drivers are specified for Unix
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OSystemGP2X::~OSystemGP2X()
 {
-  delete[] myPreviousEvents;
-  delete[] myCurrentEvents;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemGP2X::getTicks() const
+void OSystemGP2X::mainLoop()
+{
+  // These variables are common to both timing options
+  // and are needed to calculate the overall frames per second.
+  uInt32 frameTime = 0, numberOfFrames = 0;
+
+  if(mySettings->getBool("accurate"))   // normal, CPU-intensive timing
+  {
+    // Set up accurate timing stuff
+    uInt32 startTime, delta;
+
+    // Set the base for the timers
+    frameTime = 0;
+
+    // Main game loop
+    for(;;)
+    {
+      // Exit if the user wants to quit
+      if(myEventHandler->doQuit())
+        break;
+
+      startTime = getTicks();
+      myEventHandler->poll(startTime);
+      myFrameBuffer->update();
+
+      // Now, waste time if we need to so that we are at the desired frame rate
+      for(;;)
+      {
+        delta = getTicks() - startTime;
+
+        if(delta >= myTimePerFrame)
+          break;
+      }
+
+      frameTime += getTicks() - startTime;
+      ++numberOfFrames;
+    }
+  }
+  else    // less accurate, less CPU-intensive timing
+  {
+    // Set up less accurate timing stuff
+    uInt32 startTime, virtualTime, currentTime;
+
+    // Set the base for the timers
+    virtualTime = getTicks();
+    frameTime = 0;
+
+    // Main game loop
+    for(;;)
+    {
+      // Exit if the user wants to quit
+      if(myEventHandler->doQuit())
+        break;
+
+      startTime = getTicks();
+      myEventHandler->poll(startTime);
+      myFrameBuffer->update();
+
+      currentTime = getTicks();
+      virtualTime += myTimePerFrame;
+      if(currentTime < virtualTime)
+      {
+        SDL_Delay((virtualTime - currentTime)/1000);
+      }
+
+      currentTime = getTicks() - startTime;
+      frameTime += currentTime;
+      ++numberOfFrames;
+    }
+  }
+
+  // Only print console information if a console was actually created
+  if(mySettings->getBool("showinfo") && myConsole)
+  {
+    double executionTime = (double) frameTime / 1000000.0;
+    double framesPerSecond = (double) numberOfFrames / executionTime;
+
+    cout << endl;
+    cout << numberOfFrames << " total frames drawn\n";
+    cout << framesPerSecond << " frames/second\n";
+    cout << endl;
+    cout << "Cartridge Name: " << myConsole->properties().get("Cartridge.Name");
+    cout << endl;
+    cout << "Cartridge MD5:  " << myConsole->properties().get("Cartridge.MD5");
+    cout << endl << endl;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 OSystemGP2X::getTicks()
 {
 #ifdef HAVE_GETTIMEOFDAY
   timeval now;
@@ -89,129 +190,31 @@ uInt32 OSystemGP2X::getTicks() const
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystemGP2X::getScreenDimensions(int& width, int& height)
 {
-  width  = 400;
-  height = 300;
+  width  = 320;
+  height = 240;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystemGP2X::setDefaultJoymap()
 {
-  myEventHandler->setDefaultJoyMapping(Event::LauncherMode, kEmulationMode, 0, 8);	// Start
-  myEventHandler->setDefaultJoyMapping(Event::TakeSnapshot, kEmulationMode, 0, 9);	// Select
-  myEventHandler->setDefaultJoyMapping(Event::ConsoleReset, kEmulationMode, 0, 10);	// L
-  myEventHandler->setDefaultJoyMapping(Event::ConsoleSelect, kEmulationMode, 0, 11);	// R
-  myEventHandler->setDefaultJoyMapping(Event::CmdMenuMode, kEmulationMode, 0, 12);	// A
-  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire1, kEmulationMode, 0, 13);	// B
-  myEventHandler->setDefaultJoyMapping(Event::MenuMode, kEmulationMode, 0, 14);         // Y
-//  myEventHandler->setDefaultJoyMapping(Event::Pause, kEmulationMode, 0, 15);            // X
-  myEventHandler->setDefaultJoyMapping(Event::VolumeIncrease, kEmulationMode, 0, 16);	// Vol+
-  myEventHandler->setDefaultJoyMapping(Event::VolumeDecrease, kEmulationMode, 0, 17);	// Vol-
-  myEventHandler->setDefaultJoyMapping(Event::NoType, kEmulationMode, 0, 18);		// Click
-  //Begin Menu Navigation Mapping
-  myEventHandler->setDefaultJoyMapping(Event::UICancel, kMenuMode, 0, 8);		// Start
-  myEventHandler->setDefaultJoyMapping(Event::UIOK, kMenuMode, 0, 9);			// Select
-  myEventHandler->setDefaultJoyMapping(Event::UIPgUp, kMenuMode, 0, 10);		// L
-  myEventHandler->setDefaultJoyMapping(Event::UIPgDown, kMenuMode, 0, 11);		// R
-//  myEventHandler->setDefaultJoyMapping(Event::UITabPrev, kMenuMode, 0, 12);		// A
-  myEventHandler->setDefaultJoyMapping(Event::UISelect, kMenuMode, 0, 13);		// B
-//  myEventHandler->setDefaultJoyMapping(Event::UITabNext, kMenuMode, 0, 14);             // Y
-  myEventHandler->setDefaultJoyMapping(Event::UICancel, kMenuMode, 0, 15);              // X
-  myEventHandler->setDefaultJoyMapping(Event::UINavNext, kMenuMode, 0, 16);		// Vol+
-  myEventHandler->setDefaultJoyMapping(Event::UINavPrev, kMenuMode, 0, 17);		// Vol-
-  myEventHandler->setDefaultJoyMapping(Event::NoType, kMenuMode, 0, 18);		// Click
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroUp, 0, 0);    // Up
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroLeft, 0, 2);  // Left
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroDown, 0, 4);  // Down
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroRight, 0, 6); // Right
+  myEventHandler->setDefaultJoyMapping(Event::LauncherMode, 0, 8);      // Start
+  myEventHandler->setDefaultJoyMapping(Event::CmdMenuMode, 0, 9);       // Select
+  myEventHandler->setDefaultJoyMapping(Event::ConsoleReset, 0, 10);     // L
+  myEventHandler->setDefaultJoyMapping(Event::ConsoleSelect, 0, 11);    // R
+  myEventHandler->setDefaultJoyMapping(Event::TakeSnapshot, 0, 12);	    // A
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire, 0, 13); // B
+  myEventHandler->setDefaultJoyMapping(Event::Pause, 0, 14);            // X
+  myEventHandler->setDefaultJoyMapping(Event::MenuMode, 0, 15);         // Y
+  myEventHandler->setDefaultJoyMapping(Event::VolumeIncrease, 0, 16);   // Vol+
+  myEventHandler->setDefaultJoyMapping(Event::VolumeDecrease, 0, 17);   // Vol-
+  myEventHandler->setDefaultJoyMapping(Event::NoType, 0, 18);           // Click
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystemGP2X::pollEvent()
+void OSystemGP2X::setDefaultJoyAxisMap()
 {
-  // Translate joystick button events that act as directions into proper
-  // SDL axis events.  This method will use 'case 2', as discussed on the
-  // GP2X forums.  Technically, this code should be integrated directly
-  // into the GP2X SDL port.
-
-  // Swap event buffers
-  uInt8* tmp = myCurrentEvents;
-  myCurrentEvents = myPreviousEvents;
-  myPreviousEvents = tmp;
-
-  // Scan all the buttons, and detect if an event has occurred
-  bool changeDetected = false;
-  SDL_Joystick* stick = myEventHandler->getJoystick(0);
-  for(int i = 0; i < 8; ++i)
-  {
-    myCurrentEvents[i] = SDL_JoystickGetButton(stick, i);
-    myActiveEvents[i] = myCurrentEvents[i] != myPreviousEvents[i];
-    changeDetected = changeDetected || myActiveEvents[i];
-  }
-
-  if(changeDetected)
-  {
-    SDL_JoyAxisEvent eventA0, eventA1;
-    eventA0.type  = eventA1.type  = SDL_JOYAXISMOTION;
-    eventA0.which = eventA1.which = 0;
-    eventA0.value = 0;eventA1.value = 0;
-    eventA0.axis  = 0;
-    eventA1.axis  = 1;
-
-    bool axisZeroChanged = false, axisOneChanged = false;
-
-    axisOneChanged = axisOneChanged || myActiveEvents[kJDirUp];
-    if(myCurrentEvents[kJDirUp])         // up
-    {
-      eventA1.value = -32768;
-    }
-    axisOneChanged = axisOneChanged || myActiveEvents[kJDirDown];
-    if(myCurrentEvents[kJDirDown])       // down
-    {
-      eventA1.value =  32767;
-    }
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirLeft];
-    if(myCurrentEvents[kJDirLeft])       // left
-    {
-      eventA0.value = -32768;
-    }
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirRight];
-    if(myCurrentEvents[kJDirRight])      // right
-    {
-      eventA0.value =  32767;
-    }
-
-    axisOneChanged  = axisOneChanged || myActiveEvents[kJDirUpLeft];
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirUpLeft];
-    if(myCurrentEvents[kJDirUpLeft])     // up-left
-    {
-      eventA1.value = -16834;
-      eventA0.value = -16834;
-    }
-    axisOneChanged  = axisOneChanged || myActiveEvents[kJDirUpRight];
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirUpRight];
-    if(myCurrentEvents[kJDirUpRight])    // up-right
-    {
-      eventA1.value = -16834;
-      eventA0.value =  16834;
-    }
-    axisOneChanged  = axisOneChanged || myActiveEvents[kJDirDownLeft];
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirDownLeft];
-    if(myCurrentEvents[kJDirDownLeft])   // down-left
-    {
-      eventA1.value =  16834;
-      eventA0.value = -16834;
-    }
-    axisOneChanged  = axisOneChanged || myActiveEvents[kJDirDownRight];
-    axisZeroChanged = axisZeroChanged || myActiveEvents[kJDirDownRight];
-    if(myCurrentEvents[kJDirDownRight])  // down-right
-    {
-      eventA1.value =  16834;
-      eventA0.value =  16834;
-    }
-
-    if(axisZeroChanged) SDL_PushEvent((SDL_Event*)&eventA0);
-    if(axisOneChanged)  SDL_PushEvent((SDL_Event*)&eventA1);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool OSystemGP2X::joyButtonHandled(int button)
-{
-  return (button < 8);
 }

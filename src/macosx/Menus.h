@@ -4,35 +4,11 @@
    Mark Grebe <atarimac@cox.net>
    
 */
-/* $Id$ */
+/* $Id: Menus.h,v 1.7 2005-10-15 19:02:15 markgrebe Exp $ */
 
 #import <Cocoa/Cocoa.h>
 
 @interface Menus : NSObject {
-    IBOutlet id preferencesMenuItem;
-    IBOutlet id openMenuItem;
-    IBOutlet id restartMenuItem;
-    IBOutlet id savePropsMenuItem;
-    IBOutlet id screenBiggerMenuItem;
-    IBOutlet id screenSmallerMenuItem;
-    IBOutlet id fullScreenMenuItem;
-    IBOutlet id togglePalletteMenuItem;
-    IBOutlet id ntscPalMenuItem;
-    IBOutlet id increaseXStartMenuItem;
-    IBOutlet id decreaseXStartMenuItem;
-    IBOutlet id increaseYStartMenuItem;
-    IBOutlet id decreaseYStartMenuItem;
-    IBOutlet id increaseWidthMenuItem;
-    IBOutlet id decreaseWidthMenuItem;
-    IBOutlet id increaseHeightMenuItem;
-    IBOutlet id decreaseHeightMenuItem;
-    IBOutlet id mousePaddle0MenuItem;
-    IBOutlet id mousePaddle1MenuItem;
-    IBOutlet id mousePaddle2MenuItem;
-    IBOutlet id mousePaddle3MenuItem;
-    IBOutlet id grabMouseMenuItem;
-    IBOutlet id increaseVolumeMenuItem;
-    IBOutlet id decreaseVolumeMenuItem;
 }
 
 + (Menus *)sharedInstance;
@@ -43,6 +19,7 @@
 - (IBAction)fullScreen:(id)sender;
 - (IBAction)openCart:(id)sender;
 - (IBAction)restartGame:(id)sender;
+- (IBAction)pauseGame:(id)sender;
 - (IBAction)ntscPalMode:(id)sender;
 - (IBAction)togglePallette:(id)sender;
 - (IBAction)grabMouse:(id)sender;
@@ -58,10 +35,6 @@
 - (IBAction)volumePlus:(id)sender;
 - (IBAction)volumeMinus:(id)sender;
 - (IBAction)saveProps:(id)sender;
-- (void)setEmulationMenus;
-- (void)setLauncherMenus;
-- (void)setOptionsMenus;
-- (void)setCommandMenus;
-- (void)setDebuggerMenus;
+- (IBAction)mergeProps:(id)sender;
 
 @end

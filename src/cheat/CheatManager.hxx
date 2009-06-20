@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CheatManager.hxx,v 1.6 2005-12-18 18:37:01 stephena Exp $
 //============================================================================
 
 #ifndef CHEAT_MANAGER_HXX
@@ -36,7 +36,7 @@ typedef map<string,string> CheatCodeMap;
   the list of all cheats currently in use.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: CheatManager.hxx,v 1.6 2005-12-18 18:37:01 stephena Exp $
 */
 class CheatManager
 {
@@ -158,13 +158,6 @@ class CheatManager
 
     CheatCodeMap myCheatMap;
     string myCheatFile;
-
-    // This is set each time a new cheat/ROM is loaded, for later
-    // comparison to see if the cheatcode list has actually been modified
-    string myCurrentCheat;
-
-    // Indicates that the list has been modified, and should be saved to disk
-    bool myListIsDirty;
 };
 
 #endif

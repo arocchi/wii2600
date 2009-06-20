@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameList.hxx,v 1.7 2005-12-09 01:16:13 stephena Exp $
 //
 //   Based on code from KStella - Stella frontend
 //   Copyright (C) 2003-2005 Stephen Anthony
@@ -22,7 +22,7 @@
 #ifndef GAME_LIST_HXX
 #define GAME_LIST_HXX
 
-#include <vector>
+#include "Array.hxx"
 #include "bspf.hxx"
 
 /**
@@ -30,40 +30,28 @@
 */
 class GameList
 {
+  private:
+    struct Entry {
+      string _rom;
+      string _name;
+      string _note;
+    };
+
+    typedef Common::Array<Entry> EntryList;
+    EntryList myArray;
+
   public:
     GameList();
     ~GameList();
 
-    inline const string& name(int i)
-    { return i < (int)myArray.size() ? myArray[i]._name : EmptyString; }
-    inline const string& path(int i)
-    { return i < (int)myArray.size() ? myArray[i]._path : EmptyString; }
-    inline const string& md5(int i)
-    { return i < (int)myArray.size() ? myArray[i]._md5 : EmptyString; }
-    inline const bool isDir(int i)
-    { return i < (int)myArray.size() ? myArray[i]._isdir: false; }
-
-    inline void setMd5(int i, const string& md5)
-    { myArray[i]._md5 = md5; }
-
+    inline const string& rom(int i)  { return myArray[i]._rom; }
+    inline const string& name(int i) { return myArray[i]._name; }
+    inline const string& note(int i) { return myArray[i]._note; }
     inline int size() { return myArray.size(); }
-    inline void clear() { myArray.clear(); }
 
-    void appendGame(const string& name, const string& path, const string& md5,
-                    bool isDir = false);
+    void clear() { myArray.clear(); }
+    void appendGame(const string& rom, const string& name, const string& note);
     void sortByName();
-
-  private:
-    class Entry {
-      public:
-        string _name;
-        string _path;
-        string _md5;
-        bool   _isdir;
-
-        bool operator < (const Entry& a) const;
-    };
-    vector<Entry> myArray;
 };
 
 #endif

@@ -8,13 +8,13 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
-// Modified on 2006/02/05 by Alex Zaballa for use on GP2X
+// $Id: SettingsGP2X.cxx,v 1.3 2006-01-25 01:42:47 stephena Exp $
+// Modified on 2006/01/04 by Alex Zaballa for use on GP2X
 //============================================================================
 
 #include "bspf.hxx"
@@ -27,25 +27,16 @@ SettingsGP2X::SettingsGP2X(OSystem* osystem)
   : Settings(osystem)
 {
   // Some of these settings might be redundant, but are crucial for GP2X
-  setInternal("center", "true");
-  setInternal("volume", "33");
-  setInternal("sound", "true");
-  setInternal("zoom", "1");
-  setInternal("fragsize", "256");
-  setInternal("freq", "15700");
-  setInternal("tiafreq", "15700");
-  setInternal("clipvol", "false");
-  setInternal("rombrowse", "true");
-  setInternal("romdir", "/mnt/sd/");
-  setInternal("ssdir", "/mnt/sd/");
-  setInternal("p0speed", "15");
-  setInternal("p1speed", "15");
-  setInternal("p2speed", "15");
-  setInternal("p3speed", "15");
-  setInternal("launchersize", "1");
-  setInternal("uipalette", "2");
-  setInternal("tv_scale_width", "1.125");
-  setInternal("tv_scale_height", "1.2");
+  set("center", "true");
+  set("accurate", "false");
+  set("volume", "50");
+  set("sound", "true");
+  set("zoom", "1");
+  set("fragsize", "512");
+  set("tiafreq", "22050");
+  set("clipvol", "false");
+  set("joymouse", "true");
+  set("pp", "no"); // always disable phosphor until we get a faster framebuffer
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

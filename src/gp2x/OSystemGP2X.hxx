@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemGP2X.hxx,v 1.1 2006-01-08 02:28:03 stephena Exp $
 // Modified by Alex Zaballa on 2006/01/04 for use on GP2X
 //============================================================================
 
@@ -41,16 +41,23 @@ class OSystemGP2X : public OSystem
 
   public:
     /**
+      This method runs the main loop.  Since different platforms
+      may use different timing methods and/or algorithms, this method has
+      been abstracted to each platform.
+    */
+    virtual void mainLoop();
+
+    /**
       This method returns number of ticks in microseconds.
 
       @return Current time in microseconds.
     */
-    uInt32 getTicks() const;
+    virtual uInt32 getTicks();
 
     /**
       This method queries the dimensions of the screen for this hardware.
     */
-    void getScreenDimensions(int& width, int& height);
+    virtual void getScreenDimensions(int& width, int& height);
 
     /**
       This method determines the default mapping of joystick buttons to
@@ -59,28 +66,10 @@ class OSystemGP2X : public OSystem
     void setDefaultJoymap();
 
     /**
-      This method creates events from platform-specific hardware.
+      This method determines the default mapping of joystick axis to
+      Stella events for for the PSP device.
     */
-    void pollEvent();
-
-    /**
-      This method answers whether the given button as already been
-      handled by the pollEvent() method, and as such should be ignored
-      in the main event handler.
-    */
-    bool joyButtonHandled(int button);
-
-  private:
-    enum {
-      kJDirUp    =  0,  kJDirUpLeft    =  1,
-      kJDirLeft  =  2,  kJDirDownLeft  =  3,
-      kJDirDown  =  4,  kJDirDownRight =  5,
-      kJDirRight =  6,  kJDirUpRight   =  7
-    };
-
-    uInt8* myPreviousEvents;
-    uInt8* myCurrentEvents;
-    bool   myActiveEvents[8];
+    void setDefaultJoyAxisMap();
 };
 
 #endif

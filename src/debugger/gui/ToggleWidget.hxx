@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ToggleWidget.hxx,v 1.1 2005-08-30 17:51:26 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -37,8 +37,7 @@ enum {
 class ToggleWidget : public Widget, public CommandSender
 {
   public:
-    ToggleWidget(GuiObject* boss, const GUI::Font& font,
-                 int x, int y, int cols, int rows);
+    ToggleWidget(GuiObject* boss, int x, int y, int cols, int rows);
     virtual ~ToggleWidget();
 
     const BoolArray& getState()    { return _stateList; }
@@ -51,8 +50,7 @@ class ToggleWidget : public Widget, public CommandSender
 
     virtual bool wantsFocus() { return true; }
 
-    int colWidth() const { return _colWidth; }
-    void setEditable(bool editable) { _editable = editable; }
+    int colWidth() { return _colWidth; }
 
   protected:
     void drawWidget(bool hilite) = 0;
@@ -66,7 +64,6 @@ class ToggleWidget : public Widget, public CommandSender
     int  _rowHeight;
     int  _colWidth;
     int  _selectedItem;
-    bool _editable;
 
     BoolArray  _stateList;
     BoolArray  _changedList;

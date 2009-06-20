@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RamWidget.hxx,v 1.1 2005-08-30 17:51:26 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -48,31 +48,15 @@ class RamWidget : public Widget, public CommandSender
   private:
     void fillGrid(bool updateOld);
 
-    void showInputBox(int cmd);
-    string doSearch(const string& str);
-    string doCompare(const string& str);
+    const string doSearch(const string& str);
+    const string doCompare(const string& str);
     void doRestart();
-    void showSearchResults();
 
   private:
-    enum {
-      kUndoCmd     = 'RWud',
-      kRevertCmd   = 'RWrv',
-      kSearchCmd   = 'RWse',
-      kCmpCmd      = 'RWcp',
-      kRestartCmd  = 'RWrs',
-      kSValEntered = 'RWsv',
-      kCValEntered = 'RWcv'
-    };
-
     int myUndoAddress;
     int myUndoValue;
-    int myCurrentRamBank;
 
-    StaticTextWidget* myRamStart;
-    StaticTextWidget* myRamLabels[8];
-    DataGridWidget*   myRamGrid;
-
+    DataGridWidget* myRamGrid;
     EditTextWidget* myBinValue;
     EditTextWidget* myDecValue;
     EditTextWidget* myLabel;
@@ -88,7 +72,6 @@ class RamWidget : public Widget, public CommandSender
     IntArray myOldValueList;
     IntArray mySearchAddr;
     IntArray mySearchValue;
-    BoolArray mySearchState;
 };
 
 #endif

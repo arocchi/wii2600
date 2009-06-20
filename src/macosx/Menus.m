@@ -4,19 +4,16 @@
    Mark Grebe <atarimac@cox.net>
    
 */
-/* $Id: Menus.m,v 1.14 2007-01-03 12:59:23 stephena Exp $ */
+/* $Id: Menus.m,v 1.10 2005-10-15 19:02:15 markgrebe Exp $ */
 
 #import <Cocoa/Cocoa.h>
 #import "SDL.h"
 #import "Menus.h"
-#import "MenusEvents.h"
 
 #define QZ_m			0x2E
 #define QZ_o			0x1F
 #define QZ_h			0x04
 #define QZ_SLASH		0x2C
-
-extern void macOSXSendMenuEvent(int event);
 
 /*------------------------------------------------------------------------------
 *  releaseCmdKeys - This method fixes an issue when modal windows are used with
@@ -73,32 +70,6 @@ void handleMacOSXKeypress(int key) {
 	}
 }
 
-void setEmulationMenus(void)
-{
-    [[Menus sharedInstance] setEmulationMenus];
-}
-
-void setLauncherMenus(void)
-{
-    [[Menus sharedInstance] setLauncherMenus];
-}
-
-void setOptionsMenus(void)
-{
-    [[Menus sharedInstance] setOptionsMenus];
-}
-
-void setCommandMenus(void)
-{
-    [[Menus sharedInstance] setCommandMenus];
-}
-
-void setDebuggerMenus(void)
-{
-    [[Menus sharedInstance] setDebuggerMenus];
-}
-
-
 @implementation Menus
 
 static Menus *sharedInstance = nil;
@@ -151,12 +122,12 @@ static Menus *sharedInstance = nil;
 
 - (IBAction)biggerScreen:(id)sender
 {
-	[self pushKeyEvent:SDLK_EQUALS:NO:YES];
+	[self pushKeyEvent:SDLK_EQUALS:YES:YES];
 }
 
 - (IBAction)smallerScreen:(id)sender
 {
-	[self pushKeyEvent:SDLK_MINUS:NO:YES];
+	[self pushKeyEvent:SDLK_MINUS:YES:YES];
 }
 
 - (IBAction)fullScreen:(id)sender
@@ -167,15 +138,16 @@ static Menus *sharedInstance = nil;
 - (IBAction)openCart:(id)sender
 {
 	[self pushKeyEvent:SDLK_ESCAPE:NO:NO];
-//  Fixme - This should work like the other keys, but instead
-//   if you send the LauncherOpen event, it crashes SDL in
-//    the poll loop.    
-//    macOSXSendMenuEvent(MENU_OPEN);
 }
 
 - (IBAction)restartGame:(id)sender
 {
 	[self pushKeyEvent:SDLK_r:NO:YES];
+}
+
+- (IBAction)pauseGame:(id)sender
+{
+	[self pushKeyEvent:SDLK_PAUSE:NO:NO];
 }
 
 - (IBAction)ntscPalMode:(id)sender
@@ -240,12 +212,12 @@ static Menus *sharedInstance = nil;
 
 - (IBAction)volumePlus:(id)sender
 {
-    macOSXSendMenuEvent(MENU_VOLUME_INCREASE);
+	[self pushKeyEvent:SDLK_RIGHTBRACKET:YES:YES];
 }
 
 - (IBAction)volumeMinus:(id)sender
 {
-    macOSXSendMenuEvent(MENU_VOLUME_DECREASE);
+	[self pushKeyEvent:SDLK_LEFTBRACKET:YES:YES];
 }
 
 - (IBAction)saveProps:(id)sender
@@ -253,144 +225,9 @@ static Menus *sharedInstance = nil;
 	[self pushKeyEvent:SDLK_s:NO:YES];
 }
 
-- (void)setEmulationMenus
+- (IBAction)mergeProps:(id)sender
 {
-    [preferencesMenuItem setTarget:self];
-    [openMenuItem setTarget:self];
-    [restartMenuItem setTarget:self];
-    [savePropsMenuItem setTarget:self];
-    [screenBiggerMenuItem setTarget:self];
-    [screenSmallerMenuItem setTarget:self];
-    [fullScreenMenuItem setTarget:self];
-    [togglePalletteMenuItem setTarget:self];
-    [ntscPalMenuItem setTarget:self];
-    [increaseXStartMenuItem setTarget:self];
-    [decreaseXStartMenuItem setTarget:self];
-    [increaseYStartMenuItem setTarget:self];
-    [decreaseYStartMenuItem setTarget:self];
-    [increaseWidthMenuItem setTarget:self];
-    [decreaseWidthMenuItem setTarget:self];
-    [increaseHeightMenuItem setTarget:self];
-    [decreaseHeightMenuItem setTarget:self];
-    [mousePaddle0MenuItem setTarget:self];
-    [mousePaddle1MenuItem setTarget:self];
-    [mousePaddle2MenuItem setTarget:self];
-    [mousePaddle3MenuItem setTarget:self];
-    [grabMouseMenuItem setTarget:self];
-    [increaseVolumeMenuItem setTarget:self];
-    [decreaseVolumeMenuItem setTarget:self];
-}
-
-- (void)setLauncherMenus
-{
-    [preferencesMenuItem setTarget:nil];
-    [openMenuItem setTarget:nil];
-    [restartMenuItem setTarget:nil];
-    [savePropsMenuItem setTarget:nil];
-    [screenBiggerMenuItem setTarget:self];
-    [screenSmallerMenuItem setTarget:self];
-    [fullScreenMenuItem setTarget:self];
-    [togglePalletteMenuItem setTarget:nil];
-    [ntscPalMenuItem setTarget:nil];
-    [increaseXStartMenuItem setTarget:nil];
-    [decreaseXStartMenuItem setTarget:nil];
-    [increaseYStartMenuItem setTarget:nil];
-    [decreaseYStartMenuItem setTarget:nil];
-    [increaseWidthMenuItem setTarget:nil];
-    [decreaseWidthMenuItem setTarget:nil];
-    [increaseHeightMenuItem setTarget:nil];
-    [decreaseHeightMenuItem setTarget:nil];
-    [mousePaddle0MenuItem setTarget:nil];
-    [mousePaddle1MenuItem setTarget:nil];
-    [mousePaddle2MenuItem setTarget:nil];
-    [mousePaddle3MenuItem setTarget:nil];
-    [grabMouseMenuItem setTarget:nil];
-    [increaseVolumeMenuItem setTarget:nil];
-    [decreaseVolumeMenuItem setTarget:nil];
-}
-
-- (void)setOptionsMenus
-{
-    [preferencesMenuItem setTarget:nil];
-    [openMenuItem setTarget:nil];
-    [restartMenuItem setTarget:nil];
-    [savePropsMenuItem setTarget:nil];
-    [screenBiggerMenuItem setTarget:self];
-    [screenSmallerMenuItem setTarget:self];
-    [fullScreenMenuItem setTarget:self];
-    [togglePalletteMenuItem setTarget:nil];
-    [ntscPalMenuItem setTarget:nil];
-    [increaseXStartMenuItem setTarget:nil];
-    [decreaseXStartMenuItem setTarget:nil];
-    [increaseYStartMenuItem setTarget:nil];
-    [decreaseYStartMenuItem setTarget:nil];
-    [increaseWidthMenuItem setTarget:nil];
-    [decreaseWidthMenuItem setTarget:nil];
-    [increaseHeightMenuItem setTarget:nil];
-    [decreaseHeightMenuItem setTarget:nil];
-    [mousePaddle0MenuItem setTarget:nil];
-    [mousePaddle1MenuItem setTarget:nil];
-    [mousePaddle2MenuItem setTarget:nil];
-    [mousePaddle3MenuItem setTarget:nil];
-    [grabMouseMenuItem setTarget:nil];
-    [increaseVolumeMenuItem setTarget:nil];
-    [decreaseVolumeMenuItem setTarget:nil];
-}
-
-- (void)setCommandMenus
-{
-    [preferencesMenuItem setTarget:nil];
-    [openMenuItem setTarget:nil];
-    [restartMenuItem setTarget:nil];
-    [savePropsMenuItem setTarget:nil];
-    [screenBiggerMenuItem setTarget:self];
-    [screenSmallerMenuItem setTarget:self];
-    [fullScreenMenuItem setTarget:self];
-    [togglePalletteMenuItem setTarget:nil];
-    [ntscPalMenuItem setTarget:nil];
-    [increaseXStartMenuItem setTarget:nil];
-    [decreaseXStartMenuItem setTarget:nil];
-    [increaseYStartMenuItem setTarget:nil];
-    [decreaseYStartMenuItem setTarget:nil];
-    [increaseWidthMenuItem setTarget:nil];
-    [decreaseWidthMenuItem setTarget:nil];
-    [increaseHeightMenuItem setTarget:nil];
-    [decreaseHeightMenuItem setTarget:nil];
-    [mousePaddle0MenuItem setTarget:nil];
-    [mousePaddle1MenuItem setTarget:nil];
-    [mousePaddle2MenuItem setTarget:nil];
-    [mousePaddle3MenuItem setTarget:nil];
-    [grabMouseMenuItem setTarget:nil];
-    [increaseVolumeMenuItem setTarget:nil];
-    [decreaseVolumeMenuItem setTarget:nil];
-}
-
-- (void)setDebuggerMenus
-{
-    [preferencesMenuItem setTarget:nil];
-    [openMenuItem setTarget:nil];
-    [restartMenuItem setTarget:nil];
-    [savePropsMenuItem setTarget:nil];
-    [screenBiggerMenuItem setTarget:self];
-    [screenSmallerMenuItem setTarget:self];
-    [fullScreenMenuItem setTarget:self];
-    [togglePalletteMenuItem setTarget:nil];
-    [ntscPalMenuItem setTarget:nil];
-    [increaseXStartMenuItem setTarget:nil];
-    [decreaseXStartMenuItem setTarget:nil];
-    [increaseYStartMenuItem setTarget:nil];
-    [decreaseYStartMenuItem setTarget:nil];
-    [increaseWidthMenuItem setTarget:nil];
-    [decreaseWidthMenuItem setTarget:nil];
-    [increaseHeightMenuItem setTarget:nil];
-    [decreaseHeightMenuItem setTarget:nil];
-    [mousePaddle0MenuItem setTarget:nil];
-    [mousePaddle1MenuItem setTarget:nil];
-    [mousePaddle2MenuItem setTarget:nil];
-    [mousePaddle3MenuItem setTarget:nil];
-    [grabMouseMenuItem setTarget:nil];
-    [increaseVolumeMenuItem setTarget:nil];
-    [decreaseVolumeMenuItem setTarget:nil];
+	[self pushKeyEvent:SDLK_s:YES:YES];
 }
 
 @end

@@ -8,15 +8,14 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RamCheat.cxx,v 1.2 2005-11-27 15:48:05 stephena Exp $
 //============================================================================
 
-#include "Console.hxx"
 #include "System.hxx"
 #include "CheatManager.hxx"
 

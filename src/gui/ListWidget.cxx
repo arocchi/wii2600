@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ListWidget.cxx,v 1.39 2006-01-15 20:46:20 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -32,8 +32,8 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
-                       int x, int y, int w, int h, bool quickSelect)
-  : EditableWidget(boss, font, x, y, 16, 16),
+                       int x, int y, int w, int h)
+  : EditableWidget(boss, x, y, 16, 16),
     _rows(0),
     _cols(0),
     _currentPos(0),
@@ -42,25 +42,24 @@ ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
     _currentKeyDown(0),
     _editMode(false),
     _caretInverse(true),
-    _quickSelect(quickSelect),
     _quickSelectTime(0)
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS;
   _type = kListWidget;
-  _bgcolor = kWidColor;
-  _bgcolorhi = kWidColor;
-  _textcolor = kTextColor;
-  _textcolorhi = kTextColor;
 
-  _cols = w / _fontWidth;
-  _rows = h / _fontHeight;
+  setFont(font);
+
+  _colWidth  = font.getMaxCharWidth();
+  _rowHeight = font.getLineHeight();
+  _cols = w / _colWidth;
+  _rows = h / _rowHeight;
 
   // Set real dimensions
   _w = w - kScrollBarWidth;
   _h = h + 2;
 
   // Create scrollbar and attach to the list
-  _scrollBar = new ScrollBarWidget(boss, font, _x + _w, _y, kScrollBarWidth, _h);
+  _scrollBar = new ScrollBarWidget(boss, _x + _w, _y, kScrollBarWidth, _h);
   _scrollBar->setTarget(this);
 }
 
@@ -72,8 +71,7 @@ ListWidget::~ListWidget()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ListWidget::setSelected(int item)
 {
-  if(item < -1 || item >= (int)_list.size())
-    return;
+  assert(item >= -1 && item < (int)_list.size());
 
   if(isEnabled())
   {
@@ -91,8 +89,7 @@ void ListWidget::setSelected(int item)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ListWidget::setHighlighted(int item)
 {
-  if(item < -1 || item >= (int)_list.size())
-    return;
+  assert(item >= -1 && item < (int)_list.size());
 
   if(isEnabled())
   {
@@ -144,9 +141,6 @@ void ListWidget::recalc()
 
   _scrollBar->_numEntries     = _list.size();
   _scrollBar->_entriesPerPage = _rows;
-
-  // Reset to normal data entry
-  abortEditMode();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -206,33 +200,43 @@ void ListWidget::handleMouseWheel(int x, int y, int direction)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int ListWidget::findItem(int x, int y) const
 {
-  return (y - 1) / _fontHeight + _currentPos;
+  return (y - 1) / _rowHeight + _currentPos;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+static bool matchingCharsIgnoringCase(string s, string pattern)
+{
+  // Make the strings uppercase so we can compare them
+  transform(s.begin(), s.end(), s.begin(), (int(*)(int)) toupper);
+  transform(pattern.begin(), pattern.end(), pattern.begin(), (int(*)(int)) toupper);
+
+  // Make sure that if the pattern is found, it occurs at the start of 's'
+  return (s.find(pattern, 0) == string::size_type(0));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all Alt-mod keys
-  if(instance().eventHandler().kbdAlt(modifiers))
+  if(instance()->eventHandler().kbdAlt(modifiers))
     return true;
 
   bool handled = true;
   int oldSelectedItem = _selectedItem;
 
-  if (!_editMode && _quickSelect &&
-      ((isalnum((char)ascii)) || isspace((char)ascii)))
+  if (!_editMode && isalnum((char)ascii))
   {
     // Quick selection mode: Go to first list item starting with this key
     // (or a substring accumulated from the last couple key presses).
     // Only works in a useful fashion if the list entries are sorted.
     // TODO: Maybe this should be off by default, and instead we add a
     // method "enableQuickSelect()" or so ?
-    int time = instance().getTicks() / 1000;
+    int time = instance()->getTicks() / 1000;
     if (_quickSelectTime < time)
       _quickSelectStr = (char)ascii;
     else
       _quickSelectStr += (char)ascii;
-    _quickSelectTime = time + _QUICK_SELECT_DELAY;
+    _quickSelectTime = time + 300; 
 
     // FIXME: This is bad slow code (it scans the list linearly each time a
     // key is pressed); it could be much faster. Only of importance if we have
@@ -241,8 +245,8 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
     int newSelectedItem = 0;
     for (StringList::const_iterator i = _list.begin(); i != _list.end(); ++i)
     {
-      if(BSPF_strncasecmp((*i).c_str(), _quickSelectStr.c_str(),
-         _quickSelectStr.length()) == 0)
+      const bool match = matchingCharsIgnoringCase(*i, _quickSelectStr);
+      if (match)
       {
         _selectedItem = newSelectedItem;
         break;
@@ -258,7 +262,7 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   else
   {
     // not editmode
-    switch (keycode)
+    switch (ascii)
     {
       case ' ':  // space
         // Snap list back to currently highlighted line
@@ -267,6 +271,48 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
           _currentPos = _highlightedItem;
           scrollToHighlighted();
         }
+        break;
+
+      case '\n':  // enter/return
+      case '\r':
+        if (_selectedItem >= 0)
+        {
+          // override continuous enter keydown
+          if (_editable && (_currentKeyDown != '\n' && _currentKeyDown != '\r'))
+            startEditMode();
+          else
+            sendCommand(kListItemActivatedCmd, _selectedItem, _id);
+        }
+        break;
+
+      case kCursorUp:
+        if (_selectedItem > 0)
+          _selectedItem--;
+        break;
+
+      case kCursorDown:
+        if (_selectedItem < (int)_list.size() - 1)
+          _selectedItem++;
+        break;
+
+      case kCursorPgUp:
+        _selectedItem -= _rows - 1;
+        if (_selectedItem < 0)
+          _selectedItem = 0;
+        break;
+
+      case kCursorPgDn:
+        _selectedItem += _rows - 1;
+        if (_selectedItem >= (int)_list.size() )
+          _selectedItem = _list.size() - 1;
+        break;
+
+      case kCursorHome:
+        _selectedItem = 0;
+        break;
+
+      case kCursorEnd:
+        _selectedItem = _list.size() - 1;
         break;
 
       default:
@@ -295,78 +341,9 @@ bool ListWidget::handleKeyUp(int ascii, int keycode, int modifiers)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool ListWidget::handleEvent(Event::Type e)
-{
-  if(!isEnabled() || _editMode)
-    return false;
-
-  bool handled = true;
-  int oldSelectedItem = _selectedItem;
-
-  switch(e)
-  {
-    case Event::UISelect:
-      if (_selectedItem >= 0)
-      {
-        if (_editable)
-          startEditMode();
-        else
-          sendCommand(kListItemActivatedCmd, _selectedItem, _id);
-      }
-      break;
-
-    case Event::UIUp:
-      if (_selectedItem > 0)
-        _selectedItem--;
-      break;
-
-    case Event::UIDown:
-      if (_selectedItem < (int)_list.size() - 1)
-        _selectedItem++;
-      break;
-
-    case Event::UIPgUp:
-      _selectedItem -= _rows - 1;
-      if (_selectedItem < 0)
-        _selectedItem = 0;
-      break;
-
-    case Event::UIPgDown:
-      _selectedItem += _rows - 1;
-      if (_selectedItem >= (int)_list.size() )
-        _selectedItem = _list.size() - 1;
-      break;
-
-    case Event::UIHome:
-      _selectedItem = 0;
-      break;
-
-    case Event::UIEnd:
-      _selectedItem = _list.size() - 1;
-      break;
-
-    default:
-      handled = false;
-  }
-
-  if (_selectedItem != oldSelectedItem)
-  {
-    _scrollBar->draw();
-    scrollToSelected();
-
-    sendCommand(kListSelectionChangedCmd, _selectedItem, _id);
-  }
-
-  return handled;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ListWidget::lostFocusWidget()
 {
   _editMode = false;
-
-  // Reset to normal data entry
-  abortEditMode();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -385,6 +362,17 @@ void ListWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
       }
       break;
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+GUI::Rect ListWidget::getRect() const
+{
+  // Account for attached scrollbar when calculating width
+  int x = getAbsX() - 1,  y = getAbsY() - 1,
+      w = getWidth() + kScrollBarWidth + 2, h = getHeight() + 2;
+
+  GUI::Rect r(x, y, x+w, y+h);
+  return r;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -424,9 +412,6 @@ void ListWidget::startEditMode()
   {
     _editMode = true;
     setEditString(_list[_selectedItem]);
-
-    // Widget gets raw data while editing
-    EditableWidget::startEditMode();
   }
 }
 
@@ -436,24 +421,16 @@ void ListWidget::endEditMode()
   if (!_editMode)
     return;
 
-  // Send a message that editing finished with a return/enter key press
+  // send a message that editing finished with a return/enter key press
   _editMode = false;
   _list[_selectedItem] = _editString;
   sendCommand(kListItemDataChangedCmd, _selectedItem, _id);
-
-  // Reset to normal data entry
-  EditableWidget::endEditMode();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ListWidget::abortEditMode()
 {
-  // Undo any changes made
+  // undo any changes made
+  assert(_selectedItem >= 0);
   _editMode = false;
-
-  // Reset to normal data entry
-  EditableWidget::abortEditMode();
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int ListWidget::_QUICK_SELECT_DELAY = 300;

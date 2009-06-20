@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerSystem.hxx,v 1.3 2005-07-08 14:36:17 stephena Exp $
 //============================================================================
 
 #ifndef DEBUGGER_SYSTEM_HXX
@@ -42,20 +42,16 @@ class DebuggerState
 class DebuggerSystem
 {
   public:
-    DebuggerSystem(Debugger& dbg, Console& console) :
-      myDebugger(dbg), myConsole(console), mySystem(console.system()) { }
+    DebuggerSystem(Debugger* dbg, Console* console) { myDebugger = dbg; }
     virtual ~DebuggerSystem() { }
 
-    virtual const DebuggerState& getState() = 0;
-    virtual const DebuggerState& getOldState() = 0;
+    virtual DebuggerState& getState() = 0;
+    virtual DebuggerState& getOldState() = 0;
 
     virtual void saveOldState() = 0;
-    virtual string toString() = 0;
 
   protected:
-    Debugger& myDebugger;
-    Console& myConsole;
-    System& mySystem;
+    Debugger* myDebugger;
 };
 
 #endif

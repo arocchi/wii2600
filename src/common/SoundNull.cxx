@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundNull.cxx,v 1.4 2005-12-17 01:23:07 stephena Exp $
 //============================================================================
 
 #include "Serializer.hxx"
@@ -27,7 +27,7 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SoundNull::SoundNull(OSystem* osystem)
-  : Sound(osystem)
+    : Sound(osystem)
 {
   // Show some info
   if(myOSystem->settings().getBool("showinfo"))
@@ -47,12 +47,12 @@ bool SoundNull::load(Deserializer& in)
     return false;
 
   uInt8 reg;
-  reg = (uInt8) in.getByte();
-  reg = (uInt8) in.getByte();
-  reg = (uInt8) in.getByte();
-  reg = (uInt8) in.getByte();
-  reg = (uInt8) in.getByte();
-  reg = (uInt8) in.getByte();
+  reg = (uInt8) in.getInt();
+  reg = (uInt8) in.getInt();
+  reg = (uInt8) in.getInt();
+  reg = (uInt8) in.getInt();
+  reg = (uInt8) in.getInt();
+  reg = (uInt8) in.getInt();
 
   // myLastRegisterSetCycle
   in.getInt();
@@ -66,12 +66,12 @@ bool SoundNull::save(Serializer& out)
   out.putString("TIASound");
 
   uInt8 reg = 0;
-  out.putByte((char)reg);
-  out.putByte((char)reg);
-  out.putByte((char)reg);
-  out.putByte((char)reg);
-  out.putByte((char)reg);
-  out.putByte((char)reg);
+  out.putInt(reg);
+  out.putInt(reg);
+  out.putInt(reg);
+  out.putInt(reg);
+  out.putInt(reg);
+  out.putInt(reg);
 
   // myLastRegisterSetCycle
   out.putInt(0);
