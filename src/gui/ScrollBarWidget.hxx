@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ScrollBarWidget.hxx,v 1.12 2009-01-04 02:28:12 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -61,7 +61,6 @@ class ScrollBarWidget : public Widget, public CommandSender
     int _numEntries;
     int _entriesPerPage;
     int _currentPos;
-    int _wheel_lines;
 
   private:
     typedef enum {

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartFASC.cxx,v 1.19 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -28,9 +28,6 @@ CartridgeFASC::CartridgeFASC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
   memcpy(myImage, image, 12288);
-
-  // This cart contains 256 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 256, 0x100, 0x00);
 }
  
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,7 +92,7 @@ void CartridgeFASC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeFASC::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -120,23 +117,21 @@ uInt8 CartridgeFASC::peek(uInt16 address)
   }
 
   // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
   // Thanks to Kroko of AtariAge for this advice and code idea
   if(address < 0x0100)  // Write port is at 0xF000 - 0xF100 (256 bytes)
   {
-    if(myBankLocked) return 0;
-    else return myRAM[address] = 0;
+    return myRAM[address & 0x00FF] = 0;
   }  
   else
   {
-    return myImage[(myCurrentBank << 12) + address];
+    return myImage[myCurrentBank * 4096 + address];
   }  
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeFASC::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -172,7 +167,7 @@ void CartridgeFASC::bank(uInt16 bank)
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -205,7 +200,8 @@ int CartridgeFASC::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeFASC::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

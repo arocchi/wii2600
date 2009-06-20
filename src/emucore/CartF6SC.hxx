@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF6SC.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEF6SC_HXX
@@ -29,7 +29,7 @@ class System;
   128 bytes of RAM.  There are four 4K banks.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: CartF6SC.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
 */
 class CartridgeF6SC : public Cartridge
 {

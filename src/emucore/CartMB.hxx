@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartMB.hxx,v 1.11 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEMB_HXX
@@ -30,7 +30,7 @@ class System;
   Accessing $1FF0 switches to next bank.
 
   @author  Eckhard Stolberg
-  @version $Id$
+  @version $Id: CartMB.hxx,v 1.11 2009-01-01 18:13:35 stephena Exp $
 */
 class CartridgeMB : public Cartridge
 {

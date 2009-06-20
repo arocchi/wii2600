@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: UIDialog.cxx,v 1.21 2009-03-26 19:46:05 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -53,7 +53,7 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
 
   // Set real dimensions
   _w = 42 * fontWidth + 10;
-  _h = 10 * (lineHeight + 4) + 10;
+  _h = 9 * (lineHeight + 4) + 10;
 
   // The tab widget
   xpos = ypos = vBorder;
@@ -117,12 +117,6 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
     new PopUpWidget(myTab, font, xpos, ypos+1, pwidth, lineHeight, items,
                     "ROM Info viewer: ", lwidth);
   wid.push_back(myRomViewerPopup);
-  ypos += lineHeight + 4;
-
-  // Should we use the built-in ROM launcher
-  myUseLauncherBox = new CheckboxWidget(myTab, font, xpos+20, ypos+10,
-                                        "Use ROM launcher");
-  wid.push_back(myUseLauncherBox);
 
   // Add message concerning usage
   xpos = vBorder; ypos += 2*(lineHeight + 4);
@@ -146,7 +140,7 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   myDebuggerWidthSlider = new SliderWidget(myTab, font, xpos, ypos, pwidth,
                                            lineHeight, "Debugger Width: ",
                                            lwidth, kDWidthChanged);
-  myDebuggerWidthSlider->setMinValue(1050);
+  myDebuggerWidthSlider->setMinValue(1030);
   myDebuggerWidthSlider->setMaxValue(1920);
   myDebuggerWidthSlider->setStepValue(10);
   wid.push_back(myDebuggerWidthSlider);
@@ -284,12 +278,9 @@ void UIDialog::loadConfig()
   const string& viewer = instance().settings().getString("romviewer");
   myRomViewerPopup->setSelected(viewer, "0");
 
-  // Use ROM launcher
-  myUseLauncherBox->setState(instance().settings().getBool("uselauncher"));
-
   // Debugger size
   instance().settings().getSize("debuggerres", w, h);
-  w = BSPF_max(w, 1050);
+  w = BSPF_max(w, 1030);
   h = BSPF_max(h, 620);
   w = BSPF_min(w, 1920);
   h = BSPF_min(h, 1200);
@@ -333,9 +324,6 @@ void UIDialog::saveConfig()
   instance().settings().setString("romviewer",
     myRomViewerPopup->getSelectedTag());
 
-  // Use ROM launcher
-  instance().settings().setBool("uselauncher", myUseLauncherBox->getState());
-
   // Debugger size
   instance().settings().setSize("debuggerres", 
     myDebuggerWidthSlider->getValue(), myDebuggerHeightSlider->getValue());
@@ -370,13 +358,12 @@ void UIDialog::setDefaults()
       myLauncherHeightLabel->setValue(h);
       myLauncherFontPopup->setSelected("medium", "");
       myRomViewerPopup->setSelected("0", "");
-      myUseLauncherBox->setState(true);
       break;
     }
 
     case 1:  // Debugger options
-      myDebuggerWidthSlider->setValue(1050);
-      myDebuggerWidthLabel->setValue(1050);
+      myDebuggerWidthSlider->setValue(1030);
+      myDebuggerWidthLabel->setValue(1030);
       myDebuggerHeightSlider->setValue(690);
       myDebuggerHeightLabel->setValue(690);
       break;

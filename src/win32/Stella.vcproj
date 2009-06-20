@@ -462,14 +462,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\emucore\CartEF.cxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEFSC.cxx"
-					>
-				</File>
-				<File
 					RelativePath="..\emucore\CartF4.cxx"
 					>
 				</File>
@@ -571,6 +563,14 @@
 				</File>
 				<File
 					RelativePath="..\emucore\m6502\src\M6502.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Hi.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Low.cxx"
 					>
 				</File>
 				<File
@@ -969,14 +969,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\GLShaderProgs.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\HomeFinder.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\win32\OSystemWin32.hxx"
 				>
 			</File>
@@ -1077,14 +1069,6 @@
 				</File>
 				<File
 					RelativePath="..\emucore\CartE7.hxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEF.hxx"
-					>
-				</File>
-				<File
-					RelativePath="..\emucore\CartEFSC.hxx"
 					>
 				</File>
 				<File
@@ -1193,6 +1177,14 @@
 				</File>
 				<File
 					RelativePath="..\emucore\m6502\src\M6502.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Hi.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\m6502\src\M6502Low.hxx"
 					>
 				</File>
 				<File

@@ -14,7 +14,7 @@
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
+// $Id: FrameBufferWinCE.cpp,v 1.14 2007-02-12 11:16:59 knakos Exp $
 //============================================================================
 
 #include <windows.h>

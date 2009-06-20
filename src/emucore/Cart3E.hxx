@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart3E.hxx,v 1.8 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGE3E_HXX
@@ -57,7 +57,7 @@ class System;
   any problems. (Famous last words...)
 
   @author  B. Watson
-  @version $Id$
+  @version $Id: Cart3E.hxx,v 1.8 2009-01-01 18:13:35 stephena Exp $
 */
 
 class Cartridge3E : public Cartridge

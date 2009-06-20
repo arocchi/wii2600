@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Debugger.hxx,v 1.98 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef DEBUGGER_HXX
@@ -48,6 +48,12 @@ class Expression;
 typedef map<string,Expression*> FunctionMap;
 typedef map<string,string> FunctionDefMap;
 
+// Constants for RAM area
+enum {
+  kRamStart = 0x80,
+  kRamSize = 128
+};
+
 /*
 // These will probably turn out to be unneeded, left for reference for now
 // pointer types for Debugger instance methods
@@ -64,7 +70,7 @@ typedef uInt16 (Debugger::*DEBUGGER_WORD_METHOD)();
   for all debugging operations in Stella (parser, 6502 debugger, etc).
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Debugger.hxx,v 1.98 2009-01-01 18:13:35 stephena Exp $
 */
 class Debugger : public DialogContainer
 {
