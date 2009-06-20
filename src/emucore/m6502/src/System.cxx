@@ -8,35 +8,29 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2002 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.cxx,v 1.2 2001-12-30 18:36:02 bwmott Exp $
 //============================================================================
 
 #include <assert.h>
-#include <iostream>
-
 #include "Device.hxx"
 #include "M6502.hxx"
-#include "M6532.hxx"
-#include "TIA.hxx"
 #include "System.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 System::System(uInt16 n, uInt16 m)
-  : myAddressMask((1 << n) - 1),
-    myPageShift(m),
-    myPageMask((1 << m) - 1),
-    myNumberOfPages(1 << (n - m)),
-    myNumberOfDevices(0),
-    myM6502(0),
-    myTIA(0),
-    myCycles(0),
-    myDataBusState(0),
-    myDataBusLocked(false)
+    : myAddressMask((1 << n) - 1),
+      myPageShift(m),
+      myPageMask((1 << m) - 1),
+      myNumberOfPages(1 << (n - m)),
+      myNumberOfDevices(0),
+      myM6502(0),
+      myCycles(0),
+      myDataBusState(0)
 {
   // Make sure the arguments are reasonable
   assert((1 <= m) && (m <= n) && (n <= 16));
@@ -53,9 +47,6 @@ System::System(uInt16 n, uInt16 m)
   {
     setPageAccess(page, access);
   }
-
-  // Bus starts out unlocked (in other words, peek() changes myDataBusState)
-  myDataBusLocked = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -80,7 +71,7 @@ void System::reset()
   // Reset system cycle counter
   resetCycles();
 
-  // First we reset the devices attached to myself
+  // Frist we reset the devices attached to myself
   for(uInt32 i = 0; i < myNumberOfDevices; ++i)
   {
     myDevices[i]->reset();
@@ -116,26 +107,9 @@ void System::attach(M6502* m6502)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::attach(M6532* m6532)
-{
-  // Remember the processor
-  myM6532 = m6532;
-
-  // Attach it as a normal device
-  attach((Device*) m6532);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::attach(TIA* tia)
-{
-  myTIA = tia;
-  attach((Device*) tia);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void System::resetCycles()
 {
-  // First we let all of the device attached to me know about the reset
+  // Frist we let all of the device attached to me know about the reset
   for(uInt32 i = 0; i < myNumberOfDevices; ++i)
   {
     myDevices[i]->systemCyclesReset();
@@ -168,10 +142,10 @@ const System::PageAccess& System::getPageAccess(uInt16 page)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 System::System(const System& s)
-  : myAddressMask(s.myAddressMask),
-    myPageShift(s.myPageShift),
-    myPageMask(s.myPageMask),
-    myNumberOfPages(s.myNumberOfPages)
+    : myAddressMask(s.myAddressMask),
+      myPageShift(s.myPageShift),
+      myPageMask(s.myPageMask),
+      myNumberOfPages(s.myNumberOfPages)
 {
   assert(false);
 }
@@ -184,125 +158,4 @@ System& System::operator = (const System&)
   return *this;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8 System::peek(uInt16 addr)
-{
-  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
 
-  uInt8 result;
- 
-  // See if this page uses direct accessing or not 
-  if(access.directPeekBase != 0)
-  {
-    result = *(access.directPeekBase + (addr & myPageMask));
-  }
-  else
-  {
-    result = access.device->peek(addr);
-  }
-
-#ifdef DEBUGGER_SUPPORT
-  if(!myDataBusLocked)
-#endif
-    myDataBusState = result;
-
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::poke(uInt16 addr, uInt8 value)
-{
-  PageAccess& access = myPageAccessTable[(addr & myAddressMask) >> myPageShift];
-  
-  // See if this page uses direct accessing or not 
-  if(access.directPokeBase != 0)
-  {
-    *(access.directPokeBase + (addr & myPageMask)) = value;
-  }
-  else
-  {
-    access.device->poke(addr, value);
-  }
-
-#ifdef DEBUGGER_SUPPORT
-  if(!myDataBusLocked)
-#endif
-    myDataBusState = value;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::lockDataBus()
-{
-  myDataBusLocked = true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::unlockDataBus()
-{
-  myDataBusLocked = false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::save(Serializer& out) const
-{
-  const string& device = name();
-  try
-  {
-    out.putString(device);
-    out.putInt(myCycles);
-
-    if(!myM6502->save(out))
-      return false;
-
-    // Now save the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->save(out))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << device << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::load(Deserializer& in)
-{
-  const string& device = name();
-  try
-  {
-    if(in.getString() != device)
-      return false;
-
-    myCycles = (uInt32) in.getInt();
-
-    // Next, load state for the CPU
-    if(!myM6502->load(in))
-      return false;
-
-    // Now load the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->load(in))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << device << endl;
-    return false;
-  }
-
-  return true;
-}

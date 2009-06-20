@@ -8,30 +8,37 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartMB.cxx,v 1.1 2002-01-18 16:01:43 estolberg Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
-#include "System.hxx"
+#include <assert.h>
 #include "CartMB.hxx"
+#include "System.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeMB::CartridgeMB(const uInt8* image)
 {
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, 65536);
+  for(uInt32 addr = 0; addr < 65536; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeMB::~CartridgeMB()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeMB::name() const
+{
+  return "CartridgeMB";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,34 +77,30 @@ void CartridgeMB::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeMB::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch to next bank
-  if(address == 0x0FF0)
-    incbank();
+  if(address == 0x0FF0) incbank();
 
-  return myImage[(myCurrentBank << 12) + address];
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMB::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch to next bank
-  if(address == 0x0FF0)
-    incbank();
+  if(address == 0x0FF0) incbank();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMB::incbank()
 {
-  if(myBankLocked) return;
-
   // Remember what bank we're in
   myCurrentBank ++;
   myCurrentBank &= 0x0F;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -115,92 +118,3 @@ void CartridgeMB::incbank()
   }
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeMB::bank(uInt16 bank)
-{
-  if(myBankLocked) return;
-
-  myCurrentBank = bank - 1;
-  incbank();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeMB::bank()
-{
-  return myCurrentBank;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeMB::bankCount()
-{
-  return 16;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMB::patch(uInt16 address, uInt8 value)
-{
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeMB::getImage(int& size)
-{
-  size = 65536;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMB::save(Serializer& out) const
-{
-  string cart = name();
-
-  try
-  {
-    out.putString(cart);
-
-    out.putInt(myCurrentBank);
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << cart << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeMB::load(Deserializer& in)
-{
-  string cart = name();
-
-  try
-  {
-    if(in.getString() != cart)
-      return false;
-
-    myCurrentBank = (uInt16) in.getInt();
-  }
-  catch(const char* msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << cart << endl;
-    return false;
-  }
-
-  // Remember what bank we were in
-  --myCurrentBank;
-  incbank();
-
-  return true;
-}

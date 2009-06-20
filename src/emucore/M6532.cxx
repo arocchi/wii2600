@@ -8,30 +8,34 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6532.cxx,v 1.1.1.1 2001-12-27 19:54:22 bwmott Exp $
 //============================================================================
 
-#include <cassert>
-#include <iostream>
-
+#include <assert.h>
 #include "Console.hxx"
+#include "M6532.hxx"
 #include "Random.hxx"
 #include "Switches.hxx"
 #include "System.hxx"
-#include "Serializer.hxx"
-#include "Deserializer.hxx"
-
-#include "M6532.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6532::M6532(const Console& console)
-  : myConsole(console)
+    : myConsole(console)
 {
+  // Randomize the 128 bytes of memory
+  Random random;
+
+  for(uInt32 t = 0; t < 128; ++t)
+  {
+    myRAM[t] = random.next();
+  }
+
+  // Initialize other data members
   reset();
 }
  
@@ -39,29 +43,25 @@ M6532::M6532(const Console& console)
 M6532::~M6532()
 {
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* M6532::name() const
+{
+  return "M6532";
+}
  
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void M6532::reset()
 {
-  class Random random;
-
-  // Randomize the 128 bytes of memory
-  for(uInt32 t = 0; t < 128; ++t)
-    myRAM[t] = random.next();
-
-  // The timer absolutely cannot be initialized to zero; some games will
-  // loop or hang (notably Solaris and H.E.R.O.)
-  myTimer = (0xff - (random.next() % 0xfe)) << 10;
-  myIntervalShift = 10;
+  myTimer = 100;
+  myIntervalShift = 6;
   myCyclesWhenTimerSet = 0;
-  myInterruptEnabled = false;
-  myInterruptTriggered = false;
+  myCyclesWhenInterruptReset = 0;
+  myTimerReadAfterInterrupt = false;
 
   // Zero the I/O registers
-  myDDRA = myDDRB = myOutA = 0x00;
-
-  // Zero the timer registers
-  myOutTimer[0] = myOutTimer[1] = myOutTimer[2] = myOutTimer[3] = 0x00;
+  myDDRA = 0x00;
+  myDDRB = 0x00;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,20 +70,11 @@ void M6532::systemCyclesReset()
   // System cycles are being reset to zero so we need to adjust
   // the cycle count we remembered when the timer was last set
   myCyclesWhenTimerSet -= mySystem->cycles();
-
-  // We should also inform any 'smart' controllers as well
-  myConsole.controller(Controller::Left).systemCyclesReset();
-  myConsole.controller(Controller::Right).systemCyclesReset();
+  myCyclesWhenInterruptReset -= mySystem->cycles();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void M6532::install(System& system)
-{
-  install(system, *this);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6532::install(System& system, Device& device)
 {
   // Remember which system I'm installed in
   mySystem = &system;
@@ -94,18 +85,27 @@ void M6532::install(System& system, Device& device)
   // Make sure the system we're being installed in has a page size that'll work
   assert((0x1080 & mask) == 0);
   
-  // All accesses are to the given device
+  // All accesses are to this device
   System::PageAccess access;
-  access.device = &device;
+  access.device = this;
 
   // We're installing in a 2600 system
   for(int address = 0; address < 8192; address += (1 << shift))
   {
     if((address & 0x1080) == 0x0080)
     {
-      access.directPeekBase = 0; 
-      access.directPokeBase = 0;
-      mySystem->setPageAccess(address >> shift, access);
+      if((address & 0x0200) == 0x0000)
+      {
+        access.directPeekBase = &myRAM[address & 0x007f];
+        access.directPokeBase = &myRAM[address & 0x007f];
+        mySystem->setPageAccess(address >> shift, access);
+      }
+      else
+      {
+        access.directPeekBase = 0; 
+        access.directPokeBase = 0;
+        mySystem->setPageAccess(address >> shift, access);
+      }
     }
   }
 }
@@ -113,38 +113,31 @@ void M6532::install(System& system, Device& device)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 M6532::peek(uInt16 addr)
 {
-  // Access RAM directly.  Originally, accesses to RAM could bypass
-  // this method and its pages could be installed directly into the
-  // system.  However, certain cartridges (notably 4A50) can mirror
-  // the RAM address space, making it necessary to chain accesses.
-  if((addr & 0x1080) == 0x0080 && (addr & 0x0200) == 0x0000)
-  {
-    return myRAM[addr & 0x007f];
-  }
-
   switch(addr & 0x07)
   {
     case 0x00:    // Port A I/O Register (Joystick)
     {
       uInt8 value = 0x00;
 
-      Controller& port0 = myConsole.controller(Controller::Left);
-      if(port0.read(Controller::One))   value |= 0x10;
-      if(port0.read(Controller::Two))   value |= 0x20;
-      if(port0.read(Controller::Three)) value |= 0x40;
-      if(port0.read(Controller::Four))  value |= 0x80;
+      if(myConsole.controller(Controller::Left).read(Controller::One))
+        value |= 0x10;
+      if(myConsole.controller(Controller::Left).read(Controller::Two))
+        value |= 0x20;
+      if(myConsole.controller(Controller::Left).read(Controller::Three))
+        value |= 0x40;
+      if(myConsole.controller(Controller::Left).read(Controller::Four))
+        value |= 0x80;
 
-      Controller& port1 = myConsole.controller(Controller::Right);
-      if(port1.read(Controller::One))   value |= 0x01;
-      if(port1.read(Controller::Two))   value |= 0x02;
-      if(port1.read(Controller::Three)) value |= 0x04;
-      if(port1.read(Controller::Four))  value |= 0x08;
+      if(myConsole.controller(Controller::Right).read(Controller::One))
+        value |= 0x01;
+      if(myConsole.controller(Controller::Right).read(Controller::Two))
+        value |= 0x02;
+      if(myConsole.controller(Controller::Right).read(Controller::Three))
+        value |= 0x04;
+      if(myConsole.controller(Controller::Right).read(Controller::Four))
+        value |= 0x08;
 
-      // Each pin is high (1) by default and will only go low (0) if either
-      //  (a) External device drives the pin low
-      //  (b) Corresponding bit in SWACNT = 1 and SWCHA = 0
-      // Thanks to A. Herbert for this info
-      return (myOutA | ~myDDRA) & value;
+      return value;
     }
 
     case 0x01:    // Port A Data Direction Register 
@@ -165,35 +158,46 @@ uInt8 M6532::peek(uInt16 addr)
     case 0x04:    // Timer Output
     case 0x06:
     {
-      myInterruptTriggered = false;
-      Int32 timer = timerClocks();
+      uInt32 cycles = mySystem->cycles() - 1;
+      uInt32 delta = cycles - myCyclesWhenTimerSet;
+      Int32 timer = (Int32)myTimer - (Int32)(delta >> myIntervalShift) - 1;
 
       // See if the timer has expired yet?
-      // Note that this constant comes from z26, and corresponds to
-      // 256 intervals of T1024T (ie, the maximum that the timer should hold)
-      // I'm not sure why this is required, but quite a few PAL ROMs fail
-      // if we just check >= 0.
-      if(!(timer & 0x40000))
+      if(timer >= 0)
       {
-        return (timer >> myIntervalShift) & 0xff;
+        return (uInt8)timer; 
       }
       else
       {
-        if(timer != -1)
-          myInterruptTriggered = true;
+        timer = (Int32)(myTimer << myIntervalShift) - (Int32)delta - 1;
 
-        // According to the M6532 documentation, the timer continues to count
-        // down to -255 timer clocks after wraparound.  However, it isn't
-        // entirely clear what happens *after* if reaches -255.
-        // For now, we'll let it continuously wrap around.
-        return timer & 0xff;
+        if((timer <= -2) && !myTimerReadAfterInterrupt)
+        {
+          // Indicate that timer has been read after interrupt occured
+          myTimerReadAfterInterrupt = true;
+          myCyclesWhenInterruptReset = mySystem->cycles();
+        }
+
+        if(myTimerReadAfterInterrupt)
+        {
+          Int32 offset = myCyclesWhenInterruptReset - 
+              (myCyclesWhenTimerSet + (myTimer << myIntervalShift));
+
+          timer = (Int32)myTimer - (Int32)(delta >> myIntervalShift) - offset;
+        }
+
+        return (uInt8)timer;
       }
     }
 
     case 0x05:    // Interrupt Flag
     case 0x07:
     {
-      if((timerClocks() >= 0) || (myInterruptEnabled && myInterruptTriggered))
+      uInt32 cycles = mySystem->cycles() - 1;
+      uInt32 delta = cycles - myCyclesWhenTimerSet;
+      Int32 timer = (Int32)myTimer - (Int32)(delta >> myIntervalShift) - 1;
+
+      if((timer >= 0) || myTimerReadAfterInterrupt)
         return 0x00;
       else
         return 0x80;
@@ -212,177 +216,82 @@ uInt8 M6532::peek(uInt16 addr)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void M6532::poke(uInt16 addr, uInt8 value)
 {
-  // Access RAM directly.  Originally, accesses to RAM could bypass
-  // this method and its pages could be installed directly into the
-  // system.  However, certain cartridges (notably 4A50) can mirror
-  // the RAM address space, making it necessary to chain accesses.
-  if((addr & 0x1080) == 0x0080 && (addr & 0x0200) == 0x0000)
+  if((addr & 0x07) == 0x00)         // Port A I/O Register (Joystick)
   {
-    myRAM[addr & 0x007f] = value;
+    uInt8 a = value & myDDRA;
+
+    myConsole.controller(Controller::Left).write(Controller::One, a & 0x10);
+    myConsole.controller(Controller::Left).write(Controller::Two, a & 0x20);
+    myConsole.controller(Controller::Left).write(Controller::Three, a & 0x40);
+    myConsole.controller(Controller::Left).write(Controller::Four, a & 0x80);
+    
+    myConsole.controller(Controller::Right).write(Controller::One, a & 0x01);
+    myConsole.controller(Controller::Right).write(Controller::Two, a & 0x02);
+    myConsole.controller(Controller::Right).write(Controller::Three, a & 0x04);
+    myConsole.controller(Controller::Right).write(Controller::Four, a & 0x08);
+  }
+  else if((addr & 0x07) == 0x01)    // Port A Data Direction Register 
+  {
+    myDDRA = value;
+  }
+  else if((addr & 0x07) == 0x02)    // Port B I/O Register (Console switches)
+  {
     return;
   }
-
-  // A2 distinguishes I/O registers from the timer
-  if((addr & 0x04) != 0)
+  else if((addr & 0x07) == 0x03)    // Port B Data Direction Register
   {
-    if((addr & 0x10) != 0)
-    {
-      myInterruptEnabled = (addr & 0x08);
-      setTimerRegister(value, addr & 0x03);
-    }
+//        myDDRB = value;
+    return;
+  }
+  else if((addr & 0x17) == 0x14)    // Write timer divide by 1 
+  {
+    myTimer = value;
+    myIntervalShift = 0;
+    myCyclesWhenTimerSet = mySystem->cycles();
+    myTimerReadAfterInterrupt = false;
+  }
+  else if((addr & 0x17) == 0x15)    // Write timer divide by 8
+  {
+    myTimer = value;
+    myIntervalShift = 3;
+    myCyclesWhenTimerSet = mySystem->cycles();
+    myTimerReadAfterInterrupt = false;
+  }
+  else if((addr & 0x17) == 0x16)    // Write timer divide by 64
+  {
+    myTimer = value;
+    myIntervalShift = 6;
+    myCyclesWhenTimerSet = mySystem->cycles();
+    myTimerReadAfterInterrupt = false;
+  }
+  else if((addr & 0x17) == 0x17)    // Write timer divide by 1024
+  {
+    myTimer = value;
+    myIntervalShift = 10;
+    myCyclesWhenTimerSet = mySystem->cycles();
+    myTimerReadAfterInterrupt = false;
+  }
+  else if((addr & 0x14) == 0x04)    // Write Edge Detect Control
+  {
+#ifdef DEBUG_ACCESSES
+    cerr << "M6532 Poke (Write Edge Detect): "
+        << ((addr & 0x02) ? "PA7 enabled" : "PA7 disabled")
+        << ", "
+        << ((addr & 0x01) ? "Positive edge" : "Negative edge")
+        << endl;
+#endif
   }
   else
   {
-    switch(addr & 0x03)
-    {
-      case 0:     // Port A I/O Register (Joystick)
-      {
-        myOutA = value;
-        setPinState();
-        break;
-      }
-
-      case 1:     // Port A Data Direction Register 
-      {
-        myDDRA = value;
-        setPinState();
-        break;
-      }
-
-      default:    // Port B I/O & DDR Registers (Console switches)
-        break;    // hardwired as read-only
-    }
+#ifdef DEBUG_ACCESSES
+    cerr << "BAD M6532 Poke: " << hex << addr << endl;
+#endif
   }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6532::setTimerRegister(uInt8 value, uInt8 interval)
-{
-  static const uInt8 shift[] = { 0, 3, 6, 10 };
-
-  myInterruptTriggered = false;
-  myIntervalShift = shift[interval];
-  myOutTimer[interval] = value;
-  myTimer = value << myIntervalShift;
-  myCyclesWhenTimerSet = mySystem->cycles();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void M6532::setPinState()
-{
-  /*
-    When a bit in the DDR is set as input, +5V is placed on its output
-    pin.  When it's set as output, either +5V or 0V (depending on the
-    contents of SWCHA) will be placed on the output pin.
-    The standard macros for the AtariVox and SaveKey use this fact to
-    send data to the port.  This is represented by the following algorithm:
-
-      if(DDR bit is input)       set output as 1
-      else if(DDR bit is output) set output as bit in ORA
-  */
-  uInt8 a = myOutA | ~myDDRA;
-
-  Controller& port0 = myConsole.controller(Controller::Left);
-  port0.write(Controller::One, a & 0x10);
-  port0.write(Controller::Two, a & 0x20);
-  port0.write(Controller::Three, a & 0x40);
-  port0.write(Controller::Four, a & 0x80);
-
-  Controller& port1 = myConsole.controller(Controller::Right);
-  port1.write(Controller::One, a & 0x01);
-  port1.write(Controller::Two, a & 0x02);
-  port1.write(Controller::Three, a & 0x04);
-  port1.write(Controller::Four, a & 0x08);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6532::save(Serializer& out) const
-{
-  string device = name();
-
-  try
-  {
-    out.putString(device);
-
-    // Output the RAM
-    out.putInt(128);
-    for(uInt32 t = 0; t < 128; ++t)
-      out.putByte((char)myRAM[t]);
-
-    out.putInt(myTimer);
-    out.putInt(myIntervalShift);
-    out.putInt(myCyclesWhenTimerSet);
-    out.putBool(myInterruptEnabled);
-    out.putBool(myInterruptTriggered);
-
-    out.putByte((char)myDDRA);
-    out.putByte((char)myDDRB);
-    out.putByte((char)myOutA);
-    out.putByte((char)myOutTimer[0]);
-    out.putByte((char)myOutTimer[1]);
-    out.putByte((char)myOutTimer[2]);
-    out.putByte((char)myOutTimer[3]);
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << device << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool M6532::load(Deserializer& in)
-{
-  string device = name();
-
-  try
-  {
-    if(in.getString() != device)
-      return false;
-
-    // Input the RAM
-    uInt32 limit = (uInt32) in.getInt();
-    for(uInt32 t = 0; t < limit; ++t)
-      myRAM[t] = (uInt8) in.getByte();
-
-    myTimer = (uInt32) in.getInt();
-    myIntervalShift = (uInt32) in.getInt();
-    myCyclesWhenTimerSet = (uInt32) in.getInt();
-    myInterruptEnabled = in.getBool();
-    myInterruptTriggered = in.getBool();
-
-    myDDRA = (uInt8) in.getByte();
-    myDDRB = (uInt8) in.getByte();
-    myOutA = (uInt8) in.getByte();
-    myOutTimer[0] = (uInt8) in.getByte();
-    myOutTimer[1] = (uInt8) in.getByte();
-    myOutTimer[2] = (uInt8) in.getByte();
-    myOutTimer[3] = (uInt8) in.getByte();
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << device << endl;
-    return false;
-  }
-
-  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6532::M6532(const M6532& c)
-  : myConsole(c.myConsole)
+    : myConsole(c.myConsole)
 {
   assert(false);
 }
@@ -391,5 +300,7 @@ M6532::M6532(const M6532& c)
 M6532& M6532::operator = (const M6532&)
 {
   assert(false);
+
   return *this;
 }
+ 

@@ -9,45 +9,106 @@
      SSSS     ttt  eeeee llll llll  aaaaa
 
 ===============================================================================
-                 Release 2.8.1 for Linux, Mac OSX and Windows
+                     Release 1.2 for DOS, Linux, and Unix 
 ===============================================================================
 
 The Atari 2600 Video Computer System (VCS), introduced in 1977, was the most 
-popular home video game system of the early 1980's.  Now you can enjoy all of 
+popular home video game system of the early 1980's. Now you can enjoy all of 
 your favorite Atari 2600 games on your PC thanks to Stella! 
 
-Stella is a multi-platform Atari 2600 VCS emulator.  It allows you to play all
-of your favorite Atari 2600 games again!  Stella was originally developed for
+Stella is a multi-platform Atari 2600 VCS emulator. It allows you to play all
+of your favorite Atari 2600 games again! Stella was originally developed for
 Linux by Bradford W. Mott, however, it has been ported to a number of other
 platforms.
 
-This is the 2.8.1 release of Stella for Linux, Mac OSX and Windows.
-Distributions for other operating systems will appear as they become available.
-The distributions currently available are:
+This is the 1.2 release of Stella for DOS, Linux, and Unix. Distributions
+for other operating systems will appear as they become available. The three 
+distributions currently available are:
 
-  * Binary distribution in 32-bit RPM format for Linux (stella-2.8.1-1.i586.rpm)
+  * Binary distribution for Linux (stella-1.2-linux-x86.tar.gz)
 
-  * Binary distribution in 32-bit Ubuntu DEB format (stella_2.8.1-1_i386.deb)
+  * Binary distribution for DOS (st12.zip)
 
-  * Binary distribution in 64-bit Ubuntu DEB format (stella_2.8.1-1_amd64.deb)
-
-  * Binary distribution for Mac OSX (StellaOSX2.8.1.dmg.gz)
-
-  * Binary installer (exe) for Windows (stella-2.8.1-win32.exe)
-
-  * Binary zip for Windows (stella-2.8.1-win32.zip)
-
-  * Binary zip for 64-bit Windows (stella-2.8.1-win64.zip)
-
-  * Source code distribution for all platforms (stella-2.8.1-src.tar.gz)
+  * Source code distribution for Linux, Unix, and DOS (stella-1.2-src.tar.gz)
 
 PLEASE DO NOT WRITE ASKING FOR ROM IMAGES TO USE WITH STELLA! ALL SUCH
 REQUESTS WILL BE IGNORED!
 
+New in this Release
+===================
+
+  * Improved illegal CPU instruction support. Thrust and Qb will now operate
+    correctly.
+
+  * Improved emulation of undefined TIA reads. The ball in Video Pinball
+    finally bounces off of the paddles!
+
+  * More accurate NTSC and PAL palettes. These palettes should be much more
+    like the colors displayed on a real TV.
+
+  * PAL color loss is now emulated. If a PAL game displays an odd number
+    of scanlines then the next frame will be displayed in black & white.
+
+  * TIA emulation improved to fix some problems with Pole Position,
+    Fatal Run, Dolphin, Decathlon, Robot Tank, and Hole Hunter.
+
+  * Support for Pitfall II has been added, however, the enhanced sound
+    provided by the DPC chip found in the Pitfall II cartridge isn't
+    currently emulated.
+
+  * Support added for the Commavid (CV) bankswitching method.
+
+  * Support added for the Megaboy cartridge.
+
+  * Improved Supercharger emulation including a new BIOS that shows the
+    vertical blue progress bars like the real thing.
+
+  * Code for the emulation core has been updated to work with newer C++
+    compilers compliant with the C++ standard.
+
+  * Basic message support added to the TIA emulation. This allows a short
+    message to overlay the TIA frame. Currently, it's used when switching
+    color modes and difficulty settings.
+ 
+  * The internal data structure for the stella.pro file was changed from
+    a resizable array to a binary search tree. This results in quicker
+    startup times.
+
+  * An SDL port of Stella is available (requires SDL 1.2.0 or greater)
+
+  * Added option to not load in the whole stella.pro file when starting 
+    Stella. This option is enabled on the X11, SDL, and DOS versions. Win32 
+    version is left alone since it's needed for loading multiple games from 
+    the UI. Saves on memory usage.
+
+  * Added INI file option to the X11 and SDL versions. Options can be 
+    specified in this file instead of entering them on the commandline. Any 
+    options entered on the commandline override options in the INI file.  
+    File is called stellarc. For the X11 and SDL versions, it can be in
+    either $HOME (as $HOME/.stellarc) or in /etc (as /etc/stellarc).  The
+    one in $HOME has higher priority than the one in /etc.
+
+  * Added snapshot support to the X11 and SDL versions. Pressing F12 saves 
+    the current screen in PNG format. Requires PNG library.
+
+  * Removed stella.pro file from the binary, resulting in large space
+    savings. The stella.pro file is no longer optional.  For the X11 and
+    SDL versions, it can be in either $HOME (as $HOME/.stella.pro) or in
+    /etc (as /etc/stella.pro). The one in $HOME has higher priority than
+    the one in /etc. For DOS and Win32 versions, the stella.pro file must
+    be in the same directory as the executable.
+
+  * Added pause functionality to the core. Implemented in DOS, X11, and
+    SDL versions for now.
 
 Distribution Site
 ================= 
 
 The Stella distributions can be obtained from the Stella Website at:
 
-  http://stella.sourceforge.net
+  http://stella.atari.org
+
+If for some reason you are unable to connect to the Stella Website using
+the above URL please try http://stella.sourceforge.net.
+
+

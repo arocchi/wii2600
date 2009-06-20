@@ -8,20 +8,18 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: NullDev.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 //============================================================================
 
 #ifndef NULLDEVICE_HXX
 #define NULLDEVICE_HXX
 
 class System;
-class Serializer;
-class Deserializer;
 
 #include "bspf.hxx"
 #include "Device.hxx"
@@ -32,7 +30,7 @@ class Deserializer;
   holes in the address space (i.e. no real device attached). 
  
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: NullDev.hxx,v 1.1.1.1 2001-12-27 19:54:31 bwmott Exp $
 */
 class NullDevice : public Device
 {
@@ -49,6 +47,13 @@ class NullDevice : public Device
 
   public:
     /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const;
+
+    /**
       Reset device to its power-on state
     */
     virtual void reset();
@@ -60,29 +65,6 @@ class NullDevice : public Device
       @param system The system the device should install itself in
     */
     virtual void install(System& system);
-
-    /**
-      Save the current state of this device to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this device from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "NullDevice"; }
 
   public:
     /**
