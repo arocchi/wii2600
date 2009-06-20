@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartF8SC.cxx,v 1.19 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -28,9 +28,6 @@ CartridgeF8SC::CartridgeF8SC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
   memcpy(myImage, image, 8192);
-
-  // This cart contains 128 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 128, 0x80, 0x00);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,7 +92,7 @@ void CartridgeF8SC::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeF8SC::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -114,22 +111,16 @@ uInt8 CartridgeF8SC::peek(uInt16 address)
       break;
   }
 
-  // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
-  // Thanks to Kroko of AtariAge for this advice and code idea
-  if(address < 0x0080)  // Write port is at 0xF000 - 0xF080 (128 bytes)
-  {
-    if(myBankLocked) return 0;
-    else return myRAM[address] = 0;
-  }  
-  else
-    return myImage[(myCurrentBank << 12) + address];
+  // NOTE: This does not handle accessing RAM, however, this function
+  // should never be called for RAM because of the way page accessing
+  // has been setup
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeF8SC::poke(uInt16 address, uInt8)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -193,7 +184,8 @@ int CartridgeF8SC::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeF8SC::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

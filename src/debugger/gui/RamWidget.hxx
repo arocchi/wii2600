@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RamWidget.hxx,v 1.7 2009-01-01 18:13:35 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -52,7 +52,6 @@ class RamWidget : public Widget, public CommandSender
     string doSearch(const string& str);
     string doCompare(const string& str);
     void doRestart();
-    void showSearchResults();
 
   private:
     enum {
@@ -67,12 +66,8 @@ class RamWidget : public Widget, public CommandSender
 
     int myUndoAddress;
     int myUndoValue;
-    int myCurrentRamBank;
 
-    StaticTextWidget* myRamStart;
-    StaticTextWidget* myRamLabels[8];
-    DataGridWidget*   myRamGrid;
-
+    DataGridWidget* myRamGrid;
     EditTextWidget* myBinValue;
     EditTextWidget* myDecValue;
     EditTextWidget* myLabel;
@@ -88,7 +83,6 @@ class RamWidget : public Widget, public CommandSender
     IntArray myOldValueList;
     IntArray mySearchAddr;
     IntArray mySearchValue;
-    BoolArray mySearchState;
 };
 
 #endif

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystem.cxx,v 1.154 2009-01-24 17:32:29 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -191,7 +191,7 @@ bool OSystem::create()
   //       This logic should also take into account the size of the
   //       framebuffer, and try to be intelligent about font sizes
   //       We can probably add ifdefs to take care of corner cases,
-  //       but that means we've failed to abstract it enough ...
+  //       but the means we've failed to abstract it enough ...
   ////////////////////////////////////////////////////////////////////
   bool smallScreen = myDesktopWidth < 640 || myDesktopHeight < 480;
 
@@ -272,52 +272,52 @@ bool OSystem::create()
 void OSystem::setConfigPaths()
 {
   // Paths are saved with special characters preserved ('~' or '.')
-  // We do some error checking here, so the rest of the codebase doesn't
+  // Internally, we expand them so the rest of the codebase doesn't
   // have to worry about it
   FilesystemNode node;
   string s;
 
   s = mySettings->getString("statedir");
   if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "state";
+  mySettings->setString("statedir", s);
   node = FilesystemNode(s);
   myStateDir = node.getPath();
-  mySettings->setString("statedir", node.getRelativePath());
   if(!node.isDirectory())
     AbstractFilesystemNode::makeDir(myStateDir);
 
   s = mySettings->getString("ssdir");
   if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "snapshots";
+  mySettings->setString("ssdir", s);
   node = FilesystemNode(s);
   mySnapshotDir = node.getPath();
-  mySettings->setString("ssdir", node.getRelativePath());
   if(!node.isDirectory())
     AbstractFilesystemNode::makeDir(mySnapshotDir);
 
   s = mySettings->getString("eepromdir");
   if(s == "") s = myBaseDir;
+  mySettings->setString("eepromdir", s);
   node = FilesystemNode(s);
   myEEPROMDir = node.getPath();
-  mySettings->setString("eepromdir", node.getRelativePath());
   if(!node.isDirectory())
     AbstractFilesystemNode::makeDir(myEEPROMDir);
 
   s = mySettings->getString("cheatfile");
   if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.cht";
+  mySettings->setString("cheatfile", s);
   node = FilesystemNode(s);
   myCheatFile = node.getPath();
-  mySettings->setString("cheatfile", node.getRelativePath());
 
   s = mySettings->getString("palettefile");
   if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pal";
+  mySettings->setString("palettefile", s);
   node = FilesystemNode(s);
   myPaletteFile = node.getPath();
-  mySettings->setString("palettefile", node.getRelativePath());
 
   s = mySettings->getString("propsfile");
   if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pro";
+  mySettings->setString("propsfile", s);
   node = FilesystemNode(s);
   myPropertiesFile = node.getPath();
-  mySettings->setString("propsfile", node.getRelativePath());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -332,10 +332,11 @@ void OSystem::setUIPalette()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystem::setBaseDir(const string& basedir)
 {
-  FilesystemNode node(basedir);
-  myBaseDir = node.getPath();
+  myBaseDir = basedir;
+  FilesystemNode node(myBaseDir);
+  myBaseDirExpanded = node.getPath();
   if(!node.isDirectory())
-    AbstractFilesystemNode::makeDir(myBaseDir);
+    AbstractFilesystemNode::makeDir(myBaseDirExpanded);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -375,23 +376,22 @@ bool OSystem::createFrameBuffer()
     case EventHandler::S_MENU:
     case EventHandler::S_CMDMENU:
       if(!myConsole->initializeVideo())
-        goto fallback;
+        return false;
       break;  // S_EMULATE, S_PAUSE, S_MENU, S_CMDMENU
 
     case EventHandler::S_LAUNCHER:
       if(!myLauncher->initializeVideo())
-        goto fallback;
+        return false;
       break;  // S_LAUNCHER
 
 #ifdef DEBUGGER_SUPPORT
     case EventHandler::S_DEBUGGER:
       if(!myDebugger->initializeVideo())
-        goto fallback;
+        return false;
       break;  // S_DEBUGGER
 #endif
 
-    default:  // Should never happen
-      cerr << "ERROR: Unknown emulation state in createFrameBuffer()" << endl;
+    default:
       break;
   }
 
@@ -406,26 +406,6 @@ bool OSystem::createFrameBuffer()
   }
 
   return true;
-
-  // GOTO are normally considered evil, unless well documented :)
-  // If initialization of video system fails while in OpenGL mode,
-  // attempt to fallback to software mode
-fallback:
-  if(myFrameBuffer && myFrameBuffer->type() == kGLBuffer)
-  {
-    cerr << "ERROR: OpenGL mode failed, fallback to software" << endl;
-    delete myFrameBuffer; myFrameBuffer = NULL;
-    mySettings->setString("video", "soft");
-    bool ret = createFrameBuffer();
-    if(ret)
-    {
-      setFramerate(60);
-      myFrameBuffer->showMessage("OpenGL mode failed, fallback to software", kMiddleCenter);
-    }
-    return ret;
-  }
-  else
-    return false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -460,11 +440,6 @@ bool OSystem::createConsole(const string& romfile, const string& md5sum)
   {
     myRomFile = romfile;
     myRomMD5  = md5sum;
-
-    // Each time a new console is loaded, we simulate a cart removal
-    // Some carts need knowledge of this, as they behave differently
-    // based on how many power-cycles they've been through since plugged in
-    mySettings->setInt("romloadcount", 0);
   }
 
   // Create an instance of the 2600 game console
@@ -616,32 +591,12 @@ Console* OSystem::openConsole(const string& romfile, string& md5)
   if((image = openROM(romfile, md5, size)) != 0)
   {
     // Get a valid set of properties, including any entered on the commandline
-    // For initial creation of the Cart, we're only concerned with the BS type
     Properties props;
     myPropSet->getMD5(md5, props);
+
     string s = "";
     CMDLINE_PROPS_UPDATE("bs", Cartridge_Type);
     CMDLINE_PROPS_UPDATE("type", Cartridge_Type);
-
-    // Now create the cartridge
-    string id, cartmd5 = md5, type = props.get(Cartridge_Type);
-    Cartridge* cart =
-      Cartridge::create(image, size, cartmd5, id, type, *mySettings);
-
-    // It's possible that the cart created was from a piece of the image,
-    // and that the md5 (and hence the cart) has changed
-    if(props.get(Cartridge_MD5) != cartmd5)
-    {
-      string name = props.get(Cartridge_Name);
-      if(!myPropSet->getMD5(cartmd5, props))
-      {
-        // Cart md5 wasn't found, so we create a new props for it
-        props.set(Cartridge_MD5, cartmd5);
-        props.set(Cartridge_Name, name+id);
-        myPropSet->insert(props, false);
-      }
-    }
-
     CMDLINE_PROPS_UPDATE("channels", Cartridge_Sound);
     CMDLINE_PROPS_UPDATE("ld", Console_LeftDifficulty);
     CMDLINE_PROPS_UPDATE("rd", Console_RightDifficulty);
@@ -658,7 +613,7 @@ Console* OSystem::openConsole(const string& romfile, string& md5)
     CMDLINE_PROPS_UPDATE("pp", Display_Phosphor);
     CMDLINE_PROPS_UPDATE("ppblend", Display_PPBlend);
 
-    // Finally, create the cart with the correct properties
+    Cartridge* cart = Cartridge::create(image, size, props, *mySettings);
     if(cart)
       console = new Console(this, cart, props);
   }
@@ -673,7 +628,7 @@ Console* OSystem::openConsole(const string& romfile, string& md5)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
+uInt8* OSystem::openROM(const string& file, string& md5, uInt32& size)
 {
   // This method has a documented side-effect:
   // It not only loads a ROM and creates an array with its contents,
@@ -705,12 +660,8 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
           // Grab 3-character extension
           char* ext = filename + strlen(filename) - 4;
 
-          if(!BSPF_strcasecmp(ext, ".a26") || !BSPF_strcasecmp(ext, ".bin") ||
-             !BSPF_strcasecmp(ext, ".rom"))
-          {
-            file = filename;
+          if(!BSPF_strcasecmp(ext, ".bin") || !BSPF_strcasecmp(ext, ".a26"))
             break;
-          }
         }
 
         // Scan the next file in the zip
@@ -763,15 +714,20 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
   // be an entry in stella.pro.  In that case, we use the rom name
   // and reinsert the properties object
   Properties props;
-  if(!myPropSet->getMD5(md5, props))
+  myPropSet->getMD5(md5, props);
+
+  string name = props.get(Cartridge_Name);
+  if(name == "Untitled")
   {
     // Get the filename from the rom pathname
-    string::size_type pos = file.find_last_of("/\\");
-    if(pos != string::npos)  file = file.substr(pos+1);
-
-    props.set(Cartridge_MD5, md5);
-    props.set(Cartridge_Name, file);
-    myPropSet->insert(props, false);
+    string::size_type pos = file.find_last_of(BSPF_PATH_SEPARATOR);
+    if(pos+1 != string::npos)
+    {
+      name = file.substr(pos+1);
+      props.set(Cartridge_MD5, md5);
+      props.set(Cartridge_Name, name);
+      myPropSet->insert(props, false);
+    }
   }
 
   return image;
@@ -1016,5 +972,6 @@ OSystem::OSystem(const OSystem& osystem)
 OSystem& OSystem::operator = (const OSystem&)
 {
   assert(false);
+
   return *this;
 }

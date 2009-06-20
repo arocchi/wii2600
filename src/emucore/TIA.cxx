@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIA.cxx,v 1.104 2009-02-08 21:07:06 stephena Exp $
 //============================================================================
 
 //#define DEBUG_HMOVE
@@ -274,6 +274,7 @@ void TIA::install(System& system, Device& device)
       mySystem->setPageAccess(i >> shift, access);
     }
   }
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -564,7 +565,7 @@ inline void TIA::endFrame()
   myFrameCounter++;
 
   // Recalculate framerate. attempting to auto-correct for scanline 'jumps'
-  if(myFrameCounter % 8 == 0 && myAutoFrameEnabled)
+  if(myFrameCounter % 32 == 0 && myAutoFrameEnabled)
   {
     myFramerate = (myScanlineCountForLastFrame > 285 ? 15600.0 : 15720.0) /
                    myScanlineCountForLastFrame;
@@ -695,10 +696,9 @@ inline void TIA::updateFrameScanline(uInt32 clocksToUpdate, uInt32 hpos)
         break;
       }
 
-      // Playfield is enabled and the priority bit is set (score bit is overridden)
+      // Playfield is enabled and the score bit is not set
       case PFBit: 
       case PFBit | PriorityBit:
-      case PFBit | PriorityBit | ScoreBit:
       {
         uInt32* mask = &myCurrentPFMask[hpos];
 
@@ -717,8 +717,9 @@ inline void TIA::updateFrameScanline(uInt32 clocksToUpdate, uInt32 hpos)
         break;
       }
 
-      // Playfield is enabled and the score bit is set (without priority bit)
+      // Playfield is enabled and the score bit is set
       case PFBit | ScoreBit:
+      case PFBit | ScoreBit | PriorityBit:
       {
         uInt32* mask = &myCurrentPFMask[hpos];
 

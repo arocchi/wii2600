@@ -13,10 +13,8 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIADebug.cxx,v 1.30 2009-01-19 16:52:32 stephena Exp $
 //============================================================================
-
-//#define NEWTIA
 
 #include "System.hxx"
 #include "Debugger.hxx"
@@ -617,11 +615,7 @@ uInt8 TIADebug::hmP0(int newVal)
   if(newVal > -1)
     mySystem.poke(HMP0, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMP0 >> 4;
-#else
   return myTIA.myHMP0;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -630,11 +624,7 @@ uInt8 TIADebug::hmP1(int newVal)
   if(newVal > -1)
     mySystem.poke(HMP1, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMP1 >> 4;
-#else
   return myTIA.myHMP1;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -643,11 +633,7 @@ uInt8 TIADebug::hmM0(int newVal)
   if(newVal > -1)
     mySystem.poke(HMM0, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMM0 >> 4;
-#else
   return myTIA.myHMM0;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -656,11 +642,7 @@ uInt8 TIADebug::hmM1(int newVal)
   if(newVal > -1)
     mySystem.poke(HMM1, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMM1 >> 4;
-#else
   return myTIA.myHMM1;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -669,11 +651,7 @@ uInt8 TIADebug::hmBL(int newVal)
   if(newVal > -1)
     mySystem.poke(HMBL, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMBL >> 4;
-#else
   return myTIA.myHMBL;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

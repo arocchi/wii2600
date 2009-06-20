@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Surface.hxx,v 1.4 2009-01-01 18:13:39 stephena Exp $
 //============================================================================
 
 #ifndef GUI_SURFACE_HXX
@@ -31,7 +31,7 @@ namespace GUI {
   advertised interface, or from FrameBuffer-derived classes.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Surface.hxx,v 1.4 2009-01-01 18:13:39 stephena Exp $
 */
 class Surface
 {

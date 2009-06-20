@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerParser.cxx,v 1.110 2009-01-14 20:31:07 stephena Exp $
 //============================================================================
 
 #include <fstream>
@@ -30,7 +30,6 @@
 #include "YaccParser.hxx"
 #include "M6502.hxx"
 #include "Expression.hxx"
-#include "FSNode.hxx"
 #include "RomWidget.hxx"
 
 #ifdef CHEATCODE_SUPPORT
@@ -126,14 +125,16 @@ string DebuggerParser::run(const string& command)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 string DebuggerParser::exec(const string& file, bool verbose)
 {
-  string ret;
+  string ret, path = file;
   int count = 0;
   char buffer[256]; // FIXME: static buffers suck
 
-  FilesystemNode node(file);
-  ifstream in(node.getPath().c_str());
+  if( file.find_last_of('.') == string::npos )
+    path += ".stella";
+
+  ifstream in(path.c_str());
   if(!in.is_open())
-    return red("file \'" + file + "\' not found.");
+    return red("file \"" + path + "\" not found.");
 
   while( !in.eof() ) {
     if(!in.getline(buffer, 255))
@@ -151,7 +152,7 @@ string DebuggerParser::exec(const string& file, bool verbose)
   ret += "Executed ";
   ret += debugger->valueToString(count);
   ret += " commands from \"";
-  ret += file;
+  ret += path;
   ret += "\"\n";
   return ret;
 }

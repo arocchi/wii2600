@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SerialPortMACOSX.hxx,v 1.2 2009-01-01 18:13:39 stephena Exp $
 //============================================================================
 
 #ifndef SERIALPORT_UNIX_HXX
@@ -26,7 +26,7 @@
   reading isn't actually supported at all.
 
   @author  Stephen Anthony & D. Spice
-  @version $Id$
+  @version $Id: SerialPortMACOSX.hxx,v 1.2 2009-01-01 18:13:39 stephena Exp $
 */
 class SerialPortMACOSX : public SerialPort
 {

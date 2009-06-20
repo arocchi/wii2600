@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartDPC.hxx,v 1.13 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEDCP_HXX
@@ -30,7 +30,7 @@ class System;
   see David P. Crane's United States Patent Number 4,644,495.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: CartDPC.hxx,v 1.13 2009-01-01 18:13:35 stephena Exp $
 */
 class CartridgeDPC : public Cartridge
 {

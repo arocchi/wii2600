@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBufferSoft.cxx,v 1.96 2009-02-06 23:53:34 stephena Exp $
 //============================================================================
 
 #include <sstream>
@@ -101,9 +101,6 @@ bool FrameBufferSoft::setVidMode(VideoMode& mode)
   }
   myFormat = myScreen->format;
   myBytesPerPixel = myFormat->BytesPerPixel;
-
-  // Make sure the flags represent the current screen state
-  mySDLFlags = myScreen->flags;
 
   // Make sure drawTIA() knows which renderer to use
   switch(myBytesPerPixel)
