@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartEFSC.cxx,v 1.2 2009-05-01 11:25:07 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -28,9 +28,6 @@ CartridgeEFSC::CartridgeEFSC(const uInt8* image)
 {
   // Copy the ROM image into my buffer
   memcpy(myImage, image, 65536);
-
-  // This cart contains 128 bytes extended RAM @ 0x1000
-  registerRamArea(0x1000, 128, 0x80, 0x00);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -101,16 +98,10 @@ uInt8 CartridgeEFSC::peek(uInt16 address)
   if((address >= 0x0FE0) && (address <= 0x0FEF))
     bank(address - 0x0FE0);
 
-  // Reading from the write port triggers an unwanted write
-  // The value written to RAM is somewhat undefined, so we use 0
-  // Thanks to Kroko of AtariAge for this advice and code idea
-  if(address < 0x0080)  // Write port is at 0xF000 - 0xF080 (128 bytes)
-  {
-    if(myBankLocked) return 0;
-    else return myRAM[address] = 0;
-  }  
-  else
-    return myImage[(myCurrentBank << 12) + address];
+  // NOTE: This does not handle accessing RAM, however, this function
+  // should never be called for RAM because of the way page accessing
+  // has been setup
+  return myImage[myCurrentBank * 4096 + address];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -134,7 +125,7 @@ void CartridgeEFSC::bank(uInt16 bank)
 
   // Remember what bank we're in
   myCurrentBank = bank;
-  uInt16 offset = myCurrentBank << 12;
+  uInt16 offset = myCurrentBank * 4096;
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
@@ -167,7 +158,8 @@ int CartridgeEFSC::bankCount()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeEFSC::patch(uInt16 address, uInt8 value)
 {
-  myImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

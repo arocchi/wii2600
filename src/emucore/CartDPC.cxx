@@ -13,11 +13,10 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartDPC.cxx,v 1.23 2009-05-01 11:25:07 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 #include <iostream>
 
 #include "System.hxx"
@@ -26,19 +25,30 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeDPC::CartridgeDPC(const uInt8* image, uInt32 size)
 {
+  uInt32 addr;
+
   // Make a copy of the entire image as-is, for use by getImage()
   // (this wastes 12K of RAM, should be controlled by a #ifdef)
-  memcpy(myImageCopy, image, size);
+  for(addr = 0; addr < size; ++addr)
+    myImageCopy[addr] = image[addr];
 
   // Copy the program ROM image into my buffer
-  memcpy(myProgramImage, image, 8192);
+  for(addr = 0; addr < 8192; ++addr)
+  {
+    myProgramImage[addr] = image[addr];
+  }
 
   // Copy the display ROM image into my buffer
-  memcpy(myDisplayImage, image + 8192, 2048);
+  for(addr = 0; addr < 2048; ++addr)
+  {
+    myDisplayImage[addr] = image[8192 + addr];
+  }
 
   // Initialize the DPC data fetcher registers
   for(uInt16 i = 0; i < 8; ++i)
+  {
     myTops[i] = myBottoms[i] = myCounters[i] = myFlags[i] = 0;
+  }
 
   // None of the data fetchers are in music mode
   myMusicMode[0] = myMusicMode[1] = myMusicMode[2] = false;
@@ -444,15 +454,14 @@ int CartridgeDPC::bank()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeDPC::bankCount()
 {
-  // TODO - add support for debugger (support the display ROM somehow)
-  return 2;
+  return 2; // TODO: support the display ROM somehow
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeDPC::patch(uInt16 address, uInt8 value)
 {
-  // TODO - check if this actually works
-  myProgramImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
+  address = address & 0x0FFF;
+  myProgramImage[myCurrentBank * 4096 + address] = value;
   return true;
 } 
 

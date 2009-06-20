@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIA.cxx,v 1.106 2009-03-16 00:23:42 stephena Exp $
 //============================================================================
 
 //#define DEBUG_HMOVE
@@ -274,6 +274,7 @@ void TIA::install(System& system, Device& device)
       mySystem->setPageAccess(i >> shift, access);
     }
   }
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

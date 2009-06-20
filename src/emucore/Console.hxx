@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.hxx,v 1.74 2009-03-16 00:23:42 stephena Exp $
 //============================================================================
 
 #ifndef CONSOLE_HXX
@@ -53,7 +53,7 @@ struct ConsoleInfo
   This class represents the entire game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Console.hxx,v 1.74 2009-03-16 00:23:42 stephena Exp $
 */
 class Console : public Serializable
 {
@@ -264,6 +264,9 @@ class Console : public Serializable
     void togglePFBit() const { toggleTIABit(TIA::PF, "PF"); }
     void enableBits(bool enable) const;
 
+    // TODO - make the core code work without needing to access this
+    AtariVox* atariVox() { return myAVox; }
+
   private:
     /**
       Adds the left and right controllers to the console
@@ -318,6 +321,8 @@ class Console : public Serializable
     // Pointer to the 6532 (aka RIOT) (the debugger needs it)
     // A RIOT of my own! (...with apologies to The Clash...)
     M6532 *myRiot;
+
+    AtariVox* myAVox;
 
     // The currently defined display format (NTSC/PAL/SECAM)
     string myDisplayFormat;

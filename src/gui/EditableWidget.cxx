@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EditableWidget.cxx,v 1.31 2009-01-24 21:44:49 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -77,7 +77,7 @@ void EditableWidget::setEditable(bool editable)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool EditableWidget::tryInsertChar(char c, int pos)
 {
-  if (isprint(c) && c != '\"' && c != '\\')
+  if (isprint(c))
   {
     _editString.insert(pos, 1, c);
     return true;

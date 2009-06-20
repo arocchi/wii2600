@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CpuWidget.cxx,v 1.16 2009-04-13 15:17:07 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -60,26 +60,29 @@ CpuWidget::CpuWidget(GuiObject* boss, const GUI::Font& font, int x, int y)
                                  lineHeight, "");
   myPCLabel->setEditable(false);
 
+  // Create read-only textboxes for decimal and binary of currently selected item
+  ypos += myPCLabel->getHeight() + 5 + 5;
+  new StaticTextWidget(boss, font, xpos, ypos, 4*fontWidth, fontHeight,
+                       "Dec:", kTextAlignLeft);
+  myDecValue = new EditTextWidget(boss, font, xpos+4*fontWidth + 5, ypos-2,
+                                  4*fontWidth, lineHeight, "");
+  myDecValue->setEditable(false);
+
+  ypos += myPCLabel->getHeight() + 5;
+  new StaticTextWidget(boss, font, xpos, ypos, 4*fontWidth, fontHeight,
+                       "Bin:", kTextAlignLeft);
+  myBinValue = new EditTextWidget(boss, font, xpos+4*fontWidth + 5, ypos-2,
+                                  9*fontWidth, lineHeight, "");
+  myBinValue->setEditable(false);
+
   // Create a 1x4 grid with labels for the other CPU registers
-  xpos = x + lwidth;  ypos += myPCGrid->getHeight() + 1;
+  xpos = x;  ypos += myPCGrid->getHeight() + 1 - 2*(myPCLabel->getHeight() + 5) - 5;
   myCpuGrid =
-    new DataGridWidget(boss, font, xpos, ypos, 1, 4, 2, 8, kBASE_16);
+    new DataGridWidget(boss, font, xpos + lwidth, ypos, 1, 4, 2, 8, kBASE_16);
   myCpuGrid->setTarget(this);
   myCpuGrid->setID(kCpuRegID);
   addFocusWidget(myCpuGrid);
 
-  // Create a 1x4 grid with decimal and binary values for the other CPU registers
-  xpos = x + lwidth + myPCGrid->getWidth() + 10;
-  myCpuGridDecValue = 
-    new DataGridWidget(boss, font, xpos, ypos, 1, 4, 3, 8, kBASE_10);
-  myCpuGridDecValue->setEditable(false);
-  xpos += myCpuGridDecValue->getWidth() + 5;
-  myCpuGridBinValue = 
-    new DataGridWidget(boss, font, xpos, ypos, 1, 4, 8, 8, kBASE_2);
-  myCpuGridBinValue->setEditable(false);
-
-  // Add labels for other CPU registers
-  xpos = x;
   string labels[4] = { "SP:", "A:", "X:", "Y:" };
   for(int row = 0; row < 4; ++row)
   {
@@ -137,6 +140,8 @@ void CpuWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
         case kCpuRegID:
           addr  = myCpuGrid->getSelectedAddr();
           value = myCpuGrid->getSelectedValue();
+          myDecValue->setEditString(instance().debugger().valueToString(value, kBASE_10));
+          myBinValue->setEditString(instance().debugger().valueToString(value, kBASE_2));
           break;
       }
 
@@ -154,27 +159,28 @@ void CpuWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
 
         case kSPRegAddr:
           dbg.setSP(value);
-          myCpuGridDecValue->setValue(0, value);
-          myCpuGridBinValue->setValue(0, value);
           break;
 
         case kARegAddr:
           dbg.setA(value);
-          myCpuGridDecValue->setValue(1, value);
-          myCpuGridBinValue->setValue(1, value);
           break;
 
         case kXRegAddr:
           dbg.setX(value);
-          myCpuGridDecValue->setValue(2, value);
-          myCpuGridBinValue->setValue(2, value);
           break;
 
         case kYRegAddr:
           dbg.setY(value);
-          myCpuGridDecValue->setValue(3, value);
-          myCpuGridBinValue->setValue(3, value);
           break;
+      }
+      break;
+
+    case kDGSelectionChangedCmd:
+      if(id == kCpuRegID)
+      {
+          value = myCpuGrid->getSelectedValue();
+          myDecValue->setEditString(instance().debugger().valueToString(value, kBASE_10));
+          myBinValue->setEditString(instance().debugger().valueToString(value, kBASE_2));
       }
       break;
 
@@ -271,8 +277,6 @@ void CpuWidget::fillGrid()
 
   // Finally, update the register list
   myCpuGrid->setList(alist, vlist, changed);
-  myCpuGridDecValue->setList(alist, vlist, changed);
-  myCpuGridBinValue->setList(alist, vlist, changed);
 
   // Update the PS register booleans
   changed.clear();

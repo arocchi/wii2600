@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: mainSDL.cxx,v 1.87 2009-01-24 17:32:29 stephena Exp $
 //============================================================================
 
 #include <SDL.h>
@@ -157,16 +157,10 @@ int main(int argc, char* argv[])
   //   the ROM actually exists, use it to create a new console.
   // If not, use the built-in ROM launcher.  In this case, we enter 'launcher'
   //   mode and let the main event loop take care of opening a new console/ROM.
-  if(argc == 1 || romfile == "" || !romnode.exists() || romnode.isDirectory())
+  if(argc == 1 || romfile == "" || !romnode.exists())
   {
-    if(theOSystem->settings().getBool("uselauncher"))
+    if(!theOSystem->createLauncher())
     {
-      if(!theOSystem->createLauncher())
-        return Cleanup();
-    }
-    else
-    {
-      theOSystem->settings().usage();
       return Cleanup();
     }
   }

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Booster.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef BOOSTERGRIP_HXX
@@ -29,7 +29,7 @@
   on it (a booster and a trigger).
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Booster.hxx,v 1.12 2009-01-01 18:13:35 stephena Exp $
 */
 class BoosterGrip : public Controller
 {

@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartMC.cxx,v 1.18 2009-05-01 11:25:07 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -128,7 +128,7 @@ uInt8 CartridgeMC::peek(uInt16 address)
     if(block & 0x80)
     {
       // ROM access
-      return myImage[(uInt32)((block & 0x7F) << 10) + (address & 0x03FF)];
+      return myImage[(uInt32)(block & 0x7F) * 1024 + (address & 0x03FF)];
     }
     else
     {
@@ -136,12 +136,12 @@ uInt8 CartridgeMC::peek(uInt16 address)
       if(address & 0x0200)
       {
         // Reading from the read port of the RAM block
-        return myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)];
+        return myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)];
       }
       else
       {
         // Oops, reading from the write port of the RAM block!
-        myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)] = 0;
+        myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)] = 0;
         return 0;
       }
     }
@@ -188,7 +188,7 @@ void CartridgeMC::poke(uInt16 address, uInt8 value)
     if(!(block & 0x80) && !(address & 0x0200))
     {
       // Handle the write to RAM
-      myRAM[(uInt32)((block & 0x3F) << 9) + (address & 0x01FF)] = value;
+      myRAM[(uInt32)(block & 0x3F) * 512 + (address & 0x01FF)] = value;
     }
   }  
 }
@@ -196,27 +196,27 @@ void CartridgeMC::poke(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeMC::bank(uInt16 b)
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeMC::bank()
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
   return 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeMC::bankCount()
 {
-  // TODO - add support for debugger
+  // TODO: add support for debugger
   return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeMC::patch(uInt16 address, uInt8 value)
 {
-  // TODO - add support for debugger
+  // TODO: implement
   return false;
 } 
 

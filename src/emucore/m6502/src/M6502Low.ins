@@ -13,17 +13,119 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.ins 1724 2009-05-13 13:55:40Z stephena $
+// $Id: M6502Low.ins,v 1.8 2009-04-20 15:03:13 stephena Exp $
+//============================================================================
+
+/**
+  Code to handle addressing modes and branch instructions for
+  low compatibility emulation
+
+  @author  Bradford W. Mott
+  @version $Id: M6502Low.ins,v 1.8 2009-04-20 15:03:13 stephena Exp $
+*/
+
+#ifndef NOTSAMEPAGE
+  #define NOTSAMEPAGE(_addr1, _addr2) (((_addr1) ^ (_addr2)) & 0xff00)
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//============================================================================
+//
+// MM     MM  6666  555555  0000   2222
+// MMMM MMMM 66  66 55     00  00 22  22
+// MM MMM MM 66     55     00  00     22
+// MM  M  MM 66666  55555  00  00  22222  --  "A 6502 Microprocessor Emulator"
+// MM     MM 66  66     55 00  00 22
+// MM     MM 66  66 55  55 00  00 22
+// MM     MM  6666   5555   0000  222222
+//
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
+//
+// See the file "license" for information on usage and redistribution of
+// this file, and for a DISCLAIMER OF ALL WARRANTIES.
+//
+// $Id: M6502Low.ins,v 1.8 2009-04-20 15:03:13 stephena Exp $
 //============================================================================
 
 /** 
-  Code and cases to emulate each of the 6502 instructions.
+  Code and cases to emulate each of the 6502 instruction 
 
   Recompile with the following:
-    'm4 M6502.m4 > M6502.ins'
+    'm4 M6502[Hi|Low].m4 M6502.m4 > M6502[Hi|Low].ins'
 
   @author  Bradford W. Mott
-  @version $Id: M6502.m4 1724 2009-05-13 13:55:40Z stephena $
+  @version $Id: M6502Low.ins,v 1.8 2009-04-20 15:03:13 stephena Exp $
 */
 
 #ifndef NOTSAMEPAGE
@@ -174,80 +276,10 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 case 0x69:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -283,7 +315,8 @@ break;
 
 case 0x65:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -319,10 +352,8 @@ break;
 
 case 0x75:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   if(!D)
@@ -358,9 +389,9 @@ break;
 
 case 0x6d:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -396,11 +427,17 @@ break;
 
 case 0x7d:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -436,11 +473,17 @@ break;
 
 case 0x79:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -476,12 +519,9 @@ break;
 
 case 0x61:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -518,11 +558,15 @@ break;
 case 0x71:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   if(!D)
@@ -559,7 +603,8 @@ break;
 
 case 0x4b:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -578,7 +623,8 @@ break;
 case 0x0b:
 case 0x2b:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -591,7 +637,8 @@ break;
 
 case 0x29:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -602,7 +649,8 @@ break;
 
 case 0x25:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -613,10 +661,8 @@ break;
 
 case 0x35:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   A &= operand;
@@ -627,9 +673,9 @@ break;
 
 case 0x2d:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -640,11 +686,17 @@ break;
 
 case 0x3d:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -655,11 +707,17 @@ break;
 
 case 0x39:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -670,12 +728,9 @@ break;
 
 case 0x21:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -687,11 +742,15 @@ break;
 case 0x31:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A &= operand;
@@ -703,7 +762,8 @@ break;
 
 case 0x8b:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   // NOTE: The implementation of this instruction is based on
@@ -718,7 +778,8 @@ break;
 
 case 0x6b:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   // NOTE: The implementation of this instruction is based on
@@ -765,7 +826,6 @@ break;
 
 case 0x0a:
 {
-  peek(PC);
 }
 {
   // Set carry flag according to the left-most bit in A
@@ -782,7 +842,6 @@ case 0x06:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -798,11 +857,8 @@ break;
 
 case 0x16:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -818,10 +874,9 @@ break;
 
 case 0x0e:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -837,12 +892,10 @@ break;
 
 case 0x1e:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -859,15 +912,15 @@ break;
 
 case 0x90:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(!C)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -876,15 +929,15 @@ break;
 
 case 0xb0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(C)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -893,15 +946,15 @@ break;
 
 case 0xf0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(!notZ)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -910,7 +963,8 @@ break;
 
 case 0x24:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   notZ = (A & operand);
@@ -921,9 +975,9 @@ break;
 
 case 0x2C:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   notZ = (A & operand);
@@ -935,15 +989,15 @@ break;
 
 case 0x30:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(N)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -952,15 +1006,15 @@ break;
 
 case 0xD0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(notZ)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -969,15 +1023,15 @@ break;
 
 case 0x10:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(!N)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -1004,15 +1058,15 @@ break;
 
 case 0x50:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(!V)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -1021,15 +1075,15 @@ break;
 
 case 0x70:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   if(V)
   {
-    peek(PC);
     uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
+    mySystem->incrementCycles(NOTSAMEPAGE(PC, address) ?
+        mySystemCyclesPerProcessorCycle << 1 : mySystemCyclesPerProcessorCycle);
     PC = address;
   }
 }
@@ -1038,7 +1092,6 @@ break;
 
 case 0x18:
 {
-  peek(PC);
 }
 {
   C = false;
@@ -1048,7 +1101,6 @@ break;
 
 case 0xd8:
 {
-  peek(PC);
 }
 {
   D = false;
@@ -1058,7 +1110,6 @@ break;
 
 case 0x58:
 {
-  peek(PC);
 }
 {
   I = false;
@@ -1068,7 +1119,6 @@ break;
 
 case 0xb8:
 {
-  peek(PC);
 }
 {
   V = false;
@@ -1078,7 +1128,8 @@ break;
 
 case 0xc9:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1091,7 +1142,8 @@ break;
 
 case 0xc5:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1104,10 +1156,8 @@ break;
 
 case 0xd5:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1120,9 +1170,9 @@ break;
 
 case 0xcd:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1135,11 +1185,17 @@ break;
 
 case 0xdd:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1152,11 +1208,17 @@ break;
 
 case 0xd9:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1169,12 +1231,9 @@ break;
 
 case 0xc1:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1188,11 +1247,15 @@ break;
 case 0xd1:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)A - (uInt16)operand;
@@ -1206,7 +1269,8 @@ break;
 
 case 0xe0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)X - (uInt16)operand;
@@ -1219,7 +1283,8 @@ break;
 
 case 0xe4:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)X - (uInt16)operand;
@@ -1232,9 +1297,9 @@ break;
 
 case 0xec:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)X - (uInt16)operand;
@@ -1248,7 +1313,8 @@ break;
 
 case 0xc0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)Y - (uInt16)operand;
@@ -1261,7 +1327,8 @@ break;
 
 case 0xc4:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)Y - (uInt16)operand;
@@ -1274,9 +1341,9 @@ break;
 
 case 0xcc:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)Y - (uInt16)operand;
@@ -1290,10 +1357,9 @@ break;
 
 case 0xcf:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1308,12 +1374,10 @@ break;
 
 case 0xdf:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1328,12 +1392,10 @@ break;
 
 case 0xdb:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1350,7 +1412,6 @@ case 0xc7:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1365,11 +1426,8 @@ break;
 
 case 0xd7:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1384,13 +1442,9 @@ break;
 
 case 0xc3:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1406,12 +1460,9 @@ break;
 case 0xd3:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1429,7 +1480,6 @@ case 0xc6:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1442,11 +1492,8 @@ break;
 
 case 0xd6:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1459,10 +1506,9 @@ break;
 
 case 0xce:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1475,12 +1521,10 @@ break;
 
 case 0xde:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand - 1;
@@ -1494,7 +1538,6 @@ break;
 
 case 0xca:
 {
-  peek(PC);
 }
 {
   X--;
@@ -1507,7 +1550,6 @@ break;
 
 case 0x88:
 {
-  peek(PC);
 }
 {
   Y--;
@@ -1520,7 +1562,8 @@ break;
 
 case 0x49:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1531,7 +1574,8 @@ break;
 
 case 0x45:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1542,10 +1586,8 @@ break;
 
 case 0x55:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   A ^= operand;
@@ -1556,9 +1598,9 @@ break;
 
 case 0x4d:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1569,11 +1611,17 @@ break;
 
 case 0x5d:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1584,11 +1632,17 @@ break;
 
 case 0x59:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1599,12 +1653,9 @@ break;
 
 case 0x41:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1616,11 +1667,15 @@ break;
 case 0x51:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A ^= operand;
@@ -1634,7 +1689,6 @@ case 0xe6:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand + 1;
@@ -1647,11 +1701,8 @@ break;
 
 case 0xf6:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand + 1;
@@ -1664,10 +1715,9 @@ break;
 
 case 0xee:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand + 1;
@@ -1680,12 +1730,10 @@ break;
 
 case 0xfe:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = operand + 1;
@@ -1699,7 +1747,6 @@ break;
 
 case 0xe8:
 {
-  peek(PC);
 }
 {
   X++;
@@ -1711,7 +1758,6 @@ break;
 
 case 0xc8:
 {
-  peek(PC);
 }
 {
   Y++;
@@ -1723,10 +1769,9 @@ break;
 
 case 0xef:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1762,12 +1807,10 @@ break;
 
 case 0xff:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1803,12 +1846,10 @@ break;
 
 case 0xfb:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1846,7 +1887,6 @@ case 0xe7:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1882,11 +1922,8 @@ break;
 
 case 0xf7:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1922,13 +1959,9 @@ break;
 
 case 0xe3:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -1965,12 +1998,9 @@ break;
 case 0xf3:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   operand = operand + 1;
@@ -2007,8 +2037,8 @@ break;
 
 case 0x4c:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 }
 {
   PC = operandAddress;
@@ -2017,14 +2047,13 @@ break;
 
 case 0x6c:
 {
-  uInt16 addr = peek(PC++);
-  addr |= ((uInt16)peek(PC++) << 8);
+  uInt16 addr = peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 
   // Simulate the error in the indirect addressing mode!
   uInt16 high = NOTSAMEPAGE(addr, addr + 1) ? (addr & 0xff00) : (addr + 1);
 
-  operandAddress = peek(addr);
-  operandAddress |= ((uInt16)peek(high) << 8);
+  operandAddress = peek(addr) | ((uInt16)peek(high) << 8);
 }
 {
   PC = operandAddress;
@@ -2050,11 +2079,17 @@ break;
 
 case 0xbb:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A = X = SP = SP & operand;
@@ -2066,9 +2101,9 @@ break;
 
 case 0xaf:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2080,11 +2115,17 @@ break;
 
 case 0xbf:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2096,7 +2137,8 @@ break;
 
 case 0xa7:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2108,10 +2150,8 @@ break;
 
 case 0xb7:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += Y;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + Y);
+  operand = peek(operandAddress); 
 }
 {
   A = operand;
@@ -2123,12 +2163,9 @@ break;
 
 case 0xa3:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2141,11 +2178,15 @@ break;
 case 0xb3:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2158,7 +2199,8 @@ break;
 
 case 0xa9:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2169,7 +2211,8 @@ break;
 
 case 0xa5:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2180,10 +2223,8 @@ break;
 
 case 0xb5:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   A = operand;
@@ -2194,9 +2235,9 @@ break;
 
 case 0xad:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2207,11 +2248,17 @@ break;
 
 case 0xbd:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2222,11 +2269,17 @@ break;
 
 case 0xb9:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2237,12 +2290,9 @@ break;
 
 case 0xa1:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2254,11 +2304,15 @@ break;
 case 0xb1:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A = operand;
@@ -2270,7 +2324,8 @@ break;
 
 case 0xa2:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   X = operand;
@@ -2281,7 +2336,8 @@ break;
 
 case 0xa6:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   X = operand;
@@ -2292,10 +2348,8 @@ break;
 
 case 0xb6:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += Y;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + Y);
+  operand = peek(operandAddress); 
 }
 {
   X = operand;
@@ -2306,9 +2360,9 @@ break;
 
 case 0xae:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   X = operand;
@@ -2319,11 +2373,17 @@ break;
 
 case 0xbe:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   X = operand;
@@ -2335,7 +2395,8 @@ break;
 
 case 0xa0:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   Y = operand;
@@ -2346,7 +2407,8 @@ break;
 
 case 0xa4:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   Y = operand;
@@ -2357,10 +2419,8 @@ break;
 
 case 0xb4:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   Y = operand;
@@ -2371,9 +2431,9 @@ break;
 
 case 0xac:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   Y = operand;
@@ -2384,11 +2444,17 @@ break;
 
 case 0xbc:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   Y = operand;
@@ -2400,7 +2466,6 @@ break;
 
 case 0x4a:
 {
-  peek(PC);
 }
 {
   // Set carry flag according to the right-most bit
@@ -2418,7 +2483,6 @@ case 0x46:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -2434,11 +2498,8 @@ break;
 
 case 0x56:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -2454,10 +2515,9 @@ break;
 
 case 0x4e:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -2473,12 +2533,10 @@ break;
 
 case 0x5e:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -2495,7 +2553,8 @@ break;
 
 case 0xab:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   // NOTE: The implementation of this instruction is based on
@@ -2516,7 +2575,6 @@ case 0xda:
 case 0xea:
 case 0xfa:
 {
-  peek(PC);
 }
 {
 }
@@ -2528,7 +2586,8 @@ case 0x89:
 case 0xc2:
 case 0xe2:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
 }
@@ -2538,7 +2597,8 @@ case 0x04:
 case 0x44:
 case 0x64:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
 }
@@ -2551,10 +2611,8 @@ case 0x74:
 case 0xd4:
 case 0xf4:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
 }
@@ -2562,9 +2620,9 @@ break;
 
 case 0x0c:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
 }
@@ -2577,11 +2635,17 @@ case 0x7c:
 case 0xdc:
 case 0xfc:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
 }
@@ -2590,7 +2654,8 @@ break;
 
 case 0x09:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2601,7 +2666,8 @@ break;
 
 case 0x05:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2612,10 +2678,8 @@ break;
 
 case 0x15:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   A |= operand;
@@ -2626,9 +2690,9 @@ break;
 
 case 0x0d:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2639,11 +2703,17 @@ break;
 
 case 0x1d:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2654,11 +2724,17 @@ break;
 
 case 0x19:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2669,12 +2745,9 @@ break;
 
 case 0x01:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2686,11 +2759,15 @@ break;
 case 0x11:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   A |= operand;
@@ -2702,7 +2779,6 @@ break;
 
 case 0x48:
 {
-  peek(PC);
 }
 {
   poke(0x0100 + SP--, A);
@@ -2712,7 +2788,6 @@ break;
 
 case 0x08:
 {
-  peek(PC);
 }
 {
   poke(0x0100 + SP--, PS());
@@ -2722,7 +2797,6 @@ break;
 
 case 0x68:
 {
-  peek(PC);
 }
 {
   peek(0x0100 + SP++);
@@ -2735,7 +2809,6 @@ break;
 
 case 0x28:
 {
-  peek(PC);
 }
 {
   peek(0x0100 + SP++);
@@ -2746,10 +2819,9 @@ break;
 
 case 0x2f:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2764,12 +2836,10 @@ break;
 
 case 0x3f:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2784,12 +2854,10 @@ break;
 
 case 0x3b:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2806,7 +2874,6 @@ case 0x27:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2821,11 +2888,8 @@ break;
 
 case 0x37:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2840,13 +2904,9 @@ break;
 
 case 0x23:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2862,12 +2922,9 @@ break;
 case 0x33:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   uInt8 value = (operand << 1) | (C ? 1 : 0);
@@ -2883,7 +2940,6 @@ break;
 
 case 0x2a:
 {
-  peek(PC);
 }
 {
   bool oldC = C;
@@ -2903,7 +2959,6 @@ case 0x26:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -2921,11 +2976,8 @@ break;
 
 case 0x36:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -2943,10 +2995,9 @@ break;
 
 case 0x2e:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -2964,12 +3015,10 @@ break;
 
 case 0x3e:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -2988,7 +3037,6 @@ break;
 
 case 0x6a:
 {
-  peek(PC);
 }
 {
   bool oldC = C;
@@ -3007,7 +3055,6 @@ case 0x66:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3025,11 +3072,8 @@ break;
 
 case 0x76:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3047,10 +3091,9 @@ break;
 
 case 0x6e:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3068,12 +3111,10 @@ break;
 
 case 0x7e:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3092,10 +3133,9 @@ break;
 
 case 0x6f:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3139,12 +3179,10 @@ break;
 
 case 0x7f:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3188,12 +3226,10 @@ break;
 
 case 0x7b:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3239,7 +3275,6 @@ case 0x67:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3283,11 +3318,8 @@ break;
 
 case 0x77:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3331,13 +3363,9 @@ break;
 
 case 0x63:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3382,12 +3410,9 @@ break;
 case 0x73:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   bool oldC = C;
@@ -3432,7 +3457,6 @@ break;
 
 case 0x40:
 {
-  peek(PC);
 }
 {
   peek(0x0100 + SP++);
@@ -3445,7 +3469,6 @@ break;
 
 case 0x60:
 {
-  peek(PC);
 }
 {
   peek(0x0100 + SP++);
@@ -3458,8 +3481,8 @@ break;
 
 case 0x8f:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 }
 {
   poke(operandAddress, A & X);
@@ -3477,9 +3500,7 @@ break;
 
 case 0x97:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + Y) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + Y);
 }
 {
   poke(operandAddress, A & X);
@@ -3488,11 +3509,8 @@ break;
 
 case 0x83:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
 }
 {
   poke(operandAddress, A & X);
@@ -3503,7 +3521,8 @@ break;
 case 0xe9:
 case 0xeb:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3536,7 +3555,8 @@ break;
 
 case 0xe5:
 {
-  operand = peek(peek(PC++));
+  operandAddress = peek(PC++);
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3569,10 +3589,8 @@ break;
 
 case 0xf5:
 {
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
+  operandAddress = (uInt8)(peek(PC++) + X);
+  operand = peek(operandAddress); 
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3605,9 +3623,9 @@ break;
 
 case 0xed:
 {
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3640,11 +3658,17 @@ break;
 
 case 0xfd:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + X))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += X;
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3677,11 +3701,17 @@ break;
 
 case 0xf9:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+
+  // See if we need to add one cycle for indexing across a page boundary
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3714,12 +3744,9 @@ break;
 
 case 0xe1:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3753,11 +3780,15 @@ break;
 case 0xf1:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+
+  if(NOTSAMEPAGE(operandAddress, operandAddress + Y))
+  {
+    mySystem->incrementCycles(mySystemCyclesPerProcessorCycle);
+  }
+
+  operandAddress += Y;
+  operand = peek(operandAddress);
 }
 {
   // N, V, Z, C flags are the same in either mode (C calculated at the end)
@@ -3791,7 +3822,8 @@ break;
 
 case 0xcb:
 {
-  operand = peek(PC++);
+  operandAddress = PC++;
+  operand = peek(operandAddress);
 }
 {
   uInt16 value = (uInt16)(X & A) - (uInt16)operand;
@@ -3806,7 +3838,6 @@ break;
 
 case 0x38:
 {
-  peek(PC);
 }
 {
   C = true;
@@ -3816,7 +3847,6 @@ break;
 
 case 0xf8:
 {
-  peek(PC);
 }
 {
   D = true;
@@ -3826,7 +3856,6 @@ break;
 
 case 0x78:
 {
-  peek(PC);
 }
 {
   I = true;
@@ -3836,10 +3865,9 @@ break;
 
 case 0x9f:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y; 
 }
 {
   // NOTE: There are mixed reports on the actual operation
@@ -3851,10 +3879,8 @@ break;
 case 0x93:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
 }
 {
   // NOTE: There are mixed reports on the actual operation
@@ -3866,10 +3892,9 @@ break;
 
 case 0x9b:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y; 
 }
 {
   // NOTE: There are mixed reports on the actual operation
@@ -3882,10 +3907,9 @@ break;
 
 case 0x9e:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y; 
 }
 {
   // NOTE: There are mixed reports on the actual operation
@@ -3897,10 +3921,9 @@ break;
 
 case 0x9c:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X; 
 }
 {
   // NOTE: There are mixed reports on the actual operation
@@ -3912,10 +3935,9 @@ break;
 
 case 0x0f:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -3932,12 +3954,10 @@ break;
 
 case 0x1f:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -3954,12 +3974,10 @@ break;
 
 case 0x1b:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -3978,7 +3996,6 @@ case 0x07:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -3995,11 +4012,8 @@ break;
 
 case 0x17:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -4016,13 +4030,9 @@ break;
 
 case 0x03:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -4040,12 +4050,9 @@ break;
 case 0x13:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the left-most bit in value
@@ -4063,10 +4070,9 @@ break;
 
 case 0x4f:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4083,12 +4089,10 @@ break;
 
 case 0x5f:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4105,12 +4109,10 @@ break;
 
 case 0x5b:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4129,7 +4131,6 @@ case 0x47:
 {
   operandAddress = peek(PC++);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4146,11 +4147,8 @@ break;
 
 case 0x57:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4167,13 +4165,9 @@ break;
 
 case 0x43:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4191,12 +4185,9 @@ break;
 case 0x53:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
   operand = peek(operandAddress);
-  poke(operandAddress, operand);
 }
 {
   // Set carry flag according to the right-most bit in value
@@ -4223,9 +4214,7 @@ break;
 
 case 0x95:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
 }
 {
   poke(operandAddress, A);
@@ -4234,8 +4223,8 @@ break;
 
 case 0x8d:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 }
 {
   poke(operandAddress, A);
@@ -4244,10 +4233,9 @@ break;
 
 case 0x9d:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += X; 
 }
 {
   poke(operandAddress, A);
@@ -4256,10 +4244,9 @@ break;
 
 case 0x99:
 {
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
+  operandAddress += Y; 
 }
 {
   poke(operandAddress, A);
@@ -4268,11 +4255,8 @@ break;
 
 case 0x81:
 {
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
+  uInt8 pointer = peek(PC++) + X;
+  operandAddress = peek(pointer) | ((uInt16)peek(pointer + 1) << 8);
 }
 {
   poke(operandAddress, A);
@@ -4282,10 +4266,8 @@ break;
 case 0x91:
 {
   uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
+  operandAddress = (uInt16)peek(pointer) | ((uInt16)peek(pointer + 1) << 8); 
+  operandAddress += Y;
 }
 {
   poke(operandAddress, A);
@@ -4304,9 +4286,7 @@ break;
 
 case 0x96:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + Y) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + Y);
 }
 {
   poke(operandAddress, X);
@@ -4315,8 +4295,8 @@ break;
 
 case 0x8e:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 }
 {
   poke(operandAddress, X);
@@ -4335,9 +4315,7 @@ break;
 
 case 0x94:
 {
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
+  operandAddress = (uInt8)(peek(PC++) + X);
 }
 {
   poke(operandAddress, Y);
@@ -4346,8 +4324,8 @@ break;
 
 case 0x8c:
 {
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
+  operandAddress = (uInt16)peek(PC) | ((uInt16)peek(PC + 1) << 8);
+  PC += 2;
 }
 {
   poke(operandAddress, Y);
@@ -4357,7 +4335,6 @@ break;
 
 case 0xaa:
 {
-  peek(PC);
 }
 {
   X = A;
@@ -4369,7 +4346,6 @@ break;
 
 case 0xa8:
 {
-  peek(PC);
 }
 {
   Y = A;
@@ -4381,7 +4357,6 @@ break;
 
 case 0xba:
 {
-  peek(PC);
 }
 {
   X = SP;
@@ -4393,7 +4368,6 @@ break;
 
 case 0x8a:
 {
-  peek(PC);
 }
 {
   A = X;
@@ -4405,7 +4379,6 @@ break;
 
 case 0x9a:
 {
-  peek(PC);
 }
 {
   SP = X;
@@ -4415,7 +4388,6 @@ break;
 
 case 0x98:
 {
-  peek(PC);
 }
 {
   A = Y;

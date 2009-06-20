@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Debugger.cxx,v 1.136 2009-04-13 15:17:06 stephena Exp $
 //============================================================================
 
 #include "bspf.hxx"
@@ -34,7 +34,6 @@
 #include "Console.hxx"
 #include "System.hxx"
 #include "M6502.hxx"
-#include "Cart.hxx"
 
 #include "EquateList.hxx"
 #include "CpuDebug.hxx"
@@ -107,7 +106,7 @@ Debugger::Debugger(OSystem* osystem)
     myBreakPoints(NULL),
     myReadTraps(NULL),
     myWriteTraps(NULL),
-    myWidth(1050),
+    myWidth(1030),
     myHeight(620)
 {
   // Get the dialog size
@@ -115,7 +114,7 @@ Debugger::Debugger(OSystem* osystem)
   myOSystem->settings().getSize("debuggerres", w, h);
   myWidth = BSPF_max(w, 0);
   myHeight = BSPF_max(h, 0);
-  myWidth = BSPF_max(myWidth, 1050u);
+  myWidth = BSPF_max(myWidth, 1030u);
   myHeight = BSPF_max(myHeight, 620u);
   myOSystem->settings().setSize("debuggerres", myWidth, myHeight);
 
@@ -191,12 +190,6 @@ void Debugger::setConsole(Console* console)
   delete myRamDebug;
   myRamDebug = new RamDebug(*this, *myConsole);
 
-  // Register any RAM areas in the Cartridge
-  // Zero-page RAM is automatically recognized by RamDebug
-  const Cartridge::RamAreaList& areas = myConsole->cartridge().ramAreas();
-  for(Cartridge::RamAreaList::const_iterator i = areas.begin(); i != areas.end(); ++i)
-    myRamDebug->addRamArea(i->start, i->size, i->roffset, i->woffset);
-
   delete myRiotDebug;
   myRiotDebug = new RiotDebug(*this, *myConsole);
 
@@ -212,8 +205,6 @@ void Debugger::setConsole(Console* console)
   autoLoadSymbols(myOSystem->romFile());
   loadListFile();
 
-  // Make sure cart RAM is added before this is called,
-  // otherwise the debugger state won't know about it
   saveOldState();
 }
 
@@ -337,7 +328,7 @@ string Debugger::getSourceLines(int addr) const
 void Debugger::autoExec()
 {
   // autoexec.stella is always run
-  const string& autoexec = myOSystem->baseDir() + BSPF_PATH_SEPARATOR +
+  const string& autoexec = myOSystem->baseDir(false) + BSPF_PATH_SEPARATOR +
                            "autoexec.stella";
   myPrompt->print("autoExec():\n" + myParser->exec(autoexec) + "\n");
 
