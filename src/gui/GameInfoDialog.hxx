@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameInfoDialog.hxx,v 1.33 2008-05-12 22:40:26 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -34,13 +34,13 @@ class SliderWidget;
 #include "Dialog.hxx"
 #include "Command.hxx"
 #include "Props.hxx"
-#include "StringList.hxx"
 
 class GameInfoDialog : public Dialog, public CommandSender
 {
   public:
     GameInfoDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font, GuiObject* boss);
+                   const GUI::Font& font, GuiObject* boss,
+                   int x, int y, int w, int h);
     virtual ~GameInfoDialog();
 
   protected:
@@ -85,22 +85,37 @@ class GameInfoDialog : public Dialog, public CommandSender
     PopUpWidget*      myPhosphor;
     SliderWidget*     myPPBlend;
     StaticTextWidget* myPPBlendLabel;
+    PopUpWidget*      myHmoveBlanks;
+
+    // Structure used for cartridge and controller types
+    struct PropType {
+      const char* name;
+      const char* comparitor;
+    };
 
     enum {
       kLeftCChanged    = 'LCch',
       kRightCChanged   = 'RCch',
       kPhosphorChanged = 'PPch',
-      kPPBlendChanged  = 'PBch'
+      kPPBlendChanged  = 'PBch',
+      kNumCartTypes       = 25,
+      kNumControllerTypes = 10
     };
 
-    // Game properties for currently loaded ROM
+    /** Game properties for currently loaded ROM */
     Properties myGameProperties;
 
-    // Indicates that we've got a valid properties entry
+    /** Indicates that we've got a valid properties entry */
     bool myPropertiesLoaded;
 
-    // Indicates that the default properties have been loaded
+    /** Indicates that the default properties have been loaded */
     bool myDefaultsSelected;
+
+    /** Holds static strings for Cartridge type */
+    static const char* ourCartridgeList[kNumCartTypes][2];
+
+    /** Holds static strings for Controller type */
+    static const char* ourControllerList[kNumControllerTypes][2];
 };
 
 #endif

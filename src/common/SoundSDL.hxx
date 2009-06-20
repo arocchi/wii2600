@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.hxx,v 1.20 2008-05-19 21:16:58 stephena Exp $
 //============================================================================
 
 #ifndef SOUND_SDL_HXX
@@ -25,15 +25,16 @@ class OSystem;
 
 #include <SDL.h>
 
-#include "bspf.hxx"
-#include "TIASnd.hxx"
 #include "Sound.hxx"
+#include "bspf.hxx"
+#include "MediaSrc.hxx"
+#include "TIASnd.hxx"
 
 /**
   This class implements the sound API for SDL.
 
   @author Stephen Anthony and Bradford W. Mott
-  @version $Id$
+  @version $Id: SoundSDL.hxx,v 1.20 2008-05-19 21:16:58 stephena Exp $
 */
 class SoundSDL : public Sound
 {
@@ -84,11 +85,11 @@ class SoundSDL : public Sound
       Initializes the sound device.  This must be called before any
       calls are made to derived methods.
     */
-    void open();
+    void initialize();
 
     /**
       Should be called to close the sound device.  Once called the sound
-      device can be started again using the open method.
+      device can be started again using the initialize method.
     */
     void close();
 

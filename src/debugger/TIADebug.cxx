@@ -8,15 +8,13 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIADebug.cxx,v 1.27 2008-04-19 21:11:52 stephena Exp $
 //============================================================================
-
-//#define NEWTIA
 
 #include "System.hxx"
 #include "Debugger.hxx"
@@ -26,7 +24,7 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TIADebug::TIADebug(Debugger& dbg, Console& console)
   : DebuggerSystem(dbg, console),
-    myTIA(console.tia())
+    myTIA((TIA&)console.mediaSource())
 {
   nusizStrings[0] = "size=8 copy=1";
   nusizStrings[1] = "size=8 copy=2 spac=8";
@@ -159,25 +157,25 @@ void TIADebug::saveOldState()
 }
 
 /* the set methods now use mySystem.poke(). This will save us the
-   trouble of masking the values here, since TIA::poke() will do it
-   for us.
+	trouble of masking the values here, since TIA::poke() will do it
+	for us.
 
-   This means that the GUI should *never* just display the value the
-   user entered: it should always read the return value of the set
-   method and display that.
+	This means that the GUI should *never* just display the value the
+	user entered: it should always read the return value of the set
+	method and display that.
 
-   An Example:
+	An Example:
 
-   User enters "ff" in the AUDV0 field. GUI calls value = tiaDebug->audV0(0xff).
-   The AUDV0 register is only 4 bits wide, so "value" is 0x0f. That's what
-   should be displayed.
+	User enters "ff" in the AUDV0 field. GUI calls value = tiaDebug->audV0(0xff).
+	The AUDV0 register is only 4 bits wide, so "value" is 0x0f. That's what
+	should be displayed.
 
-   In a perfect world, the GUI would only allow one hex digit to be entered...
-   but we allow decimal or binary input in the GUI (with # or \ prefix). The
-   only way to make that work would be to validate the data entry after every
-   keystroke... which would be a pain for both us and the user. Using poke()
-   here is a compromise that allows the TIA to do the range-checking for us,
-   so the GUI and/or TIADebug don't have to duplicate logic from TIA::poke().
+	In a perfect world, the GUI would only allow one hex digit to be entered...
+	but we allow decimal or binary input in the GUI (with # or \ prefix). The
+	only way to make that work would be to validate the data entry after every
+	keystroke... which would be a pain for both us and the user. Using poke()
+	here is a compromise that allows the TIA to do the range-checking for us,
+	so the GUI and/or TIADebug don't have to duplicate logic from TIA::poke().
 */
 
 //	 bool vdelP0(int newVal = -1);
@@ -617,11 +615,7 @@ uInt8 TIADebug::hmP0(int newVal)
   if(newVal > -1)
     mySystem.poke(HMP0, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMP0 >> 4;
-#else
   return myTIA.myHMP0;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -630,11 +624,7 @@ uInt8 TIADebug::hmP1(int newVal)
   if(newVal > -1)
     mySystem.poke(HMP1, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMP1 >> 4;
-#else
   return myTIA.myHMP1;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -643,11 +633,7 @@ uInt8 TIADebug::hmM0(int newVal)
   if(newVal > -1)
     mySystem.poke(HMM0, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMM0 >> 4;
-#else
   return myTIA.myHMM0;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -656,11 +642,7 @@ uInt8 TIADebug::hmM1(int newVal)
   if(newVal > -1)
     mySystem.poke(HMM1, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMM1 >> 4;
-#else
   return myTIA.myHMM1;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -669,11 +651,7 @@ uInt8 TIADebug::hmBL(int newVal)
   if(newVal > -1)
     mySystem.poke(HMBL, newVal << 4);
 
-#ifdef NEWTIA
-  return myTIA.myHMBL >> 4;
-#else
   return myTIA.myHMBL;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

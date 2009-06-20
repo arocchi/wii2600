@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: UIDialog.cxx,v 1.13 2008-03-23 16:22:46 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -25,11 +25,9 @@
 
 #include "Dialog.hxx"
 #include "OSystem.hxx"
-#include "ListWidget.hxx"
 #include "PopUpWidget.hxx"
 #include "ScrollBarWidget.hxx"
 #include "Settings.hxx"
-#include "StringList.hxx"
 #include "TabWidget.hxx"
 #include "Widget.hxx"
 
@@ -37,8 +35,8 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font)
-  : Dialog(osystem, parent, 0, 0, 0, 0)
+                   const GUI::Font& font, int x, int y, int w, int h)
+  : Dialog(osystem, parent, x, y, w, h)
 {
   const int lineHeight   = font.getLineHeight(),
             fontWidth    = font.getMaxCharWidth(),
@@ -49,11 +47,10 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   int xpos, ypos, tabID;
   int lwidth, pwidth = font.getStringWidth("Standard");
   WidgetArray wid;
-  StringMap items;
 
   // Set real dimensions
-  _w = 42 * fontWidth + 10;
-  _h = 10 * (lineHeight + 4) + 10;
+//  _w = 36 * fontWidth + 10;
+//  _h = 10 * (lineHeight + 4) + 10;
 
   // The tab widget
   xpos = ypos = vBorder;
@@ -66,7 +63,7 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   wid.clear();
   tabID = myTab->addTab(" Launcher ");
   lwidth = font.getStringWidth("Launcher Height: ");
-
+      
   // Launcher width and height
   myLauncherWidthSlider = new SliderWidget(myTab, font, xpos, ypos, pwidth,
                                            lineHeight, "Launcher Width: ",
@@ -97,32 +94,18 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   ypos += lineHeight + 4;
 
   // Launcher font
-  pwidth = font.getStringWidth("2x (1000x760)");
-  items.clear();
-  items.push_back("Small",  "small");
-  items.push_back("Medium", "medium");
-  items.push_back("Large",  "large");
-  myLauncherFontPopup =
-    new PopUpWidget(myTab, font, xpos, ypos+1, pwidth, lineHeight, items,
-                    "Launcher Font: ", lwidth);
+  myLauncherFontPopup = new PopUpWidget(myTab, font, xpos, ypos+1, pwidth, lineHeight,
+                                        "Launcher Font: ", lwidth);
+  myLauncherFontPopup->appendEntry("Small", 1);
+  myLauncherFontPopup->appendEntry("Large", 2);
   wid.push_back(myLauncherFontPopup);
   ypos += lineHeight + 4;
 
   // ROM launcher info/snapshot viewer
-  items.clear();
-  items.push_back("Off", "0");
-  items.push_back("1x (640x480) ", "1");
-  items.push_back("2x (1000x760)", "2");
-  myRomViewerPopup =
-    new PopUpWidget(myTab, font, xpos, ypos+1, pwidth, lineHeight, items,
-                    "ROM Info viewer: ", lwidth);
-  wid.push_back(myRomViewerPopup);
-  ypos += lineHeight + 4;
-
-  // Should we use the built-in ROM launcher
-  myUseLauncherBox = new CheckboxWidget(myTab, font, xpos+20, ypos+10,
-                                        "Use ROM launcher");
-  wid.push_back(myUseLauncherBox);
+  xpos += ((_w - 40 - font.getStringWidth("ROM Info viewer")) >> 1);
+  myRomViewerCheckbox = new CheckboxWidget(myTab, font, xpos, ypos,
+                                           "ROM Info viewer", 0);
+  wid.push_back(myRomViewerCheckbox);
 
   // Add message concerning usage
   xpos = vBorder; ypos += 2*(lineHeight + 4);
@@ -139,14 +122,13 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   wid.clear();
   tabID = myTab->addTab(" Debugger ");
   lwidth = font.getStringWidth("Debugger Height: ");
-  pwidth = font.getStringWidth("Standard");
   xpos = ypos = vBorder;
 
   // Debugger width and height
   myDebuggerWidthSlider = new SliderWidget(myTab, font, xpos, ypos, pwidth,
                                            lineHeight, "Debugger Width: ",
                                            lwidth, kDWidthChanged);
-  myDebuggerWidthSlider->setMinValue(1050);
+  myDebuggerWidthSlider->setMinValue(1030);
   myDebuggerWidthSlider->setMaxValue(1920);
   myDebuggerWidthSlider->setStepValue(10);
   wid.push_back(myDebuggerWidthSlider);
@@ -160,7 +142,7 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   myDebuggerHeightSlider = new SliderWidget(myTab, font, xpos, ypos, pwidth,
                                             lineHeight, "Debugger Height: ",
                                             lwidth, kDHeightChanged);
-  myDebuggerHeightSlider->setMinValue(620);
+  myDebuggerHeightSlider->setMinValue(690);
   myDebuggerHeightSlider->setMaxValue(1200);
   myDebuggerHeightSlider->setStepValue(10);
   wid.push_back(myDebuggerHeightSlider);
@@ -189,27 +171,11 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
 
   // UI Palette
   ypos += 1;
-  items.clear();
-  items.push_back("Standard", "1");
-  items.push_back("Classic", "2");
   myPalettePopup = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
-                                   items, "Interface Palette: ", lwidth);
+                                   "Interface Palette: ", lwidth);
+  myPalettePopup->appendEntry("Standard", 1);
+  myPalettePopup->appendEntry("Classic", 2);
   wid.push_back(myPalettePopup);
-  ypos += lineHeight + 4;
-
-  // Delay between quick-selecting characters in ListWidget
-  myListDelaySlider = new SliderWidget(myTab, font, xpos, ypos, pwidth,
-                                       lineHeight, "List quick delay: ",
-                                       lwidth, kLQDelayChanged);
-  myListDelaySlider->setMinValue(300);
-  myListDelaySlider->setMaxValue(1000);
-  myListDelaySlider->setStepValue(100);
-  wid.push_back(myListDelaySlider);
-  myListDelayLabel =
-      new StaticTextWidget(myTab, font,
-                           xpos + myListDelaySlider->getWidth() + 4,
-                           ypos + 1, 4*fontWidth, fontHeight, "", kTextAlignLeft);
-  myListDelayLabel->setFlags(WIDGET_CLEARBG);
   ypos += lineHeight + 4;
 
   // Number of lines a mouse wheel will scroll
@@ -265,7 +231,7 @@ void UIDialog::loadConfig()
   int w, h;
 
   // Launcher size
-  instance().settings().getSize("launcherres", w, h);
+  instance()->settings().getSize("launcherres", w, h);
   w = BSPF_max(w, 320);
   h = BSPF_max(h, 240);
   w = BSPF_min(w, 1920);
@@ -277,20 +243,17 @@ void UIDialog::loadConfig()
   myLauncherHeightLabel->setValue(h);
 
   // Launcher font
-  const string& font = instance().settings().getString("launcherfont");
-     myLauncherFontPopup->setSelected(font, "medium");
+  const string& s = instance()->settings().getString("launcherfont");
+  myLauncherFontPopup->setSelectedTag(s == "large" ? 2 : 1);
 
   // ROM launcher info viewer
-  const string& viewer = instance().settings().getString("romviewer");
-  myRomViewerPopup->setSelected(viewer, "0");
-
-  // Use ROM launcher
-  myUseLauncherBox->setState(instance().settings().getBool("uselauncher"));
+  bool b = instance()->settings().getBool("romviewer");
+  myRomViewerCheckbox->setState(b);
 
   // Debugger size
-  instance().settings().getSize("debuggerres", w, h);
-  w = BSPF_max(w, 1050);
-  h = BSPF_max(h, 620);
+  instance()->settings().getSize("debuggerres", w, h);
+  w = BSPF_max(w, 1030);
+  h = BSPF_max(h, 690);
   w = BSPF_min(w, 1920);
   h = BSPF_min(h, 1200);
 
@@ -300,17 +263,12 @@ void UIDialog::loadConfig()
   myDebuggerHeightLabel->setValue(h);
 
   // UI palette
-  const string& pal = instance().settings().getString("uipalette");
-  myPalettePopup->setSelected(pal, "1");
-
-  // Listwidget quick delay
-  int delay = instance().settings().getInt("listdelay");
-  if(delay < 300 || delay > 1000) delay = 300;
-  myListDelaySlider->setValue(delay);
-  myListDelayLabel->setValue(delay);
+  int i = instance()->settings().getInt("uipalette");
+  if(i < 1 || i > 2) i = 1;
+  myPalettePopup->setSelectedTag(i);
 
   // Mouse wheel lines
-  int mw = instance().settings().getInt("mwheel");
+  int mw = instance()->settings().getInt("mwheel");
   if(mw < 1 || mw > 10) mw = 1;
   myWheelLinesSlider->setValue(mw);
   myWheelLinesLabel->setValue(mw);
@@ -322,36 +280,27 @@ void UIDialog::loadConfig()
 void UIDialog::saveConfig()
 {
   // Launcher size
-  instance().settings().setSize("launcherres", 
+  instance()->settings().setSize("launcherres", 
     myLauncherWidthSlider->getValue(), myLauncherHeightSlider->getValue());
 
   // Launcher font
-  instance().settings().setString("launcherfont",
-    myLauncherFontPopup->getSelectedTag());
+  instance()->settings().setString("launcherfont",
+    myLauncherFontPopup->getSelectedTag() == 1 ? "small" : "large");
 
   // ROM launcher info viewer
-  instance().settings().setString("romviewer",
-    myRomViewerPopup->getSelectedTag());
-
-  // Use ROM launcher
-  instance().settings().setBool("uselauncher", myUseLauncherBox->getState());
+  instance()->settings().setBool("romviewer", myRomViewerCheckbox->getState());
 
   // Debugger size
-  instance().settings().setSize("debuggerres", 
+  instance()->settings().setSize("debuggerres", 
     myDebuggerWidthSlider->getValue(), myDebuggerHeightSlider->getValue());
 
   // UI palette
-  instance().settings().setString("uipalette",
+  instance()->settings().setInt("uipalette",
     myPalettePopup->getSelectedTag());
-
-  // Listwidget quick delay
-  int delay = myListDelaySlider->getValue();
-  instance().settings().setInt("listdelay", delay);
-  ListWidget::setQuickSelectDelay(delay);
 
   // Mouse wheel lines
   int mw = myWheelLinesSlider->getValue();
-  instance().settings().setInt("mwheel", mw);
+  instance()->settings().setInt("mwheel", mw);
   ScrollBarWidget::setWheelLines(mw);
 }
 
@@ -362,29 +311,25 @@ void UIDialog::setDefaults()
   {
     case 0:  // Launcher options
     {
-      int w = BSPF_min(instance().desktopWidth(), 640u);
-      int h = BSPF_min(instance().desktopHeight(), 480u);
+      int w = BSPF_min(instance()->desktopWidth(), 640u);
+      int h = BSPF_min(instance()->desktopHeight(), 480u);
       myLauncherWidthSlider->setValue(w);
       myLauncherWidthLabel->setValue(w);
       myLauncherHeightSlider->setValue(h);
       myLauncherHeightLabel->setValue(h);
-      myLauncherFontPopup->setSelected("medium", "");
-      myRomViewerPopup->setSelected("0", "");
-      myUseLauncherBox->setState(true);
+      myRomViewerCheckbox->setState(false);
       break;
     }
 
     case 1:  // Debugger options
-      myDebuggerWidthSlider->setValue(1050);
-      myDebuggerWidthLabel->setValue(1050);
+      myDebuggerWidthSlider->setValue(1030);
+      myDebuggerWidthLabel->setValue(1030);
       myDebuggerHeightSlider->setValue(690);
       myDebuggerHeightLabel->setValue(690);
       break;
 
     case 2:  // Misc. options
-      myPalettePopup->setSelected("1", "1");
-      myListDelaySlider->setValue(300);
-      myListDelayLabel->setValue(300);
+      myPalettePopup->setSelectedTag(1);
       myWheelLinesSlider->setValue(4);
       myWheelLinesLabel->setValue(4);
       break;
@@ -417,10 +362,6 @@ void UIDialog::handleCommand(CommandSender* sender, int cmd, int data, int id)
       myDebuggerHeightLabel->setValue(myDebuggerHeightSlider->getValue());
       break;
 
-    case kLQDelayChanged:
-      myListDelayLabel->setValue(myListDelaySlider->getValue());
-      break;
-
     case kWLinesChanged:
       myWheelLinesLabel->setValue(myWheelLinesSlider->getValue());
       break;
@@ -428,7 +369,7 @@ void UIDialog::handleCommand(CommandSender* sender, int cmd, int data, int id)
     case kOKCmd:
       saveConfig();
       close();
-      instance().setUIPalette();
+      instance()->setUIPalette();
       break;
 
     case kDefaultsCmd:

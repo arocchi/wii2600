@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Sound.hxx,v 1.25 2008-05-19 21:16:58 stephena Exp $
 //============================================================================
 
 #ifndef SOUND_HXX
@@ -30,7 +30,7 @@ class Deserializer;
   It has no functionality whatsoever.
 
   @author Stephen Anthony
-  @version $Id$
+  @version $Id: Sound.hxx,v 1.25 2008-05-19 21:16:58 stephena Exp $
 */
 class Sound
 {
@@ -78,14 +78,14 @@ class Sound
     virtual void setFrameRate(float framerate) = 0;
 
     /**
-      Start the sound system, initializing it if necessary.  This must be
-      called before any calls are made to derived methods.
+      Initializes the sound device.  This must be called before any
+      calls are made to derived methods.
     */
-    virtual void open() = 0;
+    virtual void initialize() = 0;
 
     /**
-      Should be called to stop the sound system.  Once called the sound
-      device can be started again using the ::open() method.
+      Should be called to close the sound device.  Once called the sound
+      device can be started again using the initialize method.
     */
     virtual void close() = 0;
 
@@ -134,7 +134,7 @@ class Sound
     */
     virtual void adjustVolume(Int8 direction) = 0;
 
-  public:
+public:
     /**
       Loads the current state of this device from the given Deserializer.
 

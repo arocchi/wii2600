@@ -8,30 +8,37 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6532.cxx,v 1.27 2008-05-22 17:54:54 stephena Exp $
 //============================================================================
 
-#include <cassert>
-#include <iostream>
-
+#include <assert.h>
 #include "Console.hxx"
+#include "M6532.hxx"
 #include "Random.hxx"
 #include "Switches.hxx"
 #include "System.hxx"
 #include "Serializer.hxx"
 #include "Deserializer.hxx"
-
-#include "M6532.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 M6532::M6532(const Console& console)
   : myConsole(console)
 {
+  // Randomize the 128 bytes of memory
+  class Random random;
+
+  for(uInt32 t = 0; t < 128; ++t)
+  {
+    myRAM[t] = random.next();
+  }
+
+  // Initialize other data members
   reset();
 }
  
@@ -44,10 +51,6 @@ M6532::~M6532()
 void M6532::reset()
 {
   class Random random;
-
-  // Randomize the 128 bytes of memory
-  for(uInt32 t = 0; t < 128; ++t)
-    myRAM[t] = random.next();
 
   // The timer absolutely cannot be initialized to zero; some games will
   // loop or hang (notably Solaris and H.E.R.O.)
@@ -193,7 +196,7 @@ uInt8 M6532::peek(uInt16 addr)
     case 0x05:    // Interrupt Flag
     case 0x07:
     {
-      if((timerClocks() >= 0) || (myInterruptEnabled && myInterruptTriggered))
+      if((timerClocks() >= 0) || myInterruptEnabled && myInterruptTriggered)
         return 0x00;
       else
         return 0x80;

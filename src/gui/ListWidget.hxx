@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ListWidget.hxx,v 1.21 2008-02-06 13:45:24 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -36,7 +36,6 @@ enum {
   kListItemDoubleClickedCmd = 'LIdb',  // double click on item - 'data' will be item index
   kListItemActivatedCmd     = 'LIac',  // item activated by return/enter - 'data' will be item index
   kListItemDataChangedCmd   = 'LIch',  // item data changed - 'data' will be item index
-  kListItemRClickedCmd      = 'LIrc',  // right click on item - 'data' will be item index
   kListSelectionChangedCmd  = 'Lsch',  // selection changed - 'data' will be item index
   kListScrolledCmd          = 'Lscl'   // list scrolled - 'data' will be current position
 };
@@ -46,7 +45,7 @@ class ListWidget : public EditableWidget
 {
   public:
     ListWidget(GuiObject* boss, const GUI::Font& font,
-               int x, int y, int w, int h, bool quickSelect = true);
+               int x, int y, int w, int h);
     virtual ~ListWidget();
 
     int rows() const        { return _rows; }
@@ -71,13 +70,10 @@ class ListWidget : public EditableWidget
     virtual bool handleEvent(Event::Type e);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
-    // Account for the extra width of embedded scrollbar
-    virtual int getWidth() const { return _w + kScrollBarWidth; }
+    virtual GUI::Rect getRect() const;
 
     void startEditMode();
     void endEditMode();
-
-    static void setQuickSelectDelay(int time) { _QUICK_SELECT_DELAY = time; }
 
   protected:
     virtual void drawWidget(bool hilite)  = 0;
@@ -111,12 +107,8 @@ class ListWidget : public EditableWidget
 
     StringList _list;
     string     _backupString;
-    bool       _quickSelect;
     string     _quickSelectStr;
     int        _quickSelectTime;
-
-  private:
-    static int _QUICK_SELECT_DELAY;
 };
 
 #endif

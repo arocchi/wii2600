@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SaveKey.hxx,v 1.2 2008-05-19 02:53:58 stephena Exp $
 //============================================================================
 
 #ifndef SAVEKEY_HXX
@@ -31,13 +31,13 @@ class MT24LC256;
   driver code.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: SaveKey.hxx,v 1.2 2008-05-19 02:53:58 stephena Exp $
 */
 class SaveKey : public Controller
 {
   public:
     /**
-      Create a new SaveKey controller plugged into the specified jack
+      Create a new AtariVox controller plugged into the specified jack
 
       @param jack       The jack the controller is plugged into
       @param event      The event object to use for events

@@ -8,23 +8,23 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIADebug.hxx,v 1.23 2008-04-19 21:11:52 stephena Exp $
 //============================================================================
 
 #ifndef TIA_DEBUG_HXX
 #define TIA_DEBUG_HXX
 
+class TIA;
 class Debugger;
 class TiaDebug;
 
 #include "Array.hxx"
 #include "DebuggerSystem.hxx"
-#include "TIA.hxx"
 
 // pointer types for TIADebug instance methods
 // (used by TiaMethodExpression)
@@ -205,8 +205,6 @@ class TIADebug : public DebuggerSystem
     int clocksThisLine();
     bool vsync();
     bool vblank();
-    int vsyncAsInt()  { return int(vsync());  } // so we can use _vsync pseudo-register
-    int vblankAsInt() { return int(vblank()); } // so we can use _vblank pseudo-register
 
   private:
     /** Display a color patch for color at given index in the palette */

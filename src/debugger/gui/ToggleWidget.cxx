@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ToggleWidget.cxx,v 1.8 2008-05-14 18:04:58 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -99,8 +99,8 @@ int ToggleWidget::findItem(int x, int y)
 bool ToggleWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all mod keys
-  if(instance().eventHandler().kbdControl(modifiers) ||
-     instance().eventHandler().kbdAlt(modifiers))
+  if(instance()->eventHandler().kbdControl(modifiers) ||
+     instance()->eventHandler().kbdAlt(modifiers))
     return true;
 
   bool handled = true;

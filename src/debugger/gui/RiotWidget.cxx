@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RiotWidget.cxx,v 1.5 2008-05-15 18:59:56 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -91,7 +91,6 @@ RiotWidget::RiotWidget(GuiObject* boss, const GUI::Font& font,
             lineHeight = font.getLineHeight();
   int xpos = 10, ypos = 25, lwidth = 9 * fontWidth, col = 0;
   StaticTextWidget* t;
-  StringMap items;
 
   // Set the strings to be used in the various bit registers
   // We only do this once because it's the state that changes, not the strings
@@ -158,26 +157,26 @@ RiotWidget::RiotWidget(GuiObject* boss, const GUI::Font& font,
   int pwidth = font.getStringWidth("B/easy");
   lwidth = font.getStringWidth("P0 Diff: ");
   xpos = col;  ypos += 3 * lineHeight;
-  items.clear();
-  items.push_back("B/easy", "b");
-  items.push_back("A/hard", "a");
-  myP0Diff = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight, items,
+  myP0Diff = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight,
                              "P0 Diff: ", lwidth, kP0DiffChanged);
+  myP0Diff->appendEntry("B/easy", 0);
+  myP0Diff->appendEntry("A/hard", 1);
   myP0Diff->setTarget(this);
   addFocusWidget(myP0Diff);
   ypos += myP0Diff->getHeight() + 5;
-  myP1Diff = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight, items,
+  myP1Diff = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight,
                              "P1 Diff: ", lwidth, kP1DiffChanged);
+  myP1Diff->appendEntry("B/easy", 0);
+  myP1Diff->appendEntry("A/hard", 1);
   myP1Diff->setTarget(this);
   addFocusWidget(myP1Diff);
 
   // TV Type
   ypos += myP1Diff->getHeight() + 5;
-  items.clear();
-  items.push_back("B&W", "bw");
-  items.push_back("Color", "color");
-  myTVType = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight, items,
+  myTVType = new PopUpWidget(boss, font, xpos, ypos, pwidth, lineHeight,
                              "TV Type: ", lwidth, kTVTypeChanged);
+  myTVType->appendEntry("B&W", 0);
+  myTVType->appendEntry("Color", 1);
   myTVType->setTarget(this);
   addFocusWidget(myTVType);
 
@@ -216,7 +215,7 @@ void RiotWidget::loadConfig()
 
   // We push the enumerated items as addresses, and deal with the real
   // address in the callback (handleCommand)
-  Debugger& dbg   = instance().debugger();
+  Debugger& dbg   = instance()->debugger();
   RiotDebug& riot = dbg.riotDebug();
   const RiotState& state    = (RiotState&) riot.getState();
   const RiotState& oldstate = (RiotState&) riot.getOldState();
@@ -270,9 +269,9 @@ void RiotWidget::loadConfig()
   myP1Pins[4]->setState(!state.P1_PIN6);
 
   // Console switches (invert reset/select for same reason as the pins)
-  myP0Diff->setSelected((int)riot.diffP0());
-  myP1Diff->setSelected((int)riot.diffP1());
-  myTVType->setSelected((int)riot.tvType());
+  myP0Diff->setSelectedTag((int)riot.diffP0());
+  myP1Diff->setSelectedTag((int)riot.diffP1());
+  myTVType->setSelectedTag((int)riot.tvType());
   mySelect->setState(!riot.select());
   myReset->setState(!riot.reset());
 }
@@ -281,7 +280,7 @@ void RiotWidget::loadConfig()
 void RiotWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
 {
   int value = -1;
-  RiotDebug& riot = instance().debugger().riotDebug();
+  RiotDebug& riot = instance()->debugger().riotDebug();
 
   switch(cmd)
   {
@@ -345,15 +344,15 @@ void RiotWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
       break;
 
     case kP0DiffChanged:
-      riot.diffP0(myP0Diff->getSelectedTag() != "b");
+      riot.diffP0((bool)myP0Diff->getSelectedTag());
       break;
 
     case kP1DiffChanged:
-      riot.diffP1(myP1Diff->getSelectedTag() != "b");
+      riot.diffP1((bool)myP1Diff->getSelectedTag());
       break;
 
     case kTVTypeChanged:
-      riot.tvType((bool)myTVType->getSelected());
+      riot.tvType((bool)myTVType->getSelectedTag());
       break;
   }
 }

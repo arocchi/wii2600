@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystem.hxx,v 1.66 2008-05-19 21:16:58 stephena Exp $
 //============================================================================
 
 #ifndef OSYSTEM_HXX
@@ -56,7 +56,7 @@ typedef Common::Array<Resolution> ResolutionList;
   other objects belong.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: OSystem.hxx,v 1.66 2008-05-19 21:16:58 stephena Exp $
 */
 class OSystem
 {
@@ -183,13 +183,6 @@ class OSystem
 #endif
 
     /**
-      Get the small font object of the system
-
-      @return The font reference
-    */
-    inline const GUI::Font& smallFont() const { return *mySmallFont; }
-
-    /**
       Get the font object of the system
 
       @return The font reference
@@ -238,8 +231,8 @@ class OSystem
     /**
       Get the maximum dimensions of a window for the video hardware.
     */
-    inline uInt32 desktopWidth() const  { return myDesktopWidth; }
-    inline uInt32 desktopHeight() const { return myDesktopHeight; }
+    const uInt32 desktopWidth() const  { return myDesktopWidth; }
+    const uInt32 desktopHeight() const { return myDesktopHeight; }
 
     /**
       Get the supported fullscreen resolutions for the video hardware.
@@ -249,24 +242,19 @@ class OSystem
     const ResolutionList& supportedResolutions() const { return myResolutions; }
 
     /**
-      Return the default full/complete directory name for storing data.
+      Return the default directory for storing data.
     */
     const string& baseDir() const { return myBaseDir; }
 
     /**
-      Return the full/complete directory name for storing state files.
+      Return the directory for storing state files.
     */
     const string& stateDir() const { return myStateDir; }
 
     /**
-      Return the full/complete directory name for storing PNG snapshots.
+      Return the directory for storing PNG snapshots.
     */
     const string& snapshotDir() const { return mySnapshotDir; }
-
-    /**
-      Return the full/complete directory name for storing EEPROM files.
-    */
-    const string& eepromDir() const { return myEEPROMDir; }
 
     /**
       This method should be called to get the full path of the cheat file.
@@ -307,8 +295,12 @@ class OSystem
     const string& romFile() const { return myRomFile; }
 
     /**
-      Creates a new game console from the specified romfile, and correctly
-      initializes the system state to start emulation of the Console.
+      Switches between software and OpenGL framebuffer modes.
+    */
+    void toggleFrameBuffer();
+
+    /**
+      Creates a new game console from the specified romfile.
 
       @param romfile  The full pathname of the ROM to use
       @param md5      The MD5sum of the ROM
@@ -325,10 +317,8 @@ class OSystem
 
     /**
       Creates a new ROM launcher, to select a new ROM to emulate.
-
-      @return  True on successful creation, otherwise false
     */
-    bool createLauncher();
+    void createLauncher();
 
     /**
       Gets all possible info about the ROM by creating a temporary
@@ -345,6 +335,27 @@ class OSystem
       @return  The supported features
     */
     const string& features() const { return myFeatures; }
+
+    /**
+      Open the given ROM and return an array containing its contents.
+
+      @param rom    The absolute pathname of the ROM file
+      @param md5    The md5 calculated from the ROM file
+      @param image  A pointer to store the ROM data
+                      Note, the calling method is responsible for deleting this
+      @param size   The amount of data read into the image array
+
+      @return  False on any errors, else true
+    */
+    bool openROM(const string& rom, string& md5, uInt8** image, int* size);
+
+    /**
+      Is this a valid ROM filename (does it have a valid extension?).
+
+      @param filename  Filename of potential ROM file
+      @param extension The extension extracted from the given file
+     */
+    bool isValidRomName(const string& filename, string& extension);
 
     /**
       Calculate the MD5sum of the given file.
@@ -421,7 +432,7 @@ class OSystem
     /**
       Query the OSystem video hardware for resolution information.
     */
-    virtual bool queryVideoHardware();
+    virtual void queryVideoHardware();
 
     /**
       Set the base directory for all Stella files (these files may be
@@ -432,7 +443,7 @@ class OSystem
     /**
       Set the locations of config file
     */
-    void setConfigFile(const string& file);
+    void setConfigFile(const string& file) { myConfigFile = file; }
 
   protected:
     // Pointer to the EventHandler object
@@ -494,7 +505,6 @@ class OSystem
     string myBaseDir;
     string myStateDir;
     string mySnapshotDir;
-    string myEEPROMDir;
 
     string myCheatFile;
     string myConfigFile;
@@ -502,12 +512,8 @@ class OSystem
     string myPropertiesFile;
 
     string myRomFile;
-    string myRomMD5;
 
     string myFeatures;
-
-    // The font object to use when space is very limited
-    GUI::Font* mySmallFont;
 
     // The font object to use for the normal in-game GUI
     GUI::Font* myFont;
@@ -534,12 +540,11 @@ class OSystem
   private:
     /**
       Creates the various framebuffers/renderers available in this system
-      (for now, that means either 'software' or 'opengl').  Note that
-      it will only create one type per run of Stella.
+      (for now, that means either 'software' or 'opengl').
 
       @return Success or failure of the framebuffer creation
     */
-    bool createFrameBuffer();
+    bool createFrameBuffer(bool showmessage = false);
 
     /**
       Creates the various sound devices available in this system
@@ -548,38 +553,12 @@ class OSystem
     void createSound();
 
     /**
-      Creates an actual Console object based on the given info.
+      Query valid info for creating a valid console.
 
-      @param romfile  The full pathname of the ROM to use
-      @param md5      The MD5sum of the ROM
-
-      @return  The actual Console object, otherwise NULL
-               (calling method is responsible for deleting it)
+      @return Success or failure for a valid console
     */
-    Console* openConsole(const string& romfile, string& md5);
-
-    /**
-      Open the given ROM and return an array containing its contents.
-      Also, the properties database is updated with a valid ROM name
-      for this ROM (if necessary).
-
-      @param rom    The absolute pathname of the ROM file
-      @param md5    The md5 calculated from the ROM file
-                    (will be recalculated if necessary)
-      @param size   The amount of data read into the image array
-
-      @return  Pointer to the array, with size >=0 indicating valid data
-               (calling method is responsible for deleting it)
-    */
-    uInt8* openROM(string rom, string& md5, uInt32& size);
-
-    /**
-      Gets all possible info about the given console.
-
-      @param console  The console to use
-      @return  Some information about this console
-    */
-    string getROMInfo(const Console* console);
+    bool queryConsoleInfo(const uInt8* image, uInt32 size, const string& md5,
+                          Cartridge** cart, Properties& props);
 
     /**
       Initializes the timing so that the mainloop is reset to its

@@ -8,17 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: AtariVox.hxx,v 1.14 2008-05-19 02:53:57 stephena Exp $
 //============================================================================
 
 #ifndef ATARIVOX_HXX
 #define ATARIVOX_HXX
 
+class SpeakJet;
 class SerialPort;
 class MT24LC256;
 
@@ -32,7 +33,7 @@ class MT24LC256;
   driver code.
 
   @author  B. Watson
-  @version $Id$
+  @version $Id: AtariVox.hxx,v 1.14 2008-05-19 02:53:57 stephena Exp $
 */
 class AtariVox : public Controller
 {
@@ -90,18 +91,32 @@ class AtariVox : public Controller
 
     virtual string about() const;
 
+#ifdef SPEAKJET_EMULATION
+    SpeakJet* getSpeakJet() { return mySpeakJet; }
+#endif
+
   private:
    void clockDataIn(bool value);
    void shiftIn(bool value);
 
   private:
+    // How far off (in CPU cycles) can each write occur from when it's
+    // supposed to happen? Eventually, this will become a user-settable
+    // property... or it may turn out to be unnecessary.
+    enum { TIMING_SLOP = 0 };
+
     // Instance of an real serial port on the system
     // Assuming there's a real AtariVox attached, we can send SpeakJet
     // bytes directly to it
-    SerialPort& mySerialPort;
+    SerialPort* mySerialPort;
 
     // The EEPROM used in the AtariVox
     MT24LC256* myEEPROM;
+
+#ifdef SPEAKJET_EMULATION
+    // Instance of SpeakJet which will actually do the talking for us.
+    SpeakJet *mySpeakJet;
+#endif
 
     // How many bits have been shifted into the shift register?
     uInt8 myShiftCount;

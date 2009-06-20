@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Control.hxx,v 1.17 2008-05-19 02:53:57 stephena Exp $
 //============================================================================
 
 #ifndef CONTROLLER_HXX
@@ -57,7 +57,7 @@ class System;
   of the controller from the perspective of the controller's jack.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Control.hxx,v 1.17 2008-05-19 02:53:57 stephena Exp $
 */
 class Controller : public Serializable
 {
@@ -81,8 +81,7 @@ class Controller : public Serializable
     enum Type
     {
       BoosterGrip, Driving, Keyboard, Paddles, Joystick,
-      TrackBall22, TrackBall80, AmigaMouse, AtariVox, SaveKey,
-      KidVid
+      TrackBall22, TrackBall80, AmigaMouse, AtariVox, SaveKey
     };
 
   public:

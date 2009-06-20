@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Debugger.hxx,v 1.94 2008-05-14 18:04:57 stephena Exp $
 //============================================================================
 
 #ifndef DEBUGGER_HXX
@@ -48,6 +48,12 @@ class Expression;
 typedef map<string,Expression*> FunctionMap;
 typedef map<string,string> FunctionDefMap;
 
+// Constants for RAM area
+enum {
+  kRamStart = 0x80,
+  kRamSize = 128
+};
+
 /*
 // These will probably turn out to be unneeded, left for reference for now
 // pointer types for Debugger instance methods
@@ -64,7 +70,7 @@ typedef uInt16 (Debugger::*DEBUGGER_WORD_METHOD)();
   for all debugging operations in Stella (parser, 6502 debugger, etc).
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Debugger.hxx,v 1.94 2008-05-14 18:04:57 stephena Exp $
 */
 class Debugger : public DialogContainer
 {
@@ -97,7 +103,7 @@ class Debugger : public DialogContainer
     /**
       Initialize the video subsystem wrt this class.
     */
-    bool initializeVideo();
+    void initializeVideo();
 
     /**
       Inform this object of a console change.
@@ -192,7 +198,7 @@ class Debugger : public DialogContainer
     */
     int stringToValue(const string& stringval)
         { return myParser->decipher_arg(stringval); }
-    string valueToString(int value, BaseFormat outputBase = kBASE_DEFAULT);
+    const string valueToString(int value, BaseFormat outputBase = kBASE_DEFAULT);
 
     /** Convenience methods to convert to/from base values */
     static char* to_hex_4(int i)
@@ -364,10 +370,10 @@ class Debugger : public DialogContainer
     System*  mySystem;
 
     DebuggerParser* myParser;
-    CpuDebug*       myCpuDebug;
-    RamDebug*       myRamDebug;
-    RiotDebug*      myRiotDebug;
-    TIADebug*       myTiaDebug;
+    CpuDebug* myCpuDebug;
+    RamDebug* myRamDebug;
+    RiotDebug* myRiotDebug;
+    TIADebug* myTiaDebug;
 
     TiaInfoWidget*   myTiaInfo;
     TiaOutputWidget* myTiaOutput;

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RiotDebug.cxx,v 1.6 2008-05-15 18:59:56 stephena Exp $
 //============================================================================
 
 #include <sstream>
@@ -53,13 +53,13 @@ const DebuggerState& RiotDebug::getState()
   myState.TIMCLKS  = timClocks();
 
   // Controller port pins
-  const Controller& port0 = myConsole.controller(Controller::Left);
+  Controller& port0 = myConsole.controller(Controller::Left);
   myState.P0_PIN1 = port0.myDigitalPinState[Controller::One];
   myState.P0_PIN2 = port0.myDigitalPinState[Controller::Two];
   myState.P0_PIN3 = port0.myDigitalPinState[Controller::Three];
   myState.P0_PIN4 = port0.myDigitalPinState[Controller::Four];
   myState.P0_PIN6 = port0.myDigitalPinState[Controller::Six];
-  const Controller& port1 = myConsole.controller(Controller::Right);
+  Controller& port1 = myConsole.controller(Controller::Right);
   myState.P1_PIN1 = port1.myDigitalPinState[Controller::One];
   myState.P1_PIN2 = port1.myDigitalPinState[Controller::Two];
   myState.P1_PIN3 = port1.myDigitalPinState[Controller::Three];
@@ -92,13 +92,13 @@ void RiotDebug::saveOldState()
   myOldState.TIMCLKS  = timClocks();
 
   // Controller port pins
-  const Controller& port0 = myConsole.controller(Controller::Left);
+  Controller& port0 = myConsole.controller(Controller::Left);
   myOldState.P0_PIN1 = port0.myDigitalPinState[Controller::One];
   myOldState.P0_PIN2 = port0.myDigitalPinState[Controller::Two];
   myOldState.P0_PIN3 = port0.myDigitalPinState[Controller::Three];
   myOldState.P0_PIN4 = port0.myDigitalPinState[Controller::Four];
   myOldState.P0_PIN6 = port0.myDigitalPinState[Controller::Six];
-  const Controller& port1 = myConsole.controller(Controller::Right);
+  Controller& port1 = myConsole.controller(Controller::Right);
   myOldState.P1_PIN1 = port1.myDigitalPinState[Controller::One];
   myOldState.P1_PIN2 = port1.myDigitalPinState[Controller::Two];
   myOldState.P1_PIN3 = port1.myDigitalPinState[Controller::Three];
@@ -265,7 +265,7 @@ string RiotDebug::dirP0String()
       << (reg & 0x40 ? "" : "left ")
       << (reg & 0x20 ? "" : "left ")
       << (reg & 0x10 ? "" : "left ")
-      << ((reg & 0xf0) == 0xf0 ? "(no directions) " : "");
+      << (reg & 0xf0 == 0xf0 ? "(no directions) " : "");
   return buf.str();
 }
 
@@ -278,7 +278,7 @@ string RiotDebug::dirP1String()
       << (reg & 0x04 ? "" : "left ")
       << (reg & 0x02 ? "" : "left ")
       << (reg & 0x01 ? "" : "left ")
-      << ((reg & 0x0f) == 0x0f ? "(no directions) " : "");
+      << (reg & 0x0f == 0x0f ? "(no directions) " : "");
   return buf.str();
 }
 
@@ -314,7 +314,7 @@ string RiotDebug::toString()
 {
   // TODO: keyboard controllers?
 
-  const RiotState& state    = (RiotState&) getState();
+  const RiotState& state = (RiotState&) getState();
   const RiotState& oldstate = (RiotState&) getOldState();
   string ret;
 

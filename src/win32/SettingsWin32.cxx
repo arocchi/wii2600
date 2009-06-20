@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsWin32.cxx,v 1.29 2008-05-04 17:16:39 stephena Exp $
 //============================================================================
 
 #include "bspf.hxx"
@@ -28,6 +28,7 @@ SettingsWin32::SettingsWin32(OSystem* osystem)
   // Anything less than this usually causes sound skipping
   setInternal("fragsize", "2048");
   // Most Windows systems work better without this
+  setInternal("dirtyrects", "false");
   setInternal("romdir", "c:\\");
 }
 

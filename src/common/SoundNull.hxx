@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundNull.hxx,v 1.8 2008-05-19 21:16:58 stephena Exp $
 //============================================================================
 
 #ifndef SOUND_NULL_HXX
@@ -31,7 +31,7 @@ class Deserializer;
   is completely disabled.
 
   @author Stephen Anthony
-  @version $Id$
+  @version $Id: SoundNull.hxx,v 1.8 2008-05-19 21:16:58 stephena Exp $
 */
 class SoundNull : public Sound
 {
@@ -83,7 +83,7 @@ class SoundNull : public Sound
       Initializes the sound device.  This must be called before any
       calls are made to derived methods.
     */
-    void open() { }
+    void initialize() { }
 
     /**
       Should be called to close the sound device.  Once called the sound

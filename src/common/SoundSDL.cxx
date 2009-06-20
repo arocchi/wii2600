@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2008 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SoundSDL.cxx,v 1.44 2008-05-21 14:01:29 stephena Exp $
 //============================================================================
 
 #ifdef SOUND_SUPPORT
@@ -68,7 +68,7 @@ void SoundSDL::setEnabled(bool state)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SoundSDL::open()
+void SoundSDL::initialize()
 {
   // Check whether to start the sound subsystem
   if(!myIsEnabled)
@@ -83,7 +83,7 @@ void SoundSDL::open()
   myRegWriteQueue.clear();
   myTIASound.reset();
 
-  if(SDL_WasInit(SDL_INIT_AUDIO) == 0)
+  if(!((SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO) > 0))
   {
     myIsInitializedFlag = false;
     myIsMuted = false;
@@ -283,7 +283,7 @@ void SoundSDL::setChannels(uInt32 channels)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SoundSDL::setFrameRate(float framerate)
 {
-  // FIXME - should we clear out the queue or adjust the values in it?
+  // FIXME, we should clear out the queue or adjust the values in it
   myDisplayFrameRate = framerate;
 }
 
