@@ -8,18 +8,20 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RomInfoWidget.hxx,v 1.2 2007-09-03 18:37:23 stephena Exp $
 //============================================================================
 
 #ifndef ROM_INFO_WIDGET_HXX
 #define ROM_INFO_WIDGET_HXX
 
 #include <fstream>
+
+class GUI::Surface;
 
 #include "Props.hxx"
 #include "Widget.hxx"
@@ -35,44 +37,27 @@ class RomInfoWidget : public Widget
                   int x, int y, int w, int h);
     virtual ~RomInfoWidget();
 
-    void setProperties(const Properties& props);
-    void clearProperties();
-    void loadConfig();
+    void showInfo(const Properties& props);
+    void clearInfo(bool redraw = true);
 
   protected:
+    void loadConfig();
     void drawWidget(bool hilite);
 
   private:
-    void parseProperties();
-    bool isValidPNGHeader(uInt8* header);
-    void readPNGChunk(ifstream& in, string& type, uInt8** data, int& size);
-    bool parseIHDR(int& width, int& height, uInt8* data, int size);
-    bool parseIDATChunk(FBSurface* surface, int width, int height,
-                        uInt8* data, int size);
-    string parseTextChunk(uInt8* data, int size);
+    static bool isValidPNGHeader(uInt8* header);
+    static void readPNGChunk(ifstream& in, string& type, uInt8** data, int& size);
+    static bool parseIHDR(int& width, int& height, uInt8* data, int size);
+    static bool parseIDATChunk(const FrameBuffer& fb, GUI::Surface* surface,
+                               int width, int height, uInt8* data, int size);
+    static string parseTextChunk(uInt8* data, int size);
 
   private:
-    // Surface id and pointer holding the scaled PNG image
-    FBSurface* mySurface;
-    int mySurfaceID;
-
-    // How much to zoom the PNG image
-    int myZoomLevel;
-
-    // Whether the surface should be redrawn by drawWidget()
-    bool mySurfaceIsValid;
+    // Surface holding the scaled PNG image
+    GUI::Surface* mySurface;
 
     // Some ROM properties info, as well as 'tEXt' chunks from the PNG image
     StringList myRomInfo;
-
-    // The properties for the currently selected ROM
-    Properties myProperties;
-
-    // Indicates if the current properties should actually be used
-    bool myHaveProperties;
-
-    // Indicates if an error occurred in creating/displaying the surface
-    string mySurfaceErrorMsg;
 };
 
 #endif

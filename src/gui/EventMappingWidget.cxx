@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventMappingWidget.cxx,v 1.21 2007-09-03 18:37:23 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -42,14 +42,12 @@ EventMappingWidget::EventMappingWidget(GuiObject* boss, const GUI::Font& font,
     myRemapStatus(false),
     myFirstTime(true)
 {
-  const int fontHeight   = font.getFontHeight(),
-            lineHeight   = font.getLineHeight(),
-            buttonWidth  = font.getStringWidth("Defaults") + 10,
-            buttonHeight = font.getLineHeight() + 4;
+  const int fontHeight = font.getFontHeight(),
+            lineHeight = font.getLineHeight();
   int xpos = 5, ypos = 5;
 
   myActionsList = new StringListWidget(boss, font, xpos, ypos,
-                                       _w - buttonWidth - 20, _h - 3*lineHeight);
+                                       _w - 70, _h - 3*lineHeight);
   myActionsList->setTarget(this);
   myActionsList->setNumberingMode(kListNumberingOff);
   myActionsList->setEditable(false);
@@ -57,28 +55,24 @@ EventMappingWidget::EventMappingWidget(GuiObject* boss, const GUI::Font& font,
   addFocusWidget(myActionsList);
 
   // Add remap, erase, cancel and default buttons
-  xpos += myActionsList->getWidth() + 5;  ypos += 5;
-  myMapButton = new ButtonWidget(boss, font, xpos, ypos,
-                                 buttonWidth, buttonHeight,
+  xpos += myActionsList->getWidth() + 15;  ypos += 5;
+  myMapButton = new ButtonWidget(boss, font, xpos, ypos, 50, 16,
                                  "Map", kStartMapCmd);
   myMapButton->setTarget(this);
   addFocusWidget(myMapButton);
-  ypos += lineHeight + 10;
-  myEraseButton = new ButtonWidget(boss, font, xpos, ypos,
-                                   buttonWidth, buttonHeight,
+  ypos += 20;
+  myEraseButton = new ButtonWidget(boss, font, xpos, ypos, 50, 16,
                                    "Erase", kEraseCmd);
   myEraseButton->setTarget(this);
   addFocusWidget(myEraseButton);
-  ypos += lineHeight + 10;
-  myCancelMapButton = new ButtonWidget(boss, font, xpos, ypos,
-                                       buttonWidth, buttonHeight,
+  ypos += 20;
+  myCancelMapButton = new ButtonWidget(boss, font, xpos, ypos, 50, 16,
                                        "Cancel", kStopMapCmd);
   myCancelMapButton->setTarget(this);
   myCancelMapButton->clearFlags(WIDGET_ENABLED);
   addFocusWidget(myCancelMapButton);
-  ypos += lineHeight + 30;
-  myDefaultsButton = new ButtonWidget(boss, font, xpos, ypos,
-                                      buttonWidth, buttonHeight,
+  ypos += 30;
+  myDefaultsButton = new ButtonWidget(boss, font, xpos, ypos, 50, 16,
                                       "Defaults", kDefaultsCmd);
   myDefaultsButton->setTarget(this);
   addFocusWidget(myDefaultsButton);
@@ -133,7 +127,7 @@ void EventMappingWidget::startRemapping()
   // And show a message indicating which key is being remapped
   ostringstream buf;
   buf << "Select action for '"
-      << instance().eventHandler().actionAtIndex(myActionSelected, myEventMode)
+      << instance()->eventHandler().actionAtIndex(myActionSelected, myEventMode)
       << "' event";	 	
   myKeyMapping->setTextColor(kTextColorEm);
   myKeyMapping->setLabel(buf.str());
@@ -150,8 +144,8 @@ void EventMappingWidget::eraseRemapping()
     return;
 
   Event::Type event =
-    instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-  instance().eventHandler().eraseMapping(event, myEventMode);
+    instance()->eventHandler().eventAtIndex(myActionSelected, myEventMode);
+  instance()->eventHandler().eraseMapping(event, myEventMode);
 
   drawKeyMapping();
 }
@@ -188,7 +182,7 @@ void EventMappingWidget::drawKeyMapping()
   {
     ostringstream buf;
     buf << "Action: "
-        << instance().eventHandler().keyAtIndex(myActionSelected, myEventMode);
+        << instance()->eventHandler().keyAtIndex(myActionSelected, myEventMode);
     myKeyMapping->setTextColor(kTextColor);
     myKeyMapping->setLabel(buf.str());
   }
@@ -201,8 +195,8 @@ bool EventMappingWidget::handleKeyDown(int ascii, int keycode, int modifiers)
   if(myRemapStatus && myActionSelected >= 0)
   {
     Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addKeyMapping(event, myEventMode, keycode))
+      instance()->eventHandler().eventAtIndex(myActionSelected, myEventMode);
+    if(instance()->eventHandler().addKeyMapping(event, myEventMode, keycode))
       stopRemapping();
   }
   return true;
@@ -215,8 +209,8 @@ void EventMappingWidget::handleJoyDown(int stick, int button)
   if(myRemapStatus && myActionSelected >= 0)
   {
     Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyMapping(event, myEventMode, stick, button))
+      instance()->eventHandler().eventAtIndex(myActionSelected, myEventMode);
+    if(instance()->eventHandler().addJoyMapping(event, myEventMode, stick, button))
       stopRemapping();
   }
 }
@@ -228,8 +222,8 @@ void EventMappingWidget::handleJoyAxis(int stick, int axis, int value)
   if(myRemapStatus && myActionSelected >= 0)
   {
     Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyAxisMapping(event, myEventMode,
+      instance()->eventHandler().eventAtIndex(myActionSelected, myEventMode);
+    if(instance()->eventHandler().addJoyAxisMapping(event, myEventMode,
                                                     stick, axis, value))
       stopRemapping();
   }
@@ -244,8 +238,8 @@ bool EventMappingWidget::handleJoyHat(int stick, int hat, int value)
   if(myRemapStatus && myActionSelected >= 0)
   {
     Event::Type event =
-      instance().eventHandler().eventAtIndex(myActionSelected, myEventMode);
-    if(instance().eventHandler().addJoyHatMapping(event, myEventMode,
+      instance()->eventHandler().eventAtIndex(myActionSelected, myEventMode);
+    if(instance()->eventHandler().addJoyHatMapping(event, myEventMode,
                                                    stick, hat, value))
     {
       stopRemapping();
@@ -296,7 +290,7 @@ void EventMappingWidget::handleCommand(CommandSender* sender, int cmd,
       break;
 
     case kDefaultsCmd:
-      instance().eventHandler().setDefaultMapping(myEventMode);
+      instance()->eventHandler().setDefaultMapping(myEventMode);
       drawKeyMapping();
       break;
   }

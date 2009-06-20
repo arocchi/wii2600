@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TiaWidget.hxx,v 1.5 2007-01-01 18:04:44 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -105,54 +105,6 @@ class TiaWidget : public Widget, public CommandSender
     CheckboxWidget* myRefPF;
     CheckboxWidget* myScorePF;
     CheckboxWidget* myPriorityPF;
-
-    // ID's for the various widgets
-    // We need ID's, since there are more than one of several types of widgets
-    enum {
-      kP0_PFID,   kP0_BLID,   kP0_M1ID,   kP0_M0ID,   kP0_P1ID,
-      kP1_PFID,   kP1_BLID,   kP1_M1ID,   kP1_M0ID,
-      kM0_PFID,   kM0_BLID,   kM0_M1ID,
-      kM1_PFID,   kM1_BLID,
-      kBL_PFID,   // Make these first, since we want them to start from 0
-
-      kRamID,
-      kColorRegsID,
-      kGRP0ID,    kGRP1ID,
-      kPosP0ID,   kPosP1ID,
-      kPosM0ID,   kPosM1ID,   kPosBLID,
-      kHMP0ID,    kHMP1ID,
-      kHMM0ID,    kHMM1ID,    kHMBLID,
-      kRefP0ID,   kRefP1ID,
-      kDelP0ID,   kDelP1ID,   kDelBLID,
-      kNusizP0ID, kNusizP1ID,
-      kNusizM0ID, kNusizM1ID, kSizeBLID,
-      kEnaM0ID,   kEnaM1ID,   kEnaBLID,
-      kResMP0ID,  kResMP1ID,
-      kPF0ID,     kPF1ID,     kPF2ID,
-      kRefPFID,   kScorePFID, kPriorityPFID
-    };
-
-    // Strobe button commands
-    enum {
-      kWsyncCmd = 'Swsy',
-      kRsyncCmd = 'Srsy',
-      kResP0Cmd = 'Srp0',
-      kResP1Cmd = 'Srp1',
-      kResM0Cmd = 'Srm0',
-      kResM1Cmd = 'Srm1',
-      kResBLCmd = 'Srbl',
-      kHmoveCmd = 'Shmv',
-      kHmclrCmd = 'Shmc',
-      kCxclrCmd = 'Scxl'
-    };
-
-    // Color registers
-    enum {
-      kCOLUP0Addr,
-      kCOLUP1Addr,
-      kCOLUPFAddr,
-      kCOLUBKAddr
-    };
 };
 
 #endif

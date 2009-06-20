@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart2K.hxx,v 1.9 2007-01-14 16:17:52 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGE2K_HXX
@@ -32,7 +32,7 @@ class Deserializer;
   2600's 4K cartridge addressing space.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Cart2K.hxx,v 1.9 2007-01-14 16:17:52 stephena Exp $
 */
 class Cartridge2K : public Cartridge
 {
@@ -41,9 +41,8 @@ class Cartridge2K : public Cartridge
       Create a new cartridge using the specified image
 
       @param image Pointer to the ROM image
-      @param size  The size of the ROM image (<= 2048 bytes)
     */
-    Cartridge2K(const uInt8* image, uInt32 size);
+    Cartridge2K(const uInt8* image);
  
     /**
       Destructor
@@ -51,6 +50,13 @@ class Cartridge2K : public Cartridge
     virtual ~Cartridge2K();
 
   public:
+    /**
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const;
+
     /**
       Reset cartridge to its power-on state
     */
@@ -63,6 +69,22 @@ class Cartridge2K : public Cartridge
       @param system The system the device should install itself in
     */
     virtual void install(System& system);
+
+    /**
+      Saves the current state of this device to the given Serializer.
+
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
+    */
+    virtual bool save(Serializer& out);
+
+    /**
+      Loads the current state of this device from the given Deserializer.
+
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
+    */
+    virtual bool load(Deserializer& in);
 
     /**
       Install pages for the specified bank in the system.
@@ -100,29 +122,6 @@ class Cartridge2K : public Cartridge
     */
     virtual uInt8* getImage(int& size);
 
-    /**
-      Save the current state of this cart to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool save(Serializer& out) const;
-
-    /**
-      Load the current state of this cart from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    virtual bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    virtual string name() const { return "Cartridge2K"; }
-
   public:
     /**
       Get the byte at the specified address
@@ -140,14 +139,8 @@ class Cartridge2K : public Cartridge
     virtual void poke(uInt16 address, uInt8 value);
 
   private:
-    // Pointer to a dynamically allocated ROM image of the cartridge
-    uInt8* myImage;
-
-    // Size of the ROM image
-    uInt32 mySize;
-
-    // Mask to use for mirroring
-    uInt32 myMask;
+    // The 2k ROM image for the cartridge
+    uInt8 myImage[2048];
 };
 
 #endif

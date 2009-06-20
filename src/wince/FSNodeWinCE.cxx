@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -271,9 +271,20 @@ bool AbstractFilesystemNode::makeDir(const string& path)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool AbstractFilesystemNode::rename(const string& oldpath,
-                                    const string& newpath)
+string AbstractFilesystemNode::modTime(const string& path)
 {
-  // TODO - implement this
-  return false;
+  WIN32_FILE_ATTRIBUTE_DATA attr;
+
+  static TCHAR unicodeString[MAX_PATH];
+  MultiByteToWideChar(CP_ACP, 0, path.c_str(), strlen(path.c_str()) + 1, unicodeString, sizeof(unicodeString));
+
+  BOOL b = GetFileAttributesEx(unicodeString, GetFileExInfoStandard, &attr);
+
+  if(b == 0) return "";
+
+  ostringstream buf;
+  buf << attr.ftLastWriteTime.dwHighDateTime << attr.ftLastWriteTime.dwLowDateTime;
+
+  return buf.str();
 }
+

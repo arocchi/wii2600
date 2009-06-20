@@ -8,13 +8,13 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
+// $Id: OSystemWinCE.cxx,v 1.12 2007-02-12 11:16:59 knakos Exp $
 //============================================================================
 
 #include <sstream>
@@ -103,7 +103,7 @@ void OSystemWinCE::mainLoop()
   }
 }
 
-uInt32 OSystemWinCE::getTicks(void) const
+uInt32 OSystemWinCE::getTicks(void)
 {
 	return GetTickCount();
 }

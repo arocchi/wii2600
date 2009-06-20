@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DebuggerParser.cxx,v 1.101 2007-08-17 16:12:50 stephena Exp $
 //============================================================================
 
 #include <fstream>
@@ -23,14 +23,10 @@
 #include "Dialog.hxx"
 #include "Debugger.hxx"
 #include "CpuDebug.hxx"
-#include "RamDebug.hxx"
-#include "RiotDebug.hxx"
-#include "TIADebug.hxx"
 #include "DebuggerParser.hxx"
 #include "YaccParser.hxx"
 #include "M6502.hxx"
 #include "Expression.hxx"
-#include "FSNode.hxx"
 #include "RomWidget.hxx"
 
 #ifdef CHEATCODE_SUPPORT
@@ -126,14 +122,16 @@ string DebuggerParser::run(const string& command)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 string DebuggerParser::exec(const string& file, bool verbose)
 {
-  string ret;
+  string ret, path = file;
   int count = 0;
   char buffer[256]; // FIXME: static buffers suck
 
-  FilesystemNode node(file);
-  ifstream in(node.getPath().c_str());
+  if( file.find_last_of('.') == string::npos )
+    path += ".stella";
+
+  ifstream in(path.c_str());
   if(!in.is_open())
-    return red("file \'" + file + "\' not found.");
+    return red("file \"" + path + "\" not found.");
 
   while( !in.eof() ) {
     if(!in.getline(buffer, 255))
@@ -151,7 +149,7 @@ string DebuggerParser::exec(const string& file, bool verbose)
   ret += "Executed ";
   ret += debugger->valueToString(count);
   ret += " commands from \"";
-  ret += file;
+  ret += path;
   ret += "\"\n";
   return ret;
 }
@@ -267,7 +265,7 @@ int DebuggerParser::decipher_arg(const string &str)
   else if(arg == "pc" || arg == ".") result = state.PC;
   else { // Not a special, must be a regular arg: check for label first
     const char *a = arg.c_str();
-    result = debugger->equates().getAddress(arg);
+    result = debugger->equateList->getAddress(arg);
 
     if(result < 0) { // if not label, must be a number
       if(bin) { // treat as binary
@@ -561,8 +559,7 @@ string DebuggerParser::eval()
   char buf[50];
   string ret;
   for(int i=0; i<argCount; i++) {
-    // TODO - technically, we should determine if the label is read or write
-    string label = debugger->equates().getLabel(args[i], true);
+    string label = debugger->equates()->getLabel(args[i]);
     if(label != "") {
       ret += label;
       ret += ": ";
@@ -601,8 +598,7 @@ string DebuggerParser::trapStatus(int addr)
   else
     result += "   none   ";
 
-  // TODO - technically, we should determine if the label is read or write
-  const string& l = debugger->equates().getLabel(addr, true);
+  string l = debugger->equateList->getLabel(addr);
   if(l != "") {
     result += "  (";
     result += l;
@@ -930,13 +926,6 @@ void DebuggerParser::executeHelp()
   }
   commandResult += "\nBuilt-in functions:\n";
   commandResult += debugger->builtinHelp();
-  commandResult += "\nPseudo-registers:\n";
-  commandResult += "_scan     Current scanline count\n";
-  commandResult += "_bank     Currently selected bank\n";
-  commandResult += "_fcount   Number of frames since emulation started\n";
-  commandResult += "_cclocks  Color clocks on current scanline\n";
-  commandResult += "_vsync    Whether vertical sync is enabled (1 or 0)\n";
-  commandResult += "_vblank   Whether vertical blank is enabled (1 or 0)\n";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -985,19 +974,16 @@ void DebuggerParser::executeList()
 // "listbreaks"
 void DebuggerParser::executeListbreaks()
 {
-  ostringstream buf;
+  char buf[255];
   int count = 0;
 
-  for(unsigned int i = 0; i < 0x10000; i++)
-  {
-    if(debugger->breakpoints().isSet(i))
-    {
-      buf << debugger->equates().getLabel(i, true, 4) << " ";
-      if(! (++count % 8) ) buf << "\n";
+  for(unsigned int i=0; i<0x10000; i++) {
+    if(debugger->breakPoints->isSet(i)) {
+      sprintf(buf, "%s ", debugger->equateList->getFormatted(i, 4));
+      commandResult += buf;
+      if(! (++count % 8) ) commandResult += "\n";
     }
   }
-  commandResult += buf.str();
-
   /*
   if(count)
     return ret;
@@ -1071,7 +1057,7 @@ void DebuggerParser::executeLoadlist()
 // "loadsym"
 void DebuggerParser::executeLoadsym()
 {
-  commandResult = debugger->equates().loadFile(argStrings[0]);
+  commandResult = debugger->equateList->loadFile(argStrings[0]);
   debugger->myRom->invalidate();
 }
 
@@ -1104,7 +1090,7 @@ void DebuggerParser::executePrint()
 void DebuggerParser::executeRam()
 {
   if(argCount == 0)
-    commandResult = debugger->ramDebug().toString();
+    commandResult = debugger->dumpRAM();
   else
     commandResult = debugger->setRAM(args);
 }
@@ -1121,7 +1107,7 @@ void DebuggerParser::executeReset()
 // "riot"
 void DebuggerParser::executeRiot()
 {
-  commandResult = debugger->riotDebug().toString();
+  commandResult = debugger->riotState();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1235,7 +1221,7 @@ void DebuggerParser::executeSavestate()
 // "savesym"
 void DebuggerParser::executeSavesym()
 {
-  if(debugger->equates().saveFile(argStrings[0]))
+  if(debugger->equateList->saveFile(argStrings[0]))
     commandResult = "saved symbols to file " + argStrings[0];
   else
     commandResult = red("I/O error");
@@ -1268,7 +1254,7 @@ void DebuggerParser::executeStep()
 // "tia"
 void DebuggerParser::executeTia()
 {
-  commandResult = debugger->tiaDebug().toString();
+  commandResult = debugger->dumpTIA();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1310,7 +1296,7 @@ void DebuggerParser::executeTrapwrite()
 // "undef"
 void DebuggerParser::executeUndef()
 {
-  if(debugger->equates().removeEquate(argStrings[0]))
+  if(debugger->equateList->undefine(argStrings[0]))
   {
     debugger->myRom->invalidate();
     commandResult = argStrings[0] + " now undefined";

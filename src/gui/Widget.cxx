@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Widget.cxx,v 1.56 2007-09-03 18:37:24 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -35,7 +35,7 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Widget::Widget(GuiObject* boss, const GUI::Font& font,
                int x, int y, int w, int h)
-  : GuiObject(boss->instance(), boss->parent(), boss->dialog(), x, y, w, h),
+  : GuiObject(boss->instance(), boss->parent(), x, y, w, h),
     _type(0),
     _boss(boss),
     _font((GUI::Font*)&font),
@@ -72,7 +72,7 @@ void Widget::draw()
 
   _dirty = false;
   
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
   if(!isVisible() || !_boss->isVisible())
     return;
@@ -92,12 +92,12 @@ void Widget::draw()
     {
       x++; y++; w-=2; h-=2;
     }
-    s.fillRect(x, y, w, h, (_flags & WIDGET_HILITED) ? _bgcolorhi : _bgcolor);
+    fb.fillRect(x, y, w, h, (_flags & WIDGET_HILITED) ? _bgcolorhi : _bgcolor);
   }
 
   // Draw border
   if(hasBorder) {
-    s.box(_x, _y, _w, _h, kColor, kShadowColor);
+    fb.box(_x, _y, _w, _h, kColor, kShadowColor);
     _x += 4;
     _y += 4;
     _w -= 8;
@@ -127,7 +127,7 @@ void Widget::draw()
   }
 
   // Tell the framebuffer this area is dirty
-  s.addDirtyRect(getAbsX(), getAbsY(), oldW, oldH);
+  fb.addDirtyRect(getAbsX(), getAbsY(), oldW, oldH);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -148,6 +148,16 @@ void Widget::lostFocus()
 
   _hasFocus = false;
   lostFocusWidget();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+GUI::Rect Widget::getRect() const
+{
+  int x = getAbsX() - 1,  y = getAbsY() - 1,
+      w = getWidth() + 2, h = getHeight() + 2;
+
+  GUI::Rect r(x, y, x+w, y+h);
+  return r;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -218,7 +228,7 @@ bool Widget::isWidgetInChain(WidgetArray& list, Widget* find)
 Widget* Widget::setFocusForChain(GuiObject* boss, WidgetArray& arr,
                                  Widget* wid, int direction)
 {
-  FBSurface& s = boss->dialog().surface();
+  FrameBuffer& fb = boss->instance()->frameBuffer();
   int size = arr.size(), pos = -1;
   Widget* tmp;
   for(int i = 0; i < size; ++i)
@@ -229,21 +239,18 @@ Widget* Widget::setFocusForChain(GuiObject* boss, WidgetArray& arr,
     if(wid == tmp)
       pos = i;
 
-    // Get area around widget
-    // Note: we must use getXXX() methods and not access the variables
-    // directly, since in some cases (notably those widgets with embedded
-    // ScrollBars) the two quantities may be different
-    int x = tmp->getAbsX() - 1,  y = tmp->getAbsY() - 1,
-        w = tmp->getWidth() + 2, h = tmp->getHeight() + 2;
+    GUI::Rect rect = tmp->getRect();
+    int x = rect.left,    y = rect.top,
+        w = rect.width(), h = rect.height();
 
     // First clear area surrounding all widgets
     if(tmp->_hasFocus)
     {
       tmp->lostFocus();
-      s.frameRect(x, y, w, h, kDlgColor);
+      fb.frameRect(x, y, w, h, kDlgColor);
 
       tmp->setDirty(); tmp->draw();
-      s.addDirtyRect(x, y, w, h);
+      fb.addDirtyRect(x, y, w, h);
     }
   }
 
@@ -274,19 +281,15 @@ Widget* Widget::setFocusForChain(GuiObject* boss, WidgetArray& arr,
 
   // Now highlight the active widget
   tmp = arr[pos];
-
-  // Get area around widget
-  // Note: we must use getXXX() methods and not access the variables
-  // directly, since in some cases (notably those widgets with embedded
-  // ScrollBars) the two quantities may be different
-  int x = tmp->getAbsX() - 1,  y = tmp->getAbsY() - 1,
-      w = tmp->getWidth() + 2, h = tmp->getHeight() + 2;
+  GUI::Rect rect = tmp->getRect();
+  int x = rect.left,    y = rect.top,
+      w = rect.width(), h = rect.height();
 
   tmp->receivedFocus();
-  s.frameRect(x, y, w, h, kWidFrameColor, kDashLine);
+  fb.frameRect(x, y, w, h, kWidFrameColor, kDashLine);
 
   tmp->setDirty(); tmp->draw();
-  s.addDirtyRect(x, y, w, h);
+  fb.addDirtyRect(x, y, w, h);
 
   return tmp;
 }
@@ -338,9 +341,9 @@ void StaticTextWidget::setLabel(const string& label)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void StaticTextWidget::drawWidget(bool hilite)
 {
-  FBSurface& s = _boss->dialog().surface();
-  s.drawString(_font, _label, _x, _y, _w,
-               isEnabled() ? _textcolor : kColor, _align);
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
+  fb.drawString(_font, _label, _x, _y, _w,
+                isEnabled() ? _textcolor : kColor, _align);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -405,9 +408,9 @@ void ButtonWidget::handleMouseUp(int x, int y, int button, int clickCount)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ButtonWidget::drawWidget(bool hilite)
 {
-  FBSurface& s = _boss->dialog().surface();
-  s.drawString(_font, _label, _x, _y + (_h - _fontHeight)/2 + 1, _w,
-               !isEnabled() ? kColor : hilite ? _textcolorhi : _textcolor, _align);
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
+  fb.drawString(_font, _label, _x, _y + (_h - _fontHeight)/2 + 1, _w,
+                !isEnabled() ? kColor : hilite ? _textcolorhi : _textcolor, _align);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -501,29 +504,29 @@ void CheckboxWidget::setState(bool state)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CheckboxWidget::drawWidget(bool hilite)
 {
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
   // Draw the box
   if(_drawBox)
-    s.box(_x, _y + _boxY, 14, 14, kColor, kShadowColor);
+    fb.box(_x, _y + _boxY, 14, 14, kColor, kShadowColor);
 
   // Do we draw a square or cross?
-  s.fillRect(_x + 2, _y + _boxY + 2, 10, 10, _bgcolor);
+  fb.fillRect(_x + 2, _y + _boxY + 2, 10, 10, _bgcolor);
   if(isEnabled())
   {
     if(_state)
     {
-      uInt32* img  = _fillRect ? checked_img_o : checked_img_x;
-	  uInt32 color = _fillRect ? kWidFrameColor : kCheckColor;
-	  s.drawBitmap(img, _x + 3, _y + _boxY + 3, color);
+      unsigned int* img = _fillRect ? checked_img_o : checked_img_x;
+	  int color = _fillRect ? kWidFrameColor : kCheckColor;
+	  fb.drawBitmap(img, _x + 3, _y + _boxY + 3, color);
     }
   }
   else
-    s.fillRect(_x + 2, _y + _boxY + 2, 10, 10, kColor);
+    fb.fillRect(_x + 2, _y + _boxY + 2, 10, 10, kColor);
 
   // Finally draw the label
-  s.drawString(_font, _label, _x + 20, _y + _textY, _w,
-               isEnabled() ? kTextColor : kColor);
+  fb.drawString(_font, _label, _x + 20, _y + _textY, _w,
+                isEnabled() ? kTextColor : kColor);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -647,23 +650,24 @@ bool SliderWidget::handleEvent(Event::Type e)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SliderWidget::drawWidget(bool hilite)
 {
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
   // Draw the label, if any
   if(_labelWidth > 0)
-    s.drawString(_font, _label, _x, _y + 2, _labelWidth,
-                 isEnabled() ? kTextColor : kColor, kTextAlignRight);
+    fb.drawString(_font, _label, _x, _y + 2, _labelWidth,
+                  isEnabled() ? kTextColor : kColor, kTextAlignRight);
 
   // Draw the box
-  s.box(_x + _labelWidth, _y, _w - _labelWidth, _h, kColor, kShadowColor);
+  fb.box(_x + _labelWidth, _y, _w - _labelWidth, _h, kColor, kShadowColor);
 
   // Fill the box
-  s.fillRect(_x + _labelWidth + 2, _y + 2, _w - _labelWidth - 4, _h - 4,
-             !isEnabled() ? kColor : kWidColor);
+  fb.fillRect(_x + _labelWidth + 2, _y + 2, _w - _labelWidth - 4, _h - 4,
+              !isEnabled() ? kColor : kWidColor);
 
   // Draw the 'bar'
-  s.fillRect(_x + _labelWidth + 2, _y + 2, valueToPos(_value), _h - 4,
-             !isEnabled() ? kColor : hilite ? kSliderColorHi : kSliderColor);
+  fb.fillRect(_x + _labelWidth + 2, _y + 2, valueToPos(_value), _h - 4,
+              !isEnabled() ? kColor :
+              hilite ? kSliderColorHi : kSliderColor);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

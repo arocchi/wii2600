@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.cxx,v 1.129 2007-09-10 15:46:58 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -31,24 +31,22 @@
 #include "EventHandler.hxx"
 #include "Joystick.hxx"
 #include "Keyboard.hxx"
-#include "KidVid.hxx"
-#include "M6502.hxx"
+#include "M6502Hi.hxx"
+#include "M6502Low.hxx"
 #include "M6532.hxx"
+#include "MediaSrc.hxx"
 #include "Paddles.hxx"
 #include "Props.hxx"
 #include "PropsSet.hxx"
-#include "SaveKey.hxx"
 #include "Settings.hxx" 
 #include "Sound.hxx"
 #include "Switches.hxx"
 #include "System.hxx"
 #include "TIA.hxx"
-#include "TrackBall.hxx"
 #include "FrameBuffer.hxx"
 #include "OSystem.hxx"
 #include "Menu.hxx"
 #include "CommandMenu.hxx"
-#include "Serializable.hxx"
 #include "Version.hxx"
 
 #ifdef DEBUGGER_SUPPORT
@@ -64,12 +62,12 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   : myOSystem(osystem),
     myProperties(props),
     myDisplayFormat("NTSC"),
-    myFramerate(60.0),
+    myFramerate(60),
     myUserPaletteDefined(false)
 {
   myControllers[0] = 0;
   myControllers[1] = 0;
-  myTIA = 0;
+  myMediaSource = 0;
   mySwitches = 0;
   mySystem = 0;
   myEvent = 0;
@@ -80,106 +78,167 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   // Load user-defined palette for this ROM
   loadUserPalette();
 
+  // Setup the controllers based on properties
+  const string& left  = myProperties.get(Controller_Left);
+  const string& right = myProperties.get(Controller_Right);
+
+  // Swap the ports if necessary
+  int leftPort, rightPort;
+  if(myProperties.get(Console_SwapPorts) == "NO")
+  {
+    leftPort = 0; rightPort = 1;
+  }
+  else
+  {
+    leftPort = 1; rightPort = 0;
+  }
+
+  // Also check if we should swap the paddles plugged into a jack
+  bool swapPaddles = myProperties.get(Controller_SwapPaddles) == "YES";
+
+  // Construct left controller
+  if(left == "BOOSTER-GRIP")
+  {
+    myControllers[leftPort] = new BoosterGrip(Controller::Left, *myEvent);
+  }
+  else if(left == "DRIVING")
+  {
+    myControllers[leftPort] = new Driving(Controller::Left, *myEvent);
+  }
+  else if((left == "KEYBOARD") || (left == "KEYPAD"))
+  {
+    myControllers[leftPort] = new Keyboard(Controller::Left, *myEvent);
+  }
+  else if(left == "PADDLES")
+  {
+    myControllers[leftPort] = new Paddles(Controller::Left, *myEvent, swapPaddles);
+  }
+  else
+  {
+    myControllers[leftPort] = new Joystick(Controller::Left, *myEvent);
+  }
+ 
+  // Construct right controller
+  if(right == "BOOSTER-GRIP")
+  {
+    myControllers[rightPort] = new BoosterGrip(Controller::Right, *myEvent);
+  }
+  else if(right == "DRIVING")
+  {
+    myControllers[rightPort] = new Driving(Controller::Right, *myEvent);
+  }
+  else if((right == "KEYBOARD") || (right == "KEYPAD"))
+  {
+    myControllers[rightPort] = new Keyboard(Controller::Right, *myEvent);
+  }
+  else if(right == "PADDLES")
+  {
+    myControllers[rightPort] = new Paddles(Controller::Right, *myEvent, swapPaddles);
+  }
+#ifdef ATARIVOX_SUPPORT
+  else if(right == "ATARIVOX")
+  {
+    myControllers[rightPort] = new AtariVox(Controller::Right, *myEvent);
+  }
+#endif
+  else
+  {
+    myControllers[rightPort] = new Joystick(Controller::Right, *myEvent);
+  }
+
   // Create switches for the console
   mySwitches = new Switches(*myEvent, myProperties);
 
-  // Construct the system and components
+  // Now, we can construct the system and components
   mySystem = new System(13, 6);
 
-  // The real controllers for this console will be added later
-  // For now, we just add dummy joystick controllers, since autodetection
-  // runs the emulation for a while, and this may interfere with 'smart'
-  // controllers such as the AVox and SaveKey
-  // Note that the controllers must be added directly after the system
-  // has been created, and before any other device is added
-  // (particularly the M6532)
-  myControllers[0] = new Joystick(Controller::Left, *myEvent, *mySystem);
-  myControllers[1] = new Joystick(Controller::Right, *myEvent, *mySystem);
+  // Inform the controllers about the system
+  myControllers[0]->setSystem(mySystem);
+  myControllers[1]->setSystem(mySystem);
 
-  M6502* m6502 = new M6502(1);
+  M6502* m6502;
+  if(myOSystem->settings().getString("cpu") == "low")
+    m6502 = new M6502Low(1);
+  else
+    m6502 = new M6502High(1);
 #ifdef DEBUGGER_SUPPORT
   m6502->attach(myOSystem->debugger());
 #endif
 
-  myCart = cart;
-  myRiot = new M6532(*this);
-  myTIA  = new TIA(*this, myOSystem->sound(), myOSystem->settings());
+  M6532* m6532 = new M6532(*this);
+  TIA *tia = new TIA(*this, myOSystem->settings());
+  tia->setSound(myOSystem->sound());
 
   mySystem->attach(m6502);
-  mySystem->attach(myRiot);
-  mySystem->attach(myTIA);
-  mySystem->attach(myCart);
+  mySystem->attach(m6532);
+  mySystem->attach(tia);
+  mySystem->attach(cart);
+
+  // Remember what my media source is
+  myMediaSource = tia;
+  myCart = cart;
+  myRiot = m6532;
+
+  // Query some info about this console
+  ostringstream buf;
+  buf << "  Cart Name: " << myProperties.get(Cartridge_Name) << endl
+      << "  Cart MD5:  " << myProperties.get(Cartridge_MD5) << endl;
 
   // Auto-detect NTSC/PAL mode if it's requested
-  string autodetected = "";
   myDisplayFormat = myProperties.get(Display_Format);
+  buf << "  Display Format:  " << myDisplayFormat;
   if(myDisplayFormat == "AUTO-DETECT" ||
      myOSystem->settings().getBool("rominfo"))
   {
     // Run the system for 60 frames, looking for PAL scanline patterns
-    // We turn off the SuperCharger progress bars, otherwise the SC BIOS
-    // will take over 250 frames!
-    // The 'fastscbios' option must be changed before the system is reset
-    bool fastscbios = myOSystem->settings().getBool("fastscbios");
-    myOSystem->settings().setBool("fastscbios", true);
+    // We assume the first 30 frames are garbage, and only consider
+    // the second 30 (useful to get past SuperCharger BIOS)
+    // Unfortunately, this means we have to always enable 'fastscbios',
+    // since otherwise the BIOS loading will take over 250 frames!
     mySystem->reset();
     int palCount = 0;
     for(int i = 0; i < 60; ++i)
     {
-      myTIA->update();
-      if(myTIA->scanlines() > 285)
+      myMediaSource->update();
+      if(i >= 30 && myMediaSource->scanlines() > 285)
         ++palCount;
     }
-    myDisplayFormat = (palCount >= 20) ? "PAL" : "NTSC";
-    if(myProperties.get(Display_Format) == "AUTO-DETECT")
-      autodetected = "*";
 
-    // Don't forget to reset the SC progress bars again
-    myOSystem->settings().setBool("fastscbios", fastscbios);
+    myDisplayFormat = (palCount >= 15) ? "PAL" : "NTSC";
+    if(myProperties.get(Display_Format) == "AUTO-DETECT")
+      buf << " ==> " << myDisplayFormat;
   }
-  myConsoleInfo.DisplayFormat = myDisplayFormat + autodetected;
+  buf << endl << cart->about();
 
   // Set up the correct properties used when toggling format
   // Note that this can be overridden if a format is forced
   //   For example, if a PAL ROM is forced to be NTSC, it will use NTSC-like
   //   properties (60Hz, 262 scanlines, etc) and cycle between NTSC-like modes
-  // The TIA will self-adjust the framerate if necessary
   if(myDisplayFormat == "NTSC" || myDisplayFormat == "PAL60" ||
      myDisplayFormat == "SECAM60")
   {
     // Assume we've got ~262 scanlines (NTSC-like format)
-    myFramerate = 60.0;
-    myConsoleInfo.InitialFrameRate = "60";
+    myFramerate = 60;
   }
   else
   {
     // Assume we've got ~312 scanlines (PAL-like format)
-    myFramerate = 50.0;
-    myConsoleInfo.InitialFrameRate = "50";
+    myFramerate = 50;
 
     if(myProperties.get(Display_Height) == "210")
       myProperties.set(Display_Height, "250");
   }
 
-  const string& md5 = myProperties.get(Cartridge_MD5);
-
-  // Add the real controllers for this system
-  setControllers(md5);
+  // Reset, the system to its power-on state
+  mySystem->reset();
 
   // Bumper Bash requires all 4 directions
+  const string& md5 = myProperties.get(Cartridge_MD5);
   bool allow = (md5 == "aa1c41f86ec44c0a44eb64c332ce08af" ||
                 md5 == "1bf503c724001b09be79c515ecfcbd03");
   myOSystem->eventHandler().allowAllDirections(allow);
 
-  // Reset the system to its power-on state
-  mySystem->reset();
-
-  // Finally, add remaining info about the console
-  myConsoleInfo.CartName   = myProperties.get(Cartridge_Name);
-  myConsoleInfo.CartMD5    = myProperties.get(Cartridge_MD5);
-  myConsoleInfo.Control0   = myControllers[0]->about();
-  myConsoleInfo.Control1   = myControllers[1]->about();
-  myConsoleInfo.BankSwitch = cart->about();
+  myAboutString = buf.str();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -192,67 +251,13 @@ Console::~Console()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Console::save(Serializer& out) const
-{
-  try
-  {
-    // First save state for the system
-    if(!mySystem->save(out))
-      return false;
-
-    // Now save the console switches
-    if(!mySwitches->save(out))
-      return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for \'Console\'" << endl;
-    return false;
-  }
-
-  return true;  // success
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Console::load(Deserializer& in)
-{
-  try
-  {
-    // First load state for the system
-    if(!mySystem->load(in))
-      return false;
-
-    // Then load the console switches
-    if(!mySwitches->load(in))
-      return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for \'Console\'" << endl;
-    return false;
-  }
-
-  return true;  // success
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Console::toggleFormat()
 {
   string format, message;
 
   if(myDisplayFormat.compare(0, 4, "NTSC") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "PAL60";
       message = "PAL palette (PAL60)";
@@ -265,7 +270,7 @@ void Console::toggleFormat()
   }
   else if(myDisplayFormat.compare(0, 3, "PAL") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "SECAM";
       message = "SECAM palette (SECAM60)";
@@ -278,7 +283,7 @@ void Console::toggleFormat()
   }
   else if(myDisplayFormat.compare(0, 5, "SECAM") == 0)
   {
-    if(myFramerate > 55.0)
+    if(myFramerate == 60)
     {
       format  = "NTSC";
       message = "NTSC palette (NTSC)";
@@ -416,18 +421,15 @@ void Console::setProperties(const Properties& props)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Console::initializeVideo(bool full)
+void Console::initializeVideo(bool full)
 {
   if(full)
   {
     string title = string("Stella ") + STELLA_VERSION +
                    ": \"" + myProperties.get(Cartridge_Name) + "\"";
-    if(!myOSystem->frameBuffer().initialize(title,
-          myTIA->width() << 1, myTIA->height()))
-      return false;
-
-    myOSystem->frameBuffer().showFrameStats(
-      myOSystem->settings().getBool("stats"));
+    myOSystem->frameBuffer().initialize(title,
+                                        myMediaSource->width() << 1,
+                                        myMediaSource->height());
   }
 
   bool enable = myProperties.get(Display_Phosphor) == "YES";
@@ -436,18 +438,7 @@ bool Console::initializeVideo(bool full)
   setColorLossPalette(myOSystem->settings().getBool("colorloss"));
   setPalette(myOSystem->settings().getString("palette"));
 
-  // Set the correct framerate based on the format of the ROM
-  // This can be overridden by changing the framerate in the
-  // VideoDialog box or on the commandline, but it can't be saved
-  // (ie, framerate is now determined based on number of scanlines).
-  int framerate = myOSystem->settings().getInt("framerate");
-  if(framerate > 0) myFramerate = float(framerate);
-  myOSystem->setFramerate(myFramerate);
-
-  // Make sure auto-frame calculation is only enabled when necessary
-  myTIA->enableAutoFrame(framerate <= 0);
-
-  return true;
+  myOSystem->setFramerate(getFramerate());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -456,18 +447,13 @@ void Console::initializeAudio()
   // Initialize the sound interface.
   // The # of channels can be overridden in the AudioDialog box or on
   // the commandline, but it can't be saved.
-  int framerate = myOSystem->settings().getInt("framerate");
-  if(framerate > 0) myFramerate = float(framerate);
   const string& sound = myProperties.get(Cartridge_Sound);
   uInt32 channels = (sound == "STEREO" ? 2 : 1);
 
   myOSystem->sound().close();
   myOSystem->sound().setChannels(channels);
-  myOSystem->sound().setFrameRate(myFramerate);
-  myOSystem->sound().open();
-
-  // Make sure auto-frame calculation is only enabled when necessary
-  myTIA->enableAutoFrame(framerate <= 0);
+  myOSystem->sound().setFrameRate(getFramerate());
+  myOSystem->sound().initialize();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -526,7 +512,7 @@ void Console::changeYStart(int direction)
 
   strval << ystart;
   myProperties.set(Display_YStart, strval.str());
-  myTIA->frameReset();
+  ((TIA*)myMediaSource)->frameReset();
   myOSystem->frameBuffer().refresh();
 
   message = "YStart ";
@@ -564,7 +550,7 @@ void Console::changeHeight(int direction)
 
   strval << height;
   myProperties.set(Display_Height, strval.str());
-  myTIA->frameReset();
+  ((TIA*)myMediaSource)->frameReset();
   initializeVideo();  // takes care of refreshing the screen
 
   message = "Height ";
@@ -573,128 +559,9 @@ void Console::changeHeight(int direction)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setControllers(const string& rommd5)
-{
-  delete myControllers[0];
-  delete myControllers[1];
-
-  // Setup the controllers based on properties
-  const string& left  = myProperties.get(Controller_Left);
-  const string& right = myProperties.get(Controller_Right);
-
-  // Swap the ports if necessary
-  int leftPort, rightPort;
-  if(myProperties.get(Console_SwapPorts) == "NO")
-  {
-    leftPort = 0; rightPort = 1;
-  }
-  else
-  {
-    leftPort = 1; rightPort = 0;
-  }
-
-  // Also check if we should swap the paddles plugged into a jack
-  bool swapPaddles = myProperties.get(Controller_SwapPaddles) == "YES";
-  Paddles::setMouseIsPaddle(-1);  // Reset to defaults
-
-  // Construct left controller
-  if(left == "BOOSTERGRIP")
-  {
-    myControllers[leftPort] = new BoosterGrip(Controller::Left, *myEvent, *mySystem);
-  }
-  else if(left == "DRIVING")
-  {
-    myControllers[leftPort] = new Driving(Controller::Left, *myEvent, *mySystem);
-  }
-  else if((left == "KEYBOARD") || (left == "KEYPAD"))
-  {
-    myControllers[leftPort] = new Keyboard(Controller::Left, *myEvent, *mySystem);
-  }
-  else if(left == "PADDLES")
-  {
-    myControllers[leftPort] = new Paddles(Controller::Left, *myEvent, *mySystem, swapPaddles);
-  }
-  else if(left == "TRACKBALL22")
-  {
-    myControllers[leftPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                            Controller::TrackBall22);
-  }
-  else if(left == "TRACKBALL80")
-  {
-    myControllers[leftPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                            Controller::TrackBall80);
-  }
-  else if(left == "AMIGAMOUSE")
-  {
-    myControllers[leftPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                            Controller::AmigaMouse);
-  }
-  else
-  {
-    myControllers[leftPort] = new Joystick(Controller::Left, *myEvent, *mySystem);
-  }
- 
-  // Construct right controller
-  if(right == "BOOSTERGRIP")
-  {
-    myControllers[rightPort] = new BoosterGrip(Controller::Right, *myEvent, *mySystem);
-  }
-  else if(right == "DRIVING")
-  {
-    myControllers[rightPort] = new Driving(Controller::Right, *myEvent, *mySystem);
-  }
-  else if((right == "KEYBOARD") || (right == "KEYPAD"))
-  {
-    myControllers[rightPort] = new Keyboard(Controller::Right, *myEvent, *mySystem);
-  }
-  else if(right == "PADDLES")
-  {
-    myControllers[rightPort] = new Paddles(Controller::Right, *myEvent, *mySystem, swapPaddles);
-  }
-  else if(right == "TRACKBALL22")
-  {
-    myControllers[rightPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                             Controller::TrackBall22);
-  }
-  else if(right == "TRACKBALL80")
-  {
-    myControllers[rightPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                             Controller::TrackBall80);
-  }
-  else if(right == "AMIGAMOUSE")
-  {
-    myControllers[rightPort] = new TrackBall(Controller::Left, *myEvent, *mySystem,
-                                             Controller::AmigaMouse);
-  }
-  else if(right == "ATARIVOX")
-  {
-    const string& eepromfile = myOSystem->eepromDir() + BSPF_PATH_SEPARATOR +
-                               "atarivox_eeprom.dat";
-    myControllers[rightPort] = new AtariVox(Controller::Right, *myEvent,
-                   *mySystem, myOSystem->serialPort(),
-                   myOSystem->settings().getString("avoxport"), eepromfile);
-  }
-  else if(right == "SAVEKEY")
-  {
-    const string& eepromfile = myOSystem->eepromDir() + BSPF_PATH_SEPARATOR +
-                        "savekey_eeprom.dat";
-    myControllers[rightPort] = new SaveKey(Controller::Right, *myEvent, *mySystem,
-                                           eepromfile);
-  }
-  else if(right == "KIDVID")
-  {
-    myControllers[rightPort] = new KidVid(Controller::Right, *myEvent, *mySystem, rommd5);
-  }
-  else
-  {
-    myControllers[rightPort] = new Joystick(Controller::Right, *myEvent, *mySystem);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Console::toggleTIABit(TIA::TIABit bit, const string& bitname, bool show) const
 {
-  bool result = myTIA->toggleBit(bit);
+  bool result = ((TIA*)myMediaSource)->toggleBit(bit);
   string message = bitname + (result ? " enabled" : " disabled");
   myOSystem->frameBuffer().showMessage(message);
 }
@@ -702,7 +569,7 @@ void Console::toggleTIABit(TIA::TIABit bit, const string& bitname, bool show) co
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Console::enableBits(bool enable) const
 {
-  myTIA->enableBits(enable);
+  ((TIA*)myMediaSource)->enableBits(enable);
   string message = string("TIA bits") + (enable ? " enabled" : " disabled");
   myOSystem->frameBuffer().showMessage(message);
 }
@@ -808,11 +675,14 @@ void Console::setColorLossPalette(bool loss)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setFramerate(float framerate)
+uInt32 Console::getFramerate() const
 {
-  myFramerate = framerate;
-  myOSystem->setFramerate(framerate);
-  myOSystem->sound().setFrameRate(framerate);
+  // Set the correct framerate based on the format of the ROM
+  // This can be overridden by changing the framerate in the
+  // VideoDialog box or on the commandline, but it can't be saved
+  // (ie, framerate is now solely determined based on ROM format).
+  int framerate = myOSystem->settings().getInt("framerate");
+  return framerate == -1 ? myFramerate : framerate;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

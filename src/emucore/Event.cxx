@@ -8,25 +8,31 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Event.cxx,v 1.11 2007-01-01 18:04:47 stephena Exp $
 //============================================================================
 
-#include "OSystem.hxx"
-#include "Console.hxx"
-#include "Control.hxx"
-
 #include "Event.hxx"
+#include "EventStreamer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Event::Event()
-  : myNumberOfTypes(Event::LastType)
+Event::Event(EventStreamer* ev)
+  : myNumberOfTypes(Event::LastType),
+    myEventStreamer(ev)
 {
+  // Set all of the events to 0 / false to start with,
+  // including analog paddle events.  Doing it this way
+  // is a bit of a hack ...
   clear();
+
+  myValues[PaddleZeroResistance]  =
+  myValues[PaddleOneResistance]   =
+  myValues[PaddleTwoResistance]   =
+  myValues[PaddleThreeResistance] = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,11 +50,21 @@ Int32 Event::get(Type type) const
 void Event::set(Type type, Int32 value)
 {
   myValues[type] = value;
+
+/* FIXME - add full functionality at some point
+  // Add to history if we're in recording mode
+  if(myEventStreamer->isRecording())
+    myEventStreamer->addEvent(type, value);
+*/
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Event::clear()
 {
   for(int i = 0; i < myNumberOfTypes; ++i)
-    myValues[i] = 0;
+  {
+    if(i != PaddleZeroResistance && i != PaddleOneResistance &&
+       i != PaddleTwoResistance  && i != PaddleThreeResistance)
+      myValues[i] = 0;
+  }
 }

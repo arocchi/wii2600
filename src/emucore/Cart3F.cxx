@@ -8,19 +8,20 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Cart3F.cxx,v 1.15 2007-01-14 16:17:52 stephena Exp $
 //============================================================================
 
 #include <cassert>
-#include <cstring>
 
 #include "System.hxx"
 #include "TIA.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
 #include "Cart3F.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,13 +32,22 @@ Cartridge3F::Cartridge3F(const uInt8* image, uInt32 size)
   myImage = new uInt8[mySize];
 
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, mySize);
+  for(uInt32 addr = 0; addr < mySize; ++addr)
+  {
+    myImage[addr] = image[addr];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Cartridge3F::~Cartridge3F()
 {
   delete[] myImage;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* Cartridge3F::name() const
+{
+  return "Cartridge3F";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -60,13 +70,13 @@ void Cartridge3F::install(System& system)
   // Set the page accessing methods for the hot spots (for 100% emulation
   // we need to chain any accesses below 0x40 to the TIA. Our poke() method
   // does this via mySystem->tiaPoke(...), at least until we come up with a
-  // cleaner way to do it).
+  // cleaner way to do it.)
   System::PageAccess access;
   for(uInt32 i = 0x00; i < 0x40; i += (1 << shift))
   {
-    access.device = this;
     access.directPeekBase = 0;
     access.directPokeBase = 0;
+    access.device = this;
     mySystem->setPageAccess(i >> shift, access);
   }
 
@@ -86,11 +96,11 @@ void Cartridge3F::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 Cartridge3F::peek(uInt16 address)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   if(address < 0x0800)
   {
-    return myImage[(address & 0x07FF) + (myCurrentBank << 11)];
+    return myImage[(address & 0x07FF) + myCurrentBank * 2048];
   }
   else
   {
@@ -101,7 +111,7 @@ uInt8 Cartridge3F::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Cartridge3F::poke(uInt16 address, uInt8 value)
 {
-  address &= 0x0FFF;
+  address = address & 0x0FFF;
 
   // Switch banks if necessary
   if(address <= 0x003F)
@@ -109,80 +119,11 @@ void Cartridge3F::poke(uInt16 address, uInt8 value)
     bank(value);
   }
 
-  // Pass the poke through to the TIA. In a real Atari, both the cart and the
-  // TIA see the address lines, and both react accordingly. In Stella, each
-  // 64-byte chunk of address space is "owned" by only one device. If we
-  // don't chain the poke to the TIA, then the TIA can't see it...
   mySystem->tia().poke(address, value);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Cartridge3F::bank(uInt16 bank)
-{ 
-  if(myBankLocked) return;
-
-  // Make sure the bank they're asking for is reasonable
-  if(((uInt32)bank << 11) < mySize)
-  {
-    myCurrentBank = bank;
-  }
-  else
-  {
-    // Oops, the bank they're asking for isn't valid so let's wrap it
-    // around to a valid bank number
-    myCurrentBank = bank % (mySize >> 11);
-  }
-
-  uInt32 offset = myCurrentBank << 11;
-  uInt16 shift = mySystem->pageShift();
-
-  // Setup the page access methods for the current bank
-  System::PageAccess access;
-  access.device = this;
-  access.directPokeBase = 0;
-
-  // Map ROM image into the system
-  for(uInt32 address = 0x1000; address < 0x1800; address += (1 << shift))
-  {
-    access.directPeekBase = &myImage[offset + (address & 0x07FF)];
-    mySystem->setPageAccess(address >> shift, access);
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge3F::bank()
-{
-  return myCurrentBank;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int Cartridge3F::bankCount()
-{
-  return mySize >> 11;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge3F::patch(uInt16 address, uInt8 value)
-{
-  address &= 0x0FFF;
-
-  if(address < 0x0800)
-    myImage[(address & 0x07FF) + (myCurrentBank << 11)] = value;
-  else
-    myImage[(address & 0x07FF) + mySize - 2048] = value;
-
-  return true;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* Cartridge3F::getImage(int& size)
-{
-  size = mySize;
-  return &myImage[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Cartridge3F::save(Serializer& out) const
+bool Cartridge3F::save(Serializer& out)
 {
   string cart = name();
 
@@ -232,4 +173,71 @@ bool Cartridge3F::load(Deserializer& in)
   bank(myCurrentBank);
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Cartridge3F::bank(uInt16 bank)
+{ 
+  if(bankLocked) return;
+
+  // Make sure the bank they're asking for is reasonable
+  if((uInt32)bank * 2048 < mySize)
+  {
+    myCurrentBank = bank;
+  }
+  else
+  {
+    // Oops, the bank they're asking for isn't valid so let's wrap it
+    // around to a valid bank number
+    myCurrentBank = bank % (mySize / 2048);
+  }
+
+  uInt32 offset = myCurrentBank * 2048;
+  uInt16 shift = mySystem->pageShift();
+
+  // Setup the page access methods for the current bank
+  System::PageAccess access;
+  access.device = this;
+  access.directPokeBase = 0;
+
+  // Map ROM image into the system
+  for(uInt32 address = 0x1000; address < 0x1800; address += (1 << shift))
+  {
+    access.directPeekBase = &myImage[offset + (address & 0x07FF)];
+    mySystem->setPageAccess(address >> shift, access);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int Cartridge3F::bank()
+{
+  return myCurrentBank;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int Cartridge3F::bankCount()
+{
+  return mySize / 2048;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool Cartridge3F::patch(uInt16 address, uInt8 value)
+{
+  address = address & 0x0FFF;
+  if(address < 0x0800)
+  {
+    myImage[(address & 0x07FF) + myCurrentBank * 2048] = value;
+  }
+  else
+  {
+    myImage[(address & 0x07FF) + mySize - 2048] = value;
+  }
+  return true;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* Cartridge3F::getImage(int& size)
+{
+  size = mySize;
+  return &myImage[0];
 }

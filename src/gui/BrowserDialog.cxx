@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: BrowserDialog.cxx,v 1.28 2007-09-03 18:37:23 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,7 +22,6 @@
 #include "bspf.hxx"
 
 #include "Dialog.hxx"
-#include "DialogContainer.hxx"
 #include "FSNode.hxx"
 #include "GameList.hxx"
 #include "GuiObject.hxx"
@@ -36,27 +35,24 @@
  * - to select the data dir for a game
  * - to select the place where save games are stored
  * - others???
+ * TODO - make this dialog font sensitive
  */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-BrowserDialog::BrowserDialog(GuiObject* boss, const GUI::Font& font)
-  : Dialog(&boss->instance(), &boss->parent(), 0, 0, 0, 0),
+BrowserDialog::BrowserDialog(GuiObject* boss, const GUI::Font& font,
+                             int x, int y, int w, int h)
+  : Dialog(boss->instance(), boss->parent(), x, y, w, h),
     CommandSender(boss),
     _fileList(NULL),
     _currentPath(NULL),
     _nodeList(NULL),
-    _mode(FilesystemNode::kListDirectoriesOnly)
+    _mode(AbstractFilesystemNode::kListDirectoriesOnly)
 {
-  const int lineHeight   = font.getLineHeight(),
-            buttonWidth  = font.getStringWidth("Defaults") + 20,
-            buttonHeight = font.getLineHeight() + 4;
+  const int lineHeight = font.getLineHeight(),
+            bwidth     = font.getStringWidth("Cancel") + 20,
+            bheight    = font.getLineHeight() + 4;
   int xpos, ypos;
   ButtonWidget* b;
-
-  // Set real dimensions
-  // This is one dialog that can take as much space as is available
-  _w = BSPF_min(instance().desktopWidth(), 480u);
-  _h = BSPF_min(instance().desktopHeight(), 380u);
 
   xpos = 10;  ypos = 4;
   _title = new StaticTextWidget(this, font, xpos, ypos,
@@ -72,36 +68,35 @@ BrowserDialog::BrowserDialog(GuiObject* boss, const GUI::Font& font)
   // Add file list
   ypos += lineHeight;
   _fileList = new StringListWidget(this, font, xpos, ypos,
-                                   _w - 2 * xpos, _h - buttonHeight - ypos - 20);
+                                   _w - 2 * xpos, _h - bheight - ypos - 15);
   _fileList->setNumberingMode(kListNumberingOff);
   _fileList->setEditable(false);
 
   // Buttons
-  _goUpButton = new ButtonWidget(this, font, 10, _h - buttonHeight - 10,
-                                 buttonWidth, buttonHeight, "Go up", kGoUpCmd);
-  addFocusWidget(_goUpButton);
-
-  _basedirButton =
-    new ButtonWidget(this, font, 15 + buttonWidth, _h - buttonHeight - 10,
-                     buttonWidth, buttonHeight, "Base Dir", kBaseDirCmd);
-  addFocusWidget(_basedirButton);
-
+  xpos = 10;  ypos = _h - bheight - 8;
+  b = _goUpButton = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight,
+                                     "Go up", kGoUpCmd);
+  addFocusWidget(b);
 #ifndef MAC_OSX
-  b = new ButtonWidget(this, font, _w - 2 * (buttonWidth + 7), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight, "Choose", kChooseCmd);
+  xpos = _w - 2 *(bwidth + 10);  
+  b = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight, "Choose",
+                       kChooseCmd);
   addFocusWidget(b);
   addOKWidget(b);
-  b = new ButtonWidget(this, font, _w - (buttonWidth + 10), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight, "Cancel", kCloseCmd);
+  xpos += bwidth + 10;
+  b = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight, "Cancel",
+                       kCloseCmd);
   addFocusWidget(b);
   addCancelWidget(b);
 #else
-  b = new ButtonWidget(this, font, _w - 2 * (buttonWidth + 7), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight, "Cancel", kCloseCmd);
+  xpos = _w - 2 *(bwidth + 10);  ypos = _h - bheight - 8;
+  b = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight, "Cancel",
+                       kCloseCmd);
   addFocusWidget(b);
   addCancelWidget(b);
-  b = new ButtonWidget(this, font, _w - (buttonWidth + 10), _h - buttonHeight - 10,
-                       buttonWidth, buttonHeight, "Choose", kChooseCmd);
+  xpos += bwidth + 10;
+  b = new ButtonWidget(this, font, xpos, ypos, bwidth, bheight, "Choose",
+                       kChooseCmd);
   addFocusWidget(b);
   addOKWidget(b);
 #endif
@@ -119,30 +114,17 @@ BrowserDialog::~BrowserDialog()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void BrowserDialog::show(const string& title, const string& startpath,
-                         FilesystemNode::ListMode mode, int cmd)
+void BrowserDialog::setStartPath(const string& startpath,
+                                 FilesystemNode::ListMode mode)
 {
-  // TODO - dialog has to be added before any settings are changed,
-  //        since (for example) changing the title triggers a redraw,
-  //        and the dialog must be added (so it exists) for that to happen
-  // Fixing this requires changes to the underlying widget classes
-  // (ie, changing a widgets contents should signal its dialog that a
-  // redraw is necessary; it shouldn't be responsible for redraw itself)
-  //
-  // Doing it this way has the unfortunate side effect that a previous
-  // title is temporarily visible when re-using the browser for different
-  // purposes
-  parent().addDialog(this);
-
-  _title->setLabel(title);
-  _cmd = cmd;
   _mode = mode;
 
   // If no node has been set, or the last used one is now invalid,
-  // go back to the users home dir.
+  // go back to the root/default dir.
   _node = FilesystemNode(startpath);
-  if(!_node.exists())
-    _node = FilesystemNode("~");
+
+  if(!_node.isValid())
+    _node = FilesystemNode();
 
   // Generally, we always want a directory listing 
   if(!_node.isDirectory() && _node.hasParent())
@@ -162,25 +144,27 @@ void BrowserDialog::updateListing()
   _nodeList->clear();
 
   // Update the path display
-  _currentPath->setLabel(_node.getRelativePath());
+  _currentPath->setLabel(_node.path());
 
   // Read in the data from the file system
-  FSList content;
-  _node.getChildren(content, _mode);
+  FSList content = _node.listDir(_mode);
 
   // Add '[..]' to indicate previous folder
   if(_node.hasParent())
-    _nodeList->appendGame(" [..]", _node.getParent().getPath(), "", true);
+  {
+    const string& parent = _node.getParent().path();
+    _nodeList->appendGame(" [..]", parent, "", true);
+  }
 
   // Now add the directory entries
   for(unsigned int idx = 0; idx < content.size(); idx++)
   {
-    string name = content[idx].getDisplayName();
+    string name = content[idx].displayName();
     bool isDir = content[idx].isDirectory();
     if(isDir)
       name = " [" + name + "]";
 
-    _nodeList->appendGame(name, content[idx].getPath(), "", isDir);
+    _nodeList->appendGame(name, content[idx].path(), "", isDir);
   }
   _nodeList->sortByName();
 
@@ -195,6 +179,9 @@ void BrowserDialog::updateListing()
 
   // Only hilite the 'up' button if there's a parent directory
   _goUpButton->setEnabled(_node.hasParent());
+
+  // Finally, redraw
+  setDirty(); draw();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -215,18 +202,13 @@ void BrowserDialog::handleCommand(CommandSender* sender, int cmd,
       updateListing();
       break;
 
-    case kBaseDirCmd:
-      _node = FilesystemNode(instance().baseDir());
-      updateListing();
-      break;
-
     case kListItemActivatedCmd:
     case kListItemDoubleClickedCmd:
     {
       int item = _fileList->getSelected();
       if(item >= 0)
       {
-        _node = FilesystemNode(_nodeList->path(item));
+        _node = _nodeList->path(item);
         updateListing();
       }
       break;

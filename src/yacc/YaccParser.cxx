@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: YaccParser.cxx,v 1.22 2007-01-01 18:04:56 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -102,7 +102,7 @@ inline bool is_operator(char x) {
 // responsibility, not the lexer's
 int const_to_int(char *c) {
 	// what base is the input in?
-	BaseFormat base = Debugger::debugger().parser().base();
+	BaseFormat base = Debugger::debugger().parser()->base();
 
 	switch(*c) {
 		case '\\':
@@ -214,18 +214,6 @@ TIADEBUG_INT_METHOD getTiaSpecial(char *c) {
 	if(strcmp(c, "_scan") == 0)
 		return &TIADebug::scanlines;
 
-	if(strcmp(c, "_fcount") == 0)
-		return &TIADebug::frameCount;
-
-	if(strcmp(c, "_cclocks") == 0)
-		return &TIADebug::clocksThisLine;
-
-	if(strcmp(c, "_vsync") == 0)
-		return &TIADebug::vsyncAsInt;
-
-	if(strcmp(c, "_vblank") == 0)
-		return &TIADebug::vblankAsInt;
-
 	return 0;
 }
 
@@ -273,7 +261,7 @@ int yylex() {
 					// happen if the user defines a label that matches one of
 					// the specials. Who would do that, though?
 
-					if(Debugger::debugger().equates().getAddress(idbuf) > -1) {
+					if(Debugger::debugger().equates()->getAddress(idbuf) > -1) {
 						yylval.equate = idbuf;
 						return EQUATE;
 					} else if( (cpuMeth = getCpuSpecial(idbuf)) ) {

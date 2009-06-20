@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Dialog.hxx,v 1.35 2007-01-24 19:17:33 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,7 +22,6 @@
 #ifndef DIALOG_HXX
 #define DIALOG_HXX
 
-class FBSurface;
 class OSystem;
 class DialogContainer;
 class TabWidget;
@@ -37,7 +36,7 @@ class TabWidget;
   This is the base class for all dialog boxes.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Dialog.hxx,v 1.35 2007-01-24 19:17:33 stephena Exp $
 */
 class Dialog : public GuiObject
 {
@@ -51,12 +50,11 @@ class Dialog : public GuiObject
 
   public:
     Dialog(OSystem* instance, DialogContainer* parent,
-           int x, int y, int w, int h, bool isBase = false);
+           int x, int y, int w, int h);
 
     virtual ~Dialog();
 
     bool isVisible() const { return _visible; }
-    bool isBase() const    { return _isBase;  }
 
     virtual void open();
     virtual void close();
@@ -74,8 +72,7 @@ class Dialog : public GuiObject
     void addOKWidget(Widget* w)     { _okWidget = w; }
     void addCancelWidget(Widget* w) { _cancelWidget = w; }
     void setFocus(Widget* w);
-
-    inline FBSurface& surface() { return *_surface; }
+    void setCenter(bool state) { _center = state; }
 
   protected:
     virtual void draw();
@@ -96,9 +93,8 @@ class Dialog : public GuiObject
 
     Widget* findWidget(int x, int y); // Find the widget at pos x,y if any
 
-    void addOKCancelBGroup(WidgetArray& wid, const GUI::Font& font,
-                           const string& okText = "",
-                           const string& cancelText = "");
+    ButtonWidget* addButton(const GUI::Font& font, int x, int y,
+                            const string& label = "", int cmd = 0);
 
     void setResult(int result) { _result = result; }
     int getResult() const { return _result; }
@@ -114,17 +110,15 @@ class Dialog : public GuiObject
     Widget* _okWidget;
     Widget* _cancelWidget;
     bool    _visible;
-    bool    _isBase;
+    bool    _center;
 
   private:
     FocusList   _ourFocusList;
     TabWidget*  _ourTab;
     WidgetArray _ourButtonGroup;
-    FBSurface*  _surface;
 
     int _result;
     int _focusID;
-    int _surfaceID;
 };
 
 #endif

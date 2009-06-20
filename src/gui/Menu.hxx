@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Menu.hxx,v 1.15 2007-01-01 18:04:53 stephena Exp $
 //============================================================================
 
 #ifndef MENU_HXX
@@ -27,7 +27,7 @@ class OSystem;
   The base dialog for all configuration menus in Stella.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Menu.hxx,v 1.15 2007-01-01 18:04:53 stephena Exp $
 */
 class Menu : public DialogContainer
 {
