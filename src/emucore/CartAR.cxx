@@ -8,32 +8,44 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartAR.cxx,v 1.12 2005-10-12 03:32:28 urchlay Exp $
 //============================================================================
 
-#include <cassert>
-#include <cstring>
-
-#include "M6502.hxx"
+#include <assert.h>
+#include <string.h>
+#include "CartAR.hxx"
+#include "M6502Hi.hxx"
 #include "Random.hxx"
 #include "System.hxx"
-#include "CartAR.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
+#include <iostream>
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-CartridgeAR::CartridgeAR(const uInt8* image, uInt32 size,
-                         const Settings& settings)
-  : my6502(0),
-    mySettings(settings)
+CartridgeAR::CartridgeAR(const uInt8* image, uInt32 size)
+    : my6502(0)
 {
+  uInt32 i;
+
   // Create a load image buffer and copy the given image
   myLoadImages = new uInt8[size];
   myNumberOfLoadImages = size / 8448;
   memcpy(myLoadImages, image, size);
+
+  // Initialize RAM with random values
+  class Random random;
+  for(i = 0; i < 6 * 1024; ++i)
+  {
+    myImage[i] = random.next();
+  }
+
+  // Initialize SC BIOS ROM
+  initializeROM();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -43,16 +55,14 @@ CartridgeAR::~CartridgeAR()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const char* CartridgeAR::name() const
+{
+  return "CartridgeAR";
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeAR::reset()
 {
-  // Initialize RAM with random values
-  class Random random;
-  for(uInt32 i = 0; i < 6 * 1024; ++i)
-    myImage[i] = random.next();
-
-  // Initialize SC BIOS ROM
-  initializeROM();
-
   myPower = true;
   myPowerRomCycle = mySystem->cycles();
   myWriteEnabled = false;
@@ -82,7 +92,7 @@ void CartridgeAR::install(System& system)
   uInt16 shift = mySystem->pageShift();
   uInt16 mask = mySystem->pageMask();
 
-  my6502 = &(mySystem->m6502());
+  my6502 = &(M6502High&)mySystem->m6502();
 
   // Make sure the system we're being installed in has a page size that'll work
   assert((0x1000 & mask) == 0);
@@ -188,6 +198,13 @@ void CartridgeAR::poke(uInt16 addr, uInt8)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool CartridgeAR::patch(uInt16 address, uInt8 value)
+{
+	//	myImage[address & 0x0FFF] = value;
+	return false;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeAR::bankConfiguration(uInt8 configuration)
 {
   // D7-D5 of this byte: Write Pulse Delay (n/a for emulator)
@@ -281,70 +298,78 @@ void CartridgeAR::bankConfiguration(uInt8 configuration)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void CartridgeAR::bank(uInt16 b) {
+  if(bankLocked) return;
+
+  bankConfiguration(b);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int CartridgeAR::bank() {
+  return myCurrentBank;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int CartridgeAR::bankCount() {
+  return 32;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeAR::initializeROM()
 {
   static uInt8 dummyROMCode[] = {
-    0xa5, 0xfa, 0x85, 0x80, 0x4c, 0x18, 0xf8, 0xff,
-    0xff, 0xff, 0x78, 0xd8, 0xa0, 0x0, 0xa2, 0x0,
-    0x94, 0x0, 0xe8, 0xd0, 0xfb, 0x4c, 0x50, 0xf8,
-    0xa2, 0x0, 0xbd, 0x6, 0xf0, 0xad, 0xf8, 0xff,
-    0xa2, 0x0, 0xad, 0x0, 0xf0, 0xea, 0xbd, 0x0,
-    0xf7, 0xca, 0xd0, 0xf6, 0x4c, 0x50, 0xf8, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xa2, 0x3, 0xbc, 0x22, 0xf9, 0x94, 0xfa, 0xca,
-    0x10, 0xf8, 0xa0, 0x0, 0xa2, 0x28, 0x94, 0x4,
-    0xca, 0x10, 0xfb, 0xa2, 0x1c, 0x94, 0x81, 0xca,
-    0x10, 0xfb, 0xa9, 0xff, 0xc9, 0x0, 0xd0, 0x3,
-    0x4c, 0x13, 0xf9, 0xa9, 0x0, 0x85, 0x1b, 0x85,
-    0x1c, 0x85, 0x1d, 0x85, 0x1e, 0x85, 0x1f, 0x85,
-    0x19, 0x85, 0x1a, 0x85, 0x8, 0x85, 0x1, 0xa9,
-    0x10, 0x85, 0x21, 0x85, 0x2, 0xa2, 0x7, 0xca,
-    0xca, 0xd0, 0xfd, 0xa9, 0x0, 0x85, 0x20, 0x85,
-    0x10, 0x85, 0x11, 0x85, 0x2, 0x85, 0x2a, 0xa9,
-    0x5, 0x85, 0xa, 0xa9, 0xff, 0x85, 0xd, 0x85,
-    0xe, 0x85, 0xf, 0x85, 0x84, 0x85, 0x85, 0xa9,
-    0xf0, 0x85, 0x83, 0xa9, 0x74, 0x85, 0x9, 0xa9,
-    0xc, 0x85, 0x15, 0xa9, 0x1f, 0x85, 0x17, 0x85,
-    0x82, 0xa9, 0x7, 0x85, 0x19, 0xa2, 0x8, 0xa0,
-    0x0, 0x85, 0x2, 0x88, 0xd0, 0xfb, 0x85, 0x2,
-    0x85, 0x2, 0xa9, 0x2, 0x85, 0x2, 0x85, 0x0,
-    0x85, 0x2, 0x85, 0x2, 0x85, 0x2, 0xa9, 0x0,
-    0x85, 0x0, 0xca, 0x10, 0xe4, 0x6, 0x83, 0x66,
-    0x84, 0x26, 0x85, 0xa5, 0x83, 0x85, 0xd, 0xa5,
-    0x84, 0x85, 0xe, 0xa5, 0x85, 0x85, 0xf, 0xa6,
-    0x82, 0xca, 0x86, 0x82, 0x86, 0x17, 0xe0, 0xa,
-    0xd0, 0xc3, 0xa9, 0x2, 0x85, 0x1, 0xa2, 0x1c,
-    0xa0, 0x0, 0x84, 0x19, 0x84, 0x9, 0x94, 0x81,
-    0xca, 0x10, 0xfb, 0xa6, 0x80, 0xdd, 0x0, 0xf0,
-    0xa9, 0x9a, 0xa2, 0xff, 0xa0, 0x0, 0x9a, 0x4c,
-    0xfa, 0x0, 0xcd, 0xf8, 0xff, 0x4c
+    0xa5, 0xfa, 0x85, 0x80, 0x4c, 0x18, 0xf8, 0xff, 
+    0xff, 0xff, 0x78, 0xd8, 0xa0, 0x0, 0xa2, 0x0, 
+    0x94, 0x0, 0xe8, 0xd0, 0xfb, 0x4c, 0x50, 0xf8, 
+    0xa2, 0x0, 0xbd, 0x6, 0xf0, 0xad, 0xf8, 0xff, 
+    0xa2, 0x0, 0xad, 0x0, 0xf0, 0xea, 0xbd, 0x0, 
+    0xf7, 0xca, 0xd0, 0xf6, 0x4c, 0x50, 0xf8, 0xff, 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+    0xa2, 0x3, 0xbc, 0x1d, 0xf9, 0x94, 0xfa, 0xca, 
+    0x10, 0xf8, 0xa0, 0x0, 0xa2, 0x28, 0x94, 0x4, 
+    0xca, 0x10, 0xfb, 0xa2, 0x1c, 0x94, 0x81, 0xca, 
+    0x10, 0xfb, 0xa9, 0x0, 0x85, 0x1b, 0x85, 0x1c, 
+    0x85, 0x1d, 0x85, 0x1e, 0x85, 0x1f, 0x85, 0x19, 
+    0x85, 0x1a, 0x85, 0x8, 0x85, 0x1, 0xa9, 0x10, 
+    0x85, 0x21, 0x85, 0x2, 0xa2, 0x7, 0xca, 0xca, 
+    0xd0, 0xfd, 0xa9, 0x0, 0x85, 0x20, 0x85, 0x10, 
+    0x85, 0x11, 0x85, 0x2, 0x85, 0x2a, 0xa9, 0x5, 
+    0x85, 0xa, 0xa9, 0xff, 0x85, 0xd, 0x85, 0xe, 
+    0x85, 0xf, 0x85, 0x84, 0x85, 0x85, 0xa9, 0xf0, 
+    0x85, 0x83, 0xa9, 0x74, 0x85, 0x9, 0xa9, 0xc, 
+    0x85, 0x15, 0xa9, 0x1f, 0x85, 0x17, 0x85, 0x82, 
+    0xa9, 0x7, 0x85, 0x19, 0xa2, 0x8, 0xa0, 0x0, 
+    0x85, 0x2, 0x88, 0xd0, 0xfb, 0x85, 0x2, 0x85, 
+    0x2, 0xa9, 0x2, 0x85, 0x2, 0x85, 0x0, 0x85, 
+    0x2, 0x85, 0x2, 0x85, 0x2, 0xa9, 0x0, 0x85, 
+    0x0, 0xca, 0x10, 0xe4, 0x6, 0x83, 0x66, 0x84, 
+    0x26, 0x85, 0xa5, 0x83, 0x85, 0xd, 0xa5, 0x84, 
+    0x85, 0xe, 0xa5, 0x85, 0x85, 0xf, 0xa6, 0x82, 
+    0xca, 0x86, 0x82, 0x86, 0x17, 0xe0, 0xa, 0xd0, 
+    0xc3, 0xa9, 0x2, 0x85, 0x1, 0xa2, 0x1c, 0xa0, 
+    0x0, 0x84, 0x19, 0x84, 0x9, 0x94, 0x81, 0xca, 
+    0x10, 0xfb, 0xa6, 0x80, 0xdd, 0x0, 0xf0, 0xa5, 
+    0x80, 0x45, 0xfe, 0x45, 0xff, 0xa2, 0xff, 0xa0, 
+    0x0, 0x9a, 0x4c, 0xfa, 0x0, 0xcd, 0xf8, 0xff, 
+    0x4c
   };
 
-  // Note that the following offsets depend on the 'scrom.asm' file
-  // in src/emucore/misc.  If that file is ever recompiled (and its
-  // contents placed in the array above), the offsets will almost
-  // definitely change
-
-  // The scrom.asm code checks a value at offset 109 as follows:
-  //   0xff -> do a complete jump over the SC BIOS progress bars code
-  //   0x0  -> show SC BIOS progress bars as normal
-  dummyROMCode[109] = mySettings.getBool("fastscbios") ? 0xff : 0x0;
-
-  // The accumulator should contain a random value after exiting the
-  // SC BIOS code - a value placed in offset 281 will be stored in A
-  class Random random;
-  dummyROMCode[281] = random.next();
+  uInt32 size = sizeof(dummyROMCode);
 
   // Initialize ROM with illegal 6502 opcode that causes a real 6502 to jam
   for(uInt32 i = 0; i < 2048; ++i)
+  {
     myImage[3 * 2048 + i] = 0x02; 
+  }
 
   // Copy the "dummy" Supercharger BIOS code into the ROM area
-  for(uInt32 j = 0; j < sizeof(dummyROMCode); ++j)
+  for(uInt32 j = 0; j < size; ++j)
+  {
     myImage[3 * 2048 + j] = dummyROMCode[j];
+  }
 
   // Finally set 6502 vectors to point to initial load code at 0xF80A of BIOS
   myImage[3 * 2048 + 2044] = 0x0A;
@@ -424,41 +449,7 @@ void CartridgeAR::loadIntoRAM(uInt8 load)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartridgeAR::bank(uInt16 bank)
-{
-  if(myBankLocked) return;
-
-  bankConfiguration(bank);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeAR::bank()
-{
-  return myCurrentBank;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int CartridgeAR::bankCount()
-{
-  return 32;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeAR::patch(uInt16 address, uInt8 value)
-{
-  // TODO - add support for debugger
-  return false;
-} 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8* CartridgeAR::getImage(int& size)
-{
-  size = myNumberOfLoadImages * 8448;
-  return &myLoadImages[0];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartridgeAR::save(Serializer& out) const
+bool CartridgeAR::save(Serializer& out)
 {
   string cart = name();
 
@@ -469,28 +460,28 @@ bool CartridgeAR::save(Serializer& out) const
     out.putString(cart);
 
     // Indicates the offest within the image for the corresponding bank
-    out.putInt(2);
+    out.putLong(2);
     for(i = 0; i < 2; ++i)
-      out.putInt(myImageOffset[i]);
+      out.putLong(myImageOffset[i]);
 
     // The 6K of RAM and 2K of ROM contained in the Supercharger
-    out.putInt(8192);
+    out.putLong(8192);
     for(i = 0; i < 8192; ++i)
-      out.putByte((char)myImage[i]);
+      out.putLong(myImage[i]);
 
     // The 256 byte header for the current 8448 byte load
-    out.putInt(256);
+    out.putLong(256);
     for(i = 0; i < 256; ++i)
-      out.putByte((char)myHeader[i]);
+      out.putLong(myHeader[i]);
 
     // All of the 8448 byte loads associated with the game 
     // Note that the size of this array is myNumberOfLoadImages * 8448
-    out.putInt(myNumberOfLoadImages * 8448);
+    out.putLong(myNumberOfLoadImages * 8448);
     for(i = 0; i < (uInt32) myNumberOfLoadImages * 8448; ++i)
-      out.putInt(myLoadImages[i]);
+      out.putLong(myLoadImages[i]);
 
     // Indicates how many 8448 loads there are
-    out.putByte((char)myNumberOfLoadImages);
+    out.putLong(myNumberOfLoadImages);
 
     // Indicates if the RAM is write enabled
     out.putBool(myWriteEnabled);
@@ -499,18 +490,18 @@ bool CartridgeAR::save(Serializer& out) const
     out.putBool(myPower);
 
     // Indicates when the power was last turned on
-    out.putInt(myPowerRomCycle);
+    out.putLong(myPowerRomCycle);
 
     // Data hold register used for writing
-    out.putByte((char)myDataHoldRegister);
+    out.putLong(myDataHoldRegister);
 
     // Indicates number of distinct accesses when data hold register was set
-    out.putInt(myNumberOfDistinctAccesses);
+    out.putLong(myNumberOfDistinctAccesses);
 
     // Indicates if a write is pending or not
     out.putBool(myWritePending);
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -537,28 +528,28 @@ bool CartridgeAR::load(Deserializer& in)
     uInt32 i, limit;
 
     // Indicates the offest within the image for the corresponding bank
-    limit = (uInt32) in.getInt();
+    limit = (uInt32) in.getLong();
     for(i = 0; i < limit; ++i)
-      myImageOffset[i] = (uInt32) in.getInt();
+      myImageOffset[i] = (uInt32) in.getLong();
 
     // The 6K of RAM and 2K of ROM contained in the Supercharger
-    limit = (uInt32) in.getInt();
+    limit = (uInt32) in.getLong();
     for(i = 0; i < limit; ++i)
-      myImage[i] = (uInt8) in.getByte();
+      myImage[i] = (uInt8) in.getLong();
 
     // The 256 byte header for the current 8448 byte load
-    limit = (uInt32) in.getInt();
+    limit = (uInt32) in.getLong();
     for(i = 0; i < limit; ++i)
-      myHeader[i] = (uInt8) in.getByte();
+      myHeader[i] = (uInt8) in.getLong();
 
     // All of the 8448 byte loads associated with the game 
     // Note that the size of this array is myNumberOfLoadImages * 8448
-    limit = (uInt32) in.getInt();
+    limit = (uInt32) in.getLong();
     for(i = 0; i < limit; ++i)
-      myLoadImages[i] = (uInt8) in.getInt();
+      myLoadImages[i] = (uInt8) in.getLong();
 
     // Indicates how many 8448 loads there are
-    myNumberOfLoadImages = (uInt8) in.getByte();
+    myNumberOfLoadImages = (uInt8) in.getLong();
 
     // Indicates if the RAM is write enabled
     myWriteEnabled = in.getBool();
@@ -567,18 +558,18 @@ bool CartridgeAR::load(Deserializer& in)
     myPower = in.getBool();
 
     // Indicates when the power was last turned on
-    myPowerRomCycle = (Int32) in.getInt();
+    myPowerRomCycle = (Int32) in.getLong();
 
     // Data hold register used for writing
-    myDataHoldRegister = (uInt8) in.getByte();
+    myDataHoldRegister = (uInt8) in.getLong();
 
     // Indicates number of distinct accesses when data hold register was set
-    myNumberOfDistinctAccesses = (uInt32) in.getInt();
+    myNumberOfDistinctAccesses = (uInt32) in.getLong();
 
     // Indicates if a write is pending or not
     myWritePending = in.getBool();
   }
-  catch(const char* msg)
+  catch(char *msg)
   {
     cerr << msg << endl;
     return false;
@@ -590,4 +581,10 @@ bool CartridgeAR::load(Deserializer& in)
   }
 
   return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt8* CartridgeAR::getImage(int& size) {
+  size = myNumberOfLoadImages * 8448;
+  return &myLoadImages[0];
 }

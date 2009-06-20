@@ -1,22 +1,3 @@
-//============================================================================
-//
-//   SSSS    tt          lll  lll
-//  SS  SS   tt           ll   ll
-//  SS     tttttt  eeee   ll   ll   aaaa
-//   SSSS    tt   ee  ee  ll   ll      aa
-//      SS   tt   eeeeee  ll   ll   aaaaa  --  "An Atari 2600 VCS Emulator"
-//  SS  SS   tt   ee      ll   ll  aa  aa
-//   SSSS     ttt  eeeee llll llll  aaaaa
-//
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
-//
-// See the file "license" for information on usage and redistribution of
-// this file, and for a DISCLAIMER OF ALL WARRANTIES.
-//
-// Windows CE Port by Kostas Nakos
-// $Id$
-//============================================================================
-
 #ifdef SOUND_SUPPORT
 
 #include "TIASnd.hxx"
@@ -61,8 +42,6 @@ void SoundWinCE::setEnabled(bool state)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SoundWinCE::initialize()
 {
-  int i;
-
   if(!myIsEnabled)
   {
     close();
@@ -89,7 +68,7 @@ void SoundWinCE::initialize()
 
   myBuffnum = ((wf.nAvgBytesPerSec * myLatency / 1000) >> 9) + 1;
   myBuffers = (WAVEHDR *) malloc(myBuffnum * sizeof(*myBuffers));
-  for (i = 0; i < myBuffnum; i++)
+  for (int i = 0; i < myBuffnum; i++)
   {
     memset(&myBuffers[i], 0, sizeof (myBuffers[i]));
     if (!(myBuffers[i].lpData = (LPSTR) malloc(512)))
@@ -309,7 +288,6 @@ void SoundWinCE::processFragment(uInt8* stream, Int32 length)
 */
 void SoundWinCE::update(void)
 {
-	if (myIsMuted) return;
 	for (int i=0; i<myBuffnum; i++)
 		if (myBuffers[i].dwFlags & WHDR_DONE)
 		{

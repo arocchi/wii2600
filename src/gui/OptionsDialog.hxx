@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OptionsDialog.hxx,v 1.14 2005-09-25 23:14:00 urchlay Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,74 +22,44 @@
 #ifndef OPTIONS_DIALOG_HXX
 #define OPTIONS_DIALOG_HXX
 
+class Properties;
 class CommandSender;
 class DialogContainer;
-class GuiObject;
 class VideoDialog;
 class AudioDialog;
-class InputDialog;
-class UIDialog;
-class FileSnapDialog;
-class RomAuditDialog;
-class GameInfoDialog;
-class CheatCodeDialog;
+class EventMappingDialog;
 class HelpDialog;
 class AboutDialog;
-class OSystem;
 
+#include "OSystem.hxx"
 #include "Dialog.hxx"
+#include "GameInfoDialog.hxx"
+#include "CheatCodeDialog.hxx"
 #include "bspf.hxx"
 
 class OptionsDialog : public Dialog
 {
   public:
-    OptionsDialog(OSystem* osystem, DialogContainer* parent, GuiObject* boss,
-                  bool global);
-    virtual ~OptionsDialog();
+    OptionsDialog(OSystem* osystem, DialogContainer* parent);
+    ~OptionsDialog();
 
-  private:
-    void loadConfig();
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
-    void checkBounds(int width, int height, int* x, int* y, int* w, int* h);
+
+    void setGameProfile(Properties& props) { myGameInfoDialog->setGameProfile(props); }
+	 void enterCheatMode();
+
+  protected:
+    VideoDialog*        myVideoDialog;
+    AudioDialog*        myAudioDialog;
+    EventMappingDialog* myEventMappingDialog;
+    GameInfoDialog*     myGameInfoDialog;
+    CheatCodeDialog*    myCheatCodeDialog;
+    HelpDialog*         myHelpDialog;
+    AboutDialog*        myAboutDialog;
 
   private:
-    VideoDialog*     myVideoDialog;
-    AudioDialog*     myAudioDialog;
-    InputDialog*     myInputDialog;
-    UIDialog*        myUIDialog;
-    FileSnapDialog*  myFileSnapDialog;
-    RomAuditDialog*  myRomAuditDialog;
-    GameInfoDialog*  myGameInfoDialog;
-    CheatCodeDialog* myCheatCodeDialog;
-    HelpDialog*      myHelpDialog;
-    AboutDialog*     myAboutDialog;
-
-    ButtonWidget* myVideoSettingsButton;
-    ButtonWidget* myAudioSettingsButton;
-    ButtonWidget* myUIButton;
-    ButtonWidget* myFileSnapButton;
-    ButtonWidget* myRomAuditButton;
-    ButtonWidget* myGameInfoButton;
-    ButtonWidget* myCheatCodeButton;
-    ButtonWidget* myHelpButton;
-    ButtonWidget* myAboutButton;
-
-    // Indicates if this dialog is used for global (vs. in-game) settings
-    bool myIsGlobal;
-
-    enum {
-      kVidCmd      = 'VIDO',
-      kAudCmd      = 'AUDO',
-      kInptCmd     = 'INPT',
-      kUsrIfaceCmd = 'URIF',
-      kFileSnapCmd = 'FLSN',
-      kAuditCmd    = 'RAUD',
-      kInfoCmd     = 'INFO',
-      kCheatCmd    = 'CHET',
-      kHelpCmd     = 'HELP',
-      kAboutCmd    = 'ABOU',
-      kExitCmd     = 'EXIM'
-    };
+    void checkBounds(int width, int height,
+                     int* x, int* y, int* w, int* h);
 };
 
 #endif

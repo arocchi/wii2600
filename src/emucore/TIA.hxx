@@ -8,24 +8,27 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIA.hxx,v 1.33 2005-10-11 19:38:10 stephena Exp $
 //============================================================================
 
 #ifndef TIA_HXX
 #define TIA_HXX
 
 class Console;
+class System;
+class Serializer;
+class Deserializer;
 class Settings;
 
 #include "bspf.hxx"
 #include "Sound.hxx"
 #include "Device.hxx"
-#include "System.hxx"
+#include "MediaSrc.hxx"
 
 /**
   This class is a device that emulates the Television Interface Adapator 
@@ -39,9 +42,9 @@ class Settings;
   be displayed on screen.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: TIA.hxx,v 1.33 2005-10-11 19:38:10 stephena Exp $
 */
-class TIA : public Device
+class TIA : public Device , public MediaSource
 {
   public:
     friend class TIADebug;
@@ -50,10 +53,9 @@ class TIA : public Device
       Create a new TIA for the specified console
 
       @param console  The console the TIA is associated with
-      @param sound    The sound object the TIA is associated with
       @param settings The settings object for this TIA device
     */
-    TIA(Console& console, Sound& sound, Settings& settings);
+    TIA(const Console& console, Settings& settings);
  
     /**
       Destructor
@@ -62,21 +64,23 @@ class TIA : public Device
 
   public:
     /**
-      Reset device to its power-on state
+      Get a null terminated string which is the device's name (i.e. "M6532")
+
+      @return The name of the device
     */
-    void reset();
+    virtual const char* name() const;
 
     /**
-      Reset frame to change XStart/YStart/Width/Height properties
+      Reset device to its power-on state
     */
-    void frameReset();
+    virtual void reset();
 
     /**
       Notification method invoked by the system right before the
       system resets its cycle counter to zero.  It may be necessary
       to override this method for devices that remember cycle counts.
     */
-    void systemCyclesReset();
+    virtual void systemCyclesReset();
 
     /**
       Install TIA in the specified system.  Invoked by the system
@@ -84,48 +88,31 @@ class TIA : public Device
 
       @param system The system the device should install itself in
     */
-    void install(System& system);
+    virtual void install(System& system);
 
     /**
-      Install TIA in the specified system and device.  Invoked by
-      the system when the TIA is attached to it.  All devices
-      which invoke this method take responsibility for chaining
-      requests back to *this* device.
+      Saves the current state of this device to the given Serializer.
 
-      @param system The system the device should install itself in
-      @param device The device responsible for this address space
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
     */
-    void install(System& system, Device& device);
+    virtual bool save(Serializer& out);
 
     /**
-      Save the current state of this device to the given Serializer.
+      Loads the current state of this device from the given Deserializer.
 
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
     */
-    bool save(Serializer& out) const;
+    virtual bool load(Deserializer& in);
 
-    /**
-      Load the current state of this device from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "TIA"; }
-
+  public:
     /**
       Get the byte at the specified address
 
       @return The byte at the specified address
     */
-    uInt8 peek(uInt16 address);
+    virtual uInt8 peek(uInt16 address);
 
     /**
       Change the byte at the specified address to the given value
@@ -133,14 +120,14 @@ class TIA : public Device
       @param address The address where the value should be stored
       @param value The value to be stored at the address
     */
-    void poke(uInt16 address, uInt8 value);
+    virtual void poke(uInt16 address, uInt8 value);
 
+  public:
     /**
-      This method should be called at an interval corresponding to the 
-      desired frame rate to update the TIA.  Invoking this method will update
-      the graphics buffer and generate the corresponding audio samples.
+      This method should be called at an interval corresponding to
+      the desired frame rate to update the media source.
     */
-    void update();
+    virtual void update();
 
     /**
       Answers the current frame buffer
@@ -157,36 +144,46 @@ class TIA : public Device
     uInt8* previousFrameBuffer() const { return myPreviousFrameBuffer; }
 
     /**
-      Answers the width and height of the frame buffer
+      Get the palette which maps frame data to RGB values.
+
+      @return Array of integers which represent the palette (RGB)
     */
-    inline uInt32 width() const  { return myFrameWidth;  }
-    inline uInt32 height() const { return myFrameHeight; }
+    virtual const uInt32* palette() const;
 
     /**
-      Enables/disables auto-frame calculation.  If enabled, the TIA
-      re-adjusts the framerate at regular intervals.
+      Answers the height of the frame buffer
 
-      @param mode  Whether to enable or disable all auto-frame calculation
+      @return The frame's height
     */
-    void enableAutoFrame(bool mode) { myAutoFrameEnabled = mode; }
+    uInt32 height() const;
 
     /**
-      Answers the current color clock we've gotten to on this scanline.
+      Answers the width of the frame buffer
 
-      @return The current color clock
+      @return The frame's width
     */
-    inline uInt32 clocksThisLine() const
-      { return ((mySystem->cycles() * 3) - myClockWhenFrameStarted) % 228; }
+    uInt32 width() const;
 
     /**
-      Answers the total number of scanlines the TIA generated in producing
-      the current frame buffer. For partial frames, this will be the
-      current scanline.
+      Answers the total number of scanlines the media source generated
+      in producing the current frame buffer. For partial frames, this
+		will be the current scanline.
 
       @return The total number of scanlines generated
     */
-    inline uInt32 scanlines() const
-      { return ((mySystem->cycles() * 3) - myClockWhenFrameStarted) / 228; }
+    uInt32 scanlines() const;
+
+    /**
+		Answers the current color clock we've gotten to on this scanline.
+
+      @return The current color clock
+    */
+    uInt32 clocksThisLine() const;
+
+    /**
+      Sets the sound device for the TIA.
+    */
+    void setSound(Sound& sound);
 
     enum TIABit {
       P0,   // Descriptor for Player 0 Bit
@@ -202,42 +199,63 @@ class TIA : public Device
 
       @return  Whether the bit was enabled or disabled
     */
-    void enableBit(TIABit b, bool mode) { myBitEnabled[b] = mode ? 0xff : 0x00; }
+    bool enableBit(TIABit b, bool mode) { myBitEnabled[b] = mode; return mode; }
 
     /**
       Toggles the specified TIA bit.
 
       @return  Whether the bit was enabled or disabled
     */
-    bool toggleBit(TIABit b)
-      { myBitEnabled[b] = myBitEnabled[b] == 0xff ? 0x00 : 0xff; return myBitEnabled[b]; }
+    bool toggleBit(TIABit b) { myBitEnabled[b] = !myBitEnabled[b]; return myBitEnabled[b]; }
 
     /**
       Enables/disables all TIABit bits.
 
       @param mode  Whether to enable or disable all bits
     */
-    void enableBits(bool mode)
-      { for(uInt8 i = 0; i < 6; ++i) myBitEnabled[i] = mode ? 0xff : 0x00; }
+    void enableBits(bool mode) { for(uInt8 i = 0; i < 6; ++i) myBitEnabled[i] = mode; }
 
-#ifdef DEBUGGER_SUPPORT
+#ifdef DEVELOPER_SUPPORT
     /**
-      This method should be called to update the TIA with a new scanline.
+      This method should be called to update the media source with
+      a new scanline.
     */
-    void updateScanline();
-
-    /**
-      This method should be called to update the TIA with a new partial
-      scanline by stepping one CPU instruction.
-    */
-    void updateScanlineByStep();
+    virtual void updateScanline();
 
     /**
-      This method should be called to update the TIA with a new partial
-      scanline by tracing to target address.
+      This method should be called to update the media source with
+      a new partial scanline by stepping one CPU instruction.
     */
-    void updateScanlineByTrace(int target);
+    virtual void updateScanlineByStep();
+
+    /**
+      This method should be called to update the media source with
+      a new partial scanline by tracing to target address.
+    */
+    virtual void updateScanlineByTrace(int target);
 #endif
+
+  private:
+    // Compute the ball mask table
+    void computeBallMaskTable();
+
+    // Compute the collision decode table
+    void computeCollisionTable();
+
+    // Compute the missle mask table
+    void computeMissleMaskTable();
+
+    // Compute the player mask table
+    void computePlayerMaskTable();
+
+    // Compute the player position reset when table
+    void computePlayerPositionResetWhenTable();
+
+    // Compute the player reflect table
+    void computePlayerReflectTable();
+
+    // Compute playfield mask table
+    void computePlayfieldMaskTable();
 
   private:
     // Update the current frame buffer up to one scanline
@@ -255,24 +273,35 @@ class TIA : public Device
     // Clear both internal TIA buffers to black (palette color 0)
     void clearBuffers();
 
-    // Set up bookkeeping for the next frame
+    // set up bookkeeping for the next frame
     void startFrame();
 
-    // Update bookkeeping at end of frame
+    // update bookkeeping at end of frame
     void endFrame();
-
-    // Convert resistance from ports to dumped value
-    uInt8 dumpedInputPort(int resistance);
 
   private:
     // Console the TIA is associated with
-    Console& myConsole;
-
-    // Sound object the TIA is associated with
-    Sound& mySound;
+    const Console& myConsole;
 
     // Settings object the TIA is associated with
-    Settings& mySettings;
+    const Settings& mySettings;
+
+    // Sound object the TIA is associated with
+    Sound* mySound;
+
+  private:
+    // Indicates if color loss should be enabled or disabled.  Color loss
+    // occurs on PAL (and maybe SECAM) systems when the previous frame
+    // contains an odd number of scanlines.
+    bool myColorLossEnabled;
+
+    // Indicates whether we're done with the current frame. poke() clears this
+    // when VSYNC is strobed or the max scanlines/frame limit is hit.
+    bool myPartialFrameFlag;
+
+  private:
+    // Number of frames displayed by this TIA
+    int myFrameCounter;
 
     // Pointer to the current frame buffer
     uInt8* myCurrentFrameBuffer;
@@ -283,7 +312,10 @@ class TIA : public Device
     // Pointer to the next pixel that will be drawn in the current frame buffer
     uInt8* myFramePointer;
 
-    // Indicates the width of the visible scanline
+    // Indicates where the scanline should start being displayed
+    uInt32 myFrameXStart;
+
+    // Indicates the width of the scanline 
     uInt32 myFrameWidth;
 
     // Indicated what scanline the frame should start being drawn at
@@ -292,12 +324,21 @@ class TIA : public Device
     // Indicates the height of the frame in scanlines
     uInt32 myFrameHeight;
 
+  private:
+    // Indicates offset in scanlines when display should begin
+	 // (aka the Display.YStart property)
+    uInt32 myYStart;
+
+	 // Height of display (aka Display.Height)
+    uInt32 myHeight;
+
     // Indicates offset in color clocks when display should begin
     uInt32 myStartDisplayOffset;
 
     // Indicates offset in color clocks when display should stop
     uInt32 myStopDisplayOffset;
 
+  private:
     // Indicates color clocks when the current frame began
     Int32 myClockWhenFrameStarted;
 
@@ -315,21 +356,6 @@ class TIA : public Device
     // displayed portion of the frame.
     Int32 myClocksToEndOfScanLine;
 
-    // The color clocks elapsed so far for each of the graphical objects,
-    // as denoted by 'MOTCK' line described in A. Towers TIA Hardware Notes
-    Int32 myMotionClockP0;
-    Int32 myMotionClockP1;
-    Int32 myMotionClockM0;
-    Int32 myMotionClockM1;
-    Int32 myMotionClockBL;
-
-    // Indicates 'start' signal for each of the graphical objects as
-    // described in A. Towers TIA Hardware Notes
-    Int32 myStartP0;
-    Int32 myStartP1;
-    Int32 myStartM0;
-    Int32 myStartM1;
-
     // Indicates the total number of scanlines generated by the last frame
     Int32 myScanlineCountForLastFrame;
 
@@ -339,9 +365,27 @@ class TIA : public Device
     // Indicates the maximum number of scanlines to be generated for a frame
     Int32 myMaximumNumberOfScanlines;
 
+  private:
     // Color clock when VSYNC ending causes a new frame to be started
     Int32 myVSYNCFinishClock; 
 
+  private:
+    enum
+    {
+      myP0Bit = 0x01,         // Bit for Player 0
+      myM0Bit = 0x02,         // Bit for Missle 0
+      myP1Bit = 0x04,         // Bit for Player 1
+      myM1Bit = 0x08,         // Bit for Missle 1
+      myBLBit = 0x10,         // Bit for Ball
+      myPFBit = 0x20,         // Bit for Playfield
+      ScoreBit = 0x40,        // Bit for Playfield score mode
+      PriorityBit = 0x080     // Bit for Playfield priority
+    };
+
+    // Bitmap of the objects that should be considered while drawing
+    uInt8 myEnabledObjects;
+
+  private:
     uInt8 myVSYNC;        // Holds the VSYNC register value
     uInt8 myVBLANK;       // Holds the VBLANK register value
 
@@ -352,10 +396,10 @@ class TIA : public Device
     uInt32 myColor[4];
     uInt8 myPriorityEncoder[2][256];
 
-    uInt32& myCOLUBK;     // Background color register (replicated 4 times)
-    uInt32& myCOLUPF;     // Playfield color register (replicated 4 times)
-    uInt32& myCOLUP0;     // Player 0 color register (replicated 4 times)
-    uInt32& myCOLUP1;     // Player 1 color register (replicated 4 times)
+    uInt32& myCOLUBK;       // Background color register (replicated 4 times)
+    uInt32& myCOLUPF;       // Playfield color register (replicated 4 times)
+    uInt32& myCOLUP0;       // Player 0 color register (replicated 4 times)
+    uInt32& myCOLUP1;       // Player 1 color register (replicated 4 times)
 
     uInt8 myCTRLPF;       // Playfield control register
 
@@ -389,16 +433,17 @@ class TIA : public Device
     bool myRESMP0;        // Indicates if missle 0 is reset to player 0
     bool myRESMP1;        // Indicates if missle 1 is reset to player 1
 
-    uInt16 myCollision;   // Collision register
+    uInt16 myCollision;    // Collision register
 
     // Note that these position registers contain the color clock 
     // on which the object's serial output should begin (0 to 159)
-    Int16 myPOSP0;        // Player 0 position register
-    Int16 myPOSP1;        // Player 1 position register
-    Int16 myPOSM0;        // Missle 0 position register
-    Int16 myPOSM1;        // Missle 1 position register
-    Int16 myPOSBL;        // Ball position register
+    Int16 myPOSP0;         // Player 0 position register
+    Int16 myPOSP1;         // Player 1 position register
+    Int16 myPOSM0;         // Missle 0 position register
+    Int16 myPOSM1;         // Missle 1 position register
+    Int16 myPOSBL;         // Ball position register
 
+  private:
     // Graphics for Player 0 that should be displayed.  This will be
     // reflected if the player is being reflected.
     uInt8 myCurrentGRP0;
@@ -437,55 +482,89 @@ class TIA : public Device
     uInt8 myAUDF0;
     uInt8 myAUDF1;
 
+  private:
     // Indicates when the dump for paddles was last set
     Int32 myDumpDisabledCycle;
 
     // Indicates if the dump is current enabled for the paddles
     bool myDumpEnabled;
 
+  private:
     // Color clock when last HMOVE occured
     Int32 myLastHMOVEClock;
 
     // Indicates if HMOVE blanks are currently enabled
     bool myHMOVEBlankEnabled;
 
-    // Indicates if unused TIA pins are floating on a peek
-    bool myFloatTIAOutputPins;
-    
+    // Indicates if we're allowing HMOVE blanks to be enabled
+    bool myAllowHMOVEBlanks;
+
     // TIA M0 "bug" used for stars in Cosmic Ark flag
     bool myM0CosmicArkMotionEnabled;
 
     // Counter used for TIA M0 "bug" 
     uInt32 myM0CosmicArkCounter;
 
-    // Bitmap of the objects that should be considered while drawing
-    uInt8 myEnabledObjects;
+    // Answers whether specified bits (from TIABit) are enabled or disabled
+    bool myBitEnabled[6];
 
-    // Determines whether specified bits (from TIABit) are enabled or disabled
-    // Each value is and'ed with the appropriate register, so the valid values
-    // are 0x00 or 0xff;
-    uInt8 myBitEnabled[6];
+	 // Has current frame been "greyed out" (has updateScanline() been run?)
+	 bool myFrameGreyed;
 
-    // Indicates if color loss should be enabled or disabled.  Color loss
-    // occurs on PAL (and maybe SECAM) systems when the previous frame
-    // contains an odd number of scanlines.
-    bool myColorLossEnabled;
+  private:
+    // Ball mask table (entries are true or false)
+    static uInt8 ourBallMaskTable[4][4][320];
 
-    // Indicates whether we're done with the current frame. poke() clears this
-    // when VSYNC is strobed or the max scanlines/frame limit is hit.
-    bool myPartialFrameFlag;
+    // Used to set the collision register to the correct value
+    static uInt16 ourCollisionTable[64];
 
-    // Has current frame been "greyed out" (has updateScanline() been run?)
-    bool myFrameGreyed;
+    // A mask table which can be used when an object is disabled
+    static uInt8 ourDisabledMaskTable[640];
 
-    // Automatic framerate correction based on number of scanlines
-    bool myAutoFrameEnabled;
+    // Indicates the update delay associated with poking at a TIA address
+    static const Int16 ourPokeDelayTable[64];
 
-    // Number of frames displayed by this TIA
-    int myFrameCounter;
+    // Missle mask table (entries are true or false)
+    static uInt8 ourMissleMaskTable[4][8][4][320];
 
-    // The framerate currently in use by the Console
-    float myFramerate;
+    // Used to convert value written in a motion register into 
+    // its internal representation
+    static const Int32 ourCompleteMotionTable[76][16];
+
+    // Indicates if HMOVE blanks should occur for the corresponding cycle
+    static const bool ourHMOVEBlankEnableCycles[76];
+
+    // Player mask table
+    static uInt8 ourPlayerMaskTable[4][2][8][320];
+
+    // Indicates if player is being reset during delay, display or other times
+    static Int8 ourPlayerPositionResetWhenTable[8][160][160];
+
+    // Used to reflect a players graphics
+    static uInt8 ourPlayerReflectTable[256];
+
+    // Playfield mask table for reflected and non-reflected playfields
+    static uInt32 ourPlayfieldTable[2][160];
+
+    // Table of RGB values for NTSC
+    static const uInt32 ourNTSCPalette[256];
+
+    // Table of RGB values for PAL.  NOTE: The odd numbered entries in
+    // this array are always shades of grey.  This is used to implement
+    // the PAL color loss effect.
+    static const uInt32 ourPALPalette[256];
+
+    // Table of RGB values for NTSC - Stella 1.1 version
+    static const uInt32 ourNTSCPalette11[256];
+
+    // Table of RGB values for PAL - Stella 1.1 version
+    static const uInt32 ourPALPalette11[256];
+
+    // Table of RGB values for NTSC - Z26 version
+    static const uInt32 ourNTSCPaletteZ26[256];
+
+    // Table of RGB values for PAL - Z26 version
+    static const uInt32 ourPALPaletteZ26[256];
 
   private:
     // Copy constructor isn't supported by this class so make it private

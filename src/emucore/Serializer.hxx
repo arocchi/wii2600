@@ -8,31 +8,32 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Serializer.hxx,v 1.7 2005-06-16 01:11:28 stephena Exp $
 //============================================================================
 
 #ifndef SERIALIZER_HXX
 #define SERIALIZER_HXX
 
-#include <fstream>
 #include "bspf.hxx"
+#include <fstream>
+#include <string>
 
 /**
   This class implements a Serializer device, whereby data is
   serialized and sent to an output binary file in a system-
   independent way.
 
-  Bytes are written as characters, integers are written as 4 characters
-  (32-bit), strings are written as characters prepended by the length of the
-  string, boolean values are written using a special character pattern.
+  All bytes and integers are written as long's.  Strings are
+  written as characters prepended by the length of the string.
+  Boolean values are written using a special pattern.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Serializer.hxx,v 1.7 2005-06-16 01:11:28 stephena Exp $
 */
 class Serializer
 {
@@ -66,23 +67,11 @@ class Serializer
     void close(void);
 
     /**
-      Answers whether the serializer is currently opened
+      Writes a long value to the current output stream.
+
+      @param value The long value to write to the output stream.
     */
-    bool isOpen(void);
-
-    /**
-      Writes an byte value (8-bit) to the current output stream.
-
-      @param value The byte value to write to the output stream.
-    */
-    void putByte(char value);
-
-    /**
-      Writes an int value (32-bit) to the current output stream.
-
-      @param value The int value to write to the output stream.
-    */
-    void putInt(int value);
+    void putLong(long value);
 
     /**
       Writes a string to the current output stream.
@@ -100,12 +89,13 @@ class Serializer
 
   private:
     // The stream to send the serialized data to.
-    fstream myStream;
+    ofstream* myStream;
 
-    enum {
-      TruePattern  = 0xfe,
-      FalsePattern = 0x01
-    };
+    // A long pattern that represents a boolean value of true.
+    long TruePattern;
+
+    // A long pattern that represents a boolean value of false.
+    long FalsePattern;
 };
 
 #endif

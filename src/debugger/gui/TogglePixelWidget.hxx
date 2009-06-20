@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TogglePixelWidget.hxx,v 1.1 2005-08-30 17:51:26 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -29,11 +29,10 @@
 class TogglePixelWidget : public ToggleWidget
 {
   public:
-    TogglePixelWidget(GuiObject* boss, const GUI::Font& font,
-                      int x, int y, int cols, int rows);
+    TogglePixelWidget(GuiObject* boss, int x, int y, int cols, int rows);
     virtual ~TogglePixelWidget();
 
-    void setColor(int color) { _pixelColor = color; }
+    void setColor(OverlayColor color) { _pixelColor = color; }
     void setState(const BoolArray& state);
 
     void setIntState(int value, bool swap);
@@ -43,7 +42,7 @@ class TogglePixelWidget : public ToggleWidget
     void drawWidget(bool hilite);
 
   private:
-    int          _pixelColor;
+    OverlayColor _pixelColor;
     unsigned int _numBits;
     bool         _swapBits;
 };

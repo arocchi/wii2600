@@ -8,17 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemWin32.cxx,v 1.7 2005-09-11 22:55:51 stephena Exp $
 //============================================================================
 
+#include <sstream>
+#include <fstream>
+
 #include "bspf.hxx"
-#include "FSNode.hxx"
-#include "HomeFinder.hxx"
 #include "OSystem.hxx"
 #include "OSystemWin32.hxx"
 
@@ -27,58 +28,40 @@
   in its constructor:
 
   setBaseDir()
-  setConfigFile()
+  setStateDir()
+  setPropertiesDir()
+  setConfigFiles()
+  setCacheFile()
+
+  And for initializing the following variables:
+
+  myDriverList (a StringList)
 
   See OSystem.hxx for a further explanation
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OSystemWin32::OSystemWin32()
-  : OSystem()
 {
-  string basedir = "";
+  // TODO - there really should be code here to determine which version
+  // of Windows is being used.
+  // If using a version which supports multiple users (NT and above),
+  // the relevant directories should be created in per-user locations.
+  // For now, we just put it in the same directory as the executable.
 
-  // Check if the base directory should be overridden
-  // Shouldn't normally be necessary, but is useful for those people that
-  // don't want to clutter their 'My Documents' folder
-  bool overrideBasedir = false;
-  FilesystemNode basedirfile("basedir.txt");
-  if(basedirfile.exists())
-  {
-    ifstream in(basedirfile.getPath().c_str());
-    if(in && in.is_open())
-    {
-      getline(in, basedir);
-      in.close();
-
-      // trim leading and trailing spaces
-      size_t spos = basedir.find_first_not_of(" \t");
-      size_t epos = basedir.find_last_not_of(" \t");
-      if(spos != string::npos && epos != string::npos)
-        basedir = basedir.substr(spos, epos-spos+1);
-
-      if(basedir != "")  overrideBasedir = true;
-    }
-  }
-
-  // If basedir hasn't been specified, use the 'home' directory
-  if(!overrideBasedir)
-  {
-    HomeFinder homefinder;
-    FilesystemNode appdata(homefinder.getAppDataPath());
-    if(appdata.isDirectory())
-    {
-      basedir = appdata.getRelativePath();
-      if(basedir.length() > 1 && basedir[basedir.length()-1] != '\\')
-        basedir += '\\';
-      basedir += "Stella";
-    }
-    else
-      basedir = ".";  // otherwise, default to current directory
-  }
-
+  string basedir = ".\\";
   setBaseDir(basedir);
-  setConfigFile(basedir + "\\stella.ini");
+
+  string stateDir = basedir + "state\\";
+  setStateDir(stateDir);
+
+  setPropertiesDir(basedir, basedir);
+
+  string configFile = basedir + "stella.ini";
+  setConfigFiles(configFile, configFile);  // Input and output are the same
+
+  string cacheFile = basedir + "stella.cache";
+  setCacheFile(cacheFile);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -87,7 +70,61 @@ OSystemWin32::~OSystemWin32()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemWin32::getTicks() const
+void OSystemWin32::mainLoop()
+{
+  // These variables are common to both timing options
+  // and are needed to calculate the overall frames per second.
+  uInt32 frameTime = 0, numberOfFrames = 0;
+
+  // Set up less accurate timing stuff
+  uInt32 startTime, virtualTime, currentTime;
+
+  // Set the base for the timers
+  virtualTime = getTicks();
+  frameTime = 0;
+
+  // Main game loop
+  for(;;)
+  {
+	// Exit if the user wants to quit
+	if(myEventHandler->doQuit())
+	  break;
+
+	startTime = getTicks();
+	myEventHandler->poll(startTime);
+	myFrameBuffer->update();
+
+	currentTime = getTicks();
+	virtualTime += myTimePerFrame;
+	if(currentTime < virtualTime)
+	{
+	  SDL_Delay((virtualTime - currentTime)/1000);
+	}
+
+	currentTime = getTicks() - startTime;
+	frameTime += currentTime;
+	++numberOfFrames;
+  }
+
+  // Only print console information if a console was actually created
+  if(mySettings->getBool("showinfo") && myConsole)
+  {
+    double executionTime = (double) frameTime / 1000000.0;
+    double framesPerSecond = (double) numberOfFrames / executionTime;
+
+    cout << endl;
+    cout << numberOfFrames << " total frames drawn\n";
+    cout << framesPerSecond << " frames/second\n";
+    cout << endl;
+    cout << "Cartridge Name: " << myConsole->properties().get("Cartridge.Name");
+    cout << endl;
+    cout << "Cartridge MD5:  " << myConsole->properties().get("Cartridge.MD5");
+    cout << endl << endl;
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 OSystemWin32::getTicks()
 {
   return (uInt32) SDL_GetTicks() * 1000;
 }

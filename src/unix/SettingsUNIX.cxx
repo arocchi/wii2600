@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsUNIX.cxx,v 1.14 2005-06-16 01:11:29 stephena Exp $
 //============================================================================
 
 #include "bspf.hxx"
@@ -22,11 +22,10 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SettingsUNIX::SettingsUNIX(OSystem* osystem)
-  : Settings(osystem)
+    : Settings(osystem)
 {
-  setInternal("gl_lib", "libGL.so");
-  // Most Linux GL implementations don't support this yet
-  setInternal("gl_vsync", "false");
+  // This argument is only valid for Linux/UNIX, and will eventually be removed
+  set("accurate", "false");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

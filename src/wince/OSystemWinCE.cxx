@@ -1,22 +1,3 @@
-//============================================================================
-//
-//   SSSS    tt          lll  lll
-//  SS  SS   tt           ll   ll
-//  SS     tttttt  eeee   ll   ll   aaaa
-//   SSSS    tt   ee  ee  ll   ll      aa
-//      SS   tt   eeeeee  ll   ll   aaaaa  --  "An Atari 2600 VCS Emulator"
-//  SS  SS   tt   ee      ll   ll  aa  aa
-//   SSSS     ttt  eeeee llll llll  aaaaa
-//
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
-//
-// See the file "license" for information on usage and redistribution of
-// this file, and for a DISCLAIMER OF ALL WARRANTIES.
-//
-// Windows CE Port by Kostas Nakos
-// $Id$
-//============================================================================
-
 #include <sstream>
 #include <fstream>
 
@@ -25,17 +6,26 @@
 #include "OSystemWinCE.hxx"
 #include "SoundWinCE.hxx"
 #include "FrameBufferWinCE.hxx"
-
-extern bool RequestRefresh;
+//#include <sstream>
+extern void KeyCheck(void);
+extern int EventHandlerState;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemWinCE::OSystemWinCE(const string& path) : OSystem()
+OSystemWinCE::OSystemWinCE()
 {
-  setBaseDir(path);
-  setStateDir(path);
-  setPropertiesDir(path);
-  setConfigFile(path + "stella.ini");
-  setCacheFile(path + "stella.cache");
+  string basedir = ((string) getcwd()) + '\\';
+  setBaseDir(basedir);
+
+  string stateDir = basedir;// + "state\\";
+  setStateDir(stateDir);
+
+  setPropertiesDir(basedir, basedir);
+
+  string configFile = basedir + "stella.ini";
+  setConfigFiles(configFile, configFile);  // Input and output are the same
+
+  string cacheFile = basedir + "stella.cache";
+  setCacheFile(cacheFile);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -62,7 +52,7 @@ void OSystemWinCE::mainLoop()
 
   // Main game loop
   MSG msg;
-
+  int laststate = -1;
   for(;;)
   {
 	while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
@@ -75,16 +65,17 @@ void OSystemWinCE::mainLoop()
 	if (msg.message == WM_QUIT)
 		break;
 
-	if (myQuitLoop)
+	if(myEventHandler->doQuit())
 	  break;
 
-	if (RequestRefresh)
-	{
-		RequestRefresh = false;
-		myEventHandler->refreshDisplay();
-	}
+	KeyCheck();
 
 	startTime = GetTickCount();
+
+	EventHandlerState = (int) myEventHandler->state();
+	if ((laststate != -1) && (laststate != EventHandlerState) && (EventHandlerState != 2))
+		((FrameBufferWinCE *)myFrameBuffer)->wipescreen();
+	laststate = EventHandlerState;
 
 	myEventHandler->poll(startTime);
 	myFrameBuffer->update();
@@ -101,31 +92,23 @@ void OSystemWinCE::mainLoop()
 	frameTime += currentTime;
 	++numberOfFrames;
   }
+
+  /* {
+    double executionTime = (double) frameTime / 1000000.0;
+    double framesPerSecond = (double) numberOfFrames / executionTime;
+	ostringstream a;
+    a << endl;
+    a << numberOfFrames << " total frames drawn\n";
+    a << framesPerSecond << " frames/second\n";
+    a << endl;
+  TCHAR unicodeString[MAX_PATH];
+  MultiByteToWideChar(CP_ACP, 0, a.str().c_str(), strlen(a.str().c_str()) + 1, unicodeString, sizeof(unicodeString));
+	MessageBox(GetDesktopWindow(),unicodeString, _T("..."),0);
+   }
+*/
 }
 
-uInt32 OSystemWinCE::getTicks(void) const
+uInt32 OSystemWinCE::getTicks(void)
 {
 	return GetTickCount();
-}
-
-void OSystemWinCE::getScreenDimensions(int& width, int& height)
-{
-	// do not use the framebuffer issmartphonelowres method as the framebuffer has not been created yet
-	if ((unsigned int) GetSystemMetrics(SM_CXSCREEN) != 176 )
-	{
-		if (GetSystemMetrics(SM_CXSCREEN) != GetSystemMetrics(SM_CYSCREEN) )
-		{
-			width = 320;
-			height = 240;
-		}
-		else
-		{
-			width = height = 240;
-		}
-	}
-	else
-	{
-		width = 220;
-		height = 176;
-	}
 }

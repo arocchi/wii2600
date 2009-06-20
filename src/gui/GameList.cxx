@@ -8,20 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GameList.cxx,v 1.5 2005-06-16 00:55:59 stephena Exp $
 //
 //   Based on code from KStella - Stella frontend
 //   Copyright (C) 2003-2005 Stephen Anthony
 //============================================================================
 
-#include <cctype>
-#include <algorithm>
-
+#include "GuiUtils.hxx"
 #include "GameList.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -32,18 +30,16 @@ GameList::GameList()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 GameList::~GameList()
 {
-  clear();
+  myArray.clear();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void GameList::appendGame(const string& name, const string& path,
-                          const string& md5, bool isDir)
+void GameList::appendGame(const string& rom, const string& name, const string& note)
 {
   Entry g;
-  g._name  = name;
-  g._path  = path;
-  g._md5   = md5;
-  g._isdir = isDir;
+  g._rom  = rom;
+  g._name = name;
+  g._note = note;
 
   myArray.push_back(g);
 }
@@ -54,28 +50,14 @@ void GameList::sortByName()
   if(myArray.size() <= 1)
     return;
 
-  sort(myArray.begin(), myArray.end());
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool GameList::Entry::operator< (const Entry& g) const
-{
-  string::const_iterator it1 = _name.begin();
-  string::const_iterator it2 = g._name.begin();
-
-  // Account for ending ']' character in directory entries
-  string::const_iterator end1 = _isdir ? _name.end() - 1 : _name.end();
-  string::const_iterator end2 = g._isdir ? g._name.end() - 1 : g._name.end();
-
-  // Stop when either string's end has been reached
-  while((it1 != end1) && (it2 != end2)) 
-  { 
-    if(toupper(*it1) != toupper(*it2)) // letters differ?
-      return toupper(*it1) < toupper(*it2);
-
-    // proceed to the next character in each string
-    ++it1;
-    ++it2;
+  // Simple selection sort
+  for(unsigned int i = 0; i < myArray.size()-1; i++)
+  {
+    unsigned int min = i;
+    for (unsigned int j = i+1; j < myArray.size(); j++)
+      if (myArray[j]._name < myArray[min]._name)
+        min = j;
+      if (min != i)
+        SWAP(myArray[min], myArray[i]);
   }
-  return _name.size() < g._name.size();
 }

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemMACOSX.cxx,v 1.6 2005-09-14 01:50:42 markgrebe Exp $
 //============================================================================
 
 #include <cstdlib>
@@ -29,7 +29,6 @@
 #include "bspf.hxx"
 #include "OSystem.hxx"
 #include "OSystemMACOSX.hxx"
-#include "MenusEvents.h"
 
 #ifdef HAVE_GETTIMEOFDAY
   #include <time.h>
@@ -37,15 +36,7 @@
 #endif
 
 extern "C" {
-  void macOpenConsole(char *romname);
-  uInt16 macOSXDisplayWidth(void);
-  uInt16 macOSXDisplayHeight(void);
-  void setEmulationMenus(void);
-  void setLauncherMenus(void);
-  void setOptionsMenus(void);
-  void setCommandMenus(void);
-  void setDebuggerMenus(void);
-  void macOSXSendMenuEvent(int event);
+void macOpenConsole(char *romname);
 }
 
 // Pointer to the main parent osystem object or the null pointer
@@ -56,26 +47,7 @@ extern char parentdir[MAXPATHLEN];
 //  the OS into the application.
 void macOpenConsole(char *romname)
 {
-  theOSystem->deleteConsole();
-  theOSystem->createConsole(romname);
-}
-
-// Allow the Menus Objective-C object to pass event sends into the 
-//  application.
-void macOSXSendMenuEvent(int event)
-{
-  switch(event)
-  {
-    case MENU_OPEN:
-      theOSystem->eventHandler().handleEvent(Event::LauncherMode, 1);
-      break;
-    case MENU_VOLUME_INCREASE:
-      theOSystem->eventHandler().handleEvent(Event::VolumeIncrease, 1);
-      break;
-    case MENU_VOLUME_DECREASE:
-      theOSystem->eventHandler().handleEvent(Event::VolumeDecrease, 1);
-      break;
-  }
+	theOSystem->createConsole(romname);
 }
 
 /**
@@ -83,17 +55,34 @@ void macOSXSendMenuEvent(int event)
   in its constructor:
 
   setBaseDir()
-  setConfigFile()
+  setStateDir()
+  setPropertiesFiles()
+  setConfigFiles()
+  setCacheFile()
 
   See OSystem.hxx for a further explanation
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OSystemMACOSX::OSystemMACOSX()
-  : OSystem()
 {
-  setBaseDir("~/.stella");
-  setConfigFile("~/.stella/stellarc");
+  // First set variables that the OSystem needs
+  string basedir = string(getenv("HOME")) + "/.stella";
+  setBaseDir(basedir);
+
+  string statedir = basedir + "/state";
+  setStateDir(statedir);
+
+  strcat(parentdir,"/../../..");
+  string systemPropertiesDir = parentdir;
+  setPropertiesDir(basedir, systemPropertiesDir);
+
+  string userConfigFile   = basedir + "/stellarc";
+  string systemConfigFile = "/etc/stellarc";
+  setConfigFiles(userConfigFile, systemConfigFile);
+
+  string cacheFile = basedir + "/stella.cache";
+  setCacheFile(cacheFile);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,7 +91,78 @@ OSystemMACOSX::~OSystemMACOSX()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemMACOSX::getTicks() const
+void OSystemMACOSX::mainLoop()
+{
+#if 0
+    double lasttime = Atari_time();
+    double lastcurtime = 0;
+    double curtime, delaytime;
+	double timePerFrame = 1.0 / 60.0;
+
+    // Main game loop
+    for(;;)
+    {
+      // Exit if the user wants to quit
+      if(myEventHandler->doQuit())
+        break;
+
+      myEventHandler->poll();
+      myFrameBuffer->update();
+
+      if (timePerFrame > 0.0)
+      {
+	    curtime = Atari_time();
+	    delaytime = lasttime + timePerFrame - curtime;
+	    if (delaytime > 0)
+	      usleep((int) (delaytime * 1e6));
+	    curtime = Atari_time();
+
+	    lastcurtime = curtime;
+
+	    lasttime += timePerFrame;
+	    if ((lasttime + timePerFrame) < curtime)
+	      lasttime = curtime;
+	  }
+    }
+#else
+  // These variables are common to both timing options
+  // and are needed to calculate the overall frames per second.
+  uInt32 frameTime = 0, numberOfFrames = 0;
+
+    // Set up less accurate timing stuff
+    uInt32 startTime, virtualTime, currentTime;
+
+    // Set the base for the timers
+    virtualTime = getTicks();
+    frameTime = 0;
+
+    // Main game loop
+    for(;;)
+    {
+      // Exit if the user wants to quit
+      if(myEventHandler->doQuit())
+        break;
+
+      startTime = getTicks();
+      myEventHandler->poll(startTime);
+      myFrameBuffer->update();
+
+      currentTime = getTicks();
+      virtualTime = startTime + myTimePerFrame;
+      if(currentTime < virtualTime)
+      {
+      SDL_Delay((virtualTime - currentTime)/1000);
+      }
+	  
+      currentTime = getTicks() - startTime;
+      frameTime += currentTime;
+      ++numberOfFrames;
+    }
+#endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 OSystemMACOSX::getTicks()
 {
 #ifdef HAVE_GETTIMEOFDAY
   timeval now;
@@ -112,41 +172,4 @@ uInt32 OSystemMACOSX::getTicks() const
 #else
   return (uInt32) SDL_GetTicks() * 1000;
 #endif
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystemMACOSX::getScreenDimensions(int& width, int& height)
-{
-  width  = (int)macOSXDisplayWidth();
-  height = (int)macOSXDisplayHeight();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystemMACOSX::stateChanged(EventHandler::State state)
-{
-  switch(state)
-  {
-    case EventHandler::S_EMULATE:
-      setEmulationMenus();
-      break;
-
-    case EventHandler::S_LAUNCHER:
-      setLauncherMenus();
-      break;
-
-    case EventHandler::S_MENU:
-      setOptionsMenus();
-      break;
-
-    case EventHandler::S_CMDMENU:
-      setCommandMenus();
-      break;
-
-    case EventHandler::S_DEBUGGER:
-      setDebuggerMenus();
-      break;
-
-    default:
-      break;
-  }
 }
