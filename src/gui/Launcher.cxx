@@ -8,13 +8,15 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Launcher.cxx,v 1.18 2007-08-10 18:27:11 stephena Exp $
 //============================================================================
+
+#include <sstream>
 
 #include "LauncherDialog.hxx"
 #include "Version.hxx"
@@ -22,22 +24,24 @@
 #include "Settings.hxx"
 #include "FrameBuffer.hxx"
 #include "bspf.hxx"
-
 #include "Launcher.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Launcher::Launcher(OSystem* osystem)
-  : DialogContainer(osystem)
+  : DialogContainer(osystem),
+    myWidth(400),
+    myHeight(300)
 {
-  myOSystem->settings().getSize("launcherres", (int&)myWidth, (int&)myHeight);
+  int w, h;
+  myOSystem->settings().getSize("launcherres", w, h);
+  myWidth = BSPF_max(w, 0);
+  myHeight = BSPF_max(h, 0);
 
-  // The launcher dialog is resizable, within certain bounds
-  // We check those bounds now
-  myWidth  = BSPF_max(myWidth, osystem->desktopWidth() >= 640 ? 640u : 320u);
-  myHeight = BSPF_max(myHeight, osystem->desktopHeight() >= 480 ? 480u : 240u);
-  myWidth  = BSPF_min(myWidth, osystem->desktopWidth());
+  // Error check the resolution
+  myWidth = BSPF_max(myWidth, 320u);
+  myWidth = BSPF_min(myWidth, osystem->desktopWidth());
+  myHeight = BSPF_max(myHeight, 240u);
   myHeight = BSPF_min(myHeight, osystem->desktopHeight());
-
   myOSystem->settings().setSize("launcherres", myWidth, myHeight);
 
   myBaseDialog = new LauncherDialog(myOSystem, this, 0, 0, myWidth, myHeight);
@@ -49,14 +53,8 @@ Launcher::~Launcher()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool Launcher::initializeVideo()
+void Launcher::initializeVideo()
 {
   string title = string("Stella ") + STELLA_VERSION;
-  return myOSystem->frameBuffer().initialize(title, myWidth, myHeight);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string Launcher::selectedRomMD5()
-{
-  return ((LauncherDialog*)myBaseDialog)->selectedRomMD5();
+  myOSystem->frameBuffer().initialize(title, myWidth, myHeight);
 }

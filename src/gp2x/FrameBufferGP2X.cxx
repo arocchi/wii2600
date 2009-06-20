@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBufferGP2X.cxx,v 1.22 2007-06-20 16:33:22 stephena Exp $
 //============================================================================
 
 #include <SDL.h>
@@ -22,8 +22,7 @@
 #include "MediaSrc.hxx"
 #include "OSystem.hxx"
 #include "Font.hxx"
-#include "Surface.hxx"
-#include "Settings.hxx"
+#include "GuiUtils.hxx"
 #include "FrameBufferGP2X.hxx"
 
 
@@ -38,7 +37,6 @@ FrameBufferGP2X::FrameBufferGP2X(OSystem* osystem)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBufferGP2X::~FrameBufferGP2X()
 {
-  myTvHeight = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,7 +47,7 @@ bool FrameBufferGP2X::initSubsystem(VideoMode mode)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string FrameBufferGP2X::about() const
+string FrameBufferGP2X::about()
 {
   // TODO - add SDL info to this string
   return "";
@@ -58,8 +56,6 @@ string FrameBufferGP2X::about() const
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FrameBufferGP2X::setVidMode(VideoMode mode)
 {
-  const SDL_VideoInfo* info = NULL;
-
   // Make sure to clear the screen, since we're using different resolutions,
   // and there tends to be lingering artifacts in hardware mode
   if(myScreen)
@@ -68,14 +64,8 @@ bool FrameBufferGP2X::setVidMode(VideoMode mode)
     SDL_UpdateRect(myScreen, 0, 0, 0, 0);
   }
 
-  myScreenDim.x = myScreenDim.y = 0;
-  myScreenDim.w = mode.screen_w;
-  myScreenDim.h = mode.screen_h;
-
-  myImageDim.x = mode.image_x;
-  myImageDim.y = mode.image_y;
-  myImageDim.w = mode.image_w;
-  myImageDim.h = mode.image_h;
+  // We start out with the TIA buffer and SDL screen being the same size
+  myImageDim = myScreenDim = myBaseDim;
 
   // If we got a screenmode that won't be scaled, center it vertically
   // Otherwise, SDL hardware scaling kicks in, and we won't mess with it
@@ -88,41 +78,6 @@ bool FrameBufferGP2X::setVidMode(VideoMode mode)
     myScreenDim.h = myScreenDim.y + myBaseDim.h;
   }
 
-  // check to see if we're displaying on a TV
-  if (!myTvHeight) {
-    info = SDL_GetVideoInfo();
-
-    if (info && info->current_w == 720
-             && (info->current_h == 480 || info->current_h == 576)) {
-      myTvHeight = info->current_h;
-
-    } else {
-      myTvHeight = -1;
-    }
-  }
-
-  // if I am displaying on a TV then I want to handle overscan
-  // I do this as per the following:
-  // http://www.gp32x.com/board/index.php?showtopic=23819&st=375&p=464689&#entry464689
-  // Basically, I set the screen bigger than the base image.  Thus, the image
-  // should be (mostly) on screen.  The SDL HW scaler will make sure the
-  // screen fills the TV.
-  if (myTvHeight > 0) {
-    myScreenDim.w =  (int)(((float)myScreenDim.w)
-                  * myOSystem->settings().getFloat("tv_scale_width"));
-    myScreenDim.h =  (int)(((float)myScreenDim.h)
-                  * myOSystem->settings().getFloat("tv_scale_height"));
-
-    if ((myScreenDim.w % 2))
-      myScreenDim.w++;
-
-    if ((myScreenDim.h % 2))
-      myScreenDim.h++;
-
-    myScreenDim.x = (myScreenDim.w - mode.screen_w)/2;
-    myScreenDim.y = (myScreenDim.h - mode.screen_h)/2;
-  }
-
   // The GP2X always uses a 16-bit hardware buffer
   myScreen = SDL_SetVideoMode(myScreenDim.w, myScreenDim.h, 16, mySDLFlags);
   if(myScreen == NULL)
@@ -133,10 +88,6 @@ bool FrameBufferGP2X::setVidMode(VideoMode mode)
   myPitch = myScreen->pitch/2;
   myBasePtr = (uInt16*) myScreen->pixels + myScreenDim.y * myPitch;
   myDirtyFlag = true;
-  myFormat = myScreen->format;
-
-  // Make sure drawMediaSource() knows which renderer to use
-  stateChanged(myOSystem->eventHandler().state());
 
   return true;
 }
@@ -220,7 +171,7 @@ void FrameBufferGP2X::postFrameUpdate()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGP2X::scanline(uInt32 row, uInt8* data) const
+void FrameBufferGP2X::scanline(uInt32 row, uInt8* data)
 {
   // Make sure no pixels are being modified
   SDL_LockSurface(myScreen);
@@ -343,51 +294,7 @@ void FrameBufferGP2X::drawBitmap(uInt32* bitmap, Int32 xorig, Int32 yorig,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGP2X::drawSurface(const GUI::Surface* surface, Int32 x, Int32 y)
-{
-/* TODO - not supported yet
-  SDL_Rect clip;
-  clip.x = x;
-  clip.y = y;
-
-  SDL_BlitSurface(surface->myData, 0, myScreen, &clip);
-*/
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGP2X::bytesToSurface(GUI::Surface* surface, int row,
-                                     uInt8* data, int rowbytes) const
-{
-/* TODO - not supported yet
-  SDL_Surface* s = surface->myData;
-
-  uInt16* pixels = (uInt16*) s->pixels;
-  int surfbytes = s->pitch/2;
-  pixels += (row * surfbytes);
-
-  // Calculate a scanline of zoomed surface data
-  for(int c = 0; c < rowbytes; c += 3)
-  {
-    uInt32 pixel = SDL_MapRGB(s->format, data[c], data[c+1], data[c+2]);
-    *pixels++ = pixel;
-  }
-*/
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-GUI::Surface* FrameBufferGP2X::createSurface(int width, int height) const
-{
-  SDL_Surface* data =
-    SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
-                         16, myFormat->Rmask, myFormat->Gmask,
-                         myFormat->Bmask, myFormat->Amask);
-
-  return data ? new GUI::Surface(width, height, data) : NULL;
-}
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGP2X::translateCoords(Int32& x, Int32& y) const
+void FrameBufferGP2X::translateCoords(Int32* x, Int32* y)
 {
   // Coordinates don't change
 }

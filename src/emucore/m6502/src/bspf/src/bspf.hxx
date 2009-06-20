@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: bspf.hxx,v 1.17 2007-07-31 15:46:21 stephena Exp $
 //============================================================================
 
 #ifndef BSPF_HXX
@@ -24,7 +24,7 @@
   that need to be defined for different operating systems.
 
   @author Bradford W. Mott
-  @version $Id$
+  @version $Id: bspf.hxx,v 1.17 2007-07-31 15:46:21 stephena Exp $
 */
 
 // Types for 8-bit signed and unsigned integers
@@ -51,9 +51,7 @@ typedef unsigned int uInt32;
   #include <string>
   using namespace std;
 #endif
-
-#include <algorithm>
-
+	
 #ifdef HAVE_INTTYPES
   #include <inttypes.h>
 #endif
@@ -70,14 +68,13 @@ typedef unsigned int uInt32;
 #endif
 
 // I wish Windows had a complete POSIX layer
-#if defined BSPF_WIN32 && !defined __GNUG__
+#ifdef BSPF_WIN32
   #define BSPF_strcasecmp stricmp
   #define BSPF_strncasecmp strnicmp
   #define BSPF_isblank(c) ((c == ' ') || (c == '\t'))
   #define BSPF_snprintf _snprintf
   #define BSPF_vsnprintf _vsnprintf
 #else
-  #include <strings.h>
   #define BSPF_strcasecmp strcasecmp
   #define BSPF_strncasecmp strncasecmp
   #define BSPF_isblank(c) isblank(c)
@@ -90,14 +87,6 @@ template<typename T> inline void BSPF_swap(T &a, T &b) { T tmp = a; a = b; b = t
 template<typename T> inline T BSPF_abs (T x) { return (x>=0) ? x : -x; }
 template<typename T> inline T BSPF_min (T a, T b) { return (a<b) ? a : b; }
 template<typename T> inline T BSPF_max (T a, T b) { return (a>b) ? a : b; }
-inline string BSPF_tolower(const string& s)
-{
-  string t = s;
-  transform(t.begin(), t.end(), t.begin(), (int(*)(int)) tolower);
-  return t;
-}
-
-static const string EmptyString("");
 
 #ifdef _WIN32_WCE
   #include "missing.h"

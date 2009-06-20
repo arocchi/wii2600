@@ -1,6 +1,8 @@
 %define name    stella
-%define version 2.8.1
+%define version 2.4
 %define rel     1
+
+%define build_plf 0
 
 %define enable_gl 1
 %define enable_sound 1
@@ -9,7 +11,12 @@
 %define enable_cheats 1
 %define enable_static 0
 
-%define release %rel
+%if %build_plf
+  %define release %mkrel %rel
+  %define distsuffix plf
+%else
+  %define release %rel
+%endif
 
 Summary:        An Atari 2600 Video Computer System emulator
 Name:           %{name}
@@ -27,6 +34,9 @@ The Atari 2600 Video Computer System (VCS), introduced in 1977, was the most
 popular home video game system of the early 1980's.  This emulator will run
 most Atari ROM images, so that you can play your favorite old Atari 2600 games
 on your PC.
+%if %build_plf
+This package is in PLF as Mandriva Linux policy forbids emulators in contribs.
+%endif
 
 %prep
 
@@ -107,44 +117,46 @@ rm -rf $RPM_BUILD_DIR/%{name}-%{version}
 %_datadir/icons/large/%{name}.png
 
 %changelog
-* Fri Jun 19 2009 Stephen Anthony <stephena@users.sf.net> 2.8.1-1
-- Version 2.8.1 release
+* Fri Dec 22 2006 Stephen Anthony <stephena@zarb.org> 2.3-1plf2007.0
+- Packaged 2.3 release for PLF
 
-* Tue Jun 9 2009 Stephen Anthony <stephena@users.sf.net> 2.8-1
-- Version 2.8 release
+* Fri Sep 08 2006 Stephen Anthony <stephena@zarb.org> 2.2-1plf2007.0
+- Packaged 2.2 release for PLF
+- Added XDG menu
 
-* Tue May 1 2009 Stephen Anthony <stephena@users.sf.net> 2.7.7-1
-- Version 2.7.7 release
+* Sat Oct 29 2005 Stephen Anthony <stephena@zarb.org> 2.0.1-3plf
+- Fix for x86_64 compilation
 
-* Tue Apr 14 2009 Stephen Anthony <stephena@users.sf.net> 2.7.6-1
-- Version 2.7.6 release
+* Wed Oct 26 2005 Stephen Anthony <stephena@zarb.org> 2.0.1-2plf
+- Fix for improper PLF upload
 
-* Fri Mar 27 2009 Stephen Anthony <stephena@users.sf.net> 2.7.5-1
-- Version 2.7.5 release
+* Sun Oct 24 2005 Stephen Anthony <stephena@zarb.org> 2.0.1-1
+- Version 2.0.1 release, and plaform-agnostic SRPM (hopefully)
 
-* Mon Feb 9 2009 Stephen Anthony <stephena@users.sf.net> 2.7.3-1
-- Version 2.7.3 release
+* Sun Oct  9 2005 Stefan van der Eijk <stefan@eijk.nu> 1.4.2-3plf
+- BuildRequires
+- distsuffix & mkrel
 
-* Tue Jan 27 2009 Stephen Anthony <stephena@users.sf.net> 2.7.2-1
-- Version 2.7.2 release
+* Sun Jul 31 2005 Stephen Anthony <stephena@zarb.org> 1.4.2-2plf
+- Recompile for distro name change
 
-* Mon Jan 26 2009 Stephen Anthony <stephena@users.sf.net> 2.7.1-1
-- Version 2.7.1 release
+* Sat Feb 19 2005 Stephen Anthony <stephena@zarb.org> 1.4.2-1plf
+- 1.4.2
+- First release of Stella 1.4.2 for PLF
 
-* Sat Jan 17 2009 Stephen Anthony <stephena@users.sf.net> 2.7-1
-- Version 2.7 release
+* Sat Apr 24 2004 Stefan van der Eijk <stefan@eijk.nu> 1.3-1plf
+- 1.3
+- remove stella sound, seems to be included?
 
-* Thu May 22 2008 Stephen Anthony <stephena@users.sf.net> 2.6.1-1
-- Version 2.6.1 release
+* Sun Nov 10 2002 Stefan van der Eijk <stefan@eijk.nu> 1.2-3plf
+- BuildRequires
 
-* Fri May 16 2008 Stephen Anthony <stephena@users.sf.net> 2.6-1
-- Version 2.6 release
+* Thu Oct 24 2002 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.2-2plf 
+- by Rob Kudla <rpm@kudla.org>
+- doh!  forgot to build the sound server!
 
-* Wed Apr 9 2008 Stephen Anthony <stephena@users.sf.net> 2.5.1-1
-- Version 2.5.1 release
+* Wed Oct 22 2002 Rob Kudla <rpm@kudla.org> 1.2-1plf
+- oh yeah, I guess emulators go in plf
 
-* Fri Mar 28 2008 Stephen Anthony <stephena@users.sf.net> 2.5-1
-- Version 2.5 release
-
-* Mon Aug 27 2007 Stephen Anthony <stephena@users.sf.net> 2.4.1-1
-- Version 2.4.1 release
+* Tue Oct 22 2002 Rob Kudla <rpm@kudla.org> 1.2-1mdk
+- first attempt at package

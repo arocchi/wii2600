@@ -8,17 +8,19 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemWin32.cxx,v 1.20 2007-08-04 20:32:54 stephena Exp $
 //============================================================================
 
+#include <sstream>
+#include <fstream>
+#include <windows.h>
+
 #include "bspf.hxx"
-#include "FSNode.hxx"
-#include "HomeFinder.hxx"
 #include "OSystem.hxx"
 #include "OSystemWin32.hxx"
 
@@ -36,47 +38,12 @@
 OSystemWin32::OSystemWin32()
   : OSystem()
 {
-  string basedir = "";
-
-  // Check if the base directory should be overridden
-  // Shouldn't normally be necessary, but is useful for those people that
-  // don't want to clutter their 'My Documents' folder
-  bool overrideBasedir = false;
-  FilesystemNode basedirfile("basedir.txt");
-  if(basedirfile.exists())
-  {
-    ifstream in(basedirfile.getPath().c_str());
-    if(in && in.is_open())
-    {
-      getline(in, basedir);
-      in.close();
-
-      // trim leading and trailing spaces
-      size_t spos = basedir.find_first_not_of(" \t");
-      size_t epos = basedir.find_last_not_of(" \t");
-      if(spos != string::npos && epos != string::npos)
-        basedir = basedir.substr(spos, epos-spos+1);
-
-      if(basedir != "")  overrideBasedir = true;
-    }
-  }
-
-  // If basedir hasn't been specified, use the 'home' directory
-  if(!overrideBasedir)
-  {
-    HomeFinder homefinder;
-    FilesystemNode appdata(homefinder.getAppDataPath());
-    if(appdata.isDirectory())
-    {
-      basedir = appdata.getRelativePath();
-      if(basedir.length() > 1 && basedir[basedir.length()-1] != '\\')
-        basedir += '\\';
-      basedir += "Stella";
-    }
-    else
-      basedir = ".";  // otherwise, default to current directory
-  }
-
+  // TODO - there really should be code here to determine which version
+  // of Windows is being used.
+  // If using a version which supports multiple users (NT and above),
+  // the relevant directories should be created in per-user locations.
+  // For now, we just put it in the same directory as the executable.
+  const string& basedir = ".";
   setBaseDir(basedir);
   setConfigFile(basedir + "\\stella.ini");
 }
@@ -87,7 +54,7 @@ OSystemWin32::~OSystemWin32()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemWin32::getTicks() const
+uInt32 OSystemWin32::getTicks()
 {
   return (uInt32) SDL_GetTicks() * 1000;
 }

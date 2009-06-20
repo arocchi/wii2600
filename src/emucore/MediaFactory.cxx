@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: MediaFactory.cxx,v 1.8 2007-07-19 16:21:39 stephena Exp $
 //============================================================================
 
 ////////////////////////////////////////////////////////////////////
@@ -23,7 +23,6 @@
 #include "MediaFactory.hxx"
 
 #include "OSystem.hxx"
-#include "Settings.hxx"
 
 #include "FrameBuffer.hxx"
 #ifdef DISPLAY_OPENGL
@@ -58,7 +57,7 @@ FrameBuffer* MediaFactory::createVideo(OSystem* osystem)
   if(osystem->settings().getString("video") == "gl")
   {
     const string& gl_lib = osystem->settings().getString("gl_lib");
-    if(FrameBufferGL::loadLibrary(gl_lib))
+    if(FrameBufferGL::loadFuncs(gl_lib))
       fb = new FrameBufferGL(osystem);
   }
 #endif
@@ -78,6 +77,16 @@ FrameBuffer* MediaFactory::createVideo(OSystem* osystem)
 
   // This should never happen
   assert(fb != NULL);
+  switch(fb->type())
+  {
+    case kSoftBuffer:
+      osystem->settings().setString("video", "soft");
+      break;
+
+    case kGLBuffer:
+      osystem->settings().setString("video", "gl");
+      break;
+  }
 
   return fb;
 }

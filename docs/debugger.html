@@ -41,7 +41,7 @@ feature that no other 2600 debugger has; it's <b>completely</b> cross-platform.<
 	<li>Symbolic names in disassembly</li>
 	<li>Symbolic names accepted as input</li>
 	<li>Tab completion for commands and symbol names</li>
-	<li>Graphical editor for RIOT and extended RAM. Acts a lot like a spreadsheet.
+	<li>Graphical editor for RIOT RAM. Acts a lot like a spreadsheet.
 		Input in hex, with displays for label/decimal/binary for
 		currently-selected location.</li>
 	<li>GUI CPU state window</li>
@@ -73,7 +73,7 @@ feature that no other 2600 debugger has; it's <b>completely</b> cross-platform.<
 	<li>Save patched ROM ("saverom filename.bin").</li>
 </ul>
 
-<h2>Future planned features:</h2>
+<h2>Future planned features (post 2.0):</h2>
 
 <ul>
 	<li>GUI for cheat codes (Cheetah and normal codes).</li>
@@ -83,12 +83,13 @@ feature that no other 2600 debugger has; it's <b>completely</b> cross-platform.<
 	<li>Bankswitch support in the debugger for the few remaining cart types
 		that aren't supported.</li>
 	<li>Patch ROM support for a few cart types doesn't work. Must fix.</li>
+	<li>Some way to control joystick/etc. input from within the debugger.</li>
 	<li>Source-level debugging: if a DASM .lst file is available, we'll show
 		the listing in the ROM tab instead of a disassembly. This is already
 		available in a very crude form ("loadlist" and "list" commands).</li>
 	<li>More "special variables" for the expression parser.</li>
 	<li>Possibly a mini-assembler</li>
-	<li>Support for extra RAM in all remaining cart types.</li>
+	<li>Support for extra RAM in Supercharger and other cart types.</li>
 	<li>Possibly support for recording and playing back input files, like
 		MAME. This isn't a debugger feature per se, but it'll make it easier
 		to reliably trigger a bug so you can debug it.</li>
@@ -103,18 +104,12 @@ feature that no other 2600 debugger has; it's <b>completely</b> cross-platform.<
 &amp; off. When you exit the debugger, the emulation resumes at the current
 program counter, and continues until either a breakpoint/trap is hit,
 or the ` key is pressed again.</p>
-
-<p>The main debugger window will look similar to the following (note that the
-letters here are for reference in the document below; they aren't actually
-present in the debugger):</p>
-<p><img src="graphics/debugger_main.png"></p>
-
-<p>For space reasons, the Prompt, TIA, I/O and Audio displays are split into
-4 tabs, only one of which is visible at a time. You can use the mouse or
-keyboard to select which tab you want to view.  Pressing Shift with the left
-or right arrow keys cycles between tabs from right-to-left and left-to-right,
-respectively.  Pressing Tab cycles between widgets in the current tab (except
-for in the Prompt area, where 'tab' is used for something else).</p>
+<p>For space reasons, the Prompt, TIA, and Audio displays are split into
+3 tabs, only one of which is visible at a time. You can use the mouse or
+keyboard to select which tab you want to view.</p>
+<p>Pressing Ctrl-Tab cycles between tabs
+from left to right, and Shift-Ctrl-Tab cycles from right to left.
+Pressing Tab cycles between widgets in the current tab.</p>
 
 <p>You can also enter the debugger at emulator startup by giving a breakpoint on the command line:
 <pre>
@@ -149,44 +144,75 @@ already contained the same value, that's not considered a change (old
 value was $whatever, new value is the same, so nothing got tracked). This
 may change in a future version of Stella.</p>
 
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<h2><u>(A)</u> Prompt tab</h2>
+<h2>Prompt tab</h2>
 
 <p>This is a command-line interface, similar to the DOS DEBUG command
 or Supermon for the C=64.</p>
 
-<p>Editing keys work about like you'd expect them to in Windows, but many
-Bash-style commands are also supported:</p>
+<p>Editing keys work about like you'd expect them to: Home, End, Delete,
+arrows, etc. To scroll with the keyboard, use Shift-PageUp and
+Shift-PageDown or Shift-Up and Shift-Down arrow keys. You can also
+scroll with the mouse. Copy and paste is not (yet?) supported.</p>
 
-<table border="1" cellpadding="3">
-	<tr><td>Home</td><td>Move cursor to beginning of line</td></tr>
-	<tr><td>End</td><td>Move cursor to end of line</td></tr>
-	<tr><td>Delete</td><td>Remove character to right of cursor</td></tr>
-	<tr><td>Backspace</td><td>Remove character to left of cursor</td></tr>
-	<tr><td>Control-a</td><td>Same function as 'Home'</td></tr>
-	<tr><td>Control-e</td><td>Same function as 'End'</td></tr>
-	<tr><td>Control-d</td><td>Same function as 'Delete'</td></tr>
-	<tr><td>Control-k</td><td>Remove all characters from cursor to end of line</td></tr>
-	<tr><td>Control-u</td><td>Remove all characters from cursor to beginning of line</td></tr>
-	<tr><td>Control-w</td><td>Remove entire word to left of cursor</td></tr>
-	<tr><td>Shift-PgUp</td><td>Scroll up through previous commands one screen/page</td></tr>
-	<tr><td>Shift-PgDown</td><td>Scroll down through previous commands one screen/page</td></tr>
-	<tr><td>Shift-Up</td><td>Scroll up through previous commands one line</td></tr>
-	<tr><td>Shift-Down</td><td>Scroll down through previous commands one line</td></tr>
-	<tr><td>Shift-Home</td><td>Scroll to beginning of commands</td></tr>
-	<tr><td>Shift-End</td><td>Scroll to end of commands</td></tr>
-</table>
-<p>You can also scroll with the mouse.  Copy and paste is not yet supported.</p>
+<p>To see the available commands, enter "help" or "?". Most commands can
+be abbreviated: instead of "clearbreaks", you can type "clear" or
+even just "cl". However, "c" by itself is the Toggle Carry command.</p>
 
-<p>To see the available commands, enter "help".  Bash-style tab completion is
-supported for commands and labels (see below).</p>
+<p>Bash-style tab completion is supported for commands and labels (see below)</p>
 
 <p>For now, there are some functions that only exist in the prompt. We
 intend to add GUI equivalents for all (or almost all?) of the prompt
-commands in future releases. People who like command prompts will be able to
-use the prompt, but people who hate them will have a fully functional
-debugger without typing (or without typing much, anyway).</p>
+commands by the time we release Stella 2.0. People who like command
+prompts will be able to use the prompt, but people who hate them will
+have a fully functional debugger without typing (or without typing
+much, anyway).</p>
+
+<!--
+<h4>Status</h4>
+
+<p>Before each prompt, you'll see a dump of the current processor
+status, plus any watches you've set (see section on watches
+below), plus a disassembly of the instruction at the current
+Program Counter.  This is the next instruction that will execute;
+it hasn't been executed yet.</p>
+
+<pre>
+    PC=f000 A=01 X=02 Y=03 S=ff P=21/nv-bdizC  Cycle 12345
+      $f000  a2 ff    LDX #ff  ; 2
+    >
+</pre>
+
+<p>This is telling us a lot of information:
+<pre>
+    - PC=f000 A=01 X=02 Y=03 S=ff
+      The Program Counter, Accumulator, X, Y, and Stack Pointer registers.
+
+    - P=21/nv-bdizC
+      The Processor Status register. The "21" is the hex value of the
+      register, and the "nv-bdizC" shows us the individual flags. Flags
+      with capital letters are set, and lowercase means clear. In this
+      example, only the Carry bit is set.
+
+    - Cycle 12345
+      This counter gets reset at the beginning of each frame, when
+      VSYNC is strobed. In this example, we're 12345 (decimal) cycles
+      past the beginning of the frame.
+
+    - $f000  a2 ff    LDX #ff  ; 2
+      Disassembly of the instruction the PC points to. This is the next
+      instruction that will execute (when we exit the debugger, or via the
+      "step" or "trace" commands). The "a2 ff" is the raw machine code
+      for this instruction. The "; 2" is a cycle count: this instruction
+      will take 2 cycles to execute.
+
+      WARNING: the cycle count in the disassembly does NOT include extra
+      cycles caused by crossing page boundaries. Also, Branch instructions
+      are shown as 2 cycles, as though they're not going to be taken. A
+      branch that's taken adds a cycle, of course.
+
+   The "&gt;" is where your commands will appear as you type them.
+</pre>
+-->
 
 <h4>Tab completion</h4>
 
@@ -446,7 +472,7 @@ conditions without having to define the conditions yourself.</p>
 your game's source with underscores, if you plan to use them with the
 Stella debugger.</p>
 
-<table border="1" cellpadding="3">
+<table border="1">
 <tr><th>Function</th><th>Definition</th><th>Description</th></tr>
 <tr><td> _joy0left</td><td> !(*SWCHA &amp; $40)</td><td> Left joystick moved left</td></tr>
 <tr><td> _joy0right</td><td> !(*SWCHA &amp; $80)</td><td> Left joystick moved right</td></tr>
@@ -462,10 +488,10 @@ Stella debugger.</p>
 <tr><td> _reset</td><td> !(*SWCHB &amp; $02)</td><td> Game Reset pressed</td></tr>
 <tr><td> _color</td><td> *SWCHB &amp; $08</td><td> Color/BW set to Color</td></tr>
 <tr><td> _bw</td><td> !(*SWCHB &amp; $08)</td><td> Color/BW set to BW</td></tr>
-<tr><td> _diff0b</td><td> !(*SWCHB &amp; $40)</td><td> Left difficulty set to B (easy)</td></tr>
-<tr><td> _diff0a</td><td> *SWCHB &amp; $40</td><td> Left difficulty set to A (hard)</td></tr>
-<tr><td> _diff1b</td><td> !(*SWCHB &amp; $80)</td><td> Right difficulty set to B (easy)</td></tr>
-<tr><td> _diff1a</td><td> *SWCHB &amp; $80</td><td> Right difficulty set to A (hard)</td></tr>
+<tr><td> _diff0a</td><td> !(*SWCHB &amp; $40)</td><td> Right difficulty set to A (easy)</td></tr>
+<tr><td> _diff0b</td><td> *SWCHB &amp; $40</td><td> Right difficulty set to B (hard)</td></tr>
+<tr><td> _diff1a</td><td> !(*SWCHB &amp; $80)</td><td> Right difficulty set to A (easy)</td></tr>
+<tr><td> _diff1b</td><td> *SWCHB &amp; $80</td><td> Right difficulty set to B (hard)</td></tr>
 </table>
 
 <p>Don't worry about memorizing them all: the Prompt "help" command
@@ -473,20 +499,8 @@ will show you a list of them.</p>
 
 <h4>Pseudo-Registers</h4>
 
-<p>These "registers" are provided for you to use in your conditional breaks.
-They're not registers in the conventional sense, since they don't exist in
-a real system.  For example, while the debugger keeps track of the number
-of scanlines in a frame, a real system would not (there is no register
-that holds 'number of scanlines' on an actual console).</p>
-<table border="1" cellpadding="3">
-<tr><th>Function</th><th>Description</th></tr>
-<tr><td> _scan</td><td> Current scanline count</td></tr>
-<tr><td> _bank</td><td> Currently selected bank</td></tr>
-<tr><td> _fcount</td><td> Number of frames since emulation started</td></tr>
-<tr><td> _cclocks</td><td> Color clocks on a scanline</td></tr>
-<tr><td> _vsync</td><td> Whether vertical sync is enabled (1 or 0)</td></tr>
-<tr><td> _vblank</td><td> Whether vertical blank is enabled (1 or 0)</td></tr>
-</table>
+<p>Two "registers" are provided for you to use in your conditional breaks.
+These are <b>_scan</b> and <b>_bank</b>.</p>
 
 <p><b>_scan</b> always contains the current scanline count. You can use
 this to break your program in the middle of your kernel. Example:</p>
@@ -627,14 +641,15 @@ can also get rid of all traps at once with the "cleartraps" command.</p>
 <!-- <p>Commands marked with a * are unimplemented.</p> -->
 <p>Commands marked with a + are partially implemented.</p>
 
+<p>Most commands can be abbreviated just by typing a partial command:
+"st" for "step", or "f" for "frame". Where there are conflicts, generally
+the shortest name is chosen (so "tra" is "trap", not "trapread"). When
+in doubt, press TAB.</p>
 
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(B)</u> TIA Tab</h2>
+<h2>TIA Tab</h2>
 
 <p>When selected, this tab shows detailed status of all the TIA registers
 (except for audio; use the Audio tab for those).</p>
-<p><img src="graphics/debugger_tiatab.png"></p>
 
 <p>Most of the values on the TIA tab will be self-explanatory to a 2600
 programmer. The top line (with all the hex values) displays the raw
@@ -655,260 +670,148 @@ of the strobe registers at any time.</p>
 <p>The collision registers are displayed in decoded format, in a table.
 You can see exactly which objects have hit what. These are read-only
 displays; you can't toggle the bits in the current release of Stella. Of
-course, you can clear all the collisions with the CXCLR Strobe button.</p>
+course, you can clear all the collisions from the TIA tab with the CXCLR
+Strobe button.</p>
 
 <p>To the right of each color register, you'll see a small rectangle
 drawn in the current color. Changing a color register will change the
 color of this rectangle.</p>
 
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(C)</u> I/O Tab</h2>
-
-<p>When selected, this tab shows detailed status of the Input, Output,
-and Timer portion of the RIOT/M6532 chip (the RAM portion is accessed
-in another part of the debugger).</p>
-<p><img src="graphics/debugger_iotab.png"></p>
-
-<p>As with the TIA tab, most of the values here will be self-explanatory to a 2600
-programmer, and almost all can be modified.  However, the SWCHx registers need
-further explanation:<p>
-<p>SWCHA(W) can be directly modified; here, the (W) stands for write.  Similarly,
-SWACNT can be directly modified.  However, the results of reading back from
-the SWCHA register are influenced by SWACNT, and SWCHA(R) is a read-only display
-reflecting this result.</p>
-<p>SWCHB cannot be directly modified; it will be indirectly modified by setting
-the various difficulty switches, color/BW button, select/reset, etc.  SWBCNT
-is hardwired as read-only, and is not shown.</p>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(D)</u> Audio Tab</h2>
+<h2>Audio Tab</h2>
 
 <p>This tab lets you view the contents of the TIA audio registers. In
 the current release of Stella, these are read-only displays. This tab
 will grow some features in a future release.</p>
 
+<h2>CPU Widget</h2>
 
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(E)</u> TIA Display</h2>
+<p>This shows the current CPU state. All the registers and flags are
+displayed, and can be changed by double-clicking on them. Flags are
+toggled on double-click.</p>
 
-<p>In the upper left of the debugger, you'll see the current frame of
-video as generated by the TIA. If a complete frame hasn't been drawn,
-the partial contents of the current frame will be displayed up to the
-current scanline, with the contents of the old frame (in black &amp;
-white) filling the rest of the display.  Note that if 'phosphor mode'
-has been enabled for a ROM, you will see the effect here as well.  That
-is, no flicker will be shown for 30Hz display, even though a real
-system would alternate between drawing frames (and hence produce
-flicker).</p>
+<p>The 0, Inv, Neg, ++, --, &lt;&lt;, and &gt;&gt; buttons affect the
+currently-selected register (see <b>RAM Widget</b> below).</p>
 
-<p>You can use the "Scan+1" button, the prompt "scan" command, or the
-Alt-L key-combo to watch the TIA draw the frame one scanline at a time.</p>
-
-<p>You can also right-click anywhere in this window to show a context menu,
-as illustrated:</p>
-<p><img src="graphics/debugger_tiaoutcmenu.png"></p>
-<p>The options are as follows:</p>
-<ul>
-	<li><b>Fill to scanline</b>: If you've already started a partial frame
-	draw (ie, the frame is already partially 'greyed' out), selecting this
-	option will draw all scanlines up to the vertical position where the
-	mouse was clicked.  Note that if you weren't in partial-frame mode,
-	this option will have no effect.</li>
-	<li><b>Set breakpoint</b>: Will set a conditional breakpoint at the
-	scanline where the mouse was clicked.  Currently, you'll need to use
-	the Prompt Tab to turn the breakpoint off again.</li>
-	<li><b>Set zoom position</b>: Influences what is shown in the TIA
-	zoom area (further described in part (G).  The zoom area will
-	contain the area centered at the position where the mouse was
-	clicked.</li>
-</ul>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(F)</u> TIA Info</h2>
-<p>To the right of the TIA display (E) there is TIA information, as shown:</p>
-<p><img src="graphics/debugger_tiainfo.png"></p>
-<p>The indicators are as follows:</p>
-<ul>
-<li><b>Frame</b>: The current frame number, since this ROM was loaded or reset.</li>
-<li><b>F. Cyc</b>: The number of CPU cycles that have been executed this frame, since
-VSYNC was cleared at scanline 0.</li>
-<li><b>Scanline</b>: The scanline that's currently being drawn. Scanline 0 is the one
-on which VSYNC is cleared (after being set for 3 scanlines, as per the Stella
-Programmer's Guide)</li>
-<li><b>S. Cyc</b>: The number of CPU cycles that have been executed since the beginning
-of the current scanline.</li>
-<li><b>VSYNC &amp; VBLANK</b>: Self explanatory.</li>
-<li><b>Pixel Pos</b>: The current number of visible color clocks that have been displayed on
-the current scanline, starting from the beginning of the Horizontal Blank period.
-During HBLANK, this value will be negative (representing the number of clocks
-until the first visible one). Since there are 68 color clocks per HBLANK and
-160 visible clocks per scanline, the Pixel Position will range from -68 to 159.</li>
-<li><b>Color Clk</b>: The current number of total color clocks since the beginning of this
-scanline's HBLANK. This counter starts at zero, but otherwise displays the same
-information as the Pixel Position (so Color Clock will always be 68 more than Pixel
-Position, and will range from 0 to 228).</li>
-</ul>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(G)</u> TIA Zoom</h2>
-<p>Below the TIA Info (F) is the TIA Zoom area. This allows you to enlarge
-part of the TIA display, so you can see fine details.  Note that unlike
-the TIA display area, this one <b>does</b> generate frames as the real
-system would.  So, if you've enabled 'phosphor mode' for a ROM, it
-won't be honoured here (ie, you'll see alternating frames at 30Hz display,
-just like on a real system).</p>
-<p>You can also right-click anywhere in this window to show a context menu,
-as illustrated:</p>
-<p><img src="graphics/debugger_tiazoomcmenu.png"></p>
-<p>These options allow you to zoom in on the image for even greater detail.
-If you click on the output window, you can scroll around using the cursor,
-PageUp/Dn and Home/End keys.  You can also select the zoom position from
-a context menu in the TIA Display.</p>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(H)</u> Breakpoint/Trap Status</h2>
-<p>Below the TIA Zoom (G), there is a status line that shows the reason the
-debugger was entered (if a breakpoint/trap was hit), as shown:</p>
-<p><img src="graphics/debugger_bpstatus.png"></p>
-<p>The output here will generally be self-explanatory.  Due to space concerns,
-conditional breakpoints will be shown as "CBP: ...", normal breakpoints
-as "BP: ...", read traps as "RTrap: ..." and write traps as "WTrap: ...".
-See the "Breakpoints" section for details.</p>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(I)</u> CPU Registers</h2>
-<p>This displays the current CPU state, as shown:</p>
-<p><img src="graphics/debugger_cpuregs.png"></p>
-<p>All the registers and flags are displayed, and can be changed by
-double-clicking on them (to the left). Flags are toggled on double-click.
-Selected registers here can also be changed by using the "Data Operations" buttons,
-further described in (J).  All items are shown in hex.  Any label defined for the
-current PC value is shown to the right.  Decimal and binary equivalents
-are shown for SP/A/X/Y to the right (first decimal, then binary).</p>
 <p>There's not much else to say about the CPU widget: if you know 6502
 assembly, it's pretty self-explanatory. If you don't, well, you should
 learn :)</p>
 
+<h2>RAM Widget</h2>
 
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(J)</u> Data Operations buttons</h2>
-<p>These buttons can be used to change values in either CPU Registers (I), or
-the RIOT RAM (K), depending on which of these widgets is currently active.
-<p><img src="graphics/debugger_dataops.png"></p>
-<p>Each of these buttons also have a keyboard shortcut (indicated in square
-brackets).  In fact, many of the inputboxes in various parts of the debugger
-respond to these same keyboard shortcuts.  If in doubt, give them a try.</p>
+<p>This is a spreadsheet-like GUI for inspecting and changing the contents
+of the 2600's RAM. All 128 bytes of RAM are visible on the screen at
+once. You can navigate with either the mouse or the keyboard arrow keys.
+To change a RAM location, either double-click on it or press Enter while
+it's highlighted. Enter the new value (hex only for now, sorry), then
+press Enter to make the change. If you change your mind, press Escape
+and the original value will be restored.</p>
+
+<p>Nearby there are also some buttons to do various things to the
+currently-selected memory location from the RAM widget or
+CPU register from the CPU widget (whichever was most recently
+selected). The buttons are:</p>
+
 <pre>
-  0   [z]    - Set the current location/register to zero.
-  Inv [i !]  - Invert the current location/register [toggle all its bits].
-  Neg [n]    - Negate the current location/register [twos' complement negative].
-  ++  [+ =]  - Increment the current location/register
-  --  [-]    - Decrement the current location/register
-  &lt;&lt;  [&lt; ,]  - Shift the current location/register left.
-  &gt;&gt;  [&gt; .]  - Shift the current location/register right.
+  0   - Set the current location/register to zero.
+  Inv - Invert the current location/register (toggle all its bits).
+  Neg - Negate the current location/register (twos' complement negative).
+  ++  - Increment the current location/register
+  --  - Decrement the current location/register
+  &lt;&lt;  - Shift the current location/register left.
+  &gt;&gt;  - Shift the current location/register right.
 
   Any bits shifted out of the location/register with &lt;&lt; or &gt;&gt;
   are lost (they will NOT end up in the Carry flag).
 </pre>
 
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(K)</u> M6532/RIOT and extended RAM</h2>
-<p>This is a spreadsheet-like GUI for inspecting and changing the contents
-of the 2600's RAM. You can view 128 bytes of RAM at a time, starting with
-the RAM built in to the console (zero-page RAM).  If a cartridge contains
-extended RAM, a scrollbar will be activated, allowing to scroll in
-sequence through each 128 byte 'bank' of RAM.  The address in the upper left
-corner indicates the offset (in terms of the read port) for the bank
-currently being displayed.</p>
-<p>You can navigate with either the mouse or the keyboard arrow keys.
-To change a RAM location, either double-click on it or press Enter while
-it's highlighted. Enter the new value (hex only for now, sorry), then
-press Enter to make the change. If you change your mind, press Escape
-and the original value will be restored.  The currently selected RAM cell
-can also be changed by using the Data operations buttons/associated
-shortcut keys (J).</p>
-<p><b>Note:</b> Many extended RAM schemes involve different addresses for
-reading versus writing RAM (read port vs. write port).  The UI takes care
-of this for you; although the addresses shown are for the read port,
-modifying a cell will use the write port.  Also, some bankswitching
-schemes can swap RAM and ROM dynamically during program execution.  In
-these cases, the values shown may not always be for RAM, and may point
-to ROM instead.  In the latter case, the data cannot be modified.</p>
-<p><img src="graphics/debugger_ram.png"></p>
-<p>The 'Undo' button in the upper right should be self-explanatory; it will
-undo the most previous operation to one cell only.  The 'Rev' button is
-more comprehensive.  It will undo <i>all</i> operations on <i>all</i> cells
-since you first made a change.</p>
-<p>The UI objects at the bottom refer to the currently selected RAM cell.
-The 'label' textbox shows the label attached to this RAM location (if any),
-and the other textboxes show the decimal and binary equivalent value.
-The remaining buttons to the right are further explained in section (L).</p>
-
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(L)</u> M6532/RIOT and extended RAM (search/compare mode)</h2>
-<p>The RAM widget also lets you search memory for values such as lives or remaining
+<p>This widget also lets you search memory for values such as lives or remaining
 energy, but it's also very useful when debugging to determine which
 memory location holds which quantity.</p>
-<p><img src="graphics/debugger_ramsearch.png"></p>
-<p>To search RAM, click 'Srch' and enter a byte value into the search editbox (0-255).
-All matching values will be highlighted in the RAM widget.  If 'Search' is clicked
-and the input is empty, all RAM locations are highlighted.</p>
 
-<p>The 'Cmp' button is used to compare the given value using all
+<p>To search RAM, click 'Search' and enter a byte value into the search editbox (0-255).
+All matching values will be highlighted in the RAM widget.  If 'Search' is clicked
+when the input is empty, all RAM locations are searched.</p>
+
+<p>The 'Compare' button is used to compare the given value using all
 addresses currently highlighted.  This may be an absolute number (such as 2),
 or a comparitive number (such as -1).  Using a '+' or '-' operator
 means 'search addresses for values that have changed by that amount'.</p>
-<p>The 'Rset' button resets the entire operation; it clears the highlighted
-addresses and allows another search.</p>
+
 <p>The following is an example of inspecting all addresses that have
-decreased by 1:</p>
+decreased by 1:
+
 <ul>
-	<li>Click 'Srch' with empty input.  All address/values are highlighted</li>
+	<li>Click 'Search' with empty input.  All 128 address/values are highlighted</li>
 	<li>Exit debugger mode and lose a life, let your energy decrease, or
 		do whatever it is you're trying to debug</li>
-	<li>Enter debugger mode again, click 'Cmp' and and enter a '-1' for input.
+	<li>Enter debugger mode again, click 'Compare' and and enter a '-1' for input.
 		This finds all values that have decreased by 1 (as compared to their current
 		values)</li>
 	<li>Repeatedly following these steps may help to narrow number of
 		addresses under consideration, and eventually you'll find the
 		memory address you're looking for</li>
-	<li>Click 'Rset' when you're finished</li>
+	<li>The 'Reset' button restarts the whole procedure (ie, clear the highlighted
+		addresses and allow another search</li>
 </ul>
 
+<h2>TIA Display</h2>
 
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
-<h2><u>(M)</u> ROM Listing</h2>
+<p>In the upper left of the debugger, you'll see the current frame of
+video as generated by the TIA. If a complete frame hasn't been drawn,
+the partial contents of the current frame will be displayed up to the
+current scanline, with the contents of the old frame (in black &amp;
+white) filling the rest of the display.</p>
+
+<p>You can use the "Scan+1" button or the prompt "scan" command to watch
+the TIA draw the frame one scanline at a time.</p>
+
+<p>To the right of the video display, there are indicators for:</p>
+<ul>
+<li>Frame - The current frame number, since this ROM was loaded or reset.</li>
+<li>Scanline - The scanline that's currently being drawn. Scanline 0 is the one
+on which VSYNC is cleared (after being set for 3 scanlines, as per the Stella
+Programmer's Guide)</li>
+<li>F. Cycle - The number of CPU cycles that have been executed this frame, since
+VSYNC was cleared at scanline 0.</li>
+<li>S. Cycle - The number of CPU cycles that have been executed since the beginning
+of the current scanline.</li>
+<li>VSYNC and VBLANK indicators</li>
+<li>Pixel Pos. - The current number of visible color clocks that have been displayed on
+the current scanline, starting from the beginning of the Horizontal Blank period.
+During HBLANK, this value will be negative (representing the number of clocks
+until the first visible one). Since there are 68 color clocks per HBLANK and
+160 visible clocks per scanline, the Pixel Position will range from -68 to 159.</li>
+<li>Color Clk. - The current number of total color clocks since the beginning of this
+scanline's HBLANK. This counter starts at zero, but otherwise displays the same
+information as the Pixel Position (so Color Clock will always be 68 more than Pixel
+Position, and will range from 0 to 228).</li>
+</ul>
+
+<p>Below the indicators is the TIA Zoom area. This allows you to enlarge
+part of the TIA display, so you can see fine details. To set the zoom
+region, right-click on the TIA display and choose "Set Zoom Position". To
+set the magnification level, right-click on the TIA Zoom area and choose
+2x, 4x, or 8x from the pop-up menu.</p>
+
+<p>Below the TIA Zoom, there is a status line that shows the reason the
+debugger was entered (if a breakpoint/trap was hit). This isn't really
+part of the TIA display; see "Breakpoints" below for details.</p>
+
+<p></p>
+
+<h2>ROM Widget</h2>
+
 <p>The ROM Widget is a disassembly of the current bank of ROM. If a symbol
 file is loaded, the disassembly will have labels. Even without a symbol
 file, the standard TIA/RIOT labels will still be present.</p>
-<p><img src="graphics/debugger_rom.png"></p>
 
 <p>Each line of disassembly has four fields:</p>
 <ul>
 <li>Breakpoint - This is the area at the far left, to the left of the
 address. Normally there will be nothing there: this indicates that there's
 no breakpoint set at that address. You can set and clear breakpoints by
-clicking in this area. When a breakpoint is set, there will be a
-red circle in this area. These are the same breakpoints as used
+double-clicking in this area. When a breakpoint is set, there will be a
+red square in this area. These are the same breakpoints as used
 by the "break" command, <b>not</b> the conditional "breakif" breakpoints
 (which makes sense: cond-breaks can break on any condition, the Program
 Counter isn't necessarily involved).</li>
@@ -941,27 +844,24 @@ scroll to the current PC location.</p>
 emulator: you can change ROM all you want within the debugger.  The hex
 bytes in the ROM Widget are editable. Double-click on them to edit
 them. When you're done, press Enter to accept the changes or Escape to
-cancel them.  Any time you edit ROM, there may be a short pause while
+cancel them.  Any time you edit ROM, there will be a short pause while
 the ROM Widget disassembles the current bank again.</p>
 
 <p>Speaking of banks: Above the disassembly there's an indicator for the
 current bank and total number of banks. If there's more than one bank,
 you can manually switch banks by double-clicking the bank number and enter
-a new number (or using the shortcuts keys for inputboxes as described
-in section (J). This won't work if the ROM only has one bank, of course.</p>
+a new number. This won't work if the ROM only has one bank, of course.</p>
 
-<p>The ROM listing also contains a context menu, accessible by right-clicking
-anywhere in the listing:</p>
-<p><img src="graphics/debugger_romcmenu.png"></p>
-<p>Currently, there are two options:</p>
-<ul>
-	<li><b>Save ROM</b>: A textbox will appear for you to enter filename,
-and then the ROM will be saved. Note that the filename is considered
-relative to the <b>current</b> directory, not the ROM or base directory.
-You can enter a full path, though, in which case it doesn't matter.</li>
-	<li><b>Set PC</b>: Set the Program Counter to the address of the
-disassembly line where the mouse was clicked.</li>
-</ul>
+<p>If you patch your ROM, you'll want a way to save it. To do this,
+right-click on any line of the disassembly and choose "Save ROM" from the
+pop-up menu.  You'll be asked for a filename, and then the ROM will be
+saved. Note that the filename is considered relative to the <b>current</b>
+directory, not the ROM or base directory. You can enter a full path,
+though, in which case it doesn't matter.<p>
+
+<p>There's one more thing you can do from the ROM Widget: you can set
+the Program Counter to the address of any disassembly line. Right-click
+on the line you want and choose "Set PC" from the pop-up menu.</p>
 
 <h3>Limitations</h3>
 
@@ -996,26 +896,20 @@ if the PC hits $D010, even though it shouldn't)</li>
 
 <p>These limitations will be addressed in a future release of Stella.</p>
 
-
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
 <h2>Global Buttons</h2>
 
 <p>There are also buttons on the right that always show up no matter which
 tab you're looking at. These are always active. They are: Step, Trace,
-Scan+1, Frame+1 and Exit.</p>
-<p><img src="graphics/debugger_globalbuttons.png"></p>
+Frame+1, Scan+1 and Exit.</p>
 
 <p>When you use these buttons, the prompt doesn't change. This means the
 status lines with the registers and disassembly will be "stale". You
 can update them just by pressing Enter in the prompt.</p>
 
-<p>You can also use the Step, Trace, Scan+1 and Frame+1 buttons from anywhere in
-the GUI via the keyboard, with Alt-S, Alt-T, Alt-L and Alt-F.</p>
+<p>You can also use the Step, Trace, Frame+1 and Scan+1 buttons from anywhere in
+the GUI via the keyboard, with Alt-S, Alt-T, Alt-F and Alt-L.</p>
 
 
-<!-- /////////////////////////////////////////////////////////////////////////  -->
-<br>
 <h2>Tutorial: How to hack a ROM</h2>
 
 <p>Here is a step-by-step guide that shows you how to use the debugger to
@@ -1026,7 +920,7 @@ but it helps to know at least a little about 6502 programming.</p>
 	<li>Get the Atari Battlezone ROM image. Make sure you've got the
 		regular NTSC version. Load it up in Stella and press TAB to get to
 		the main menu. From there, click on "Game Information". For "Name", it
-		should say "Battlezone (1983) (Atari)" and for MD5Sum it should say
+		should say "Battlezone (1983) (Atari) [!]" and for MD5Sum it should say
 		"41f252a66c6301f1e8ab3612c19bc5d4". The rest of this tutorial assumes
 		you're using this version of the ROM; it may or may not work with the
 		PAL version, or with any of the various "hacked" versions floating around
@@ -1038,7 +932,7 @@ but it helps to know at least a little about 6502 programming.</p>
 	<li>Enter the debugger by pressing the ` (backquote) key. Don't get
 		killed before you do this, though.  You should still have all 5 lives.</li>
 
-	<li>In the RAM display, click the "Search" button (labelled 'Srch') and enter "5" for input.
+	<li>In the RAM display, click the "Search" button and enter "5" for input.
 		This searches RAM for your value and highlights all addresses that match
 		the input.  You should see two addresses highlighted: "00a5" and "00ba".
 		These are the only two addresses that currently have the value 5, so they're
@@ -1054,7 +948,7 @@ but it helps to know at least a little about 6502 programming.</p>
 	<li>Get killed! Ram an enemy tank, or let him shoot you. Wait for
 		the explosion to finish. You will now have 4 lives.</li>
 
-	<li>Enter the debugger again.  Click the "Compare" button (labelled 'Cmp') in RAM widget and enter
+	<li>Enter the debugger again.  Click the "Compare" button in RAM widget and enter
 		a value of 4.  Now the RAM widget should only show one highlighted address:
 		"00ba".  What we did was search within our previous results (the ones that
 		were 5 before) for the new value 4. Address $00ba used to have the value 5,
@@ -1063,7 +957,7 @@ but it helps to know at least a little about 6502 programming.</p>
 
 	<li>Test your theory. Go to the RAM display and change address $ba to
 		some high number like $ff (you could use the Prompt instead: enter "ram
-		$ba $ff"). Exit the debugger again (or advance the frame). You should now see lots of lives
+		$ba $ff"). Exit the debugger again. You should now see lots of lives
 		at the bottom of the screen (of course, there isn't room to display $ff
 		(255) of them!)... play the game, get killed a few times, notice that
 		you have lots of lives.</li>

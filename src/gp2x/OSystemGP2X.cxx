@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemGP2X.cxx,v 1.27 2007-06-20 16:33:22 stephena Exp $
 // Modified on 2006/01/06 by Alex Zaballa for use on GP2X
 //============================================================================
 
@@ -48,7 +48,7 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemGP2X::OSystemGP2X() : OSystem()
+OSystemGP2X::OSystemGP2X(const string& path) : OSystem()
 {
   // GP2X needs all config files in exec directory
   
@@ -57,6 +57,9 @@ OSystemGP2X::OSystemGP2X() : OSystem()
   free(currdir);
   setBaseDir(basedir);
   
+  setStateDir(basedir + "/state");
+  
+  setPropertiesDir(basedir);
   setConfigFile(basedir + "/stellarc");
 
   setCacheFile(basedir + "/stella.cache");
@@ -64,6 +67,9 @@ OSystemGP2X::OSystemGP2X() : OSystem()
   // Set event arrays to a known state
   myPreviousEvents = new uInt8[8];  memset(myPreviousEvents, 0, 8);
   myCurrentEvents  = new uInt8[8];  memset(myCurrentEvents, 0, 8);
+
+  // GP2X doesn't have windowed mode; it's always in fullscreen
+  clearCapability(CAP_WINDOWED);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,7 +80,7 @@ OSystemGP2X::~OSystemGP2X()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemGP2X::getTicks() const
+uInt32 OSystemGP2X::getTicks()
 {
 #ifdef HAVE_GETTIMEOFDAY
   timeval now;
@@ -101,7 +107,7 @@ void OSystemGP2X::setDefaultJoymap()
   myEventHandler->setDefaultJoyMapping(Event::ConsoleReset, kEmulationMode, 0, 10);	// L
   myEventHandler->setDefaultJoyMapping(Event::ConsoleSelect, kEmulationMode, 0, 11);	// R
   myEventHandler->setDefaultJoyMapping(Event::CmdMenuMode, kEmulationMode, 0, 12);	// A
-  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire1, kEmulationMode, 0, 13);	// B
+  myEventHandler->setDefaultJoyMapping(Event::JoystickZeroFire, kEmulationMode, 0, 13);	// B
   myEventHandler->setDefaultJoyMapping(Event::MenuMode, kEmulationMode, 0, 14);         // Y
 //  myEventHandler->setDefaultJoyMapping(Event::Pause, kEmulationMode, 0, 15);            // X
   myEventHandler->setDefaultJoyMapping(Event::VolumeIncrease, kEmulationMode, 0, 16);	// Vol+
