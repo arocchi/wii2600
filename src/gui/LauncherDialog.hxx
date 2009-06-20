@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: LauncherDialog.hxx,v 1.13 2005-08-22 18:17:10 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,33 +22,28 @@
 #ifndef LAUNCHER_DIALOG_HXX
 #define LAUNCHER_DIALOG_HXX
 
-#include "bspf.hxx"
-
-class ButtonWidget;
-class CommandSender;
-class ContextMenu;
 class DialogContainer;
-class GameList;
-class OptionsDialog;
-class GlobalPropsDialog;
-class LauncherFilterDialog;
-class OSystem;
-class Properties;
-class EditTextWidget;
-class RomInfoWidget;
+class LauncherOptionsDialog;
+class ProgressDialog;
+class CommandSender;
 class StaticTextWidget;
 class StringListWidget;
+class ButtonWidget;
+class OSystem;
 
 #include "Dialog.hxx"
-#include "FSNode.hxx"
-#include "StringList.hxx"
+#include "GameList.hxx"
+#include "bspf.hxx"
 
-// These must be accessible from dialogs created by this class
 enum {
+  kStartCmd   = 'STRT',
+  kOptionsCmd = 'OPTI',
+  kReloadCmd  = 'RELO',
+  kQuitCmd    = 'QUIT',
+  kChooseRomDirCmd  = 'roms',  // rom select
+  kChooseSnapDirCmd = 'snps',  // snap select
   kRomDirChosenCmd  = 'romc',  // rom chosen
-  kSnapDirChosenCmd = 'snpc',  // snap chosen
-  kReloadRomDirCmd  = 'rdrl',  // reload the current listing
-  kReloadFiltersCmd = 'rlfl'   // reload filtering options and current listing
+  kSnapDirChosenCmd = 'snpc'   // snap chosen
 };
 
 class LauncherDialog : public Dialog
@@ -58,62 +53,32 @@ class LauncherDialog : public Dialog
                    int x, int y, int w, int h);
     ~LauncherDialog();
 
-    /**
-      Get MD5sum for the currently selected file
-
-      @return md5sum if a valid ROM file, else the empty string
-    */
-    string selectedRomMD5();
-
-  protected:
-    virtual void handleKeyDown(int ascii, int keycode, int modifiers);
-    virtual void handleMouseDown(int x, int y, int button, int clickCount);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
+  protected:
+    void updateListing(bool fullReload = false);
     void loadConfig();
-    void updateListing();
 
-  private:
-    void enableButtons(bool enable);
-    void loadDirListing();
-    void loadRomInfo();
-    void handleContextMenu();
-    void setListFilters();
-    bool matchPattern(const string& s, const string& pattern);
-
-  private:
+  protected:
     ButtonWidget* myStartButton;
-    ButtonWidget* myPrevDirButton;
     ButtonWidget* myOptionsButton;
+    ButtonWidget* myReloadButton;
     ButtonWidget* myQuitButton;
 
     StringListWidget* myList;
-    StaticTextWidget* myDirLabel;
-    StaticTextWidget* myDir;
+    StaticTextWidget* myNote;
     StaticTextWidget* myRomCount;
-    EditTextWidget*   myPattern;
     GameList*         myGameList;
 
-    OptionsDialog*    myOptions;
-    RomInfoWidget*    myRomInfoWidget;
+    LauncherOptionsDialog* myOptions;
+    ProgressDialog*        myProgressBar;
 
-    ContextMenu*          myMenu;
-    GlobalPropsDialog*    myGlobalProps;
-    LauncherFilterDialog* myFilters;
-
-    int mySelectedItem;
-    int myRomInfoSize;
-    FilesystemNode myCurrentNode;
-
-    bool myShowDirs;
-    StringList myRomExts;
-
-    enum {
-      kStartCmd   = 'STRT',
-      kPrevDirCmd = 'PRVD',
-      kOptionsCmd = 'OPTI',
-      kQuitCmd    = 'QUIT'
-    };
+  private:
+    void enableButtons(bool enable);
+    void loadListFromDisk();
+    void loadListFromCache();
+    void createListCache();
+    string MD5FromFile(const string& path);
 };
 
 #endif

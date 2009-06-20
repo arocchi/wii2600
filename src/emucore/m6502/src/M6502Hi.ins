@@ -13,17 +13,115 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.ins 1724 2009-05-13 13:55:40Z stephena $
+// $Id: M6502Hi.ins,v 1.2 2005-06-16 01:11:28 stephena Exp $
+//============================================================================
+
+/**
+  Code to handle addressing modes and branch instructions for
+  high compatibility emulation
+
+  @author  Bradford W. Mott
+  @version $Id: M6502Hi.ins,v 1.2 2005-06-16 01:11:28 stephena Exp $
+*/
+
+#ifndef NOTSAMEPAGE
+  #define NOTSAMEPAGE(_addr1, _addr2) (((_addr1) ^ (_addr2)) & 0xff00)
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//============================================================================
+//
+// MM     MM  6666  555555  0000   2222
+// MMMM MMMM 66  66 55     00  00 22  22
+// MM MMM MM 66     55     00  00     22
+// MM  M  MM 66666  55555  00  00  22222  --  "A 6502 Microprocessor Emulator"
+// MM     MM 66  66     55 00  00 22
+// MM     MM 66  66 55  55 00  00 22
+// MM     MM  6666   5555   0000  222222
+//
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
+//
+// See the file "license" for information on usage and redistribution of
+// this file, and for a DISCLAIMER OF ALL WARRANTIES.
+//
+// $Id: M6502Hi.ins,v 1.2 2005-06-16 01:11:28 stephena Exp $
 //============================================================================
 
 /** 
-  Code and cases to emulate each of the 6502 instructions.
-
-  Recompile with the following:
-    'm4 M6502.m4 > M6502.ins'
+  Code and cases to emulate each of the 6502 instruction 
 
   @author  Bradford W. Mott
-  @version $Id: M6502.m4 1724 2009-05-13 13:55:40Z stephena $
+  @version $Id: M6502Hi.ins,v 1.2 2005-06-16 01:11:28 stephena Exp $
 */
 
 #ifndef NOTSAMEPAGE
@@ -174,109 +272,33 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 case 0x69:
 {
   operand = peek(PC++);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -286,33 +308,28 @@ case 0x65:
   operand = peek(peek(PC++));
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -325,33 +342,28 @@ case 0x75:
   operand = peek(address); 
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -363,33 +375,28 @@ case 0x6d:
   operand = peek(address);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -403,33 +410,28 @@ case 0x7d:
     operand = peek((high | low) + X);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -443,33 +445,28 @@ case 0x79:
     operand = peek((high | low) + Y);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -484,33 +481,28 @@ case 0x61:
   operand = peek(address);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -525,33 +517,28 @@ case 0x71:
     operand = peek((high | low) + Y);
 }
 {
+  uInt8 oldA = A;
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -1732,31 +1719,35 @@ case 0xef:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1773,31 +1764,35 @@ case 0xff:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1814,31 +1809,35 @@ case 0xfb:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1852,31 +1851,35 @@ case 0xe7:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1892,31 +1895,35 @@ case 0xf7:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1934,31 +1941,35 @@ case 0xe3:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -1976,31 +1987,35 @@ case 0xf3:
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3098,6 +3113,7 @@ case 0x6f:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3108,31 +3124,24 @@ case 0x6f:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3147,6 +3156,7 @@ case 0x7f:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3157,31 +3167,24 @@ case 0x7f:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3196,6 +3199,7 @@ case 0x7b:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3206,31 +3210,24 @@ case 0x7b:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3242,6 +3239,7 @@ case 0x67:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3252,31 +3250,24 @@ case 0x67:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3290,6 +3281,7 @@ case 0x77:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3300,31 +3292,24 @@ case 0x77:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3340,6 +3325,7 @@ case 0x63:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3350,31 +3336,24 @@ case 0x63:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3390,6 +3369,7 @@ case 0x73:
   poke(operandAddress, operand);
 }
 {
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -3400,31 +3380,24 @@ case 0x73:
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }
 break;
@@ -3506,31 +3479,35 @@ case 0xeb:
   operand = peek(PC++);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3539,31 +3516,35 @@ case 0xe5:
   operand = peek(peek(PC++));
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3575,31 +3556,35 @@ case 0xf5:
   operand = peek(address); 
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3610,31 +3595,35 @@ case 0xed:
   operand = peek(address);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3647,31 +3636,35 @@ case 0xfd:
     operand = peek((high | low) + X);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3684,31 +3677,35 @@ case 0xf9:
     operand = peek((high | low) + Y);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3722,31 +3719,35 @@ case 0xe1:
   operand = peek(address);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 
@@ -3760,31 +3761,35 @@ case 0xf1:
     operand = peek((high | low) + Y);
 }
 {
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }
 break;
 

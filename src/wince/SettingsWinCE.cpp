@@ -8,13 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
 //============================================================================
 
 #include <sstream>
@@ -27,8 +26,10 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SettingsWinCE::SettingsWinCE(OSystem* osystem) : Settings(osystem) 
 {
-  setInternal("romdir", (string) getcwd() + "\\Roms\\");
-  setInternal("wince_orientation", "0");
+  //set("GameFilename", "Mega Force (1982) (20th Century Fox).bin");
+  //set("GameFilename", "Enduro (1983) (Activision).bin");
+  //set("GameFilename", "Night Driver (1978) (Atari).bin");
+  set("romdir", (string) getcwd() + '\\');
 }
 
 SettingsWinCE::~SettingsWinCE()

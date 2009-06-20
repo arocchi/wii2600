@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: StringList.hxx,v 1.3 2005-06-16 00:56:00 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -26,7 +26,7 @@
 #include "bspf.hxx"
 
 
-class StringList : public Common::Array<string>
+class StringList : public GUI::Array<string>
 {
   public:
     void push_back(const char *str)
@@ -39,36 +39,6 @@ class StringList : public Common::Array<string>
     {
       ensureCapacity(_size + 1);
       _data[_size++] = str;
-    }
-
-    static string removePattern(const string& str, const string& pattern)
-    {
-      // This can probably be made more efficient ...
-      string tmp;
-      for(unsigned int i = 0; i < str.length(); ++i)
-      {
-        bool match = false;
-        for(unsigned int j = 0; j < pattern.length(); ++j)
-        {
-          if(str[i] == pattern[j])
-          {
-            match = true;
-            break;
-          }
-        }
-        if(!match) tmp += str[i];
-      }
-      return tmp;
-    }
-};
-
-class StringMap : public Common::Array< pair<string,string> >
-{
-  public:
-    void push_back(const string& name, const string& tag)
-    {
-      ensureCapacity(_size + 1);
-      _data[_size++] = make_pair(name, tag);
     }
 };
 

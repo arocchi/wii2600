@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ScrollBarWidget.cxx,v 1.11 2005-08-10 12:23:42 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -27,55 +27,58 @@
 
 /*
  * TODO:
+ * - Auto-repeat: if user clicks & holds on one of the arrows, then after a
+ *   brief delay, it should start to contiously scroll
  * - Allow for a horizontal scrollbar, too?
  * - If there are less items than fit on one pages, no scrolling can be done
  *   and we thus should not highlight the arrows/slider.
+ * - Allow the mouse wheel to scroll more than one line at a time
  */
 
-#define UP_DOWN_BOX_HEIGHT	12
+#define UP_DOWN_BOX_HEIGHT	10
+#define WHEEL_LINES 2
 
 // Up arrow
 static unsigned int up_arrow[8] = {
-  0x00011000,
-  0x00111100,
-  0x01111110,
-  0x11111111,
   0x00000000,
   0x00000000,
-  0x00000000,
-  0x00000000
+  0x00001000,
+  0x00001000,
+  0x00011100,
+  0x00011100,
+  0x00110110,
+  0x00100010,
 };
 
 // Down arrow
 static unsigned int down_arrow[8] = {
-  0x11111111,
-  0x01111110,
-  0x00111100,
-  0x00011000,
   0x00000000,
   0x00000000,
-  0x00000000,
-  0x00000000
+  0x00100010,
+  0x00110110,
+  0x00011100,
+  0x00011100,
+  0x00001000,
+  0x00001000,
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-ScrollBarWidget::ScrollBarWidget(GuiObject* boss, const GUI::Font& font,
-                                 int x, int y, int w, int h)
-  : Widget(boss, font, x, y, w, h), CommandSender(boss),
-    _numEntries(0),
-    _entriesPerPage(0),
-    _currentPos(0),
-    _wheel_lines(0),
-    _part(kNoPart),
-    _draggingPart(kNoPart),
-    _sliderHeight(0),
-    _sliderPos(0),
-    _sliderDeltaMouseDownPos(0)
+ScrollBarWidget::ScrollBarWidget(GuiObject* boss, int x, int y, int w, int h)
+    : Widget(boss, x, y, w, h), CommandSender(boss)
 {
   _flags = WIDGET_ENABLED | WIDGET_TRACK_MOUSE | WIDGET_CLEARBG;
   _type = kScrollBarWidget;
-  _bgcolor = kWidColor;
-  _bgcolorhi = kWidColor;
+
+  _part = kNoPart;
+  _sliderHeight = 0;
+  _sliderPos = 0;
+
+  _draggingPart = kNoPart;
+  _sliderDeltaMouseDownPos = 0;
+
+  _numEntries = 0;
+  _entriesPerPage = 0;
+  _currentPos = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -134,9 +137,9 @@ void ScrollBarWidget::handleMouseWheel(int x, int y, int direction)
     return;
 
   if(direction < 0)
-    _currentPos -= _wheel_lines ? _wheel_lines : _WHEEL_LINES;
+    _currentPos -= WHEEL_LINES;
   else
-    _currentPos += _wheel_lines ? _wheel_lines : _WHEEL_LINES;
+    _currentPos += WHEEL_LINES;
 
   // Make sure that _currentPos is still inside the bounds
   checkBounds(old_pos);
@@ -220,7 +223,6 @@ void ScrollBarWidget::handleMouseLeft(int button)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ScrollBarWidget::recalc()
 {
-//cerr << "ScrollBarWidget::recalc()\n";
   if(_numEntries > _entriesPerPage)
   {
     _sliderHeight = (_h - 2 * UP_DOWN_BOX_HEIGHT) * _entriesPerPage / _numEntries;
@@ -245,37 +247,37 @@ void ScrollBarWidget::recalc()
 void ScrollBarWidget::drawWidget(bool hilite)
 {
 //cerr << "ScrollBarWidget::drawWidget\n";
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
   int bottomY = _y + _h;
   bool isSinglePage = (_numEntries <= _entriesPerPage);
 
-  s.frameRect(_x, _y, _w, _h, kShadowColor);
+  fb.frameRect(_x, _y, _w, _h, kShadowColor);
 
   if(_draggingPart != kNoPart)
     _part = _draggingPart;
 
   // Up arrow
-  s.frameRect(_x, _y, _w, UP_DOWN_BOX_HEIGHT, kColor);
-  s.drawBitmap(up_arrow, _x+2, _y+4, isSinglePage ? kColor :
-               (hilite && _part == kUpArrowPart) ? kScrollColorHi : kScrollColor, 4);
+  fb.frameRect(_x, _y, _w, UP_DOWN_BOX_HEIGHT, kColor);
+  fb.drawBitmap(up_arrow, _x, _y,
+                isSinglePage ? kColor :
+                (hilite && _part == kUpArrowPart) ? kTextColorHi : kTextColor);
 
   // Down arrow
-  s.frameRect(_x, bottomY - UP_DOWN_BOX_HEIGHT, _w, UP_DOWN_BOX_HEIGHT, kColor);
-  s.drawBitmap(down_arrow, _x+2, bottomY - UP_DOWN_BOX_HEIGHT + 4, isSinglePage ? kColor :
-               (hilite && _part == kDownArrowPart) ? kScrollColorHi : kScrollColor);
+  fb.frameRect(_x, bottomY - UP_DOWN_BOX_HEIGHT, _w, UP_DOWN_BOX_HEIGHT, kColor);
+  fb.drawBitmap(down_arrow, _x, bottomY - UP_DOWN_BOX_HEIGHT,
+                isSinglePage ? kColor :
+                (hilite && _part == kDownArrowPart) ? kTextColorHi : kTextColor);
 
   // Slider
   if(!isSinglePage)
   {
-    s.fillRect(_x, _y + _sliderPos, _w, _sliderHeight,
-              (hilite && _part == kSliderPart) ? kScrollColorHi : kScrollColor);
-    s.frameRect(_x, _y + _sliderPos, _w, _sliderHeight, kColor);
+    fb.fillRect(_x, _y + _sliderPos, _w, _sliderHeight,
+               (hilite && _part == kSliderPart) ? kTextColorHi : kTextColor);
+    fb.frameRect(_x, _y + _sliderPos, _w, _sliderHeight, kColor);
     int y = _y + _sliderPos + _sliderHeight / 2;
-    s.hLine(_x + 2, y - 2, _x + _w - 3, kWidColor);
-    s.hLine(_x + 2, y,     _x + _w - 3, kWidColor);
-    s.hLine(_x + 2, y + 2, _x + _w - 3, kWidColor);
+    OverlayColor color = (hilite && _part == kSliderPart) ? kColor : kShadowColor;
+    fb.hLine(_x + 2, y - 2, _x + _w - 3, color);
+    fb.hLine(_x + 2, y,     _x + _w - 3, color);
+    fb.hLine(_x + 2, y + 2, _x + _w - 3, color);
   }
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int ScrollBarWidget::_WHEEL_LINES = 4;

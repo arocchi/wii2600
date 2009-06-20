@@ -8,13 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // Windows CE Port by Kostas Nakos
-// $Id$
 //============================================================================
 
 #ifndef OSYSTEM_WINCE_HXX
@@ -26,14 +25,13 @@
 class OSystemWinCE : public OSystem
 {
   public:
-    OSystemWinCE(const string& path);
+    OSystemWinCE();
     virtual ~OSystemWinCE();
 
   public:
     virtual void mainLoop();
-	virtual uInt32 getTicks(void) const;
+	virtual uInt32 getTicks(void);
     virtual void setFramerate(uInt32 framerate);
-	virtual void getScreenDimensions(int& width, int& height);
 };
 
 #endif

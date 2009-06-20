@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EditableWidget.hxx,v 1.8 2005-10-09 20:41:56 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -38,15 +38,14 @@ enum {
 class EditableWidget : public Widget, public CommandSender
 {
   public:
-    EditableWidget(GuiObject *boss, const GUI::Font& font,
-                   int x, int y, int w, int h);
+    EditableWidget(GuiObject *boss, int x, int y, int w, int h);
     virtual ~EditableWidget();
 
     virtual void setEditString(const string& str);
     virtual const string& getEditString() const { return _editString; }
 
-    bool isEditable() const	 { return _editable; }
-    void setEditable(bool editable);
+    bool isEditable() const	         { return _editable; }
+    void setEditable(bool editable)  { _editable = editable; }
 
     virtual bool handleKeyDown(int ascii, int keycode, int modifiers);
 
@@ -54,9 +53,9 @@ class EditableWidget : public Widget, public CommandSender
     virtual bool wantsFocus() { return _editable; }
 
   protected:
-    virtual void startEditMode() { setFlags(WIDGET_WANTS_RAWDATA);   }
-    virtual void endEditMode()   { clearFlags(WIDGET_WANTS_RAWDATA); }
-    virtual void abortEditMode() { clearFlags(WIDGET_WANTS_RAWDATA); }
+    virtual void startEditMode() = 0;
+    virtual void endEditMode() = 0;
+    virtual void abortEditMode() = 0;
 
     virtual GUI::Rect getEditRect() const = 0;
     virtual int getCaretOffset() const;
@@ -68,15 +67,10 @@ class EditableWidget : public Widget, public CommandSender
 
   private:
     // Line editing
-    bool specialKeys(int ascii, int keycode);
+    bool specialKeys(int keycode);
     bool killChar(int direction);
     bool killLine(int direction);
     bool killLastWord();
-    bool moveWord(int direction);
-
-    // Clipboard
-    void copySelectedText();
-    void pasteSelectedText();
 
   protected:
     bool   _editable;
@@ -89,8 +83,6 @@ class EditableWidget : public Widget, public CommandSender
     bool  _caretInverse;
 
     int   _editScrollOffset;
-
-    static string _clippedText;
 };
 
 #endif

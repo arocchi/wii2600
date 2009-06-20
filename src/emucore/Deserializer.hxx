@@ -8,30 +8,31 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Deserializer.hxx,v 1.6 2005-06-16 01:11:27 stephena Exp $
 //============================================================================
 
 #ifndef DESERIALIZER_HXX
 #define DESERIALIZER_HXX
 
-#include <fstream>
 #include "bspf.hxx"
+#include <fstream>
+#include <string>
 
 /**
   This class implements a Deserializer device, whereby data is
   deserialized from an input binary file in a system-independent
   way.
 
-  All bytes and ints should be cast to their appropriate data type upon
-  method return.
+  All longs should be cast to their appropriate data type upon method
+  return.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Deserializer.hxx,v 1.6 2005-06-16 01:11:27 stephena Exp $
 */
 class Deserializer
 {
@@ -65,23 +66,11 @@ class Deserializer
     void close(void);
 
     /**
-      Answers whether the deserializer is currently opened
+      Reads a long value from the current input stream.
+
+      @result The long value which has been read from the stream.
     */
-    bool isOpen(void);
-
-    /**
-      Reads a byte value (8-bit) from the current input stream.
-
-      @result The char value which has been read from the stream.
-    */
-    char getByte(void);
-
-    /**
-      Reads an int value (32-bit) from the current input stream.
-
-      @result The int value which has been read from the stream.
-    */
-    int getInt(void);
+    long getLong(void);
 
     /**
       Reads a string from the current input stream.
@@ -99,12 +88,13 @@ class Deserializer
 
   private:
     // The stream to get the deserialized data from.
-    fstream myStream;
+    ifstream* myStream;
 
-    enum {
-      TruePattern  = 0xfe,
-      FalsePattern = 0x01
-    };
+    // A long pattern that represents a boolean value of true.
+    long TruePattern;
+
+    // A long pattern that represents a boolean value of false.
+    long FalsePattern;
 };
 
 #endif

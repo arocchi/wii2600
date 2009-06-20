@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsMACOSX.cxx,v 1.6 2005-08-25 01:21:08 markgrebe Exp $
 //============================================================================
 
 #include <cassert>
@@ -27,24 +27,21 @@
 #include "bspf.hxx"
 #include "Console.hxx"
 #include "EventHandler.hxx"
-#include "Version.hxx"
 
 #include "Settings.hxx"
 #include "SettingsMACOSX.hxx"
 
 extern "C" {
-  void prefsSetString(char *key, char *value);
-  void prefsGetString(char *key, char *value);
-  void prefsSave(void);
+void prefsSetString(char *key, char *value);
+void prefsGetString(char *key, char *value);
+void prefsSave(void);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SettingsMACOSX::SettingsMACOSX(OSystem* osystem)
-  : Settings(osystem)
+    : Settings(osystem)
 {
-  setInternal("video", "gl");        // Use opengl mode by default
-  setInternal("gl_lib", "libGL.so"); // Try this one first, then let the system decide
-  setInternal("gl_vsync", "true");   // OSX almost always supports vsync; let's use it
+  set("video", "opengl");          // Use opengl mode by default
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -56,27 +53,27 @@ SettingsMACOSX::~SettingsMACOSX()
 void SettingsMACOSX::loadConfig()
 {
   string key, value;
-  char cvalue[2048];
+  char cvalue[1024];
   
-  // Read key/value pairs from the plist file
-  const SettingsArray& settings = getInternalSettings();
-  for(unsigned int i = 0; i < settings.size(); ++i)
-  {
-    prefsGetString((char *) settings[i].key.c_str(), cvalue);
-    if(cvalue[0] != 0)
-      setInternal(settings[i].key, cvalue, i, true);
-  }
+  // Write out each of the key and value pairs
+  for(uInt32 i = 0; i < mySize; ++i)
+	{
+	prefsGetString((char *) mySettings[i].key.c_str(),cvalue);
+	if (cvalue[0] != 0)
+		mySettings[i].value.assign(cvalue);
+	}
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SettingsMACOSX::saveConfig()
 {
   // Write out each of the key and value pairs
-  const SettingsArray& settings = getInternalSettings();
-  for(unsigned int i = 0; i < settings.size(); ++i)
-  {
-    prefsSetString((char *) settings[i].key.c_str(),
-                   (char *) settings[i].value.c_str());
-  }
-  prefsSave();
+  for(uInt32 i = 0; i < mySize; ++i)
+    if(mySettings[i].save)
+		{
+		prefsSetString((char *) mySettings[i].key.c_str(), 
+					   (char *) mySettings[i].value.c_str());
+		}
+   prefsSave();
 }
+

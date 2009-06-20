@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Menu.cxx,v 1.11 2005-09-25 23:14:00 urchlay Exp $
 //============================================================================
 
 #include "Dialog.hxx"
@@ -25,12 +25,30 @@ class Properties;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Menu::Menu(OSystem* osystem)
-  : DialogContainer(osystem)
+    : DialogContainer(osystem)
 {
-  myBaseDialog = new OptionsDialog(myOSystem, this, 0, false);  // in game mode
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Menu::~Menu()
 {
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Menu::initialize()
+{
+  delete myBaseDialog;
+  myBaseDialog = new OptionsDialog(myOSystem, this);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Menu::setGameProfile(Properties& props)
+{
+  ((OptionsDialog*)myBaseDialog)->setGameProfile(props);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Menu::enterCheatMode()
+{
+  ((OptionsDialog*)myBaseDialog)->enterCheatMode();
 }

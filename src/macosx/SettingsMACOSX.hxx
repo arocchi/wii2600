@@ -8,24 +8,27 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SettingsMACOSX.hxx,v 1.3 2005-06-16 01:11:29 stephena Exp $
 //============================================================================
 
 #ifndef SETTINGS_MAC_OSX_HXX
 #define SETTINGS_MAX_OSX_HXX
 
-class OSystem;
+#include "bspf.hxx"
+
+class Console;
+
 
 /**
   This class defines Macintosh OSX system specific settings.
 
   @author  Mark Grebe
-  @version $Id$
+  @version $Id: SettingsMACOSX.hxx,v 1.3 2005-06-16 01:11:29 stephena Exp $
 */
 class SettingsMACOSX : public Settings
 {
@@ -52,7 +55,9 @@ class SettingsMACOSX : public Settings
       This method should be called to save the current settings to the
 	  standard Mac preferences.
     */
-    void saveConfig();
+	
+	void saveConfig();
+
 };
 
 #endif

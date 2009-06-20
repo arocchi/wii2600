@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputTextDialog.hxx,v 1.3 2005-10-06 17:28:55 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -24,49 +24,31 @@
 
 class GuiObject;
 class StaticTextWidget;
-class EditTextWidget;
 
 #include "Dialog.hxx"
 #include "Command.hxx"
-
-typedef Common::Array<EditTextWidget*> InputWidget;
+#include "EditTextWidget.hxx"
 
 class InputTextDialog : public Dialog, public CommandSender
 {
   public:
-    InputTextDialog(GuiObject* boss, const GUI::Font& font,
-                    const StringList& labels);
-    virtual ~InputTextDialog();
+    InputTextDialog(GuiObject* boss, const GUI::Font& font, int x, int y);
 
-    /** Place the input dialog onscreen and center it */
-    void show();
+    const string& getResult() { return _input->getEditString(); }
 
-    /** Show input dialog onscreen at the specified coordinates */
-    void show(uInt32 x, uInt32 y);
-
-    const string& getResult(int idx = 0);
-
-    void setEditString(const string& str, int idx = 0);
-    void setEmitSignal(int cmd) { myCmd = cmd; }
+    void setEditString(const string& str) { _input->setEditString(str); }
+    void setEmitSignal(int cmd) { _cmd = cmd; }
     void setTitle(const string& title);
-
-    void setFocus(int idx = 0);
-
-    /** This dialog uses its own positioning, so we override Dialog::center() */
-    void center();
 
   protected:
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
   private:
-    InputWidget       myInput;
-    StaticTextWidget* myTitle;
+    StaticTextWidget* _title;
+    EditTextWidget*   _input;
 
-    bool myEnableCenter;
-    bool myErrorFlag;
-    int	 myCmd;
-
-    uInt32 myXOrig, myYOrig;
+    int	 _cmd;
+    bool _errorFlag;
 };
 
 #endif

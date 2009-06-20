@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TiaOutputWidget.hxx,v 1.2 2005-08-31 22:34:43 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -33,8 +33,7 @@ class TiaZoomWidget;
 class TiaOutputWidget : public Widget, public CommandSender
 {
   public:
-    TiaOutputWidget(GuiObject *boss, const GUI::Font& font,
-                    int x, int y, int w, int h);
+    TiaOutputWidget(GuiObject *boss, int x, int y, int w, int h);
     virtual ~TiaOutputWidget();
 
     void loadConfig();
@@ -64,10 +63,6 @@ class TiaOutputWidget : public Widget, public CommandSender
     TiaZoomWidget* myZoom;
 
     int myClickX, myClickY;
-
-    // Create this buffer once, instead of allocating it each time the
-    // TIA image is redrawn
-    uInt32 myLineBuffer[320];
 };
 
 #endif

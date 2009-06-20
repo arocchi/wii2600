@@ -8,25 +8,23 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott
+// Copyright (c) 1995-2005 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIASnd.cxx,v 1.3 2005-10-09 17:31:47 stephena Exp $
 //============================================================================
 
 #include "System.hxx"
 #include "TIASnd.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TIASound::TIASound(Int32 outputFrequency, Int32 tiaFrequency, uInt32 channels)
-  : myOutputFrequency(outputFrequency),
-    myTIAFrequency(tiaFrequency),
-    myChannels(channels),
-    myOutputCounter(0),
-    myVolumePercentage(100),
-    myVolumeClip(128)
+TIASound::TIASound(Int32 outputFrequency, uInt32 channels)
+    : myOutputFrequency(outputFrequency),
+      myChannels(channels),
+      myOutputCounter(0),
+      myVolumePercentage(100)
 {
   reset();
 }
@@ -47,27 +45,18 @@ void TIASound::reset()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void TIASound::outputFrequency(Int32 freq)
+void TIASound::outputFrequency(uInt32 freq)
 {
   myOutputFrequency = freq;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void TIASound::tiaFrequency(Int32 freq)
-{
-  myTIAFrequency = freq;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TIASound::channels(uInt32 number)
 {
-  myChannels = number == 2 ? 2 : 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void TIASound::clipVolume(bool clip)
-{
-  myVolumeClip = clip ? 128 : 0;
+  if(number == 2)
+    myChannels = 2;
+  else
+    myChannels = 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -138,7 +127,9 @@ uInt8 TIASound::get(uInt16 address)
 void TIASound::volume(uInt32 percent)
 {
   if((percent >= 0) && (percent <= 100))
+  {
     myVolumePercentage = percent;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -359,24 +350,27 @@ void TIASound::process(uInt8* buffer, uInt32 samples)
     if(myChannels == 1)
     {
       // Handle mono sample generation
-      while((samples > 0) && (myOutputCounter >= myTIAFrequency))
+      while((samples > 0) && (myOutputCounter >= TIASoundFrequency))
       {
         *(buffer++) = (((myP4[0] & 8) ? v0 : 0) + 
-            ((myP4[1] & 8) ? v1 : 0)) + myVolumeClip;
-        myOutputCounter -= myTIAFrequency;
+            ((myP4[1] & 8) ? v1 : 0)) + 128;
+        myOutputCounter -= TIASoundFrequency;
         samples--;
       }
     }
     else
     {
       // Handle stereo sample generation
-      while((samples > 0) && (myOutputCounter >= myTIAFrequency))
+      while((samples > 0) && (myOutputCounter >= TIASoundFrequency))
       {
-        *(buffer++) = ((myP4[0] & 8) ? v0 : 0) + myVolumeClip;
-        *(buffer++) = ((myP4[1] & 8) ? v1 : 0) + myVolumeClip;
-        myOutputCounter -= myTIAFrequency;
+        *(buffer++) = ((myP4[0] & 8) ? v0 : 0) + 128;
+        *(buffer++) = ((myP4[1] & 8) ? v1 : 0) + 128;
+        myOutputCounter -= TIASoundFrequency;
         samples--;
       }
     }
   }
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+const int TIASound::TIASoundFrequency = 31400;

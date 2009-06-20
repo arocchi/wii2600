@@ -8,159 +8,154 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2005 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBuffer.cxx,v 1.67 2005-10-18 18:49:46 stephena Exp $
 //============================================================================
 
-#include <algorithm>
 #include <sstream>
 
 #include "bspf.hxx"
-
-#include "CommandMenu.hxx"
 #include "Console.hxx"
-#include "EventHandler.hxx"
 #include "Event.hxx"
-#include "Font.hxx"
-#include "Launcher.hxx"
-#include "Menu.hxx"
-#include "OSystem.hxx"
+#include "EventHandler.hxx"
 #include "Settings.hxx"
-#include "TIA.hxx"
-
+#include "MediaSrc.hxx"
 #include "FrameBuffer.hxx"
+#include "Font.hxx"
+#include "GuiUtils.hxx"
+#include "Menu.hxx"
+#include "CommandMenu.hxx"
+#include "Launcher.hxx"
+#include "OSystem.hxx"
 
-#ifdef DEBUGGER_SUPPORT
+#ifdef DEVELOPER_SUPPORT
   #include "Debugger.hxx"
 #endif
 
+#if defined(MAC_OSX)
+  #include "macOSXDisplay.h"
+#elif defined(PSP)
+  #include "DisplayPSP.hxx"
+#endif
+
+#include "stella.xpm"   // The Stella icon
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBuffer::FrameBuffer(OSystem* osystem)
-  : myOSystem(osystem),
-    myScreen(0),
-    myRedrawEntireFrame(true),
-    myUsePhosphor(false),
-    myPhosphorBlend(77),
-    myInitializedCount(0),
-    myPausedCount(0),
-    mySurfaceCount(0)
+   :  myOSystem(osystem),
+      theRedrawTIAIndicator(true),
+      theZoomLevel(2),
+      theMaxZoomLevel(2),
+      theAspectRatio(1.0),
+      myFrameRate(0),
+      myPauseStatus(false),
+      myMessageTime(0),
+      myMessageText(""),
+      myNumRedraws(0)
 {
-  myMsg.surface   = myStatsMsg.surface = NULL;
-  myMsg.surfaceID = myStatsMsg.surfaceID = -1;
-  myMsg.enabled   = myStatsMsg.enabled = false;
+  myBaseDim.x = myBaseDim.y = myBaseDim.w = myBaseDim.h = 0;
+  myImageDim = myScreenDim = myDesktopDim = myBaseDim;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBuffer::~FrameBuffer(void)
 {
-  // Free all allocated surfaces
-  while(!mySurfaceList.empty())
-  {
-    delete (*mySurfaceList.begin()).second;
-    mySurfaceList.erase(mySurfaceList.begin());
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
+void FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height,
+                             bool useAspect)
 {
+  bool isAlreadyInitialized = (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) > 0;
+
+  myBaseDim.w = (uInt16) width;
+  myBaseDim.h = (uInt16) height;
+  myFrameRate = myOSystem->frameRate();
+
   // Now (re)initialize the SDL video system
-  // These things only have to be done one per FrameBuffer creation
-  if(SDL_WasInit(SDL_INIT_VIDEO) == 0)
+  if(!isAlreadyInitialized)
   {
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
-    {
-      cerr << "ERROR: Couldn't initialize SDL: " << SDL_GetError() << endl;
-      return false;
-    }
-  }
-  myInitializedCount++;
+    Uint32 initflags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 
-  // Make sure this mode is even possible
-  // We only really need to worry about it in non-windowed environments,
-  // where requesting a window that's too large will probably cause a crash
-#ifndef WINDOWED_SUPPORT
-  if(myOSystem->desktopWidth() < width || myOSystem->desktopHeight() < height)
-    return false;
+    if(SDL_Init(initflags) < 0)
+      return;
+
+    setWindowIcon();
+  }
+
+  // Calculate the desktop size
+  // This is really the job of SDL
+  myDesktopDim.w = myDesktopDim.h = 0;
+#if defined(UNIX)
+  SDL_SysWMinfo myWMInfo;
+  SDL_VERSION(&myWMInfo.version);
+  if(SDL_GetWMInfo(&myWMInfo) > 0 && myWMInfo.subsystem == SDL_SYSWM_X11)
+  {
+    myWMInfo.info.x11.lock_func();
+    myDesktopDim.w = DisplayWidth(myWMInfo.info.x11.display,
+                     DefaultScreen(myWMInfo.info.x11.display));
+    myDesktopDim.h = DisplayHeight(myWMInfo.info.x11.display,
+                     DefaultScreen(myWMInfo.info.x11.display));
+    myWMInfo.info.x11.unlock_func();
+  }
+#elif defined(WIN32)
+  myDesktopDim.w = (uInt16) GetSystemMetrics(SM_CXSCREEN);
+  myDesktopDim.h = (uInt16) GetSystemMetrics(SM_CYSCREEN);
+#elif defined(MAC_OSX)
+  myDesktopDim.w = macOSXDisplayWidth();
+  myDesktopDim.h = macOSXDisplayHeight();
+#elif defined(PSP)
+  myDesktopDim.w = PSP_SCREEN_WIDTH;
+  myDesktopDim.h = PSP_SCREEN_HEIGHT;
 #endif
 
-  // Initialize SDL flags and set fullscreen flag
-  // This must be done before any modes are initialized
-  mySDLFlags = 0;
-#ifdef WINDOWED_SUPPORT
-  if(myOSystem->settings().getBool("fullscreen")) mySDLFlags = SDL_FULLSCREEN;
-#endif
+  // Set fullscreen flag
+  mySDLFlags = myOSystem->settings().getBool("fullscreen") ? SDL_FULLSCREEN : 0;
 
-  // Set the available video modes for this framebuffer
-  setAvailableVidModes(width, height);
+  // Set window title
+  setWindowTitle(title);
 
-  // Initialize video subsystem (make sure we get a valid mode)
-  VideoMode mode = getSavedVidMode();
-  if(width <= mode.screen_w && height <= mode.screen_h)
-  {
-    // Set window title and icon
-    setWindowTitle(title);
-    if(myInitializedCount == 1) setWindowIcon();
+  // Get the aspect ratio for the display if it's been enabled
+  theAspectRatio = 1.0;
+  if(useAspect)
+    setAspectRatio();
 
-    if(!initSubsystem(mode))
-    {
-      cerr << "ERROR: Couldn't initialize video subsystem" << endl;
-      return false;
-    }
-    else
-    {
-      myImageRect.setWidth(mode.image_w);
-      myImageRect.setHeight(mode.image_h);
-      myImageRect.moveTo(mode.image_x, mode.image_y);
+  // Get the maximum size of a window for the current desktop
+  theMaxZoomLevel = maxWindowSizeForScreen();
 
-      myScreenRect.setWidth(mode.screen_w);
-      myScreenRect.setHeight(mode.screen_h);
-
-      // Did we get the requested fullscreen state?
-      myOSystem->settings().setBool("fullscreen", fullScreen());
-    }
-  }
+  // Check to see if window size will fit in the screen
+  if((uInt32)myOSystem->settings().getInt("zoom") > theMaxZoomLevel)
+    theZoomLevel = theMaxZoomLevel;
   else
-    return false;
+    theZoomLevel = myOSystem->settings().getInt("zoom");
+
+  // Initialize video subsystem
+  initSubsystem();
+
+  // Set emulation palette if a console exists
+  if(&myOSystem->console())
+    setPalette(myOSystem->console().mediaSource().palette());
 
   // Enable unicode so we can see translated key events
   // (lowercase vs. uppercase characters)
   SDL_EnableUNICODE(1);
 
   // Erase any messages from a previous run
-  myMsg.counter = 0;
+  myMessageTime = 0;
 
-  // Create surfaces for TIA statistics and general messages
-  myStatsMsg.color = kBtnTextColor;
-  myStatsMsg.w = myOSystem->consoleFont().getMaxCharWidth() * 23 + 2;
-  myStatsMsg.h = (myOSystem->consoleFont().getFontHeight() + 2) * 2;
-
- if(myStatsMsg.surface == NULL)
-  {
-    myStatsMsg.surfaceID = allocateSurface(myStatsMsg.w, myStatsMsg.h);
-    myStatsMsg.surface   = surface(myStatsMsg.surfaceID);
-  }
-  if(myMsg.surface == NULL)
-  {
-    myMsg.surfaceID = allocateSurface(500, myOSystem->font().getFontHeight()+10);
-    myMsg.surface   = surface(myMsg.surfaceID);
-  }
-
-  // Finally, show some information about the framebuffer,
-  // but only on the first initialization
-  if(myInitializedCount == 1 && myOSystem->settings().getBool("showinfo"))
-    cout << about() << endl;
-
-  return true;
+  myUseDirtyRects = myOSystem->settings().getBool("dirtyrects");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::update()
 {
+  // Do any pre-frame stuff
+  preFrameUpdate();
+
   // Determine which mode we are in (from the EventHandler)
   // Take care of S_EMULATE mode here, otherwise let the GUI
   // figure out what to draw
@@ -168,84 +163,57 @@ void FrameBuffer::update()
   {
     case EventHandler::S_EMULATE:
     {
-      // Run the console for one frame
-      // Note that the debugger can cause a breakpoint to occur, which changes
-      // the EventHandler state 'behind our back' - we need to check for that
-      myOSystem->console().tia().update();
-  #ifdef DEBUGGER_SUPPORT
-      if(myOSystem->eventHandler().state() != EventHandler::S_EMULATE) break;
-  #endif
-      if(myOSystem->eventHandler().frying())
-        myOSystem->console().fry();
-
-      // And update the screen
-      drawTIA(myRedrawEntireFrame);
-
-      // Show frame statistics
-      if(myStatsMsg.enabled)
+      // Draw changes to the mediasource
+      if(!myPauseStatus)
       {
-        const ConsoleInfo& info = myOSystem->console().about();
-        char msg[30];
-        sprintf(msg, "%u @ %2.2ffps => %s",
-                myOSystem->console().tia().scanlines(),
-                myOSystem->console().getFramerate(), info.DisplayFormat.c_str());
-        myStatsMsg.surface->fillRect(0, 0, myStatsMsg.w, myStatsMsg.h, kBGColor);
-        myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          msg, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
-        myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          info.BankSwitch, 1, 15, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
-        myStatsMsg.surface->addDirtyRect(0, 0, 0, 0);  // force a full draw
-        myStatsMsg.surface->setPos(myImageRect.x() + 1, myImageRect.y() + 1);
-        myStatsMsg.surface->update();
+        myOSystem->console().mediaSource().update();
+        if(myOSystem->eventHandler().frying())
+          myOSystem->console().fry();
       }
+
+      // We always draw the screen, even if the core is paused
+      drawMediaSource();
+
+      // Draw any pending messages
+      if(myMessageTime > 0 && !myPauseStatus)
+        drawMessage();
       break;  // S_EMULATE
-    }
-
-    case EventHandler::S_PAUSE:
-    {
-      // Only update the screen if it's been invalidated
-      if(myRedrawEntireFrame)
-        drawTIA(true);
-
-      // Show a pause message every 5 seconds
-      if(myPausedCount++ >= 7*myOSystem->frameRate())
-      {
-        myPausedCount = 0;
-        showMessage("Paused", kMiddleCenter);
-      }
-      break;  // S_PAUSE
     }
 
     case EventHandler::S_MENU:
     {
-      // When onscreen messages are enabled in double-buffer mode,
-      // a full redraw is required
-      myOSystem->menu().draw(myMsg.enabled && type() == kGLBuffer);
+      // Only update the screen if it's been invalidated
+      if(theRedrawTIAIndicator)
+        drawMediaSource();
+
+      myOSystem->menu().draw();
       break;  // S_MENU
     }
 
     case EventHandler::S_CMDMENU:
     {
-      // When onscreen messages are enabled in double-buffer mode,
-      // a full redraw is required
-      myOSystem->commandMenu().draw(myMsg.enabled && type() == kGLBuffer);
+      // Only update the screen if it's been invalidated
+      if(theRedrawTIAIndicator)
+        drawMediaSource();
+
+      myOSystem->commandMenu().draw();
+
+      // Draw any pending messages
+      if(myMessageTime > 0 && !myPauseStatus)
+        drawMessage();
       break;  // S_CMDMENU
     }
 
     case EventHandler::S_LAUNCHER:
     {
-      // When onscreen messages are enabled in double-buffer mode,
-      // a full redraw is required
-      myOSystem->launcher().draw(myMsg.enabled && type() == kGLBuffer);
+      myOSystem->launcher().draw();
       break;  // S_LAUNCHER
     }
 
-#ifdef DEBUGGER_SUPPORT
+#ifdef DEVELOPER_SUPPORT
     case EventHandler::S_DEBUGGER:
     {
-      // When onscreen messages are enabled in double-buffer mode,
-      // a full redraw is required
-      myOSystem->debugger().draw(myMsg.enabled && type() == kGLBuffer);
+      myOSystem->debugger().draw();
       break;  // S_DEBUGGER
     }
 #endif
@@ -255,440 +223,140 @@ void FrameBuffer::update()
       break;
   }
 
-  // Draw any pending messages
-  if(myMsg.enabled)
-    drawMessage();
-
   // Do any post-frame stuff
   postFrameUpdate();
 
   // The frame doesn't need to be completely redrawn anymore
-  myRedrawEntireFrame = false;
+  theRedrawTIAIndicator = false;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::showMessage(const string& message, MessagePosition position,
-                              uInt32 color)
+void FrameBuffer::refresh(bool now)
+{
+//  cerr << "refreshTIA() " << myNumRedraws++ << endl;
+  theRedrawTIAIndicator = true;
+  if(now)
+  {
+    myMessageTime = 0;
+    update();
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FrameBuffer::showMessage(const string& message)
 {
   // Erase old messages on the screen
-  if(myMsg.counter > 0)
+  if(myMessageTime > 0)
   {
-    myRedrawEntireFrame = true;
-    refresh();
+    theRedrawTIAIndicator = true;
+    drawMediaSource();
   }
 
-  // Precompute the message coordinates
-  myMsg.text    = message;
-  myMsg.counter = uInt32(myOSystem->frameRate()) << 1; // Show message for 2 seconds
-  myMsg.color   = color;
-
-  myMsg.w = myOSystem->font().getStringWidth(myMsg.text) + 10;
-  myMsg.h = myOSystem->font().getFontHeight() + 8;
-  myMsg.surface->setWidth(myMsg.w);
-  myMsg.surface->setHeight(myMsg.h);
-  myMsg.position = position;
-  myMsg.enabled = true;
+  myMessageText = message;
+  myMessageTime = myFrameRate << 1;   // Show message for 2 seconds
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::toggleFrameStats()
+void FrameBuffer::hideMessage()
 {
-  showFrameStats(!myOSystem->settings().getBool("stats"));
+  // Erase old messages on the screen
+  if(myMessageTime > 0)
+    refresh(true);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::showFrameStats(bool enable)
+void FrameBuffer::pause(bool status)
 {
-  myOSystem->settings().setBool("stats", enable);
-  myStatsMsg.enabled = enable;
-  refresh();
+  myPauseStatus = status;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::enableMessages(bool enable)
+void FrameBuffer::setPalette(const uInt32* palette)
 {
-  if(enable)
+  for(uInt32 i = 0; i < 256; ++i)
   {
-    // Only re-anable frame stats if they were already enabled before
-    myStatsMsg.enabled = myOSystem->settings().getBool("stats");
-  }
-  else
-  {
-    // Temporarily disable frame stats
-    myStatsMsg.enabled = false;
+    Uint8 r, g, b;
 
-    // Erase old messages on the screen
-    myMsg.enabled = false;
-    myMsg.counter = 0;
+    r = (Uint8) ((palette[i] & 0x00ff0000) >> 16);
+    g = (Uint8) ((palette[i] & 0x0000ff00) >> 8);
+    b = (Uint8) (palette[i] & 0x000000ff);
 
-    refresh();
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void FrameBuffer::drawMessage()
-{
-  // Draw the bounded box and text
-  switch(myMsg.position)
-  {
-    case kTopLeft:
-      myMsg.x = 5;
-      myMsg.y = 5;
-      break;
-
-    case kTopCenter:
-      myMsg.x = (myImageRect.width() - myMsg.w) >> 1;
-      myMsg.y = 5;
-      break;
-
-    case kTopRight:
-      myMsg.x = myImageRect.width() - myMsg.w - 5;
-      myMsg.y = 5;
-      break;
-
-    case kMiddleLeft:
-      myMsg.x = 5;
-      myMsg.y = (myImageRect.height() - myMsg.h) >> 1;
-      break;
-
-    case kMiddleCenter:
-      myMsg.x = (myImageRect.width() - myMsg.w) >> 1;
-      myMsg.y = (myImageRect.height() - myMsg.h) >> 1;
-      break;
-
-    case kMiddleRight:
-      myMsg.x = myImageRect.width() - myMsg.w - 5;
-      myMsg.y = (myImageRect.height() - myMsg.h) >> 1;
-      break;
-
-    case kBottomLeft:
-      myMsg.x = 5;
-      myMsg.y = myImageRect.height() - myMsg.h - 5;
-      break;
-
-    case kBottomCenter:
-      myMsg.x = (myImageRect.width() - myMsg.w) >> 1;
-      myMsg.y = myImageRect.height() - myMsg.h - 5;
-      break;
-
-    case kBottomRight:
-      myMsg.x = myImageRect.width() - myMsg.w - 5;
-      myMsg.y = myImageRect.height() - myMsg.h - 5;
-      break;
+    myPalette[i] = mapRGB(r, g, b);
   }
 
-  myMsg.surface->setPos(myMsg.x + myImageRect.x(), myMsg.y + myImageRect.y());
-  myMsg.surface->fillRect(0, 0, myMsg.w-2, myMsg.h-4, kBGColor);
-  myMsg.surface->box(0, 0, myMsg.w, myMsg.h-2, kColor, kShadowColor);
-  myMsg.surface->drawString(&myOSystem->font(), myMsg.text, 4, 4,
-                               myMsg.w, myMsg.color, kTextAlignLeft);
-  myMsg.counter--;
-
-  // Either erase the entire message (when time is reached),
-  // or show again this frame
-  if(myMsg.counter == 0)  // Force an immediate update
-  {
-    myMsg.enabled = false;
-    refresh();
-  }
-  else
-  {
-    myMsg.surface->addDirtyRect(0, 0, 0, 0);
-    myMsg.surface->update();
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::refresh()
-{
-  // This method partly duplicates the behaviour in ::update()
-  // Here, however, make sure to redraw *all* surfaces applicable to the
-  // current EventHandler state
-  // We also check for double-buffered modes, and when present
-  // update both buffers accordingly
-  //
-  // This method is in essence a FULL refresh, putting all rendering
-  // buffers in a known, fully redrawn state
-
-  bool doubleBuffered = (type() == kGLBuffer);
-  switch(myOSystem->eventHandler().state())
-  {
-    case EventHandler::S_EMULATE:
-    case EventHandler::S_PAUSE:
-      drawTIA(true);
-      if(doubleBuffered)
-        drawTIA(true);
-      break;
-
-    case EventHandler::S_MENU:
-      drawTIA(true);
-      myOSystem->menu().draw(true);
-      if(doubleBuffered)
-      {
-        postFrameUpdate();
-        drawTIA(true);
-        myOSystem->menu().draw(true);
-      }
-      break;
-
-    case EventHandler::S_CMDMENU:
-      drawTIA(true);
-      myOSystem->commandMenu().draw(true);
-      if(doubleBuffered)
-      {
-        postFrameUpdate();
-        drawTIA(true);
-        myOSystem->commandMenu().draw(true);
-      }
-      break;
-
-    case EventHandler::S_LAUNCHER:
-      myOSystem->launcher().draw(true);
-      if(doubleBuffered)
-      {
-        postFrameUpdate();
-        myOSystem->launcher().draw(true);
-      }
-      break;
-
-  #ifdef DEBUGGER_SUPPORT
-    case EventHandler::S_DEBUGGER:
-      myOSystem->debugger().draw(true);
-      if(doubleBuffered)
-      {
-        postFrameUpdate();
-        myOSystem->debugger().draw(true);
-      }
-      break;
-  #endif
-
-    default:
-      break;
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int FrameBuffer::allocateSurface(int w, int h, bool useBase)
-{
-  // Create a new surface
-  FBSurface* surface = createSurface(w, h, useBase);
-
-  // Add it to the list
-  mySurfaceList.insert(make_pair(mySurfaceCount, surface));
-  mySurfaceCount++;
-
-  // Return a reference to it
-  return mySurfaceCount - 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FBSurface* FrameBuffer::surface(int id) const
-{
-  map<int,FBSurface*>::const_iterator iter = mySurfaceList.find(id);
-  return iter != mySurfaceList.end() ? iter->second : NULL;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::resetSurfaces()
-{
-  // Free all resources for each surface, then reload them
-  // Due to possible timing and/or synchronization issues, all free()'s
-  // are done first, then all reload()'s
-  // Any derived FrameBuffer classes that call this method should be
-  // aware of these restrictions, and act accordingly
-
-  map<int,FBSurface*>::iterator iter;
-  for(iter = mySurfaceList.begin(); iter != mySurfaceList.end(); ++iter)
-    iter->second->free();
-  for(iter = mySurfaceList.begin(); iter != mySurfaceList.end(); ++iter)
-    iter->second->reload();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 FrameBuffer::tiaPixel(uInt32 idx) const
-{
-  uInt8 c = *(myOSystem->console().tia().currentFrameBuffer() + idx);
-  uInt8 p = *(myOSystem->console().tia().previousFrameBuffer() + idx);
-
-  return (!myUsePhosphor ? myDefPalette[c] : myAvgPalette[c][p]);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::setTIAPalette(const uInt32* palette)
-{
-  int i, j;
-
-  // Set palette for normal fill
-  for(i = 0; i < 256; ++i)
-  {
-    Uint8 r = (palette[i] >> 16) & 0xff;
-    Uint8 g = (palette[i] >> 8) & 0xff;
-    Uint8 b = palette[i] & 0xff;
-
-    myDefPalette[i] = mapRGB(r, g, b);
-    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
-    {
-      myDefPalette24[i][0] = b;
-      myDefPalette24[i][1] = g;
-      myDefPalette24[i][2] = r;
-    }
-    else
-    {
-      myDefPalette24[i][0] = r;
-      myDefPalette24[i][1] = g;
-      myDefPalette24[i][2] = b;
-    }
-  }
-
-  // Set palette for phosphor effect
-  for(i = 0; i < 256; ++i)
-  {
-    for(j = 0; j < 256; ++j)
-    {
-      uInt8 ri = (palette[i] >> 16) & 0xff;
-      uInt8 gi = (palette[i] >> 8) & 0xff;
-      uInt8 bi = palette[i] & 0xff;
-      uInt8 rj = (palette[j] >> 16) & 0xff;
-      uInt8 gj = (palette[j] >> 8) & 0xff;
-      uInt8 bj = palette[j] & 0xff;
-
-      Uint8 r = (Uint8) getPhosphor(ri, rj);
-      Uint8 g = (Uint8) getPhosphor(gi, gj);
-      Uint8 b = (Uint8) getPhosphor(bi, bj);
-
-      myAvgPalette[i][j] = mapRGB(r, g, b);
-    }
-  }
-
-  myRedrawEntireFrame = true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::setUIPalette(const uInt32* palette)
-{
-  // Set palette for GUI
-  for(int i = 0, j = 256; i < kNumColors-256; ++i, ++j)
-  {
-    Uint8 r = (palette[i] >> 16) & 0xff;
-    Uint8 g = (palette[i] >> 8) & 0xff;
-    Uint8 b = palette[i] & 0xff;
-
-    myDefPalette[j] = mapRGB(r, g, b);
-    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
-    {
-      myDefPalette24[j][0] = b;
-      myDefPalette24[j][1] = g;
-      myDefPalette24[j][2] = r;
-    }
-    else
-    {
-      myDefPalette24[j][0] = r;
-      myDefPalette24[j][1] = g;
-      myDefPalette24[j][2] = b;
-    }
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::stateChanged(EventHandler::State state)
-{
-  // Make sure any onscreen messages are removed
-  myMsg.enabled = false;
-  myMsg.counter = 0;
-
-  myRedrawEntireFrame = true;
+  theRedrawTIAIndicator = true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::toggleFullscreen()
 {
-  setFullscreen(!fullScreen());
+  setFullscreen(!myOSystem->settings().getBool("fullscreen"));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::setFullscreen(bool enable)
 {
-#ifdef WINDOWED_SUPPORT
+  // Update the settings
+  myOSystem->settings().setBool("fullscreen", enable);
+
   if(enable)
     mySDLFlags |= SDL_FULLSCREEN;
   else
     mySDLFlags &= ~SDL_FULLSCREEN;
 
-  // Do a dummy call to getSavedVidMode to set up the modelists
-  // and have it point to the correct 'current' mode
-  getSavedVidMode();
+  if(!createScreen())
+    return;
 
-  // Do a mode change to the 'current' mode by not passing a '+1' or '-1'
-  // to changeVidMode()
-  changeVidMode(0);
-#endif
+  setCursorState();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBuffer::changeVidMode(int direction)
+void FrameBuffer::resize(Size size, Int8 zoom)
 {
-  EventHandler::State state = myOSystem->eventHandler().state();
-  bool inUIMode = (state == EventHandler::S_DEBUGGER ||
-                   state == EventHandler::S_LAUNCHER);
-
-  // Ignore any attempts to change video size while in UI mode
-  if(inUIMode && direction != 0)
-    return false;
-
-  // Only save mode changes in TIA mode with a valid selector
-  bool saveModeChange = !inUIMode && (direction == -1 || direction == +1);
-
-  if(direction == +1)
-    myCurrentModeList->next();
-  else if(direction == -1)
-    myCurrentModeList->previous();
-
-  VideoMode vidmode = myCurrentModeList->current(myOSystem->settings(), fullScreen());
-  if(setVidMode(vidmode))
+  switch(size)
   {
-    myImageRect.setWidth(vidmode.image_w);
-    myImageRect.setHeight(vidmode.image_h);
-    myImageRect.moveTo(vidmode.image_x, vidmode.image_y);
+    case PreviousSize:   // decrease size
+      if(myOSystem->settings().getBool("fullscreen"))
+        return;
+      if(theZoomLevel == 1)
+        theZoomLevel = theMaxZoomLevel;
+      else
+        theZoomLevel--;
+      break;
 
-    myScreenRect.setWidth(vidmode.screen_w);
-    myScreenRect.setHeight(vidmode.screen_h);
+    case NextSize:       // increase size
+      if(myOSystem->settings().getBool("fullscreen"))
+        return;
+      if(theZoomLevel == theMaxZoomLevel)
+        theZoomLevel = 1;
+      else
+        theZoomLevel++;
+      break;
 
-    // Did we get the requested fullscreen state?
-    myOSystem->settings().setBool("fullscreen", fullScreen());
+    case GivenSize:      // use 'zoom' quantity
+      if(zoom < 1)
+        theZoomLevel = 1;
+      else if((uInt32)zoom > theMaxZoomLevel)
+        theZoomLevel = theMaxZoomLevel;
+      else
+        theZoomLevel = zoom;
+      break;
 
-    if(!inUIMode)
-    {
-      setCursorState();
-      if(direction != 0)  // only show message when mode actually changes
-        showMessage(vidmode.gfxmode.description);
-    }
-    if(saveModeChange)
-      myOSystem->settings().setString("tia_filter", vidmode.gfxmode.name);
-
-    refresh();
+    default:   // should never happen
+      return;
+      break;
   }
-  else
-    return false;
 
-  return true;
-/*
-cerr << "New mode:" << endl
-	<< "    screen w = " << newmode.screen_w << endl
-	<< "    screen h = " << newmode.screen_h << endl
-	<< "    image x  = " << newmode.image_x << endl
-	<< "    image y  = " << newmode.image_y << endl
-	<< "    image w  = " << newmode.image_w << endl
-	<< "    image h  = " << newmode.image_h << endl
-	<< "    zoom     = " << newmode.zoom << endl
-	<< "    name     = " << newmode.name << endl
-	<< endl;
-*/
+  if(!createScreen())
+    return;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::setCursorState()
 {
-  if(fullScreen())
+  bool isFullscreen = myOSystem->settings().getBool("fullscreen");
+
+  if(isFullscreen)
     grabMouse(true);
   else
     grabMouse(myOSystem->settings().getBool("grabmouse"));
@@ -696,9 +364,9 @@ void FrameBuffer::setCursorState()
   switch(myOSystem->eventHandler().state())
   {
     case EventHandler::S_EMULATE:
-    case EventHandler::S_PAUSE:
       showCursor(false);
       break;
+
     default:
       showCursor(true);
   }
@@ -707,23 +375,55 @@ void FrameBuffer::setCursorState()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::showCursor(bool show)
 {
-  SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+  if(show)
+    SDL_ShowCursor(SDL_ENABLE);
+  else
+    SDL_ShowCursor(SDL_DISABLE);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::grabMouse(bool grab)
 {
-  SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
+  if(grab)
+    SDL_WM_GrabInput(SDL_GRAB_ON);
+  else
+    SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBuffer::fullScreen() const
+bool FrameBuffer::fullScreen()
 {
-#ifdef WINDOWED_SUPPORT
-  return mySDLFlags & SDL_FULLSCREEN;
-#else
-  return true;
-#endif
+  return myOSystem->settings().getBool("fullscreen");
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uInt32 FrameBuffer::maxWindowSizeForScreen()
+{
+  uInt32 sWidth     = myDesktopDim.w;
+  uInt32 sHeight    = myDesktopDim.h;
+  uInt32 multiplier = 10;
+
+  // If screenwidth or height could not be found, use default zoom value
+  if(sWidth == 0 || sHeight == 0)
+    return 4;
+
+  bool found = false;
+  while(!found && (multiplier > 0))
+  {
+    // Figure out the desired size of the window
+    uInt32 width  = (uInt32) (myBaseDim.w * multiplier * theAspectRatio);
+    uInt32 height = myBaseDim.h * multiplier;
+
+    if((width < sWidth) && (height < sHeight))
+      found = true;
+    else
+      multiplier--;
+  }
+
+  if(found)
+    return multiplier;
+  else
+    return 1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -736,14 +436,12 @@ void FrameBuffer::setWindowTitle(const string& title)
 void FrameBuffer::setWindowIcon()
 {
 #ifndef MAC_OSX
-  #include "stella.xpm"   // The Stella icon
-
   // Set the window icon
   uInt32 w, h, ncols, nbytes;
   uInt32 rgba[256], icon[32 * 32];
   uInt8  mask[32][4];
 
-  sscanf(stella_icon[0], "%u %u %u %u", &w, &h, &ncols, &nbytes);
+  sscanf(stella_icon[0], "%d %d %d %d", &w, &h, &ncols, &nbytes);
   if((w != 32) || (h != 32) || (ncols > 255) || (nbytes > 1))
   {
     cerr << "ERROR: Couldn't load the icon.\n";
@@ -794,353 +492,33 @@ void FrameBuffer::setWindowIcon()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt8 FrameBuffer::getPhosphor(uInt8 c1, uInt8 c2)
+inline void FrameBuffer::drawMessage()
 {
-  if(c2 > c1)
-    BSPF_swap(c1, c2);
+  int w = myOSystem->font().getStringWidth(myMessageText) + 10;
+  int h = myOSystem->font().getFontHeight() + 8;
+  int x = (myBaseDim.w >> 1) - (w >> 1);
+  int y = myBaseDim.h - h - 10/2;
 
-  return ((c1 - c2) * myPhosphorBlend)/100 + c2;
-}
+  // Draw the bounded box and text
+  fillRect(x+1, y+2, w-2, h-4, kBGColor);
+  box(x, y+1, w, h-2, kColor, kColor);
+  drawString(&myOSystem->font(), myMessageText, x+1, y+4, w, kTextColor, kTextAlignCenter);
+  myMessageTime--;
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const StringMap& FrameBuffer::supportedTIAFilters(const string& type)
-{
-  uInt32 max_zoom = maxWindowSizeForScreen(320, 210,
-                    myOSystem->desktopWidth(), myOSystem->desktopHeight());
-  uInt8 mask = (type == "soft" ? 0x1 : 0x2);
-
-  uInt32 firstmode = 1;
-  if(myOSystem->desktopWidth() < 640 || myOSystem->desktopHeight() < 480)
-    firstmode = 0;
-
-  myTIAFilters.clear();
-  for(uInt32 i = firstmode; i < GFX_NumModes; ++i)
+  // Either erase the entire message (when time is reached),
+  // or show again this frame
+  if(myMessageTime == 0)
   {
-    // For now, just include all filters
-    // This will change once OpenGL-only filters are added
-    if((ourGraphicsModes[i].avail & mask) && ourGraphicsModes[i].zoom <= max_zoom)
-    {
-      myTIAFilters.push_back(ourGraphicsModes[i].description,
-                             ourGraphicsModes[i].name);
-    }
-  }
-  return myTIAFilters;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 FrameBuffer::maxWindowSizeForScreen(uInt32 baseWidth, uInt32 baseHeight,
-                    uInt32 screenWidth, uInt32 screenHeight)
-{
-  uInt32 multiplier = 1;
-  for(;;)
-  {
-    // Figure out the zoomed size of the window
-    uInt32 width  = baseWidth * multiplier;
-    uInt32 height = baseHeight * multiplier;
-
-    if((width > screenWidth) || (height > screenHeight))
-      break;
-
-    ++multiplier;
-  }
-  return multiplier > 1 ? multiplier - 1 : 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::setAvailableVidModes(uInt32 baseWidth, uInt32 baseHeight)
-{
-  // Modelists are different depending on what state we're in
-  EventHandler::State state = myOSystem->eventHandler().state();
-  bool inUIMode = (state == EventHandler::S_DEBUGGER ||
-                   state == EventHandler::S_LAUNCHER);
-
-  myWindowedModeList.clear();
-  myFullscreenModeList.clear();
-
-  // In UI/windowed mode, there's only one valid video mode we can use
-  // We don't use maxWindowSizeForScreen here, since UI mode has to open its
-  // window at the requested size
-  if(inUIMode)
-  {
-    VideoMode m;
-    m.image_x = m.image_y = 0;
-    m.image_w = m.screen_w = baseWidth;
-    m.image_h = m.screen_h = baseHeight;
-    m.gfxmode = ourGraphicsModes[0];  // this should be zoom1x
-
-    addVidMode(m);
+	theRedrawTIAIndicator = true;
+	drawMediaSource();
   }
   else
-  {
-    // Scan list of filters, adding only those which are appropriate
-    // for the given dimensions
-    uInt32 max_zoom = maxWindowSizeForScreen(baseWidth, baseHeight,
-                      myOSystem->desktopWidth(), myOSystem->desktopHeight());
-
-    // Figure our the smallest zoom level we can use
-    uInt32 firstmode = 1;
-    if(myOSystem->desktopWidth() < 640 || myOSystem->desktopHeight() < 480)
-      firstmode = 0;
-
-    for(uInt32 i = firstmode; i < GFX_NumModes; ++i)
-    {
-      uInt32 zoom = ourGraphicsModes[i].zoom;
-      if(zoom <= max_zoom)
-      {
-        VideoMode m;
-        m.image_x = m.image_y = 0;
-        m.image_w = m.screen_w = baseWidth * zoom;
-        m.image_h = m.screen_h = baseHeight * zoom;
-        m.gfxmode = ourGraphicsModes[i];
-
-        addVidMode(m);
-      }
-    }
-  }
+	addDirtyRect(x, y, w, h);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::addVidMode(VideoMode& mode)
-{
-  // Windowed modes can be sized exactly as required, since there's normally
-  // no restriction on window size (up the maximum size)
-  myWindowedModeList.add(mode);
-
-  // There are often stricter requirements on fullscreen modes, and they're
-  // normally different depending on the OSystem in use
-  // As well, we usually can't get fullscreen modes in the exact size
-  // we want, so we need to calculate image offsets
-  const ResolutionList& res = myOSystem->supportedResolutions();
-  for(uInt32 i = 0; i < res.size(); ++i)
-  {
-    if(mode.screen_w <= res[i].width && mode.screen_h <= res[i].height)
-    {
-      // Auto-calculate 'smart' centering; platform-specific framebuffers are
-      // free to ignore or augment it
-      mode.screen_w = res[i].width;
-      mode.screen_h = res[i].height;
-      mode.image_x = (mode.screen_w - mode.image_w) >> 1;
-      mode.image_y = (mode.screen_h - mode.image_h) >> 1;
-      break;
-    }
-  }
-  myFullscreenModeList.add(mode);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBuffer::VideoMode FrameBuffer::getSavedVidMode()
-{
-  EventHandler::State state = myOSystem->eventHandler().state();
-
-  if(fullScreen())
-    myCurrentModeList = &myFullscreenModeList;
-  else
-    myCurrentModeList = &myWindowedModeList;
-
-  // Now select the best resolution depending on the state
-  // UI modes (launcher and debugger) have only one supported resolution
-  // so the 'current' one is the only valid one
-  if(state == EventHandler::S_DEBUGGER || state == EventHandler::S_LAUNCHER)
-  {
-    myCurrentModeList->setByGfxMode(GFX_Zoom1x);
-  }
-  else
-  {
-    const string& name = myOSystem->settings().getString("tia_filter");
-    myCurrentModeList->setByGfxMode(name);
-  }
-
-  return myCurrentModeList->current(myOSystem->settings(), fullScreen());
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBuffer::VideoModeList::VideoModeList()
-  : myIdx(-1)
-{
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBuffer::VideoModeList::~VideoModeList()
-{
-  clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::add(VideoMode mode)
-{
-  myModeList.push_back(mode);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::clear()
-{
-  myModeList.clear();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBuffer::VideoModeList::isEmpty() const
-{
-  return myModeList.isEmpty();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 FrameBuffer::VideoModeList::size() const
-{
-  return myModeList.size();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::previous()
-{
-  --myIdx;
-  if(myIdx < 0) myIdx = myModeList.size() - 1;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const FrameBuffer::VideoMode FrameBuffer::
-  VideoModeList::current(const Settings& settings, bool isFullscreen) const
-{
-  // Fullscreen modes are related to the 'fullres' setting
-  //   If it's 'auto', we just use the mode as already previously defined
-  //   If it's not 'auto', attempt to fit the mode into the resolution
-  //   specified by 'fullres' (if possible)
-  if(isFullscreen && BSPF_tolower(settings.getString("fullres")) != "auto")
-  {
-    // Only use 'fullres' if it's *bigger* than the requested mode
-    int w, h;
-    settings.getSize("fullres", w, h);
-
-    if(w != -1 && h != -1 && (uInt32)w >= myModeList[myIdx].screen_w &&
-      (uInt32)h >= myModeList[myIdx].screen_h)
-    {
-      VideoMode mode = myModeList[myIdx];
-      mode.screen_w = w;
-      mode.screen_h = h;
-      mode.image_x = (mode.screen_w - mode.image_w) >> 1;
-      mode.image_y = (mode.screen_h - mode.image_h) >> 1;
-
-      return mode;
-    }
-  }
-
-  // Otherwise, we just use the mode has it was defined in ::addVidMode()
-  return myModeList[myIdx];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::next()
-{
-  myIdx = (myIdx + 1) % myModeList.size();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::setByGfxMode(GfxID id)
-{
-  // First we determine which graphics mode is being requested
-  bool found = false;
-  GraphicsMode gfxmode;
-  for(uInt32 i = 0; i < GFX_NumModes; ++i)
-  {
-    if(ourGraphicsModes[i].type == id)
-    {
-      gfxmode = ourGraphicsModes[i];
-      found = true;
-      break;
-    }
-  }
-  if(!found) gfxmode = ourGraphicsModes[0];
-
-  // Now we scan the list for the applicable video mode
-  set(gfxmode);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::setByGfxMode(const string& name)
-{
-  // First we determine which graphics mode is being requested
-  bool found = false;
-  GraphicsMode gfxmode;
-  for(uInt32 i = 0; i < GFX_NumModes; ++i)
-  {
-    if(ourGraphicsModes[i].name == BSPF_tolower(name) ||
-       ourGraphicsModes[i].description == BSPF_tolower(name))
-    {
-      gfxmode = ourGraphicsModes[i];
-      found = true;
-      break;
-    }
-  }
-  if(!found) gfxmode = ourGraphicsModes[0];
-
-  // Now we scan the list for the applicable video mode
-  set(gfxmode);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::set(const GraphicsMode& gfxmode)
-{
-  // Attempt to point the current mode to the one given
-  myIdx = -1;
-
-  // First search for the given gfx id
-  for(unsigned int i = 0; i < myModeList.size(); ++i)
-  {
-    if(myModeList[i].gfxmode.type == gfxmode.type)
-    {
-      myIdx = i;
-      return;
-    }
-  }
-
-  // If we get here, then the gfx type couldn't be found, so we search
-  // for the first mode with the same zoomlevel (making sure that the
-  // requested mode can fit inside the current screen)
-  if(gfxmode.zoom > myModeList[myModeList.size()-1].gfxmode.zoom)
-  {
-    myIdx = myModeList.size()-1;
-    return;
-  }
-  else
-  {
-    for(unsigned int i = 0; i < myModeList.size(); ++i)
-    {
-      if(myModeList[i].gfxmode.zoom == gfxmode.zoom)
-      {
-        myIdx = i;
-        return;
-      }
-    }
-  }
-
-  // Finally, just pick the lowest video mode
-  myIdx = 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBuffer::VideoModeList::print()
-{
-  cerr << "VideoModeList: " << endl << endl;
-  for(Common::Array<VideoMode>::const_iterator i = myModeList.begin();
-      i != myModeList.end(); ++i)
-  {
-    cerr << "  Mode " << i << endl
-         << "    screen w = " << i->screen_w << endl
-         << "    screen h = " << i->screen_h << endl
-         << "    image x  = " << i->image_x << endl
-         << "    image y  = " << i->image_y << endl
-         << "    image w  = " << i->image_w << endl
-         << "    image h  = " << i->image_h << endl
-         << "    gfx id   = " << i->gfxmode.type << endl
-         << "    gfx name = " << i->gfxmode.name << endl
-         << "    gfx desc = " << i->gfxmode.description << endl
-         << "    gfx zoom = " << i->gfxmode.zoom << endl
-         << endl;
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FBSurface::box(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
-                    uInt32 colorA, uInt32 colorB)
+void FrameBuffer::box(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
+                      OverlayColor colorA, OverlayColor colorB)
 {
   hLine(x + 1, y,     x + w - 2, colorA);
   hLine(x,     y + 1, x + w - 1, colorA);
@@ -1154,8 +532,8 @@ void FBSurface::box(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FBSurface::frameRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
-                          uInt32 color, FrameStyle style)
+void FrameBuffer::frameRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
+                            OverlayColor color, FrameStyle style)
 {
   switch(style)
   {
@@ -1190,10 +568,10 @@ void FBSurface::frameRect(uInt32 x, uInt32 y, uInt32 w, uInt32 h,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FBSurface::drawString(const GUI::Font* font, const string& s,
-                           int x, int y, int w,
-                           uInt32 color, TextAlignment align,
-                           int deltax, bool useEllipsis)
+void FrameBuffer::drawString(const GUI::Font* font, const string& s,
+                             int x, int y, int w,
+                             OverlayColor color, TextAlignment align,
+                             int deltax, bool useEllipsis)
 {
   const int leftX = x, rightX = x + w;
   unsigned int i;
@@ -1266,15 +644,12 @@ void FBSurface::drawString(const GUI::Font* font, const string& s,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBuffer::GraphicsMode FrameBuffer::ourGraphicsModes[GFX_NumModes] = {
-  { GFX_Zoom1x,  "zoom1x",  "Zoom 1x",  1,  0x3 },
-  { GFX_Zoom2x,  "zoom2x",  "Zoom 2x",  2,  0x3 },
-  { GFX_Zoom3x,  "zoom3x",  "Zoom 3x",  3,  0x3 },
-  { GFX_Zoom4x,  "zoom4x",  "Zoom 4x",  4,  0x3 },
-  { GFX_Zoom5x,  "zoom5x",  "Zoom 5x",  5,  0x3 },
-  { GFX_Zoom6x,  "zoom6x",  "Zoom 6x",  6,  0x3 },
-  { GFX_Zoom7x,  "zoom7x",  "Zoom 7x",  7,  0x3 },
-  { GFX_Zoom8x,  "zoom8x",  "Zoom 8x",  8,  0x3 },
-  { GFX_Zoom9x,  "zoom9x",  "Zoom 9x",  9,  0x3 },
-  { GFX_Zoom10x, "zoom10x", "Zoom 10x", 10, 0x3 }
+const uInt8 FrameBuffer::ourGUIColors[kNumColors-256][3] = {
+  { 104, 104, 104 },  // kColor
+  {   0,   0,   0 },  // kBGColor
+  {  64,  64,  64 },  // kShadowColor
+  { 200, 200, 255 },  // kHiliteColor
+  {  32, 160,  32 },  // kTextColor
+  {   0, 255,   0 },  // kTextColorHi
+  { 200,   0,   0 }   // kTextColorEm
 };
