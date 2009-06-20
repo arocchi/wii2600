@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: KidVid.hxx,v 1.1 2009-03-16 00:23:42 stephena Exp $
 //============================================================================
 
 #ifndef KIDVID_HXX
@@ -35,7 +35,7 @@
   This code was heavily borrowed from z26.
 
   @author  Stephen Anthony & z26 team
-  @version $Id$
+  @version $Id: KidVid.hxx,v 1.1 2009-03-16 00:23:42 stephena Exp $
 */
 class KidVid : public Controller
 {

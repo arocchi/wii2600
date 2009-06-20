@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: RomWidget.cxx,v 1.29 2009-01-11 15:01:36 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -32,6 +32,10 @@
 #include "ContextMenu.hxx"
 #include "RomListWidget.hxx"
 #include "RomWidget.hxx"
+
+enum {
+  kRomNameEntered = 'RWrn'
+};
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 RomWidget::RomWidget(GuiObject* boss, const GUI::Font& font, int x, int y)
@@ -55,7 +59,7 @@ RomWidget::RomWidget(GuiObject* boss, const GUI::Font& font, int x, int y)
 
   xpos += t->getWidth() + 10;
   myBank = new DataGridWidget(boss, font, xpos, ypos-2,
-                              1, 1, 4, 8, kBASE_10);
+                              1, 1, 3, 8, kBASE_10);
   myBank->setTarget(this);
   myBank->setRange(0, instance().debugger().bankCount());
   if(instance().debugger().bankCount() <= 1)
@@ -71,8 +75,7 @@ RomWidget::RomWidget(GuiObject* boss, const GUI::Font& font, int x, int y)
 
   xpos += t->getWidth() + 10;
   myBankCount = new EditTextWidget(boss, font, xpos, ypos-2,
-                                   font.getStringWidth("XXXX"),
-                                   font.getLineHeight(), "");
+                                   30, font.getLineHeight(), "");
   myBankCount->setEditable(false);
 
   // Create rom listing

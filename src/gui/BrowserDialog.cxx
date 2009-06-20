@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: BrowserDialog.cxx,v 1.37 2009-01-16 14:57:52 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -80,11 +80,6 @@ BrowserDialog::BrowserDialog(GuiObject* boss, const GUI::Font& font)
   _goUpButton = new ButtonWidget(this, font, 10, _h - buttonHeight - 10,
                                  buttonWidth, buttonHeight, "Go up", kGoUpCmd);
   addFocusWidget(_goUpButton);
-
-  _basedirButton =
-    new ButtonWidget(this, font, 15 + buttonWidth, _h - buttonHeight - 10,
-                     buttonWidth, buttonHeight, "Base Dir", kBaseDirCmd);
-  addFocusWidget(_basedirButton);
 
 #ifndef MAC_OSX
   b = new ButtonWidget(this, font, _w - 2 * (buttonWidth + 7), _h - buttonHeight - 10,
@@ -162,7 +157,7 @@ void BrowserDialog::updateListing()
   _nodeList->clear();
 
   // Update the path display
-  _currentPath->setLabel(_node.getRelativePath());
+  _currentPath->setLabel(_node.getPath());
 
   // Read in the data from the file system
   FSList content;
@@ -212,11 +207,6 @@ void BrowserDialog::handleCommand(CommandSender* sender, int cmd,
 
     case kGoUpCmd:
       _node = _node.getParent();
-      updateListing();
-      break;
-
-    case kBaseDirCmd:
-      _node = FilesystemNode(instance().baseDir());
       updateListing();
       break;
 

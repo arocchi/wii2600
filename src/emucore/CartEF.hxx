@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CartEF.hxx,v 1.1 2009-04-05 18:59:56 stephena Exp $
 //============================================================================
 
 #ifndef CARTRIDGEEF_HXX
@@ -33,7 +33,7 @@ class System;
   as this scheme doesn't seem to be documented anywhere.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: CartEF.hxx,v 1.1 2009-04-05 18:59:56 stephena Exp $
 */
 class CartridgeEF : public Cartridge
 {

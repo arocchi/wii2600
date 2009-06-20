@@ -2,40 +2,30 @@
   Simple program that produces a hex list of a binary object file
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: romtohex.cxx,v 1.2 2002-04-05 02:18:23 bwmott Exp $
 */
 
-#include <iomanip>
-#include <fstream>
-#include <iostream>
-using namespace std;
+#include <iomanip.h>
+#include <fstream.h>
 
-int main(int ac, char* av[])
+main()
 {
-  ifstream in;
-  in.open("scrom.bin");
-  if(in.is_open())
+  ifstream in("scrom.bin");
+
+  cout << "    ";
+
+  for(int t = 0; ; ++t)
   {
-    in.seekg(0, ios::end);
-    int len = (int)in.tellg();
-    in.seekg(0, ios::beg);
+    unsigned char c;
+    in.get(c);
 
-    unsigned char* data = new unsigned char[len];
-    in.read((char*)data, len);
-    in.close();
+    if(in.eof())
+      break;
 
-    cout << "    ";
+    cout << "0x" << hex << (int)c << ", ";
 
-    // Skip first two bytes; they shouldn't be used
-    for(int t = 2; t < len; ++t)
-    {
-      cout << "0x" << hex << (int)data[t];
-      if(t < len - 1)
-        cout << ", ";
-      if(((t-2) % 8) == 7)
-        cout << endl << "    ";
-    }
-    cout << endl;
-    delete[] data;
+    if((t % 8) == 7)
+      cout << endl << "    ";
   }
-}
+  cout << endl;
+} 
