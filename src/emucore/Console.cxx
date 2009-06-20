@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.cxx,v 1.156 2009-01-24 18:17:34 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -31,8 +31,8 @@
 #include "EventHandler.hxx"
 #include "Joystick.hxx"
 #include "Keyboard.hxx"
-#include "KidVid.hxx"
-#include "M6502.hxx"
+#include "M6502Hi.hxx"
+#include "M6502Low.hxx"
 #include "M6532.hxx"
 #include "Paddles.hxx"
 #include "Props.hxx"
@@ -63,6 +63,7 @@
 Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   : myOSystem(osystem),
     myProperties(props),
+    myAVox(0),
     myDisplayFormat("NTSC"),
     myFramerate(60.0),
     myUserPaletteDefined(false)
@@ -96,7 +97,11 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   myControllers[0] = new Joystick(Controller::Left, *myEvent, *mySystem);
   myControllers[1] = new Joystick(Controller::Right, *myEvent, *mySystem);
 
-  M6502* m6502 = new M6502(1);
+  M6502* m6502;
+  if(myOSystem->settings().getString("cpu") == "low")
+    m6502 = new M6502Low(1);
+  else
+    m6502 = new M6502High(1);
 #ifdef DEBUGGER_SUPPORT
   m6502->attach(myOSystem->debugger());
 #endif
@@ -110,34 +115,32 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   mySystem->attach(myTIA);
   mySystem->attach(myCart);
 
+  // Query some info about this console
+  ostringstream about, vidinfo;
+
   // Auto-detect NTSC/PAL mode if it's requested
-  string autodetected = "";
   myDisplayFormat = myProperties.get(Display_Format);
   if(myDisplayFormat == "AUTO-DETECT" ||
      myOSystem->settings().getBool("rominfo"))
   {
     // Run the system for 60 frames, looking for PAL scanline patterns
-    // We turn off the SuperCharger progress bars, otherwise the SC BIOS
-    // will take over 250 frames!
-    // The 'fastscbios' option must be changed before the system is reset
-    bool fastscbios = myOSystem->settings().getBool("fastscbios");
-    myOSystem->settings().setBool("fastscbios", true);
+    // We assume the first 30 frames are garbage, and only consider
+    // the second 30 (useful to get past SuperCharger BIOS)
+    // Unfortunately, this means we have to always enable 'fastscbios',
+    // since otherwise the BIOS loading will take over 250 frames!
     mySystem->reset();
     int palCount = 0;
     for(int i = 0; i < 60; ++i)
     {
       myTIA->update();
-      if(myTIA->scanlines() > 285)
+      if(i >= 30 && myTIA->scanlines() > 285)
         ++palCount;
     }
-    myDisplayFormat = (palCount >= 20) ? "PAL" : "NTSC";
+    myDisplayFormat = (palCount >= 15) ? "PAL" : "NTSC";
     if(myProperties.get(Display_Format) == "AUTO-DETECT")
-      autodetected = "*";
-
-    // Don't forget to reset the SC progress bars again
-    myOSystem->settings().setBool("fastscbios", fastscbios);
+      myConsoleInfo.DisplayFormat = "AUTO => ";
   }
-  myConsoleInfo.DisplayFormat = myDisplayFormat + autodetected;
+  myConsoleInfo.DisplayFormat += myDisplayFormat;
 
   // Set up the correct properties used when toggling format
   // Note that this can be overridden if a format is forced
@@ -161,12 +164,11 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
       myProperties.set(Display_Height, "250");
   }
 
-  const string& md5 = myProperties.get(Cartridge_MD5);
-
   // Add the real controllers for this system
-  setControllers(md5);
+  setControllers();
 
   // Bumper Bash requires all 4 directions
+  const string& md5 = myProperties.get(Cartridge_MD5);
   bool allow = (md5 == "aa1c41f86ec44c0a44eb64c332ce08af" ||
                 md5 == "1bf503c724001b09be79c515ecfcbd03");
   myOSystem->eventHandler().allowAllDirections(allow);
@@ -573,7 +575,7 @@ void Console::changeHeight(int direction)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setControllers(const string& rommd5)
+void Console::setControllers()
 {
   delete myControllers[0];
   delete myControllers[1];
@@ -670,8 +672,8 @@ void Console::setControllers(const string& rommd5)
   {
     const string& eepromfile = myOSystem->eepromDir() + BSPF_PATH_SEPARATOR +
                                "atarivox_eeprom.dat";
-    myControllers[rightPort] = new AtariVox(Controller::Right, *myEvent,
-                   *mySystem, myOSystem->serialPort(),
+    myControllers[rightPort] = myAVox =
+      new AtariVox(Controller::Right, *myEvent, *mySystem, myOSystem->serialPort(),
                    myOSystem->settings().getString("avoxport"), eepromfile);
   }
   else if(right == "SAVEKEY")
@@ -680,10 +682,6 @@ void Console::setControllers(const string& rommd5)
                         "savekey_eeprom.dat";
     myControllers[rightPort] = new SaveKey(Controller::Right, *myEvent, *mySystem,
                                            eepromfile);
-  }
-  else if(right == "KIDVID")
-  {
-    myControllers[rightPort] = new KidVid(Controller::Right, *myEvent, *mySystem, rommd5);
   }
   else
   {

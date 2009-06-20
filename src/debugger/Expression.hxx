@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Expression.hxx,v 1.7 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #ifndef EXPRESSION_HXX
@@ -32,7 +32,7 @@
   can represent complex expression statements.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Expression.hxx,v 1.7 2009-01-01 18:13:35 stephena Exp $
 */
 class Expression
 {

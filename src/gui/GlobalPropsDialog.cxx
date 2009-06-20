@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: GlobalPropsDialog.cxx,v 1.4 2009-01-15 18:45:23 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -43,7 +43,7 @@ GlobalPropsDialog::
             buttonHeight = font.getLineHeight() + 4;
   int xpos, ypos;
   int lwidth = font.getStringWidth("Right Difficulty: "),
-      pwidth = font.getStringWidth("EFSC (64K H. Runner + ram)");
+      pwidth = font.getStringWidth("MC (C. Wilkson Megacart)");
   WidgetArray wid;
   StringMap items;
 
@@ -66,9 +66,6 @@ GlobalPropsDialog::
   items.push_back("Default", "DEFAULT");
   items.push_back("Auto-detect",          "AUTO-DETECT");
   items.push_back("0840 (8K ECONObank)",        "0840" );
-  items.push_back("4IN1 Multicart (8-32K)",     "4IN1" );
-  items.push_back("8IN1 Multicart (16-64K)",    "8IN1" );
-  items.push_back("32IN1 Multicart (64-128K)",  "32IN1");
   items.push_back("2K (2K Atari)",              "2K"   );
   items.push_back("3E (32K Tigervision)",       "3E"   );
   items.push_back("3F (512K Tigervision)",      "3F"   );
@@ -79,8 +76,6 @@ GlobalPropsDialog::
   items.push_back("DPC (Pitfall II)",           "DPC"  );
   items.push_back("E0 (8K Parker Bros)",        "E0"   );
   items.push_back("E7 (16K M-network)",         "E7"   );
-  items.push_back("EF (64K H. Runner)",         "EF"   );
-  items.push_back("EFSC (64K H. Runner + ram)", "EFSC" );
   items.push_back("F4 (32K Atari)",             "F4"   );
   items.push_back("F4SC (32K Atari + ram)",     "F4SC" );
   items.push_back("F6 (16K Atari)",             "F6"   );
@@ -91,7 +86,7 @@ GlobalPropsDialog::
   items.push_back("FE (8K Decathlon)",          "FE"   );
   items.push_back("MB (Dynacom Megaboy)",       "MB"   );
   items.push_back("MC (C. Wilkson Megacart)",   "MC"   );
-  items.push_back("SB (128-256K SUPERbank)",    "SB"   );
+  items.push_back("SB (128-256k SUPERbank)",    "SB"   );
   items.push_back("UA (8K UA Ltd.)",            "UA"   );
   items.push_back("X07 (64K AtariAge)",         "X07"  );
   myBSType = new PopUpWidget(this, font, xpos+lwidth, ypos,

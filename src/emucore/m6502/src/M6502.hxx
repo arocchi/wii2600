@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6502.hxx,v 1.23 2009-01-01 18:13:38 stephena Exp $
 //============================================================================
 
 #ifndef M6502_HXX
@@ -36,17 +36,12 @@ class PackedBitArray;
 typedef Common::Array<Expression*> ExpressionList;
 
 /**
-  The 6502 is an 8-bit microprocessor that has a 64K addressing space.
-  This class provides a high compatibility 6502 microprocessor emulator.
-
-  The memory accesses and cycle counts it generates are valid at the
-  sub-instruction level and "false" reads are generated (such as the ones 
-  produced by the Indirect,X addressing when it crosses a page boundary).
-  This provides provides better compatibility for hardware that has side
-  effects and for games which are very time sensitive.
+  This is an abstract base class for classes that emulate the
+  6502 microprocessor.  The 6502 is an 8-bit microprocessor that
+  has a 64K addressing space.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: M6502.hxx,v 1.23 2009-01-01 18:13:38 stephena Exp $ 
 */
 class M6502
 {
@@ -97,25 +92,68 @@ class M6502
 
       @param system The system the processor should install itself in
     */
-    void install(System& system);
+    virtual void install(System& system);
 
     /**
       Reset the processor to its power-on state.  This method should not 
       be invoked until the entire 6502 system is constructed and installed
       since it involves reading the reset vector from memory.
     */
-    void reset();
+    virtual void reset();
 
     /**
       Request a maskable interrupt
     */
-    void irq();
+    virtual void irq();
 
     /**
       Request a non-maskable interrupt
     */
-    void nmi();
+    virtual void nmi();
 
+    /**
+      Saves the current state of this device to the given Serializer.
+
+      @param out The serializer device to save to.
+      @return The result of the save.  True on success, false on failure.
+    */
+    virtual bool save(Serializer& out) = 0;
+
+    /**
+      Loads the current state of this device from the given Deserializer.
+
+      @param in The deserializer device to load from.
+      @return The result of the load.  True on success, false on failure.
+    */
+    virtual bool load(Deserializer& in) = 0;
+
+    /**
+      Get a null terminated string which is the processor's name (i.e. "M6532")
+
+      @return The name of the device
+    */
+    virtual const char* name() const = 0;
+
+  public:
+    /**
+      Get the addressing mode of the specified instruction
+
+      @param opcode The opcode of the instruction
+      @return The addressing mode of the instruction
+    */
+    AddressingMode addressingMode(uInt8 opcode) const
+      { return ourAddressingModeTable[opcode]; }
+
+    /**
+      Get the access mode of the specified instruction
+
+      @param opcode The opcode of the instruction
+      @return The access mode of the instruction
+    */
+    AccessMode accessMode(uInt8 opcode) const
+      { return ourAccessModeTable[opcode]; }
+
+  public:
     /**
       Execute instructions until the specified number of instructions
       is executed, someone stops execution, or an error occurs.  Answers
@@ -124,7 +162,7 @@ class M6502
       @param number Indicates the number of instructions to execute
       @return true iff execution stops normally
     */
-    bool execute(uInt32 number);
+    virtual bool execute(uInt32 number) = 0;
 
     /**
       Tell the processor to stop executing instructions.  Invoking this 
@@ -139,7 +177,10 @@ class M6502
 
       @return true iff a fatal error has occured
     */
-    bool fatalError() const { return myExecutionStatus & FatalErrorBit; }
+    bool fatalError() const
+    {
+      return myExecutionStatus & FatalErrorBit;
+    }
   
     /**
       Get the 16-bit value of the Program Counter register.
@@ -162,13 +203,7 @@ class M6502
     */
     int totalInstructionCount() const { return myTotalInstructionCount; }
 
-    /**
-      Get the number of memory accesses to distinct memory locations
-
-      @return The number of memory accesses to distinct memory locations
-    */
-    uInt32 distinctAccesses() const { return myNumberOfDistinctAccesses; }
-
+  public:
     /**
       Overload the ostream output operator for addressing modes.
 
@@ -177,50 +212,8 @@ class M6502
     */
     friend ostream& operator<<(ostream& out, const AddressingMode& mode);
 
-    /**
-      Saves the current state of this device to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    bool save(Serializer& out);
-
-    /**
-      Loads the current state of this device from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a null terminated string which is the processor's name (i.e. "M6532")
-
-      @return The name of the device
-    */
-    const char* name() const { return "M6502High"; }
-
   public:
-    /**
-      Get the addressing mode of the specified instruction
-
-      @param opcode The opcode of the instruction
-      @return The addressing mode of the instruction
-    */
-    AddressingMode addressingMode(uInt8 opcode) const
-      { return ourAddressingModeTable[opcode]; }
-
-    /**
-      Get the access mode of the specified instruction
-
-      @param opcode The opcode of the instruction
-      @return The access mode of the instruction
-    */
-    AccessMode accessMode(uInt8 opcode) const
-      { return ourAccessModeTable[opcode]; }
-
 #ifdef DEBUGGER_SUPPORT
-  public:
     /**
       Attach the specified debugger.
 
@@ -239,23 +232,7 @@ class M6502
     int evalCondBreaks();
 #endif
 
-  private:
-    /**
-      Get the byte at the specified address and update the cycle count.
-
-      @return The byte at the specified address
-    */
-    inline uInt8 peek(uInt16 address);
-
-    /**
-      Change the byte at the specified address to the given value and
-      update the cycle count.
-
-      @param address The address where the value should be stored
-      @param value The value to be stored at the address
-    */
-    inline void poke(uInt16 address, uInt8 value);
-
+  protected:
     /**
       Get the 8-bit value of the Processor Status register.
 
@@ -270,12 +247,7 @@ class M6502
     */
     void PS(uInt8 ps);
 
-    /**
-      Called after an interrupt has be requested using irq() or nmi()
-    */
-    void interruptHandler();
-
-  private:
+  protected:
     uInt8 A;    // Accumulator
     uInt8 X;    // X index register
     uInt8 Y;    // Y index register
@@ -294,7 +266,12 @@ class M6502
     /** 
       Bit fields used to indicate that certain conditions need to be 
       handled such as stopping execution, fatal errors, maskable interrupts 
-      and non-maskable interrupts (in myExecutionStatus)
+      and non-maskable interrupts
+    */
+    uInt8 myExecutionStatus;
+
+    /**
+      Constants used for setting bits in myExecutionStatus
     */
     enum 
     {
@@ -303,7 +280,6 @@ class M6502
       MaskableInterruptBit = 0x04,
       NonmaskableInterruptBit = 0x08
     };
-    uInt8 myExecutionStatus;
   
     /// Pointer to the system the processor is installed in or the null pointer
     System* mySystem;
@@ -319,12 +295,6 @@ class M6502
 
     /// The total number of instructions executed so far
     int myTotalInstructionCount;
-
-    /// Indicates the numer of distinct memory accesses
-    uInt32 myNumberOfDistinctAccesses;
-
-    /// Indicates the last address which was accessed
-    uInt16 myLastAddress;
 
 #ifdef DEBUGGER_SUPPORT
     /// Pointer to the debugger for this processor or the null pointer
@@ -346,7 +316,7 @@ class M6502
     ExpressionList myBreakConds;
 #endif
 
-  private:
+  protected:
     /// Addressing mode for each of the 256 opcodes
     /// This specifies how the opcode argument is addressed
     static AddressingMode ourAddressingModeTable[256];
@@ -354,6 +324,9 @@ class M6502
     /// Access mode for each of the 256 opcodes
     /// This specifies how the opcode will access its argument
     static AccessMode ourAccessModeTable[256];
+
+    /// Lookup table used for binary-code-decimal math
+    static uInt8 ourBCDTable[2][256];
 
     /**
       Table of instruction processor cycle times.  In some cases additional 

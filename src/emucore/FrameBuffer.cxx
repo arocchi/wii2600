@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBuffer.cxx,v 1.163 2009-01-20 21:01:28 stephena Exp $
 //============================================================================
 
 #include <algorithm>
@@ -88,13 +88,6 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
     return false;
 #endif
 
-  // Initialize SDL flags and set fullscreen flag
-  // This must be done before any modes are initialized
-  mySDLFlags = 0;
-#ifdef WINDOWED_SUPPORT
-  if(myOSystem->settings().getBool("fullscreen")) mySDLFlags = SDL_FULLSCREEN;
-#endif
-
   // Set the available video modes for this framebuffer
   setAvailableVidModes(width, height);
 
@@ -105,6 +98,13 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
     // Set window title and icon
     setWindowTitle(title);
     if(myInitializedCount == 1) setWindowIcon();
+
+    // Set fullscreen flag
+  #ifdef WINDOWED_SUPPORT
+    mySDLFlags = myOSystem->settings().getBool("fullscreen") ? SDL_FULLSCREEN : 0;
+  #else
+    mySDLFlags = 0;
+  #endif
 
     if(!initSubsystem(mode))
     {
@@ -119,9 +119,6 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
 
       myScreenRect.setWidth(mode.screen_w);
       myScreenRect.setHeight(mode.screen_h);
-
-      // Did we get the requested fullscreen state?
-      myOSystem->settings().setBool("fullscreen", fullScreen());
     }
   }
   else
@@ -136,8 +133,8 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
 
   // Create surfaces for TIA statistics and general messages
   myStatsMsg.color = kBtnTextColor;
-  myStatsMsg.w = myOSystem->consoleFont().getMaxCharWidth() * 23 + 2;
-  myStatsMsg.h = (myOSystem->consoleFont().getFontHeight() + 2) * 2;
+  myStatsMsg.w = myOSystem->consoleFont().getMaxCharWidth() * 21;
+  myStatsMsg.h = (myOSystem->consoleFont().getFontHeight() + 2) * 3;
 
  if(myStatsMsg.surface == NULL)
   {
@@ -186,16 +183,18 @@ void FrameBuffer::update()
       {
         const ConsoleInfo& info = myOSystem->console().about();
         char msg[30];
-        sprintf(msg, "%u @ %2.2ffps => %s",
+        sprintf(msg, "%u LINES  %2.2f FPS",
                 myOSystem->console().tia().scanlines(),
-                myOSystem->console().getFramerate(), info.DisplayFormat.c_str());
+                myOSystem->console().getFramerate());
         myStatsMsg.surface->fillRect(0, 0, myStatsMsg.w, myStatsMsg.h, kBGColor);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
           msg, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          info.BankSwitch, 1, 15, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+          info.DisplayFormat, 1, 15, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+        myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
+          info.BankSwitch, 1, 30, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->addDirtyRect(0, 0, 0, 0);  // force a full draw
-        myStatsMsg.surface->setPos(myImageRect.x() + 1, myImageRect.y() + 1);
+        myStatsMsg.surface->setPos(myImageRect.x() + 3, myImageRect.y() + 3);
         myStatsMsg.surface->update();
       }
       break;  // S_EMULATE
@@ -513,6 +512,7 @@ uInt32 FrameBuffer::tiaPixel(uInt32 idx) const
   return (!myUsePhosphor ? myDefPalette[c] : myAvgPalette[c][p]);
 }
 
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::setTIAPalette(const uInt32* palette)
 {
@@ -526,18 +526,6 @@ void FrameBuffer::setTIAPalette(const uInt32* palette)
     Uint8 b = palette[i] & 0xff;
 
     myDefPalette[i] = mapRGB(r, g, b);
-    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
-    {
-      myDefPalette24[i][0] = b;
-      myDefPalette24[i][1] = g;
-      myDefPalette24[i][2] = r;
-    }
-    else
-    {
-      myDefPalette24[i][0] = r;
-      myDefPalette24[i][1] = g;
-      myDefPalette24[i][2] = b;
-    }
   }
 
   // Set palette for phosphor effect
@@ -567,25 +555,12 @@ void FrameBuffer::setTIAPalette(const uInt32* palette)
 void FrameBuffer::setUIPalette(const uInt32* palette)
 {
   // Set palette for GUI
-  for(int i = 0, j = 256; i < kNumColors-256; ++i, ++j)
+  for(int i = 0; i < kNumColors-256; ++i)
   {
     Uint8 r = (palette[i] >> 16) & 0xff;
     Uint8 g = (palette[i] >> 8) & 0xff;
     Uint8 b = palette[i] & 0xff;
-
-    myDefPalette[j] = mapRGB(r, g, b);
-    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
-    {
-      myDefPalette24[j][0] = b;
-      myDefPalette24[j][1] = g;
-      myDefPalette24[j][2] = r;
-    }
-    else
-    {
-      myDefPalette24[j][0] = r;
-      myDefPalette24[j][1] = g;
-      myDefPalette24[j][2] = b;
-    }
+    myDefPalette[i+256] = mapRGB(r, g, b);
   }
 }
 
@@ -602,13 +577,15 @@ void FrameBuffer::stateChanged(EventHandler::State state)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::toggleFullscreen()
 {
-  setFullscreen(!fullScreen());
+  setFullscreen(!myOSystem->settings().getBool("fullscreen"));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::setFullscreen(bool enable)
 {
 #ifdef WINDOWED_SUPPORT
+  // Update the settings
+  myOSystem->settings().setBool("fullscreen", enable);
   if(enable)
     mySDLFlags |= SDL_FULLSCREEN;
   else
@@ -643,7 +620,7 @@ bool FrameBuffer::changeVidMode(int direction)
   else if(direction == -1)
     myCurrentModeList->previous();
 
-  VideoMode vidmode = myCurrentModeList->current(myOSystem->settings(), fullScreen());
+  VideoMode vidmode = myCurrentModeList->current(myOSystem->settings());
   if(setVidMode(vidmode))
   {
     myImageRect.setWidth(vidmode.image_w);
@@ -652,9 +629,6 @@ bool FrameBuffer::changeVidMode(int direction)
 
     myScreenRect.setWidth(vidmode.screen_w);
     myScreenRect.setHeight(vidmode.screen_h);
-
-    // Did we get the requested fullscreen state?
-    myOSystem->settings().setBool("fullscreen", fullScreen());
 
     if(!inUIMode)
     {
@@ -688,7 +662,9 @@ cerr << "New mode:" << endl
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::setCursorState()
 {
-  if(fullScreen())
+  bool isFullscreen = myOSystem->settings().getBool("fullscreen");
+
+  if(isFullscreen)
     grabMouse(true);
   else
     grabMouse(myOSystem->settings().getBool("grabmouse"));
@@ -720,9 +696,9 @@ void FrameBuffer::grabMouse(bool grab)
 bool FrameBuffer::fullScreen() const
 {
 #ifdef WINDOWED_SUPPORT
-  return mySDLFlags & SDL_FULLSCREEN;
+    return myOSystem->settings().getBool("fullscreen");
 #else
-  return true;
+    return true;
 #endif
 }
 
@@ -932,7 +908,7 @@ FrameBuffer::VideoMode FrameBuffer::getSavedVidMode()
 {
   EventHandler::State state = myOSystem->eventHandler().state();
 
-  if(fullScreen())
+  if(myOSystem->settings().getBool("fullscreen"))
     myCurrentModeList = &myFullscreenModeList;
   else
     myCurrentModeList = &myWindowedModeList;
@@ -950,13 +926,13 @@ FrameBuffer::VideoMode FrameBuffer::getSavedVidMode()
     myCurrentModeList->setByGfxMode(name);
   }
 
-  return myCurrentModeList->current(myOSystem->settings(), fullScreen());
+  return myCurrentModeList->current(myOSystem->settings());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBuffer::VideoModeList::VideoModeList()
-  : myIdx(-1)
 {
+  myIdx = -1;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -998,13 +974,14 @@ void FrameBuffer::VideoModeList::previous()
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 const FrameBuffer::VideoMode FrameBuffer::
-  VideoModeList::current(const Settings& settings, bool isFullscreen) const
+  VideoModeList::current(const Settings& settings) const
 {
   // Fullscreen modes are related to the 'fullres' setting
   //   If it's 'auto', we just use the mode as already previously defined
   //   If it's not 'auto', attempt to fit the mode into the resolution
   //   specified by 'fullres' (if possible)
-  if(isFullscreen && BSPF_tolower(settings.getString("fullres")) != "auto")
+  if(settings.getBool("fullscreen") &&
+     BSPF_tolower(settings.getString("fullres")) != "auto")
   {
     // Only use 'fullres' if it's *bigger* than the requested mode
     int w, h;
@@ -1093,26 +1070,17 @@ void FrameBuffer::VideoModeList::set(const GraphicsMode& gfxmode)
   }
 
   // If we get here, then the gfx type couldn't be found, so we search
-  // for the first mode with the same zoomlevel (making sure that the
-  // requested mode can fit inside the current screen)
-  if(gfxmode.zoom > myModeList[myModeList.size()-1].gfxmode.zoom)
+  // for the first mode with the same zoomlevel
+  for(unsigned int i = 0; i < myModeList.size(); ++i)
   {
-    myIdx = myModeList.size()-1;
-    return;
-  }
-  else
-  {
-    for(unsigned int i = 0; i < myModeList.size(); ++i)
+    if(myModeList[i].gfxmode.zoom == gfxmode.zoom)
     {
-      if(myModeList[i].gfxmode.zoom == gfxmode.zoom)
-      {
-        myIdx = i;
-        return;
-      }
+      myIdx = i;
+      return;
     }
   }
 
-  // Finally, just pick the lowest video mode
+  // Finally, just pick the lowes video mode
   myIdx = 0;
 }
 

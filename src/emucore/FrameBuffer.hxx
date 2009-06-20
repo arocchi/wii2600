@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FrameBuffer.hxx,v 1.117 2009-01-24 17:32:29 stephena Exp $
 //============================================================================
 
 #ifndef FRAMEBUFFER_HXX
@@ -91,7 +91,7 @@ enum {
   into FBSurfaces), are in turn drawn here as well.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBuffer.hxx,v 1.117 2009-01-24 17:32:29 stephena Exp $
 */
 class FrameBuffer
 {
@@ -270,11 +270,6 @@ class FrameBuffer
     */
     void stateChanged(EventHandler::State state);
 
-    /**
-      Get the zoom level.
-    */
-    uInt32 getZoomLevel() { return myZoomLevel; }
-
   //////////////////////////////////////////////////////////////////////
   // The following methods are system-specific and must be implemented
   // in derived classes.
@@ -417,9 +412,6 @@ class FrameBuffer
     SDL_Surface* myScreen;
 
     // SDL initialization flags
-    // This is set by the base FrameBuffer class, and read by the derived classes
-    // If a FrameBuffer is successfully created, the derived classes must modify
-    // it to point to the actual flags used by the SDL_Surface
     uInt32 mySDLFlags;
 
     // Indicates if the entire frame need to redrawn
@@ -433,19 +425,11 @@ class FrameBuffer
 
     // TIA palettes for normal and phosphor modes
     // 'myDefPalette' also contains the UI palette
-    // The '24' version of myDefPalette is used in 24-bit colour mode,
-    // eliminating having to deal with endian and shift issues
-    // Phosphor mode doesn't have a corresponding '24' mode, since it
-    // would require a 192KB lookup table
     Uint32 myDefPalette[256+kNumColors];
     Uint32 myAvgPalette[256][256];
-    Uint8 myDefPalette24[256+kNumColors][3];
 
     // Names of the TIA filters that can be used for this framebuffer
     StringMap myTIAFilters;
-
-    // Holds the zoom level being used
-    uInt32 myZoomLevel;
 
   private:
     /**
@@ -512,8 +496,7 @@ class FrameBuffer
         uInt32 size() const;
 
         void previous();
-        const FrameBuffer::VideoMode current(const Settings& settings,
-                                             bool isFullscreen) const;
+        const FrameBuffer::VideoMode current(const Settings& settings) const;
         void next();
 
         void setByGfxMode(GfxID id);
@@ -580,7 +563,7 @@ class FrameBuffer
   FrameBuffer type.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: FrameBuffer.hxx,v 1.117 2009-01-24 17:32:29 stephena Exp $
 */
 // Text alignment modes for drawString()
 enum TextAlignment {

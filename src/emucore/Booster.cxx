@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Booster.cxx,v 1.14 2009-01-01 18:13:35 stephena Exp $
 //============================================================================
 
 #include "Event.hxx"

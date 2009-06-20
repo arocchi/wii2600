@@ -13,335 +13,43 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: M6502.m4,v 1.7 2008-04-27 11:53:22 stephena Exp $
 //============================================================================
 
 /** 
-  Code and cases to emulate each of the 6502 instructions.
-
-  Recompile with the following:
-    'm4 M6502.m4 > M6502.ins'
+  Code and cases to emulate each of the 6502 instruction 
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: M6502.m4,v 1.7 2008-04-27 11:53:22 stephena Exp $
 */
 
 #ifndef NOTSAMEPAGE
   #define NOTSAMEPAGE(_addr1, _addr2) (((_addr1) ^ (_addr2)) & 0xff00)
 #endif
 
-define(M6502_IMPLIED, `{
-  peek(PC);
-}')
-
-define(M6502_IMMEDIATE_READ, `{
-  operand = peek(PC++);
-}')
-
-define(M6502_ABSOLUTE_READ, `{
-  uInt16 address = peek(PC++);
-  address |= ((uInt16)peek(PC++) << 8);
-  operand = peek(address);
-}')
-
-define(M6502_ABSOLUTE_WRITE, `{
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
-}')
-
-define(M6502_ABSOLUTE_READMODIFYWRITE, `{
-  operandAddress = peek(PC++);
-  operandAddress |= ((uInt16)peek(PC++) << 8);
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_ABSOLUTEX_READ, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + X));
-  if((low + X) > 0xFF)
-    operand = peek((high | low) + X);
-}')
-
-define(M6502_ABSOLUTEX_WRITE, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
-}')
-
-define(M6502_ABSOLUTEX_READMODIFYWRITE, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + X));
-  operandAddress = (high | low) + X;
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_ABSOLUTEY_READ, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
-}')
-
-define(M6502_ABSOLUTEY_WRITE, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
-}')
-
-define(M6502_ABSOLUTEY_READMODIFYWRITE, `{
-  uInt16 low = peek(PC++);
-  uInt16 high = ((uInt16)peek(PC++) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_ZERO_READ, `{
-  operand = peek(peek(PC++));
-}')
-
-define(M6502_ZERO_WRITE, `{
-  operandAddress = peek(PC++);
-}')
-
-define(M6502_ZERO_READMODIFYWRITE, `{
-  operandAddress = peek(PC++);
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_ZEROX_READ, `{
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += X;
-  operand = peek(address); 
-}')
-
-define(M6502_ZEROX_WRITE, `{
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
-}')
-
-define(M6502_ZEROX_READMODIFYWRITE, `{
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + X) & 0xFF;
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_ZEROY_READ, `{
-  uInt8 address = peek(PC++);
-  peek(address);
-  address += Y;
-  operand = peek(address); 
-}')
-
-define(M6502_ZEROY_WRITE, `{
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + Y) & 0xFF;
-}')
-
-define(M6502_ZEROY_READMODIFYWRITE, `{
-  operandAddress = peek(PC++);
-  peek(operandAddress);
-  operandAddress = (operandAddress + Y) & 0xFF;
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_INDIRECT, `{
-  uInt16 addr = peek(PC++);
-  addr |= ((uInt16)peek(PC++) << 8);
-
-  // Simulate the error in the indirect addressing mode!
-  uInt16 high = NOTSAMEPAGE(addr, addr + 1) ? (addr & 0xff00) : (addr + 1);
-
-  operandAddress = peek(addr);
-  operandAddress |= ((uInt16)peek(high) << 8);
-}')
-
-define(M6502_INDIRECTX_READ, `{
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  uInt16 address = peek(pointer++);
-  address |= ((uInt16)peek(pointer) << 8);
-  operand = peek(address);
-}')
-
-define(M6502_INDIRECTX_WRITE, `{
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
-}')
-
-define(M6502_INDIRECTX_READMODIFYWRITE, `{
-  uInt8 pointer = peek(PC++);
-  peek(pointer);
-  pointer += X;
-  operandAddress = peek(pointer++);
-  operandAddress |= ((uInt16)peek(pointer) << 8);
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-define(M6502_INDIRECTY_READ, `{
-  uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  operand = peek(high | (uInt8)(low + Y));
-  if((low + Y) > 0xFF)
-    operand = peek((high | low) + Y);
-}')
-
-define(M6502_INDIRECTY_WRITE, `{
-  uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
-}')
-
-define(M6502_INDIRECTY_READMODIFYWRITE, `{
-  uInt8 pointer = peek(PC++);
-  uInt16 low = peek(pointer++);
-  uInt16 high = ((uInt16)peek(pointer) << 8);
-  peek(high | (uInt8)(low + Y));
-  operandAddress = (high | low) + Y;
-  operand = peek(operandAddress);
-  poke(operandAddress, operand);
-}')
-
-
-define(M6502_BCC, `{
-  if(!C)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BCS, `{
-  if(C)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BEQ, `{
-  if(!notZ)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BMI, `{
-  if(N)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BNE, `{
-  if(notZ)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BPL, `{
-  if(!N)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BVC, `{
-  if(!V)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
-define(M6502_BVS, `{
-  if(V)
-  {
-    peek(PC);
-    uInt16 address = PC + (Int8)operand;
-    if(NOTSAMEPAGE(PC, address))
-      peek((PC & 0xFF00) | (address & 0x00FF));
-    PC = address;
-  }
-}')
-
 define(M6502_ADC, `{
+  uInt8 oldA = A;
+  Int16 nonBCDSum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    A = nonBCDSum;
+    C = (nonBCDSum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    notZ = nonBCDSum & 0xff;  // Z flag calculation ignores D flag
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }')
 
@@ -565,31 +273,35 @@ define(M6502_ISB, `{
   operand = operand + 1;
   poke(operandAddress, operand);
 
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    A = ourBCDTable[1][difference];
+    notZ = A;
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }')
 
 define(M6502_JMP, `{
@@ -760,6 +472,7 @@ define(M6502_RORA, `{
 }')
 
 define(M6502_RRA, `{
+  uInt8 oldA = A;
   bool oldC = C;
 
   // Set carry flag according to the right-most bit
@@ -770,31 +483,24 @@ define(M6502_RRA, `{
 
   if(!D)
   {
-    Int32 sum = A + operand + (C ? 1 : 0);
-    N = sum & 0x80;
-    V = ~(A ^ operand) & (A ^ sum) & 0x80;
-    notZ = sum & 0xff;
-    C = sum & 0xff00;
+    Int16 sum = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((sum > 127) || (sum < -128));
 
-    A = (uInt8) sum;
+    sum = (Int16)A + (Int16)operand + (C ? 1 : 0);
+    A = sum;
+    C = (sum > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) + (operand & 0x0f) + (C ? 1 : 0);
-    Int32 hi = (A & 0xf0) + (operand & 0xf0);
-    notZ = (lo+hi) & 0xff;
-    if(lo > 0x09)
-    {
-      hi += 0x10;
-      lo += 0x06;
-    }
-    N = hi & 0x80;
-    V = ~(A ^ operand) & (A ^ hi) & 0x80;
-    if(hi > 0x90)
-      hi += 0x60;
-    C = hi & 0xff00;
+    Int16 sum = ourBCDTable[0][A] + ourBCDTable[0][operand] + (C ? 1 : 0);
 
-    A = (lo & 0x0f) + (hi & 0xf0);
+    C = (sum > 99);
+    A = ourBCDTable[1][sum & 0xff];
+    notZ = A;
+    N = A & 0x80;
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
 }')
 
@@ -817,31 +523,36 @@ define(M6502_SAX, `{
 }')
 
 define(M6502_SBC, `{
-  // N, V, Z, C flags are the same in either mode (C calculated at the end)
-  Int32 sum = A - operand - (C ? 0 : 1);
-  N = sum & 0x80;
-  V = (A ^ operand) & (A ^ sum) & 0x80;
-  notZ = sum & 0xff;
+  uInt8 oldA = A;
 
   if(!D)
   {
-    A = (uInt8) sum;
+    operand = ~operand;
+    Int16 difference = (Int16)((Int8)A) + (Int16)((Int8)operand) + (C ? 1 : 0);
+    V = ((difference > 127) || (difference < -128));
+
+    difference = ((Int16)A) + ((Int16)operand) + (C ? 1 : 0);
+    A = difference;
+    C = (difference > 0xff);
+    notZ = A;
+    N = A & 0x80;
   }
   else
   {
-    Int32 lo = (A & 0x0f) - (operand & 0x0f) - (C ? 0 : 1);
-    Int32 hi = (A & 0xf0) - (operand & 0xf0);
-    if(lo & 0x10)
-    {
-      lo -= 6;
-      hi--;
-    }
-    if(hi & 0x0100)
-      hi -= 0x60;
+    Int16 difference = ourBCDTable[0][A] - ourBCDTable[0][operand] 
+        - (C ? 0 : 1);
 
-    A = (lo & 0x0f) | (hi & 0xf0);
+    if(difference < 0)
+      difference += 100;
+
+    // Z flag calculation ignores D flag
+    notZ = (((Int16)A) + ((Int16)~operand) + (C ? 1 : 0)) & 0xff;
+    A = ourBCDTable[1][difference];
+    N = A & 0x80;
+
+    C = (oldA >= (operand + (C ? 0 : 1)));
+    V = ((oldA ^ A) & 0x80) && ((A ^ operand) & 0x80);
   }
-  C = (sum & 0xff00) == 0;
 }')
 
 define(M6502_SBX, `{

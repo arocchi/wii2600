@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Dialog.hxx,v 1.44 2009-01-14 20:31:07 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -37,7 +37,7 @@ class TabWidget;
   This is the base class for all dialog boxes.
   
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Dialog.hxx,v 1.44 2009-01-14 20:31:07 stephena Exp $
 */
 class Dialog : public GuiObject
 {

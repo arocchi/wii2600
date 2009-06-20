@@ -14,8 +14,6 @@ MODULE_OBJS := \
 	src/emucore/CartDPC.o \
 	src/emucore/CartE0.o \
 	src/emucore/CartE7.o \
-	src/emucore/CartEF.o \
-	src/emucore/CartEFSC.o \
 	src/emucore/CartF4.o \
 	src/emucore/CartF4SC.o \
 	src/emucore/CartF6.o \
@@ -40,7 +38,6 @@ MODULE_OBJS := \
 	src/emucore/FSNode.o \
 	src/emucore/Joystick.o \
 	src/emucore/Keyboard.o \
-	src/emucore/KidVid.o \
 	src/emucore/M6532.o \
 	src/emucore/MT24LC256.o \
 	src/emucore/MD5.o \
