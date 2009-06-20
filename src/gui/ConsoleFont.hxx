@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ConsoleFont.hxx,v 1.6 2007-01-01 18:04:52 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -3116,7 +3116,7 @@ static const uInt16 _console_font_bits[] = {
 };
 
 /* Character->glyph mapping. */
-static const uInt32 _console_sysfont_offset[] = {
+static const uInt16 _console_sysfont_offset[] = {
 	13, /* (0x00) */
 	0,	/* (0x01) */
 	0,	/* (0x02) */
@@ -3250,14 +3250,12 @@ static const FontDesc consoleDesc = {
 	"8x13",
 	8,
 	13,
-	8, 13, 0, -1,
 	11,
 	0,
 	127,
 	_console_font_bits,
 	_console_sysfont_offset,  /* encode table */
 	0,  /* fixed width*/
-	0,
 	0,
 	sizeof(_console_font_bits)/sizeof(uInt16)
 };

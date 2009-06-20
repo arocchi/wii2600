@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Switches.hxx,v 1.4 2007-01-01 18:04:50 stephena Exp $
 //============================================================================
 
 #ifndef SWITCHES_HXX
@@ -21,23 +21,18 @@
 
 class Event;
 class Properties;
+class Switches;
 
-#include "Serializable.hxx"
 #include "bspf.hxx"
 
 /**
   This class represents the console switches of the game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Switches.hxx,v 1.4 2007-01-01 18:04:50 stephena Exp $
 */
-class Switches : public Serializable
+class Switches
 {
-  /**
-    Riot debug class needs special access to the underlying controller state
-  */
-  friend class RiotDebug;
-
   public:
     /**
       Create a new set of switches using the specified events and
@@ -58,35 +53,7 @@ class Switches : public Serializable
 
       @return The 8 bits which represent the state of the console switches
     */
-    uInt8 read() const { return mySwitches; }
-
-    /**
-      Update the switches variable
-    */
-    void update();
-
-    /**
-      Save the current state of the switches to the given Serializer.
-
-      @param out  The Serializer object to use
-      @return  False on any errors, else true
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Load the current state of the switches from the given Deserializer.
-
-      @param in  The Deserializer object to use
-      @return  False on any errors, else true
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for the device name (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "Switches"; }
+    uInt8 read();
 
   private:
     // Reference to the event object to use
@@ -95,5 +62,5 @@ class Switches : public Serializable
     // State of the console switches
     uInt8 mySwitches;
 };
-
 #endif
+

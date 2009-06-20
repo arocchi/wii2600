@@ -8,12 +8,12 @@
 // MM     MM 66  66 55  55 00  00 22
 // MM     MM  6666   5555   0000  222222
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: System.cxx,v 1.21 2007-01-01 18:04:51 stephena Exp $
 //============================================================================
 
 #include <assert.h>
@@ -21,9 +21,10 @@
 
 #include "Device.hxx"
 #include "M6502.hxx"
-#include "M6532.hxx"
 #include "TIA.hxx"
 #include "System.hxx"
+#include "Serializer.hxx"
+#include "Deserializer.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 System::System(uInt16 n, uInt16 m)
@@ -35,8 +36,7 @@ System::System(uInt16 n, uInt16 m)
     myM6502(0),
     myTIA(0),
     myCycles(0),
-    myDataBusState(0),
-    myDataBusLocked(false)
+    myDataBusState(0)
 {
   // Make sure the arguments are reasonable
   assert((1 <= m) && (m <= n) && (n <= 16));
@@ -116,20 +116,56 @@ void System::attach(M6502* m6502)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void System::attach(M6532* m6532)
-{
-  // Remember the processor
-  myM6532 = m6532;
-
-  // Attach it as a normal device
-  attach((Device*) m6532);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void System::attach(TIA* tia)
 {
   myTIA = tia;
   attach((Device*) tia);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool System::save(Serializer& out)
+{
+  try
+  {
+    out.putString("System");
+    out.putInt(myCycles);
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in save state for \'System\'" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool System::load(Deserializer& in)
+{
+  try
+  {
+    if(in.getString() != "System")
+      return false;
+
+    myCycles = (uInt32) in.getInt();
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in load state for \'System\'" << endl;
+    return false;
+  }
+
+  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -164,6 +200,87 @@ const System::PageAccess& System::getPageAccess(uInt16 page)
   assert(page <= myNumberOfPages);
 
   return myPageAccessTable[page];
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool System::saveState(const string& md5sum, Serializer& out)
+{
+  // Open the file as a new Serializer
+  if(!out.isOpen())
+    return false;
+
+  try
+  {
+    // Prepend the state file with the md5sum of this cartridge
+    // This is the first defensive check for an invalid state file
+    out.putString(md5sum);
+
+    // First save state for this system
+    if(!save(out))
+      return false;
+
+    // Next, save state for the CPU
+    if(!myM6502->save(out))
+      return false;
+
+    // Now save the state of each device
+    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
+      if(!myDevices[i]->save(out))
+        return false;
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in save state for \'System\'" << endl;
+    return false;
+  }
+
+  return true;  // success
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool System::loadState(const string& md5sum, Deserializer& in)
+{
+  // Open the file as a new Deserializer
+  if(!in.isOpen())
+    return false;
+
+  try
+  {
+    // Look at the beginning of the state file.  It should contain the md5sum
+    // of the current cartridge.  If it doesn't, this state file is invalid.
+    if(in.getString() != md5sum)
+      return false;
+
+    // First load state for this system
+    if(!load(in))
+      return false;
+
+    // Next, load state for the CPU
+    if(!myM6502->load(in))
+      return false;
+
+    // Now load the state of each device
+    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
+      if(!myDevices[i]->load(in))
+        return false;
+  }
+  catch(char *msg)
+  {
+    cerr << msg << endl;
+    return false;
+  }
+  catch(...)
+  {
+    cerr << "Unknown error in load state for \'System\'" << endl;
+    return false;
+  }
+
+  return true;  // success
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -240,69 +357,4 @@ void System::lockDataBus()
 void System::unlockDataBus()
 {
   myDataBusLocked = false;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::save(Serializer& out) const
-{
-  const string& device = name();
-  try
-  {
-    out.putString(device);
-    out.putInt(myCycles);
-
-    if(!myM6502->save(out))
-      return false;
-
-    // Now save the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->save(out))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in save state for " << device << endl;
-    return false;
-  }
-
-  return true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool System::load(Deserializer& in)
-{
-  const string& device = name();
-  try
-  {
-    if(in.getString() != device)
-      return false;
-
-    myCycles = (uInt32) in.getInt();
-
-    // Next, load state for the CPU
-    if(!myM6502->load(in))
-      return false;
-
-    // Now load the state of each device
-    for(uInt32 i = 0; i < myNumberOfDevices; ++i)
-      if(!myDevices[i]->load(in))
-        return false;
-  }
-  catch(char *msg)
-  {
-    cerr << msg << endl;
-    return false;
-  }
-  catch(...)
-  {
-    cerr << "Unknown error in load state for " << device << endl;
-    return false;
-  }
-
-  return true;
 }

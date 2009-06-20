@@ -8,21 +8,22 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: SpeakJet.cxx,v 1.6 2007-01-01 18:04:50 stephena Exp $
 //============================================================================
 
-#ifdef SPEAKJET_EMULATION
+#ifdef ATARIVOX_SUPPORT
 
 #include "SpeakJet.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SpeakJet::SpeakJet()
 {
+
   // Initialize output buffers. Each one points to the next element,
   // except the last, which points back to the first.
   SpeechBuffer *first = &outputBuffers[0];
@@ -84,11 +85,9 @@ int SpeakJet::thread(void *data) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void SpeakJet::write(uInt8 code)
 {
-  cerr << "SpeakJet: output byte " << ((int)(code)) << endl;
-
   // TODO: clean up this mess.
   const char *rsynthPhones = xlatePhoneme(code);
-//  cerr << "rsynth: \"" << rsynthPhones << "\"" << endl;
+  cerr << "rsynth: \"" << rsynthPhones << "\"" << endl;
   int len = strlen(rsynthPhones);
 
   if(ourInputCount + len + 1 >= INPUT_BUFFER_SIZE) {
@@ -97,14 +96,14 @@ void SpeakJet::write(uInt8 code)
   }
 
   uInt32 sem = SDL_SemValue(ourInputSemaphore);
-//  cerr << "write() waiting on semaphore (value " << sem << ")" << endl;
+  cerr << "write() waiting on semaphore (value " << sem << ")" << endl;
   SDL_SemWait(ourInputSemaphore);
-//  cerr << "write() got semaphore" << endl;
+  cerr << "write() got semaphore" << endl;
   for(int i=0; i<len; i++)
     phonemeBuffer[ourInputCount++] = rsynthPhones[i];
   phonemeBuffer[ourInputCount] = '\0';
-//  cerr << "phonemeBuffer contains \"" << phonemeBuffer << "\"" << endl;
-//  cerr << "write() releasing semaphore" << endl;
+  cerr << "phonemeBuffer contains \"" << phonemeBuffer << "\"" << endl;
+  cerr << "write() releasing semaphore" << endl;
   SDL_SemPost(ourInputSemaphore);
 }
 
@@ -118,9 +117,9 @@ void SpeakJet::speak()
     return;
 
   uInt32 sem = SDL_SemValue(ourInputSemaphore);
-//  cerr << "speak() waiting on semaphore (value " << sem << ")" << endl;
+  cerr << "speak() waiting on semaphore (value " << sem << ")" << endl;
   SDL_SemWait(ourInputSemaphore);
-//  cerr << "speak() got semaphore" << endl;
+  cerr << "speak() got semaphore" << endl;
 
   // begin locked section
 
@@ -136,7 +135,7 @@ void SpeakJet::speak()
     ourInputCount = 0;
 
   // end locked section
-//  cerr << "speak() releasing semaphore" << endl;
+  cerr << "speak() releasing semaphore" << endl;
   SDL_SemPost(ourInputSemaphore);
 
   if(foundSpace)
@@ -198,7 +197,7 @@ void *SpeakJet::save_sample(void *user_data,
   // output = (uInt8)( (((float)shortSamp) + 32768.0) / 256.0 );
   double d = shortSamp + 32768.0;
   output = (uInt8)(d/256.0);
-//  cerr << "Output sample: " << ((int)(output)) << endl;
+  cerr << "Output sample: " << ((int)(output)) << endl;
 
   // Put in buffer
   ourCurrentWriteBuffer->contents[ourCurrentWritePosition++] = output;

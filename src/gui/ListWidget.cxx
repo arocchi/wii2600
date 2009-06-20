@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: ListWidget.cxx,v 1.47 2007-01-01 18:04:53 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -32,7 +32,7 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
-                       int x, int y, int w, int h, bool quickSelect)
+                       int x, int y, int w, int h)
   : EditableWidget(boss, font, x, y, 16, 16),
     _rows(0),
     _cols(0),
@@ -42,15 +42,10 @@ ListWidget::ListWidget(GuiObject* boss, const GUI::Font& font,
     _currentKeyDown(0),
     _editMode(false),
     _caretInverse(true),
-    _quickSelect(quickSelect),
     _quickSelectTime(0)
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS;
   _type = kListWidget;
-  _bgcolor = kWidColor;
-  _bgcolorhi = kWidColor;
-  _textcolor = kTextColor;
-  _textcolorhi = kTextColor;
 
   _cols = w / _fontWidth;
   _rows = h / _fontHeight;
@@ -210,29 +205,39 @@ int ListWidget::findItem(int x, int y) const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+static bool matchingCharsIgnoringCase(string s, string pattern)
+{
+  // Make the strings uppercase so we can compare them
+  transform(s.begin(), s.end(), s.begin(), (int(*)(int)) toupper);
+  transform(pattern.begin(), pattern.end(), pattern.begin(), (int(*)(int)) toupper);
+
+  // Make sure that if the pattern is found, it occurs at the start of 's'
+  return (s.find(pattern, 0) == string::size_type(0));
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
   // Ignore all Alt-mod keys
-  if(instance().eventHandler().kbdAlt(modifiers))
+  if(instance()->eventHandler().kbdAlt(modifiers))
     return true;
 
   bool handled = true;
   int oldSelectedItem = _selectedItem;
 
-  if (!_editMode && _quickSelect &&
-      ((isalnum((char)ascii)) || isspace((char)ascii)))
+  if (!_editMode && isalnum((char)ascii))
   {
     // Quick selection mode: Go to first list item starting with this key
     // (or a substring accumulated from the last couple key presses).
     // Only works in a useful fashion if the list entries are sorted.
     // TODO: Maybe this should be off by default, and instead we add a
     // method "enableQuickSelect()" or so ?
-    int time = instance().getTicks() / 1000;
+    int time = instance()->getTicks() / 1000;
     if (_quickSelectTime < time)
       _quickSelectStr = (char)ascii;
     else
       _quickSelectStr += (char)ascii;
-    _quickSelectTime = time + _QUICK_SELECT_DELAY;
+    _quickSelectTime = time + 300; 
 
     // FIXME: This is bad slow code (it scans the list linearly each time a
     // key is pressed); it could be much faster. Only of importance if we have
@@ -241,8 +246,8 @@ bool ListWidget::handleKeyDown(int ascii, int keycode, int modifiers)
     int newSelectedItem = 0;
     for (StringList::const_iterator i = _list.begin(); i != _list.end(); ++i)
     {
-      if(BSPF_strncasecmp((*i).c_str(), _quickSelectStr.c_str(),
-         _quickSelectStr.length()) == 0)
+      const bool match = matchingCharsIgnoringCase(*i, _quickSelectStr);
+      if (match)
       {
         _selectedItem = newSelectedItem;
         break;
@@ -388,6 +393,17 @@ void ListWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+GUI::Rect ListWidget::getRect() const
+{
+  // Account for attached scrollbar when calculating width
+  int x = getAbsX() - 1,  y = getAbsY() - 1,
+      w = getWidth() + kScrollBarWidth + 2, h = getHeight() + 2;
+
+  GUI::Rect r(x, y, x+w, y+h);
+  return r;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void ListWidget::scrollToCurrent(int item)
 {
   // Only do something if the current item is not in our view port
@@ -454,6 +470,3 @@ void ListWidget::abortEditMode()
   // Reset to normal data entry
   EditableWidget::abortEditMode();
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-int ListWidget::_QUICK_SELECT_DELAY = 300;

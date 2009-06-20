@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemMACOSX.cxx,v 1.16 2007-01-03 12:59:23 stephena Exp $
 //============================================================================
 
 #include <cstdlib>
@@ -56,26 +56,25 @@ extern char parentdir[MAXPATHLEN];
 //  the OS into the application.
 void macOpenConsole(char *romname)
 {
-  theOSystem->deleteConsole();
-  theOSystem->createConsole(romname);
+	theOSystem->deleteConsole();
+	theOSystem->createConsole(romname);
 }
 
 // Allow the Menus Objective-C object to pass event sends into the 
 //  application.
 void macOSXSendMenuEvent(int event)
 {
-  switch(event)
-  {
-    case MENU_OPEN:
-      theOSystem->eventHandler().handleEvent(Event::LauncherMode, 1);
-      break;
-    case MENU_VOLUME_INCREASE:
-      theOSystem->eventHandler().handleEvent(Event::VolumeIncrease, 1);
-      break;
-    case MENU_VOLUME_DECREASE:
-      theOSystem->eventHandler().handleEvent(Event::VolumeDecrease, 1);
-      break;
-  }
+    switch(event) {
+        case MENU_OPEN:
+            theOSystem->eventHandler().handleEvent(Event::LauncherMode, 1);
+            break;
+        case MENU_VOLUME_INCREASE:
+            theOSystem->eventHandler().handleEvent(Event::VolumeIncrease, 1);
+            break;
+        case MENU_VOLUME_DECREASE:
+            theOSystem->eventHandler().handleEvent(Event::VolumeDecrease, 1);
+            break;
+    }
 }
 
 /**
@@ -83,17 +82,27 @@ void macOSXSendMenuEvent(int event)
   in its constructor:
 
   setBaseDir()
+  setStateDir()
+  setPropertiesFiles()
   setConfigFile()
+  setCacheFile()
 
   See OSystem.hxx for a further explanation
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemMACOSX::OSystemMACOSX()
-  : OSystem()
+OSystemMACOSX::OSystemMACOSX(const string& path) : OSystem()
 {
-  setBaseDir("~/.stella");
-  setConfigFile("~/.stella/stellarc");
+  const string& basedir = (path.length() > 0) ? path :
+                           string(getenv("HOME")) + "/.stella";
+  setBaseDir(basedir);
+
+  setStateDir(basedir + "/state");
+
+  setPropertiesDir(basedir);
+  setConfigFile(basedir + "/stellarc");
+
+  setCacheFile(basedir + "/stella.cache");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,7 +111,7 @@ OSystemMACOSX::~OSystemMACOSX()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 OSystemMACOSX::getTicks() const
+uInt32 OSystemMACOSX::getTicks()
 {
 #ifdef HAVE_GETTIMEOFDAY
   timeval now;

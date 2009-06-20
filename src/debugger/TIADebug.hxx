@@ -8,23 +8,23 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TIADebug.hxx,v 1.21 2007-01-01 18:04:42 stephena Exp $
 //============================================================================
 
 #ifndef TIA_DEBUG_HXX
 #define TIA_DEBUG_HXX
 
+class TIA;
 class Debugger;
 class TiaDebug;
 
 #include "Array.hxx"
 #include "DebuggerSystem.hxx"
-#include "TIA.hxx"
 
 // pointer types for TIADebug instance methods
 // (used by TiaMethodExpression)
@@ -102,13 +102,12 @@ class TiaState : public DebuggerState
 class TIADebug : public DebuggerSystem
 {
   public:
-    TIADebug(Debugger& dbg, Console& console);
+    TIADebug(Debugger* dbg, Console* console);
 
-    const DebuggerState& getState();
-    const DebuggerState& getOldState() { return myOldState; }
+    DebuggerState& getState();
+    DebuggerState& getOldState() { return myOldState; }
 
     void saveOldState();
-    string toString();
 
 	 /* TIA byte (or part of a byte) registers */
     uInt8 nusiz0(int newVal = -1);
@@ -188,16 +187,16 @@ class TIADebug : public DebuggerSystem
     bool collM0_M1(int newVal = -1) { return collision(14, newVal); }
 
     /* TIA strobe registers */
-    void strobeWsync() { mySystem.poke(WSYNC, 0); }
-    void strobeRsync() { mySystem.poke(RSYNC, 0); } // not emulated!
-    void strobeResP0() { mySystem.poke(RESP0, 0); }
-    void strobeResP1() { mySystem.poke(RESP1, 0); }
-    void strobeResM0() { mySystem.poke(RESM0, 0); }
-    void strobeResM1() { mySystem.poke(RESM1, 0); }
-    void strobeResBL() { mySystem.poke(RESBL, 0); }
-    void strobeHmove() { mySystem.poke(HMOVE, 0); }
-    void strobeHmclr() { mySystem.poke(HMCLR, 0); }
-    void strobeCxclr() { mySystem.poke(CXCLR, 0); }
+    void strobeWsync() { mySystem->poke(WSYNC, 0); }
+    void strobeRsync() { mySystem->poke(RSYNC, 0); } // not emulated!
+    void strobeResP0() { mySystem->poke(RESP0, 0); }
+    void strobeResP1() { mySystem->poke(RESP1, 0); }
+    void strobeResM0() { mySystem->poke(RESM0, 0); }
+    void strobeResM1() { mySystem->poke(RESM1, 0); }
+    void strobeResBL() { mySystem->poke(RESBL, 0); }
+    void strobeHmove() { mySystem->poke(HMOVE, 0); }
+    void strobeHmclr() { mySystem->poke(HMCLR, 0); }
+    void strobeCxclr() { mySystem->poke(CXCLR, 0); }
 
 	 /* read-only internal TIA state */
     int scanlines();
@@ -205,8 +204,7 @@ class TIADebug : public DebuggerSystem
     int clocksThisLine();
     bool vsync();
     bool vblank();
-    int vsyncAsInt()  { return int(vsync());  } // so we can use _vsync pseudo-register
-    int vblankAsInt() { return int(vblank()); } // so we can use _vblank pseudo-register
+    string state();
 
   private:
     /** Display a color patch for color at given index in the palette */
@@ -215,13 +213,12 @@ class TIADebug : public DebuggerSystem
     /** Get/set specific bits in the collision register (used by collXX_XX) */
     bool collision(int collID, int newVal);
 
-    string booleanWithLabel(string label, bool value);
-
   private:
     TiaState myState;
     TiaState myOldState;
 
-    TIA& myTIA;
+    System* mySystem;
+    TIA*    myTIA;
 
     string nusizStrings[8];
 };

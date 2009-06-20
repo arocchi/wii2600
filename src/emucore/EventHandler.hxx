@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: EventHandler.hxx,v 1.99 2007-01-13 15:55:14 stephena Exp $
 //============================================================================
 
 #ifndef EVENTHANDLER_HXX
@@ -21,17 +21,18 @@
 
 #include <SDL.h>
 
+#include "bspf.hxx"
+#include "Event.hxx"
+#include "Array.hxx"
+#include "Control.hxx"
+#include "StringList.hxx"
+#include "Serializer.hxx"
+
 class Console;
 class OSystem;
 class DialogContainer;
 class EventMappingWidget;
-
-#include "Array.hxx"
-#include "Event.hxx"
-#include "Control.hxx"
-#include "StringList.hxx"
-#include "bspf.hxx"
-
+class EventStreamer;
 
 enum MouseButton {
   EVENT_LBUTTONDOWN,
@@ -61,7 +62,7 @@ enum EventMode {
   mapping can take place.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: EventHandler.hxx,v 1.99 2007-01-13 15:55:14 stephena Exp $
 */
 class EventHandler
 {
@@ -77,15 +78,7 @@ class EventHandler
     virtual ~EventHandler();
 
     // Enumeration representing the different states of operation
-    enum State {
-      S_NONE,
-      S_EMULATE,
-      S_PAUSE,
-      S_LAUNCHER,
-      S_MENU,
-      S_CMDMENU,
-      S_DEBUGGER
-    };
+    enum State { S_NONE, S_EMULATE, S_LAUNCHER, S_MENU, S_CMDMENU, S_DEBUGGER };
 
     /**
       Returns the event object associated with this handler class.
@@ -165,6 +158,12 @@ class EventHandler
     inline State state() { return myState; }
 
     /**
+      Returns the current launcher state (decide whether to enter launcher
+      on game exit).
+    */
+    inline bool useLauncher() { return myUseLauncherFlag; }
+
+    /**
       Resets the state machine of the EventHandler to the defaults
 
       @param state  The current state to set
@@ -172,9 +171,27 @@ class EventHandler
     void reset(State state);
 
     /**
+      Refresh display according to the current state
+
+      @param forceUpdate  Do a framebuffer update right away, instead
+                          of waiting for the next frame
+    */
+    void refreshDisplay(bool forceUpdate = false);
+
+    /**
       This method indicates that the system should terminate.
     */
     void quit() { handleEvent(Event::Quit, 1); }
+
+    /**
+      Save state to explicit state number (debugger uses this)
+    */
+    void saveState(int state);
+
+    /**
+      Load state from explicit state number (debugger uses this)
+    */
+    void loadState(int state);
 
     /**
       Sets the mouse to act as paddle 'num'
@@ -183,6 +200,23 @@ class EventHandler
       @param showmessage  Print a message to the framebuffer
     */
     void setPaddleMode(int num, bool showmessage = false);
+
+    /**
+      Sets the speed of the given paddle
+
+      @param num    The paddle number (0-3)
+      @param speed  The speed of paddle movement for the given paddle
+    */
+    void setPaddleSpeed(int num, int speed);
+
+    /**
+      Sets the amount by which paddle jitter is detected.  Quick movements
+      of less than this amount constitute jitter, and do not generate
+      paddle events.
+
+      @param thresh  The threshold to use for jitter detection
+    */
+    void setPaddleThreshold(int thresh);
 
     inline bool kbdAlt(int mod)
     {
@@ -211,7 +245,6 @@ class EventHandler
     void leaveMenuMode();
     bool enterDebugMode();
     void leaveDebugMode();
-    void takeSnapshot();
 
     /**
       Send an event directly to the event handler.
@@ -223,6 +256,23 @@ class EventHandler
     void handleEvent(Event::Type type, Int32 value);
 
     inline bool frying() { return myFryingFlag; }
+
+    /**
+      Create a synthetic SDL mouse motion event based on the given x,y values.
+
+      @param x  The x coordinate of motion, scaled in value
+      @param y  The y coordinate of motion, scaled in value
+    */
+    void createMouseMotionEvent(int x, int y);
+
+    /**
+      Create a synthetic SDL mouse button event based on the given x,y values.
+
+      @param x     The x coordinate of motion, scaled in value
+      @param y     The y coordinate of motion, scaled in value
+      @param state The state of the button click (on or off)
+    */
+    void createMouseButtonEvent(int x, int y, int state);
 
     inline SDL_Joystick* getJoystick(int i) { return ourJoysticks[i].stick; }
 
@@ -397,12 +447,26 @@ class EventHandler
     */
     inline bool eventIsAnalog(Event::Type event);
 
+    /**
+      Tests if the given paddle value is displaying a rapid left/right
+      motion, which is also known as jitter.
+
+      @param paddle The paddle to test
+      @param value  The value assigned to the paddle
+      @return       True if jittering, else false
+    */
+    inline bool isJitter(int paddle, int value);
+
+    void saveState();
+    void changeState(bool show = true);
+    void loadState();
+    void takeSnapshot();
     void setEventState(State state);
 
   private:
     enum {
-      kEmulActionListSize = 75,
-      kMenuActionListSize = 13
+      kEmulActionListSize = 80,
+      kMenuActionListSize = 15
     };
 
     // Structure used for action menu items
@@ -448,6 +512,9 @@ class EventHandler
     // Global Event object
     Event* myEvent;
 
+    // The EventStreamer to use for loading/saving eventstreams
+    EventStreamer* myEventStreamer;
+
     // Indicates current overlay object
     DialogContainer* myOverlay;
 
@@ -475,8 +542,14 @@ class EventHandler
     // Indicates the current state of the system (ie, which mode is current)
     State myState;
 
+    // Indicates the current state to use for state loading/saving
+    uInt32 myLSState;
+
     // Indicates whether the mouse cursor is grabbed
     bool myGrabMouseFlag;
+
+    // Indicates whether to use launcher mode when exiting a game
+    bool myUseLauncherFlag;
 
     // Indicates whether the joystick emulates 'impossible' directions
     bool myAllowAllDirectionsFlag;
@@ -487,13 +560,29 @@ class EventHandler
     // Indicates which paddle the mouse currently emulates
     Int8 myPaddleMode;
 
+    // Indicates the amount by which we consider a paddle to be jittering
+    int myPaddleThreshold;
+
+    // Used for paddle emulation by keyboard or joystick
+    JoyMouse myPaddle[4];
+
+    // Type of device on each controller port (based on ROM properties)
+    Controller::Type myController[2];
+
     // Holds static strings for the remap menu (emulation and menu events)
     static ActionList ourEmulActionList[kEmulActionListSize];
     static ActionList ourMenuActionList[kMenuActionListSize];
 
+    // Lookup table for paddle resistance events
+    static const Event::Type Paddle_Resistance[4];
+
+    // Lookup table for paddle button events
+    static const Event::Type Paddle_Button[4];
+
     // Static lookup tables for Stelladaptor axis/button support
-    static const Event::Type SA_Axis[2][2];
-    static const Event::Type SA_Button[2][2];
+    static const Event::Type SA_Axis[2][2][3];
+    static const Event::Type SA_Button[2][2][3];
+    static const Event::Type SA_DrivingValue[2];
 };
 
 #endif

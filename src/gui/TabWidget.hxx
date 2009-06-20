@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TabWidget.hxx,v 1.16 2007-01-01 18:04:54 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -22,11 +22,11 @@
 #ifndef TAB_WIDGET_HXX
 #define TAB_WIDGET_HXX
 
-#include "bspf.hxx"
-
-#include "Array.hxx"
-#include "Command.hxx"
+#include "GuiUtils.hxx"
 #include "Widget.hxx"
+#include "Command.hxx"
+#include "Array.hxx"
+#include "bspf.hxx"
 
 class TabWidget : public Widget, public CommandSender
 {
@@ -64,11 +64,9 @@ class TabWidget : public Widget, public CommandSender
 
     int getTabWidth()  { return _tabWidth;  }
     int getTabHeight() { return _tabHeight; }
-    int getActiveTab() { return _activeTab; }
 
     virtual void handleMouseDown(int x, int y, int button, int clickCount);
     virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
-    virtual bool handleEvent(Event::Type event);
 
     virtual void loadConfig();
 
@@ -91,7 +89,7 @@ class TabWidget : public Widget, public CommandSender
 
   private:
     void box(int x, int y, int width, int height,
-             uInt32 colorA, uInt32 colorB, bool omitBottom);
+             int colorA, int colorB, bool omitBottom);
 
     void updateActiveTab();
 };

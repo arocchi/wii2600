@@ -8,57 +8,41 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: InputDialog.cxx,v 1.23 2007-01-17 13:17:42 stephena Exp $
 //============================================================================
+
+#include "OSystem.hxx"
+#include "Widget.hxx"
+#include "Array.hxx"
+#include "TabWidget.hxx"
+#include "EventMappingWidget.hxx"
+#include "InputDialog.hxx"
+#include "PopUpWidget.hxx"
 
 #include "bspf.hxx"
 
-#include "Array.hxx"
-#include "OSystem.hxx"
-#include "Joystick.hxx"
-#include "Paddles.hxx"
-#include "Settings.hxx"
-#include "StringList.hxx"
-#include "EventMappingWidget.hxx"
-#include "EditTextWidget.hxx"
-#include "PopUpWidget.hxx"
-#include "TabWidget.hxx"
-#include "Widget.hxx"
-
-#include "InputDialog.hxx"
-
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
-                         const GUI::Font& font)
-  : Dialog(osystem, parent, 0, 0, 0, 0)
+                         const GUI::Font& font, int x, int y, int w, int h)
+  : Dialog(osystem, parent, x, y, w, h)
 {
-  const int lineHeight   = font.getLineHeight(),
-            fontWidth    = font.getMaxCharWidth(),
-            buttonHeight = font.getLineHeight() + 4;
   const int vBorder = 4;
   int xpos, ypos, tabID;
   WidgetArray wid;
 
-  // Set real dimensions
-  _w = 42 * fontWidth + 10;
-  _h = 12 * (lineHeight + 4) + 10;
-
   // The tab widget
   xpos = 2; ypos = vBorder;
-  myTab = new TabWidget(this, font, xpos, ypos, _w - 2*xpos, _h - buttonHeight - 20);
+  myTab = new TabWidget(this, font, xpos, ypos, _w - 2*xpos, _h - 24 - 2*ypos);
   addTabWidget(myTab);
-  wid.push_back(myTab);
-  addToFocusList(wid);
 
   // 1) Event mapper for emulation actions
   tabID = myTab->addTab("Emul. Events");
-  const StringList& eactions = instance().eventHandler().getActionList(kEmulationMode);
+  const StringList& eactions = instance()->eventHandler().getActionList(kEmulationMode);
   myEmulEventMapper = new EventMappingWidget(myTab, font, 2, 2,
                                              myTab->getWidth(),
                                              myTab->getHeight() - ypos,
@@ -68,7 +52,7 @@ InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
 
   // 2) Event mapper for UI actions
   tabID = myTab->addTab("UI Events");
-  const StringList& mactions = instance().eventHandler().getActionList(kMenuMode);
+  const StringList& mactions = instance()->eventHandler().getActionList(kMenuMode);
   myMenuEventMapper = new EventMappingWidget(myTab, font, 2, 2,
                                              myTab->getWidth(),
                                              myTab->getHeight() - ypos,
@@ -84,9 +68,19 @@ InputDialog::InputDialog(OSystem* osystem, DialogContainer* parent,
   myTab->setActiveTab(0);
 
   // Add OK and Cancel buttons
-  wid.clear();
-  addOKCancelBGroup(wid, font);
-  addBGroupToFocusList(wid);
+  ButtonWidget* b;
+#ifndef MAC_OSX
+  b = addButton(font, _w - 2 * (kButtonWidth + 7), _h - 24, "OK", kOKCmd);
+  wid.push_back(b);
+  b = addButton(font, _w - (kButtonWidth + 10), _h - 24, "Cancel", kCloseCmd);
+  wid.push_back(b);
+#else
+  b = addButton(font, _w - 2 * (kButtonWidth + 7), _h - 24, "Cancel", kCloseCmd);
+  wid.push_back(b);
+  b = addButton(font, _w - (kButtonWidth + 10), _h - 24, "OK", kOKCmd);
+  wid.push_back(b);
+#endif
+  addToFocusList(wid);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -97,11 +91,9 @@ InputDialog::~InputDialog()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void InputDialog::addVDeviceTab(const GUI::Font& font)
 {
-  const int lineHeight = font.getLineHeight(),
-            fontHeight = font.getFontHeight();
+  const int lineHeight = font.getLineHeight();
   int xpos, ypos, lwidth, pwidth, tabID;
   WidgetArray wid;
-  StringMap items;
 
   // Virtual device/ports
   tabID = myTab->addTab("Virtual Devs");
@@ -111,35 +103,23 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
   lwidth = font.getStringWidth("Stelladaptor 2 is: ");
   pwidth = font.getStringWidth("right virtual port");
 
-  items.clear();
-  items.push_back("left virtual port", "left");
-  items.push_back("right virtual port", "right");
-  myLeftPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight, items,
-                               "Stelladaptor 1 is: ", lwidth, kLeftChanged);
+  myLeftPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                               "Stelladaptor 1 is: ", lwidth);
+  myLeftPort->appendEntry("left virtual port", 1);
+  myLeftPort->appendEntry("right virtual port", 2);
   wid.push_back(myLeftPort);
 
   ypos += lineHeight + 5;
-  // ... use items from above
-  myRightPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight, items,
-                                "Stelladaptor 2 is: ", lwidth, kRightChanged);
+  myRightPort = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                "Stelladaptor 2 is: ", lwidth);
+  myRightPort->appendEntry("left virtual port", 1);
+  myRightPort->appendEntry("right virtual port", 2);
   wid.push_back(myRightPort);
 
-  lwidth = font.getStringWidth("Paddle threshold: ");
-  pwidth = font.getMaxCharWidth() * 8;
-
-  // Add joystick deadzone setting
-  ypos += 2*lineHeight;
-  myDeadzone = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
-                                "Joy deadzone: ", lwidth, kDeadzoneChanged);
-  myDeadzone->setMinValue(0); myDeadzone->setMaxValue(29);
-  xpos += myDeadzone->getWidth() + 5;
-  myDeadzoneLabel = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
-                                         "", kTextAlignLeft);
-  myDeadzoneLabel->setFlags(WIDGET_CLEARBG);
-  wid.push_back(myDeadzone);
-
   // Add 'mouse to paddle' mapping
-  xpos = 5;  ypos += lineHeight + 3;
+  ypos += 2*lineHeight;
+  lwidth = font.getStringWidth("Paddle threshold: ");
+  pwidth = font.getMaxCharWidth() * 5;
   myPaddleMode = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
                                   "Mouse is paddle: ", lwidth, kPaddleChanged);
   myPaddleMode->setMinValue(0); myPaddleMode->setMaxValue(3);
@@ -149,26 +129,66 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
   myPaddleModeLabel->setFlags(WIDGET_CLEARBG);
   wid.push_back(myPaddleMode);
 
-  // Add paddle speed
+  // Add 'paddle threshhold' setting
   xpos = 5;  ypos += lineHeight + 3;
-  myPaddleSpeed = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
-                                   "Paddle speed: ",
-                                   lwidth, kPSpeedChanged);
-  myPaddleSpeed->setMinValue(1); myPaddleSpeed->setMaxValue(15);
-  xpos += myPaddleSpeed->getWidth() + 5;
-  myPaddleLabel = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
-                                       "", kTextAlignLeft);
-  myPaddleLabel->setFlags(WIDGET_CLEARBG);
-  wid.push_back(myPaddleSpeed);
+  myPaddleThreshold = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                       "Paddle threshold: ",
+                                       lwidth, kPaddleThreshChanged);
+  myPaddleThreshold->setMinValue(400); myPaddleThreshold->setMaxValue(800);
+  xpos += myPaddleThreshold->getWidth() + 5;
+  myPaddleThresholdLabel = new StaticTextWidget(myTab, font, xpos, ypos+1,
+                                                24, lineHeight,
+                                                "", kTextAlignLeft);
+  myPaddleThresholdLabel->setFlags(WIDGET_CLEARBG);
+  wid.push_back(myPaddleThreshold);
 
-  // Add AtariVox serial port
-  xpos = 5;  ypos += 2*lineHeight;
-  int fwidth = _w - xpos - lwidth - 20;
-  new StaticTextWidget(myTab, font, xpos, ypos, lwidth, fontHeight,
-                       "AVox serial port:", kTextAlignLeft);
-  myAVoxPort = new EditTextWidget(myTab, font, xpos+lwidth, ypos,
-                                  fwidth, fontHeight, "");
-  wid.push_back(myAVoxPort);
+  // Add paddle 0 speed
+  xpos = 5;  ypos += lineHeight + 3;
+  myPaddleSpeed[0] = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                      "Paddle 0 speed: ",
+                                      lwidth, kP0SpeedID);
+  myPaddleSpeed[0]->setMinValue(1); myPaddleSpeed[0]->setMaxValue(100);
+  xpos += myPaddleSpeed[0]->getWidth() + 5;
+  myPaddleLabel[0] = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
+                                          "", kTextAlignLeft);
+  myPaddleLabel[0]->setFlags(WIDGET_CLEARBG);
+  wid.push_back(myPaddleSpeed[0]);
+
+  // Add paddle 1 speed
+  xpos = 5;  ypos += lineHeight + 3;
+  myPaddleSpeed[1] = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                      "Paddle 1 speed: ",
+                                      lwidth, kP1SpeedID);
+  myPaddleSpeed[1]->setMinValue(1); myPaddleSpeed[1]->setMaxValue(100);
+  xpos += myPaddleSpeed[1]->getWidth() + 5;
+  myPaddleLabel[1] = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
+                                          "", kTextAlignLeft);
+  myPaddleLabel[1]->setFlags(WIDGET_CLEARBG);
+  wid.push_back(myPaddleSpeed[1]);
+
+  // Add paddle 2 speed
+  xpos = 5;  ypos += lineHeight + 3;
+  myPaddleSpeed[2] = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                      "Paddle 2 speed: ",
+                                      lwidth, kP2SpeedID);
+  myPaddleSpeed[2]->setMinValue(1); myPaddleSpeed[2]->setMaxValue(100);
+  xpos += myPaddleSpeed[2]->getWidth() + 5;
+  myPaddleLabel[2] = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
+                                        "", kTextAlignLeft);
+  myPaddleLabel[2]->setFlags(WIDGET_CLEARBG);
+  wid.push_back(myPaddleSpeed[2]);
+
+  // Add paddle 3 speed
+  xpos = 5;  ypos += lineHeight + 3;
+  myPaddleSpeed[3] = new SliderWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
+                                      "Paddle 3 speed: ",
+                                      lwidth, kP3SpeedID);
+  myPaddleSpeed[3]->setMinValue(1); myPaddleSpeed[3]->setMaxValue(100);
+  xpos += myPaddleSpeed[3]->getWidth() + 5;
+  myPaddleLabel[3] = new StaticTextWidget(myTab, font, xpos, ypos+1, 24, lineHeight,
+                                        "", kTextAlignLeft);
+  myPaddleLabel[3]->setFlags(WIDGET_CLEARBG);
+  wid.push_back(myPaddleSpeed[3]);
 
   // Add items for virtual device ports
   addToFocusList(wid, tabID);
@@ -178,27 +198,30 @@ void InputDialog::addVDeviceTab(const GUI::Font& font)
 void InputDialog::loadConfig()
 {
   // Left & right ports
-  const string& sa1 = instance().settings().getString("sa1");
-  int lport = sa1 == "right" ? 1 : 0;
-  myLeftPort->setSelected(lport);
-  const string& sa2 = instance().settings().getString("sa2");
-  int rport = sa2 == "right" ? 1 : 0;
-  myRightPort->setSelected(rport);
-
-  // Joystick deadzone
-  myDeadzone->setValue(instance().settings().getInt("joydeadzone"));
-  myDeadzoneLabel->setLabel(instance().settings().getString("joydeadzone"));
+  const string& sa1 = instance()->settings().getString("sa1");
+  int lport = sa1 == "right" ? 2 : 1;
+  myLeftPort->setSelectedTag(lport);
+  const string& sa2 = instance()->settings().getString("sa2");
+  int rport = sa2 == "right" ? 2 : 1;
+  myRightPort->setSelectedTag(rport);
 
   // Paddle mode
-  myPaddleMode->setValue(0);
-  myPaddleModeLabel->setLabel("0");
+  myPaddleMode->setValue(instance()->settings().getInt("paddle"));
+  myPaddleModeLabel->setLabel(instance()->settings().getString("paddle"));
 
-  // Paddle speed
-  myPaddleSpeed->setValue(instance().settings().getInt("pspeed"));
-  myPaddleLabel->setLabel(instance().settings().getString("pspeed"));
+  // Paddle threshold
+  myPaddleThreshold->setValue(instance()->settings().getInt("pthresh"));
+  myPaddleThresholdLabel->setLabel(instance()->settings().getString("pthresh"));
 
-  // AtariVox serial port
-  myAVoxPort->setEditString(instance().settings().getString("avoxport"));
+  // Paddle speed settings
+  myPaddleSpeed[0]->setValue(instance()->settings().getInt("p0speed"));
+  myPaddleLabel[0]->setLabel(instance()->settings().getString("p0speed"));
+  myPaddleSpeed[1]->setValue(instance()->settings().getInt("p1speed"));
+  myPaddleLabel[1]->setLabel(instance()->settings().getString("p1speed"));
+  myPaddleSpeed[2]->setValue(instance()->settings().getInt("p2speed"));
+  myPaddleLabel[2]->setLabel(instance()->settings().getString("p2speed"));
+  myPaddleSpeed[3]->setValue(instance()->settings().getInt("p3speed"));
+  myPaddleLabel[3]->setLabel(instance()->settings().getString("p3speed"));
 
   myTab->loadConfig();
 }
@@ -207,25 +230,21 @@ void InputDialog::loadConfig()
 void InputDialog::saveConfig()
 {
   // Left & right ports
-  const string& sa1 = myLeftPort->getSelectedTag();
-  const string& sa2 = myRightPort->getSelectedTag();
-  instance().eventHandler().mapStelladaptors(sa1, sa2);
-
-  // Joystick deadzone
-  int deadzone = myDeadzone->getValue();
-  instance().settings().setInt("joydeadzone", deadzone);
-  Joystick::setDeadZone(deadzone);
+  string sa1 = myLeftPort->getSelectedTag() == 2 ? "right" : "left";
+  string sa2 = myRightPort->getSelectedTag() == 2 ? "right" : "left";
+  instance()->eventHandler().mapStelladaptors(sa1, sa2);
 
   // Paddle mode
-  Paddles::setMouseIsPaddle(myPaddleMode->getValue());
+  int mode = myPaddleMode->getValue();
+  instance()->eventHandler().setPaddleMode(mode);
 
-  // Paddle speed
-  int speed = myPaddleSpeed->getValue();
-  instance().settings().setInt("pspeed", speed);
-  Paddles::setDigitalSpeed(speed);
+  // Paddle threshold
+  int threshold = myPaddleThreshold->getValue();
+  instance()->eventHandler().setPaddleThreshold(threshold);
 
-  // AtariVox serial port
-  instance().settings().setString("avoxport", myAVoxPort->getEditString());
+  // Paddle speed settings
+  for(int i = 0; i < 4; ++i)
+    instance()->eventHandler().setPaddleSpeed(i, myPaddleSpeed[i]->getValue());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -292,26 +311,19 @@ void InputDialog::handleCommand(CommandSender* sender, int cmd,
       close();
       break;
 
-    case kLeftChanged:
-      myRightPort->setSelected(
-        myLeftPort->getSelected() == 1 ? 0 : 1);
-      break;
-
-    case kRightChanged:
-      myLeftPort->setSelected(
-        myRightPort->getSelected() == 1 ? 0 : 1);
-      break;
-
-    case kDeadzoneChanged:
-      myDeadzoneLabel->setValue(myDeadzone->getValue());
-      break;
-
     case kPaddleChanged:
       myPaddleModeLabel->setValue(myPaddleMode->getValue());
       break;
 
-    case kPSpeedChanged:
-      myPaddleLabel->setValue(myPaddleSpeed->getValue());
+    case kPaddleThreshChanged:
+      myPaddleThresholdLabel->setValue(myPaddleThreshold->getValue());
+      break;
+
+    case kP0SpeedID:
+    case kP1SpeedID:
+    case kP2SpeedID:
+    case kP3SpeedID:
+      myPaddleLabel[cmd-100]->setValue(myPaddleSpeed[cmd-100]->getValue());
       break;
 
     default:

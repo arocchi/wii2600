@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemGP2X.hxx,v 1.10 2007-01-01 18:04:51 stephena Exp $
 // Modified by Alex Zaballa on 2006/01/04 for use on GP2X
 //============================================================================
 
@@ -32,7 +32,7 @@ class OSystemGP2X : public OSystem
     /**
       Create a new GP2X-specific operating system object
     */
-    OSystemGP2X();
+    OSystemGP2X(const string& path);
 
     /**
       Destructor
@@ -45,7 +45,7 @@ class OSystemGP2X : public OSystem
 
       @return Current time in microseconds.
     */
-    uInt32 getTicks() const;
+    uInt32 getTicks();
 
     /**
       This method queries the dimensions of the screen for this hardware.

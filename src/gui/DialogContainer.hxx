@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: DialogContainer.hxx,v 1.21 2007-01-01 18:04:52 stephena Exp $
 //============================================================================
 
 #ifndef DIALOG_CONTAINER_HXX
@@ -36,7 +36,7 @@ class OSystem;
   a stack, and handles their events.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: DialogContainer.hxx,v 1.21 2007-01-01 18:04:52 stephena Exp $
 */
 class DialogContainer
 {
@@ -119,9 +119,9 @@ class DialogContainer
     void handleJoyHatEvent(int stick, int hat, int value);
 
     /**
-      Draw the stack of menus (full indicates to redraw all items).
+      Draw the stack of menus.
     */
-    void draw(bool full = false);
+    void draw();
 
     /**
       Add a dialog box to the stack.
@@ -139,9 +139,19 @@ class DialogContainer
     void reStack();
 
     /**
+      Redraw all dialogs on the stack.
+    */
+    void refresh() { myRefreshFlag = true; }
+
+    /**
       Return the bottom-most dialog of this container.
     */
     const Dialog* baseDialog() const { return myBaseDialog; }
+
+    /**
+      (Re)initialize the menuing system.  This isn't necessary in most cases.
+    */
+    virtual void initialize() {}
 
   private:
     void reset();
@@ -160,6 +170,9 @@ class DialogContainer
 
     // Indicates the most current time (in milliseconds) as set by updateTime()
     int myTime;
+
+    // Indicates a full refresh of all dialogs is required
+    bool myRefreshFlag;
 
     // For continuous 'key down' events
     struct {

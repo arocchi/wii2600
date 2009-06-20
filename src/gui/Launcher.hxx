@@ -8,18 +8,17 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Launcher.hxx,v 1.9 2007-01-01 18:04:53 stephena Exp $
 //============================================================================
 
 #ifndef LAUNCHER_HXX
 #define LAUNCHER_HXX
 
-class Properties;
 class OSystem;
 
 #include "DialogContainer.hxx"
@@ -28,7 +27,7 @@ class OSystem;
   The base dialog for the ROM launcher in Stella.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Launcher.hxx,v 1.9 2007-01-01 18:04:53 stephena Exp $
 */
 class Launcher : public DialogContainer
 {
@@ -46,17 +45,13 @@ class Launcher : public DialogContainer
     /**
       Initialize the video subsystem wrt this class.
     */
-    bool initializeVideo();
-
-    /**
-      Wrapper for LauncherDialog::selectedRomMD5() method.
-    */
-    string selectedRomMD5();
+    void initializeVideo();
 
   private:
     // The width and height of this dialog
-    uInt32 myWidth;
-    uInt32 myHeight;
+    // These can only be changed by exiting and restarting Stella
+    int myWidth;
+    int myHeight;
 };
 
 #endif

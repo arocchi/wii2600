@@ -8,25 +8,24 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TabWidget.cxx,v 1.25 2007-01-01 18:04:54 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
-#include "bspf.hxx"
-
-#include "Dialog.hxx"
-#include "FrameBuffer.hxx"
-#include "GuiObject.hxx"
 #include "OSystem.hxx"
+#include "FrameBuffer.hxx"
+#include "GuiUtils.hxx"
+#include "bspf.hxx"
+#include "GuiObject.hxx"
 #include "Widget.hxx"
-
+#include "Dialog.hxx"
 #include "TabWidget.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,10 +39,6 @@ TabWidget::TabWidget(GuiObject* boss, const GUI::Font& font,
 {
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG;
   _type = kTabWidget;
-  _bgcolor = kDlgColor;
-  _bgcolorhi = kDlgColor;
-  _textcolor = kTextColor;
-  _textcolorhi = kTextColor;
 
   _tabHeight = font.getLineHeight() + 4;
 }
@@ -214,31 +209,6 @@ void TabWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool TabWidget::handleEvent(Event::Type event)
-{
-  bool handled = false;
-
-  switch (event)
-  {
-    case Event::UIDown:
-    case Event::UIRight:
-    case Event::UIPgDown:
-      cycleTab(1);
-      handled = true;
-      break;
-    case Event::UIUp:
-    case Event::UILeft:
-    case Event::UIPgUp:
-      cycleTab(-1);
-      handled = true;
-      break;
-    default:
-      break;
-  }
-  return handled;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TabWidget::loadConfig()
 {
   if(_firstTime)
@@ -252,34 +222,35 @@ void TabWidget::loadConfig()
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TabWidget::box(int x, int y, int width, int height,
-                    uInt32 colorA, uInt32 colorB, bool omitBottom)
+                    int colorA, int colorB, bool omitBottom)
 {
 //cerr << "TabWidget::box\n";
-  FBSurface& s = _boss->dialog().surface();
+  FrameBuffer& fb = _boss->instance()->frameBuffer();
 
-  s.hLine(x + 1, y, x + width - 2, colorA);
-  s.hLine(x, y + 1, x + width - 1, colorA);
-  s.vLine(x, y + 1, y + height - (omitBottom ? 1 : 2), colorA);
-  s.vLine(x + 1, y, y + height - (omitBottom ? 2 : 1), colorA);
+  fb.hLine(x + 1, y, x + width - 2, colorA);
+  fb.hLine(x, y + 1, x + width - 1, colorA);
+  fb.vLine(x, y + 1, y + height - (omitBottom ? 1 : 2), colorA);
+  fb.vLine(x + 1, y, y + height - (omitBottom ? 2 : 1), colorA);
 
   if (!omitBottom)
   {
-    s.hLine(x + 1, y + height - 2, x + width - 1, colorB);
-    s.hLine(x + 1, y + height - 1, x + width - 2, colorB);
+    fb.hLine(x + 1, y + height - 2, x + width - 1, colorB);
+    fb.hLine(x + 1, y + height - 1, x + width - 2, colorB);
   }
-  s.vLine(x + width - 1, y + 1, y + height - (omitBottom ? 1 : 2), colorB);
-  s.vLine(x + width - 2, y + 1, y + height - (omitBottom ? 2 : 1), colorB);
+  fb.vLine(x + width - 1, y + 1, y + height - (omitBottom ? 1 : 2), colorB);
+  fb.vLine(x + width - 2, y + 1, y + height - (omitBottom ? 2 : 1), colorB);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void TabWidget::drawWidget(bool hilite)
 {
+//cerr << "TabWidget::drawWidget\n";
   // The tab widget is strange in that it acts as both a widget (obviously)
   // and a dialog (it contains other widgets).  Because of the latter,
   // it must assume responsibility for refreshing all its children.
   Widget::setDirtyInChain(_tabs[_activeTab].firstWidget);
 
-  FBSurface& s = dialog().surface();
+  FrameBuffer& fb = instance()->frameBuffer();
 
   const int left1  = _x + 1;
   const int right1 = _x + kTabLeftOffset + _activeTab * (_tabWidth + kTabSpacing);
@@ -287,30 +258,30 @@ void TabWidget::drawWidget(bool hilite)
   const int right2 = _x + _w - 2;
 	
   // Draw horizontal line
-  s.hLine(left1, _y + _tabHeight - 2, right1, kShadowColor);
-  s.hLine(left2, _y + _tabHeight - 2, right2, kShadowColor);
+  fb.hLine(left1, _y + _tabHeight - 2, right1, kShadowColor);
+  fb.hLine(left2, _y + _tabHeight - 2, right2, kShadowColor);
 
   // Iterate over all tabs and draw them
   int i, x = _x + kTabLeftOffset;
   for (i = 0; i < (int)_tabs.size(); ++i)
   {
-    uInt32 fontcolor = _tabs[i].enabled ? kTextColor : kColor;
-    uInt32 boxcolor = (i == _activeTab) ? kColor : kShadowColor;
+    int fontcolor = _tabs[i].enabled ? kTextColor : kColor;
+    int boxcolor = (i == _activeTab) ? kColor : kShadowColor;
     int yOffset = (i == _activeTab) ? 0 : 2;
     box(x, _y + yOffset, _tabWidth, _tabHeight - yOffset, boxcolor, boxcolor, (i == _activeTab));
-    s.drawString(_font, _tabs[i].title, x + kTabPadding,
-                 _y + yOffset / 2 + (_tabHeight - _fontHeight - 1),
-                 _tabWidth - 2 * kTabPadding, fontcolor, kTextAlignCenter);
+    fb.drawString(_font, _tabs[i].title, x + kTabPadding,
+                  _y + yOffset / 2 + (_tabHeight - _fontHeight - 1),
+                  _tabWidth - 2 * kTabPadding, fontcolor, kTextAlignCenter);
     x += _tabWidth + kTabSpacing;
   }
 
   // Draw a frame around the widget area (belows the tabs)
-  s.hLine(left1, _y + _tabHeight - 1, right1, kColor);
-  s.hLine(left2, _y + _tabHeight - 1, right2, kColor);
-  s.hLine(_x+1, _y + _h - 2, _x + _w - 2, kShadowColor);
-  s.hLine(_x+1, _y + _h - 1, _x + _w - 2, kColor);
-  s.vLine(_x + _w - 2, _y + _tabHeight - 1, _y + _h - 2, kColor);
-  s.vLine(_x + _w - 1, _y + _tabHeight - 1, _y + _h - 2, kShadowColor);
+  fb.hLine(left1, _y + _tabHeight - 1, right1, kColor);
+  fb.hLine(left2, _y + _tabHeight - 1, right2, kColor);
+  fb.hLine(_x+1, _y + _h - 2, _x + _w - 2, kShadowColor);
+  fb.hLine(_x+1, _y + _h - 1, _x + _w - 2, kColor);
+  fb.vLine(_x + _w - 2, _y + _tabHeight - 1, _y + _h - 2, kColor);
+  fb.vLine(_x + _w - 1, _y + _tabHeight - 1, _y + _h - 2, kShadowColor);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: FileSnapDialog.hxx,v 1.2 2007-01-01 18:04:52 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -28,54 +28,47 @@ class DialogContainer;
 class BrowserDialog;
 class CheckboxWidget;
 class PopUpWidget;
-class EditTextWidget;
+class StaticTextWidget;
+class TabWidget;
 
 #include "Dialog.hxx"
 #include "Command.hxx"
-#include "FSNode.hxx"
 
 class FileSnapDialog : public Dialog, public CommandSender
 {
   public:
     FileSnapDialog(OSystem* osystem, DialogContainer* parent,
-                   const GUI::Font& font, GuiObject* boss);
+                   const GUI::Font& font, GuiObject* boss,
+                   int x, int y, int w, int h);
     ~FileSnapDialog();
 
-    void handleCommand(CommandSender* sender, int cmd, int data, int id);
+    virtual void loadConfig();
+    virtual void saveConfig();
+
+    virtual void handleCommand(CommandSender* sender, int cmd, int data, int id);
 
   private:
-    void loadConfig();
-    void saveConfig();
-    void setDefaults();
+    void openRomBrowser();
+    void openSnapBrowser();
 
   private:
     enum {
-      kChooseRomDirCmd      = 'LOrm', // rom select
-      kChooseStateDirCmd    = 'LOsd', // state dir
-      kChooseCheatFileCmd   = 'LOcf', // cheatfile (stella.cht)
-      kChoosePaletteFileCmd = 'LOpf', // palette file (stella.pal)
-      kChoosePropsFileCmd   = 'LOpr', // properties file (stella.pro)
-      kChooseSnapDirCmd     = 'LOsn', // snapshot dir
-      kChooseEEPROMDirCmd   = 'LOee', // eeprom dir
-      kStateDirChosenCmd    = 'LOsc', // state dir changed
-      kCheatFileChosenCmd   = 'LOcc', // cheatfile changed
-      kPaletteFileChosenCmd = 'LOpc', // palette file changed
-      kPropsFileChosenCmd   = 'LOrc', // properties file changed
-      kEEPROMDirChosenCmd   = 'LOec'  // eeprom dir changed
+      kChooseRomDirCmd  = 'LOrm', // rom select
+      kChooseSnapDirCmd = 'LOsn', // snap select
+      kBrowseDirCmd     = 'LObd'  // browse mode
     };
 
     BrowserDialog* myBrowser;
+    TabWidget* myTab;
 
-    // Config paths
-    EditTextWidget* myRomPath;
-    EditTextWidget* myStatePath;
-    EditTextWidget* myEEPROMPath;
-    EditTextWidget* myCheatFile;
-    EditTextWidget* myPaletteFile;
-    EditTextWidget* myPropsFile;
-    EditTextWidget* mySnapPath;
-    CheckboxWidget* mySnapSingle;
-    CheckboxWidget* mySnap1x;
+    // Rom path controls
+    StaticTextWidget* myRomPath;
+    CheckboxWidget*   myBrowseCheckbox;
+    ButtonWidget*     myReloadButton;
+
+    // Snapshot controls
+    StaticTextWidget* mySnapPath;
+    CheckboxWidget*   mySnapSingleCheckbox;
 
     // Indicates if this dialog is used for global (vs. in-game) settings
     bool myIsGlobal;

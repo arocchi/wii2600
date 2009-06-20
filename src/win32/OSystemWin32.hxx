@@ -8,25 +8,24 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: OSystemWin32.hxx,v 1.9 2007-01-01 18:04:56 stephena Exp $
 //============================================================================
 
 #ifndef OSYSTEM_WIN32_HXX
 #define OSYSTEM_WIN32_HXX
 
-#include "OSystem.hxx"
 #include "bspf.hxx"
 
 /**
   This class defines Windows system specific settings.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: OSystemWin32.hxx,v 1.9 2007-01-01 18:04:56 stephena Exp $
 */
 class OSystemWin32 : public OSystem
 {
@@ -34,7 +33,7 @@ class OSystemWin32 : public OSystem
     /**
       Create a new Win32 operating system object
     */
-    OSystemWin32();
+    OSystemWin32(const string& path);
 
     /**
       Destructor
@@ -47,7 +46,12 @@ class OSystemWin32 : public OSystem
 
       @return Current time in microseconds.
     */
-    virtual uInt32 getTicks() const;
+    virtual uInt32 getTicks();
+
+    /**
+      This method queries the dimensions of the screen for this hardware.
+    */
+    virtual void getScreenDimensions(int& width, int& height);
 };
 
 #endif

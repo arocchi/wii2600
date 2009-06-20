@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.hxx,v 1.58 2007-01-01 18:04:47 stephena Exp $
 //============================================================================
 
 #ifndef CONSOLE_HXX
@@ -22,9 +22,9 @@
 class Console;
 class Controller;
 class Event;
+class MediaSource;
 class Switches;
 class System;
-class TIA;
 
 #include "bspf.hxx"
 #include "Control.hxx"
@@ -33,29 +33,14 @@ class TIA;
 #include "Cart.hxx"
 #include "M6532.hxx"
 #include "AtariVox.hxx"
-#include "Serializable.hxx"
-
-/**
-  Contains detailed info about a console.
-*/
-struct ConsoleInfo
-{
-  string BankSwitch;
-  string CartName;
-  string CartMD5;
-  string Control0;
-  string Control1;
-  string DisplayFormat;
-  string InitialFrameRate;
-};
 
 /**
   This class represents the entire game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Console.hxx,v 1.58 2007-01-01 18:04:47 stephena Exp $
 */
-class Console : public Serializable
+class Console
 {
   public:
     /**
@@ -92,11 +77,11 @@ class Console : public Serializable
     }
 
     /**
-      Get the TIA for this console
+      Get the MediaSource for this console
 
-      @return The TIA
+      @return The mediasource
     */
-    TIA& tia() const { return *myTIA; }
+    MediaSource& mediaSource() const { return *myMediaSource; }
 
     /**
       Get the properties being used by the game
@@ -134,29 +119,6 @@ class Console : public Serializable
     M6532& riot() const { return *myRiot; }
 
     /**
-      Saves the current state of this console class to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Loads the current state of this console class from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for this console class (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "Console"; }
-
-    /**
       Set the properties to those given
 
       @param The properties to use for the current game
@@ -164,9 +126,9 @@ class Console : public Serializable
     void setProperties(const Properties& props);
 
     /**
-      Query detailed information about this console.
+      Query some information about this console.
     */
-    inline const ConsoleInfo& about() const { return myConsoleInfo; }
+    const string& about() const { return myAboutString; }
 
   public:
     /**
@@ -179,9 +141,14 @@ class Console : public Serializable
 
   public:
     /**
-      Toggle between NTSC/PAL/SECAM (and variants) display format.
+      Toggle between NTSC/PAL/PAL60 display format.
     */
     void toggleFormat();
+
+    /**
+      Query the currently selected display format (NTSC/PAL/PAL60).
+    */
+    string getFormat() const { return myDisplayFormat; }
 
     /**
       Toggle between the available palettes.
@@ -211,10 +178,8 @@ class Console : public Serializable
 
       @param full  Whether we want a full initialization,
                    or only reset certain attributes.
-
-      @return  False on any errors, else true
     */
-    bool initializeVideo(bool full = true);
+    void initializeVideo(bool full = true);
 
     /**
       Initialize the audio subsystem wrt this class.
@@ -228,30 +193,36 @@ class Console : public Serializable
     void fry() const;
 
     /**
-      Change the "Display.YStart" variable.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.
+
+      @param direction +1 indicates increase, -1 indicates decrease.
+    */
+    void changeXStart(int direction);
+
+    /**
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.
 
       @param direction +1 indicates increase, -1 indicates decrease.
     */
     void changeYStart(int direction);
 
     /**
-      Change the "Display.Height" variable.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.
+
+      @param direction +1 indicates increase, -1 indicates decrease.
+    */
+    void changeWidth(int direction);
+
+    /**
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.
 
       @param direction +1 indicates increase, -1 indicates decrease.
     */
     void changeHeight(int direction);
-
-    /**
-      Sets the framerate of the console, which in turn communicates
-      this to all applicable subsystems.
-    */
-    void setFramerate(float framerate);
-
-    /**
-      Returns the framerate based on a number of factors
-      (whether 'framerate' is set, what display format is in use, etc)
-    */
-    float getFramerate() const { return myFramerate; }
 
     /**
       Toggles the TIA bit specified in the method name.
@@ -264,16 +235,15 @@ class Console : public Serializable
     void togglePFBit() const { toggleTIABit(TIA::PF, "PF"); }
     void enableBits(bool enable) const;
 
-  private:
-    /**
-      Adds the left and right controllers to the console
-    */
-    void setControllers(const string& rommd5);
+#ifdef ATARIVOX_SUPPORT
+    AtariVox *atariVox() { return vox; }
+#endif
 
+  private:
     void toggleTIABit(TIA::TIABit bit, const string& bitname, bool show = true) const;
 
     /**
-      Loads a user-defined palette file (from OSystem::paletteFile), filling the
+      Loads a user-defined palette file from 'stella.pal', filling the
       appropriate user-defined palette arrays.
     */
     void loadUserPalette();
@@ -290,6 +260,12 @@ class Console : public Serializable
     */
     const uInt32* getPalette(int direction) const;
 
+    /**
+      Returns the framerate based on a number of factors
+      (whether 'framerate' is set, what display format is in use, etc)
+    */
+    uInt32 getFrameRate() const;
+
   private:
     // Pointer to the osystem object
     OSystem* myOSystem;
@@ -300,8 +276,8 @@ class Console : public Serializable
     // Pointer to the event object to use
     Event* myEvent;
 
-    // Pointer to the TIA object 
-    TIA* myTIA;
+    // Pointer to the media source object 
+    MediaSource* myMediaSource;
 
     // Properties for the game
     Properties myProperties;
@@ -319,33 +295,35 @@ class Console : public Serializable
     // A RIOT of my own! (...with apologies to The Clash...)
     M6532 *myRiot;
 
-    // The currently defined display format (NTSC/PAL/SECAM)
-    string myDisplayFormat;
+#ifdef ATARIVOX_SUPPORT
+    AtariVox *vox;
+#endif
 
-    // The currently defined display framerate
-    float myFramerate;
+    // The currently defined display format (NTSC/PAL/PAL60)
+    string myDisplayFormat;
 
     // Indicates whether an external palette was found and
     // successfully loaded
     bool myUserPaletteDefined;
 
-    // Contains detailed info about this console
-    ConsoleInfo myConsoleInfo;
+    // Contains info about this console in string format
+    string myAboutString;
 
-    // Table of RGB values for NTSC, PAL and SECAM
+    // Table of RGB values for NTSC and PAL
     static uInt32 ourNTSCPalette[256];
     static uInt32 ourPALPalette[256];
-    static uInt32 ourSECAMPalette[256];
 
-    // Table of RGB values for NTSC, PAL and SECAM - Z26 version
+    // Table of RGB values for NTSC and PAL - Stella 1.1 version
+    static uInt32 ourNTSCPalette11[256];
+    static uInt32 ourPALPalette11[256];
+
+    // Table of RGB values for NTSC and PAL - Z26 version
     static uInt32 ourNTSCPaletteZ26[256];
     static uInt32 ourPALPaletteZ26[256];
-    static uInt32 ourSECAMPaletteZ26[256];
 
-    // Table of RGB values for NTSC, PAL and SECAM - user-defined
+    // Table of RGB values for NTSC and PAL - user-defined
     static uInt32 ourUserNTSCPalette[256];
     static uInt32 ourUserPALPalette[256];
-    static uInt32 ourUserSECAMPalette[256];
 };
 
 #endif

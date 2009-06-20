@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Serializer.hxx,v 1.12 2007-01-01 18:04:49 stephena Exp $
 //============================================================================
 
 #ifndef SERIALIZER_HXX
@@ -27,12 +27,12 @@
   serialized and sent to an output binary file in a system-
   independent way.
 
-  Bytes are written as characters, integers are written as 4 characters
-  (32-bit), strings are written as characters prepended by the length of the
-  string, boolean values are written using a special character pattern.
+  All bytes and integers are written as int's.  Strings are
+  written as characters prepended by the length of the string.
+  Boolean values are written using a special pattern.
 
   @author  Stephen Anthony
-  @version $Id$
+  @version $Id: Serializer.hxx,v 1.12 2007-01-01 18:04:49 stephena Exp $
 */
 class Serializer
 {
@@ -71,14 +71,7 @@ class Serializer
     bool isOpen(void);
 
     /**
-      Writes an byte value (8-bit) to the current output stream.
-
-      @param value The byte value to write to the output stream.
-    */
-    void putByte(char value);
-
-    /**
-      Writes an int value (32-bit) to the current output stream.
+      Writes an int value to the current output stream.
 
       @param value The int value to write to the output stream.
     */
@@ -103,8 +96,8 @@ class Serializer
     fstream myStream;
 
     enum {
-      TruePattern  = 0xfe,
-      FalsePattern = 0x01
+      TruePattern  = 0xfab1fab2,
+      FalsePattern = 0xbad1bad2
     };
 };
 

@@ -8,19 +8,18 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: TiaZoomWidget.cxx,v 1.11 2007-01-01 18:04:44 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
 #include "OSystem.hxx"
-#include "Console.hxx"
 #include "FrameBuffer.hxx"
 #include "Widget.hxx"
 #include "GuiObject.hxx"
@@ -30,19 +29,16 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TiaZoomWidget::TiaZoomWidget(GuiObject* boss, const GUI::Font& font,
-                             int x, int y, int w, int h)
+                             int x, int y)
   : Widget(boss, font, x, y, 16, 16),
     CommandSender(boss),
     myMenu(NULL)
 {
-  _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS;
+  _flags = WIDGET_ENABLED | WIDGET_CLEARBG | WIDGET_RETAIN_FOCUS |
+           WIDGET_WANTS_RAWDATA;
   _type = kTiaZoomWidget;
-  _bgcolor = _bgcolorhi = kDlgColor;
-
-  // Use all available space, up to the maximum bounds of the TIA image
-  // Width myst 
-  _w = BSPF_min(w, 320);
-  _h = BSPF_min(h, 260);
+  _w = 210;
+  _h = 120;
 
   addFocusWidget(this);
 
@@ -56,11 +52,14 @@ TiaZoomWidget::TiaZoomWidget(GuiObject* boss, const GUI::Font& font,
   myYCenter = myNumRows >> 1;
 
   // Create context menu for zoom levels
-  StringMap l;
-  l.push_back("2x zoom", "2");
-  l.push_back("4x zoom", "4");
-  l.push_back("8x zoom", "8");
-  myMenu = new ContextMenu(this, font, l);
+  myMenu = new ContextMenu(this, font);
+
+  StringList l;
+  l.push_back("2x zoom");
+  l.push_back("4x zoom");
+  l.push_back("8x zoom");
+
+  myMenu->setList(l);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -104,8 +103,8 @@ void TiaZoomWidget::zoom(int level)
 void TiaZoomWidget::recalc()
 {
   // Don't go past end of framebuffer
-  const int width  = instance().console().tia().width(),
-            height = instance().console().tia().height();
+  const int width  = instance()->console().mediaSource().width(),
+            height = instance()->console().mediaSource().height();
 
   // Figure out the bounding rectangle for the current center coords
   const int xoff = myNumCols >> 1,
@@ -138,52 +137,36 @@ void TiaZoomWidget::handleMouseDown(int x, int y, int button, int clickCount)
   // Grab right mouse button for zoom context menu
   if(button == 2)
   {
-    // Add menu at current x,y mouse location
-    myMenu->show(x + getAbsX(), y + getAbsY());
+    myMenu->setPos(x + getAbsX(), y + getAbsY());
+    myMenu->show();
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool TiaZoomWidget::handleEvent(Event::Type event)
+bool TiaZoomWidget::handleKeyDown(int ascii, int keycode, int modifiers)
 {
-  bool handled = true;
+  bool handled = false;
 
-  switch(event)
+  switch(ascii)
   {
-    case Event::UIUp:
+    case 256+17:  // up arrow
       myYCenter -= 4;
+      handled = true;
       break;
 
-    case Event::UIDown:
+    case 256+18:  // down arrow
       myYCenter += 4;
+      handled = true;
       break;
 
-    case Event::UILeft:
+    case 256+20:  // left arrow
       myXCenter -= 2;
+      handled = true;
       break;
 
-    case Event::UIRight:
+    case 256+19:  // right arrow
       myXCenter += 2;
-      break;
-
-    case Event::UIPgUp:
-      myYCenter = 0;
-      break;
-
-    case Event::UIPgDown:
-      myYCenter = 260;
-      break;
-
-    case Event::UIHome:
-      myXCenter = 0;
-      break;
-
-    case Event::UIEnd:
-      myXCenter = 320;
-      break;
-
-    default:
-      handled = false;
+      handled = true;
       break;
   }
 
@@ -200,7 +183,14 @@ void TiaZoomWidget::handleCommand(CommandSender* sender, int cmd, int data, int 
   {
     case kCMenuItemSelectedCmd:
     {
-      int level = (int) atoi(myMenu->getSelectedTag().c_str());
+      int item = myMenu->getSelected(), level = 0;
+      if(item == 0)
+        level = 2;
+      else if(item == 1)
+        level = 4;
+      else if(item == 2)
+        level = 8;
+
       if(level > 0)
         zoom(level);
       break;
@@ -212,16 +202,16 @@ void TiaZoomWidget::handleCommand(CommandSender* sender, int cmd, int data, int 
 void TiaZoomWidget::drawWidget(bool hilite)
 {
 //cerr << "TiaZoomWidget::drawWidget\n";
-  FBSurface& s = dialog().surface();
+  FrameBuffer& fb = instance()->frameBuffer();
 
-  s.fillRect(_x+1, _y+1, _w-2, _h-2, kBGColor);
-  s.box(_x, _y, _w, _h, kColor, kShadowColor);
+  fb.fillRect(_x+1, _y+1, _w-2, _h-2, kBGColor);
+  fb.box(_x, _y, _w, _h, kColor, kShadowColor);
 
   // Draw the zoomed image
   // This probably isn't as efficient as it can be, but it's a small area
   // and I don't have time to make it faster :)
-  uInt8* currentFrame  = instance().console().tia().currentFrameBuffer();
-  const int pitch  = instance().console().tia().width(),
+  uInt8* currentFrame  = instance()->console().mediaSource().currentFrameBuffer();
+  const int pitch  = instance()->console().mediaSource().width(),
             width  = myZoomLevel << 1,
             height = myZoomLevel;
 
@@ -230,8 +220,8 @@ void TiaZoomWidget::drawWidget(bool hilite)
   {
     for(x = myXoff, col = 0; x < myNumCols+myXoff; ++x, col += width)
     {
-      s.fillRect(_x + col + 2, _y + row + 2, width, height,
-                 currentFrame[y*pitch + x]);
+      fb.fillRect(_x + col + 2, _y + row + 2, width, height,
+                  currentFrame[y*pitch + x]);
     }
   }
 }
