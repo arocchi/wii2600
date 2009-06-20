@@ -165,7 +165,8 @@ class FilesystemNode
     virtual string getName() const;
 
     /**
-     * Return a string representation of the file which can be passed to fopen().
+     * Return a string representation of the file which can be passed to fopen(),
+     * and is suitable for archiving (i.e. writing to the config file).
      * This will usually be a 'path' (hence the name of the method), but can
      * be anything that fulfills the above criterions.
      *
@@ -175,18 +176,6 @@ class FilesystemNode
      * @return the 'path' represented by this filesystem node
      */
     virtual string getPath() const;
-
-    /**
-     * Return a string representation of the file which contains the '~'
-     * symbol (if applicable), and is suitable for archiving (i.e. writing
-     * to the config file).
-     *
-     * @note Do not assume that this string contains (back)slashes or any
-     *       other kind of 'path separators'.
-     *
-     * @return the 'path' represented by this filesystem node
-     */
-    virtual string getRelativePath() const;
 
     /**
      * Determine whether this node has a parent.
@@ -304,11 +293,6 @@ class AbstractFilesystemNode
      * Returns the 'path' of the current node, usable in fopen().
      */
     virtual string getPath() const = 0;
-
-    /**
-     * Returns the 'path' of the current node, containing '~' and for archiving.
-     */
-    virtual string getRelativePath() const = 0;
 
     /**
      * Indicates whether this path refers to a directory or not.

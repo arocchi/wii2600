@@ -130,13 +130,6 @@ string FilesystemNode::getPath() const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string FilesystemNode::getRelativePath() const
-{
-  assert(_realNode);
-  return _realNode->getRelativePath();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FilesystemNode::isDirectory() const
 {
   if (_realNode == 0)

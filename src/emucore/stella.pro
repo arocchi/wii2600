@@ -445,7 +445,7 @@
 "Cartridge.MD5" "05ebd183ea854c0a1b56c218246fbbae"
 "Cartridge.Manufacturer" "Atari, Dan Hitchens"
 "Cartridge.ModelNo" "CX2656"
-"Cartridge.Name" "SwordQuest - EarthWorld (1982) (Atari) [a]"
+"Cartridge.Name" "Swordquest - EarthWorld (1982) (Atari) [a]"
 ""
 
 "Cartridge.MD5" "06742cf522f23797157f215a1dc8a1a9"
@@ -1945,8 +1945,6 @@
 "Cartridge.ModelNo" "CX26163P"
 "Cartridge.Name" "32 in 1 Game Cartridge (1988) (Atari) (Prototype) (PAL)"
 "Cartridge.Rarity" "Prototype"
-"Cartridge.Type" "32IN1"
-"Display.YStart" "42"
 ""
 
 "Cartridge.MD5" "1d1d2603ec139867c1d1f5ddf83093f1"
@@ -3062,10 +3060,8 @@
 ""
 
 "Cartridge.MD5" "278f14887d601b5e5b620f1870bc09f6"
-"Cartridge.Manufacturer" "Thomas Jentzsch"
-"Cartridge.Name" "SWOOPS! (v0.96) (TJ)"
+"Cartridge.Name" "SWOOPS! (v0.96) (Thomas Jentzsch)"
 "Cartridge.Note" "Uses the Joystick (L) and Paddle (R) Controllers"
-"Cartridge.Rarity" "Homebrew"
 "Controller.Right" "PADDLES"
 "Display.YStart" "30"
 ""
@@ -3189,8 +3185,6 @@
 "Cartridge.Manufacturer" "Atari"
 "Cartridge.Name" "32 in 1 Console ROM (02-10-1989) (Atari) (Prototype) (PAL)"
 "Cartridge.Rarity" "Prototype"
-"Cartridge.Type" "32IN1"
-"Display.YStart" "42"
 ""
 
 "Cartridge.MD5" "29396db58406084e416032c372734a3e"
@@ -3631,8 +3625,7 @@
 "Cartridge.MD5" "31bb9b8ceed46cb3e506777a9e65f3ce"
 "Cartridge.Manufacturer" "Bit Corporation"
 "Cartridge.Name" "4 Game in One Light Green (1983) (BitCorp) (PAL)"
-"Cartridge.Note" "Phantom UFO, Ice Hockey, Cosmic Avenger, Spy Vs. Spy"
-"Cartridge.Type" "4IN1"
+"Cartridge.Note" "Ice Hockey, Phantom UFO, Spy Vs. Spy, Cosmic Avenger"
 ""
 
 "Cartridge.MD5" "2f2f9061398a74c80420b99ddecf6448"
@@ -4409,7 +4402,7 @@
 "Cartridge.MD5" "3882224adbd0ca7c748b2a1c9b87263e"
 "Cartridge.Manufacturer" "Atari, Tod Frye"
 "Cartridge.ModelNo" "CX2657"
-"Cartridge.Name" "SwordQuest - FireWorld (1982) (Atari) (PAL) [a]"
+"Cartridge.Name" "Swordquest - FireWorld (1982) (Atari) (PAL) [a]"
 ""
 
 "Cartridge.MD5" "38bd172da8b2a3a176e517c213fcd5a6"
@@ -6165,10 +6158,8 @@
 ""
 
 "Cartridge.MD5" "504688d49a41bf03d8a955512609f3f2"
-"Cartridge.Manufacturer" "Thomas Jentzsch"
-"Cartridge.Name" "SWOOPS! (TJ)"
+"Cartridge.Name" "SWOOPS!"
 "Cartridge.Note" "Uses the Joystick (L) and Paddle (R) Controllers"
-"Cartridge.Rarity" "Homebrew"
 "Controller.Right" "PADDLES"
 "Display.YStart" "30"
 ""
@@ -7049,10 +7040,8 @@
 ""
 
 "Cartridge.MD5" "5d8f1ab95362acdf3426d572a6301bf2"
-"Cartridge.Manufacturer" "Thomas Jentzsch"
-"Cartridge.Name" "SWOOPS! (v0.96) (TJ) (PAL)"
+"Cartridge.Name" "SWOOPS! (v0.96) (Thomas Jentzsch) (PAL)"
 "Cartridge.Note" "Uses the Joystick (L) and Paddle (R) Controllers"
-"Cartridge.Rarity" "Homebrew"
 "Controller.Right" "PADDLES"
 "Display.YStart" "30"
 ""
@@ -8290,8 +8279,7 @@
 "Cartridge.Manufacturer" "Bit Corporation"
 "Cartridge.ModelNo" "P460"
 "Cartridge.Name" "4 Game in One Dark Green (1983) (BitCorp) (PAL)"
-"Cartridge.Note" "Rodeo Champ, Bobby is Going Home, Open Sesame, Festival"
-"Cartridge.Type" "4IN1"
+"Cartridge.Note" "Rodeo Champ, Open Sesame, Bobby is Going Home, Festival"
 ""
 
 "Cartridge.MD5" "6d218dafbf5a691045cdc1f67ceb6a8f"
@@ -8643,6 +8631,7 @@
 
 "Cartridge.MD5" "713fde2af865b6ec464dfd72e2ebb83e"
 "Cartridge.Name" "Challenge (208 in 1) (Unknown) (PAL)"
+"Display.Height" "250"
 "Display.Phosphor" "YES"
 ""
 
@@ -8914,7 +8903,6 @@
 "Cartridge.ModelNo" "CX26193"
 "Cartridge.Name" "8 in 1 (01-16-92) (Atari) (Prototype)"
 "Cartridge.Rarity" "Prototype"
-"Cartridge.Type" "8IN1"
 ""
 
 "Cartridge.MD5" "7481f0771bff13885b2ff2570cf90d7b"
@@ -9511,6 +9499,11 @@
 "Cartridge.Name" "Venture II (2001) (Tim Snider)"
 "Cartridge.Rarity" "New Release"
 "Display.Phosphor" "YES"
+""
+
+"Cartridge.MD5" "7cafc884a21aa3b7052f7109e690ca70"
+"Cartridge.Name" "sgems.bin"
+"Display.YStart" "30"
 ""
 
 "Cartridge.MD5" "7cc77f6745e1f2b20df4a4327d350545"
@@ -15203,6 +15196,7 @@
 "Cartridge.Name" "Bobby Is Going Home (1983) (BitCorp) (PAL) [demo cart]"
 "Cartridge.Note" "AKA Bobby geht Heim"
 "Display.YStart" "40"
+"Display.Height" "250"
 ""
 
 "Cartridge.MD5" "ccb807eb79b0ed0f5fdc460445ef703a"
@@ -15446,6 +15440,7 @@
 "Cartridge.ModelNo" "PG207"
 "Cartridge.Name" "Mission 3,000 A.D. (1983) (BitCorp) (PAL) [demo cart]"
 "Cartridge.Note" "demonstration cartridge"
+"Display.Height" "250"
 "Display.Phosphor" "YES"
 ""
 
@@ -19324,10 +19319,8 @@
 "Cartridge.MD5" "fe6abc0f63e31e2646c9c600926b5b7f"
 "Cartridge.Manufacturer" "Atari"
 "Cartridge.ModelNo" "CX26137"
-"Cartridge.Name" "4 in 1 (02-19-1987) (Atari) (Prototype)"
-"Cartridge.Note" "Home Run, Canyon Bomber, Sky Diver, Night Driver"
+"Cartridge.Name" "4 in 1 - Canyon Bomber, Home Run, Night Driver, Sky Diver (02-19-1987) (Atari) (Prototype)"
 "Cartridge.Rarity" "Prototype"
-"Cartridge.Type" "4IN1"
 ""
 
 "Cartridge.MD5" "fe940ab8eaa07e4db801f1728e391dbd"

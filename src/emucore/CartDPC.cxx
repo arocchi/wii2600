@@ -444,14 +444,12 @@ int CartridgeDPC::bank()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeDPC::bankCount()
 {
-  // TODO - add support for debugger (support the display ROM somehow)
-  return 2;
+  return 2; // TODO: support the display ROM somehow
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CartridgeDPC::patch(uInt16 address, uInt8 value)
 {
-  // TODO - check if this actually works
   myProgramImage[(myCurrentBank << 12) + (address & 0x0FFF)] = value;
   return true;
 } 

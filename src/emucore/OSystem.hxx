@@ -251,7 +251,8 @@ class OSystem
     /**
       Return the default full/complete directory name for storing data.
     */
-    const string& baseDir() const { return myBaseDir; }
+    const string& baseDir(bool expanded = true) const
+    { return expanded ? myBaseDirExpanded : myBaseDir; }
 
     /**
       Return the full/complete directory name for storing state files.
@@ -491,7 +492,7 @@ class OSystem
 
   private:
     enum { kNumUIPalettes = 2 };
-    string myBaseDir;
+    string myBaseDir, myBaseDirExpanded;
     string myStateDir;
     string mySnapshotDir;
     string myEEPROMDir;
@@ -571,7 +572,7 @@ class OSystem
       @return  Pointer to the array, with size >=0 indicating valid data
                (calling method is responsible for deleting it)
     */
-    uInt8* openROM(string rom, string& md5, uInt32& size);
+    uInt8* openROM(const string& rom, string& md5, uInt32& size);
 
     /**
       Gets all possible info about the given console.

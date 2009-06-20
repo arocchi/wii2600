@@ -20,7 +20,6 @@
 #define CARTRIDGE_HXX
 
 #include <fstream>
-#include <sstream>
 
 class Cartridge;
 class System;
@@ -47,14 +46,12 @@ class Cartridge : public Device
 
       @param image    A pointer to the ROM image
       @param size     The size of the ROM image 
-      @param md5      The md5sum for the given ROM image (can be updated)
-      @param name     The name of the ROM (can be updated)
-      @param type     The bankswitch type of the ROM image
+      @param props    The properties associated with the game
       @param settings The settings associated with the system
       @return   Pointer to the new cartridge object allocated on the heap
     */
-    static Cartridge* create(const uInt8* image, uInt32 size, string& md5,
-                             string& name, string type, Settings& settings);
+    static Cartridge* create(const uInt8* image, uInt32 size, 
+        const Properties& props, const Settings& settings);
 
     /**
       Create a new cartridge
@@ -174,21 +171,6 @@ class Cartridge : public Device
 
   private:
     /**
-      Get an image pointer and size for a ROM that is part of a larger,
-      multi-ROM image.
-
-      @param image    A pointer to the ROM image
-      @param size     The size of the ROM image 
-      @param numroms  The number of ROMs in the multicart
-      @param md5      The md5sum for the specific cart in the ROM image
-      @param id       The ID for the specific cart in the ROM image
-      @param settings The settings associated with the system
-      @return   The bankswitch type for the specific cart in the ROM image
-    */
-    static string createFromMultiCart(const uInt8*& image, uInt32& size,
-        uInt32 numroms, string& md5, string& id, Settings& settings);
-
-    /**
       Try to auto-detect the bankswitching type of the cartridge
 
       @param image  A pointer to the ROM image
@@ -271,11 +253,6 @@ class Cartridge : public Device
       Returns true if the image is probably an FE bankswitching cartridge
     */
     static bool isProbablyFE(const uInt8* image, uInt32 size);
-
-    /**
-      Returns true if the image is probably an X07 bankswitching cartridge
-    */
-    static bool isProbablyX07(const uInt8* image, uInt32 size);
 
   protected:
     // If myBankLocked is true, ignore attempts at bankswitching. This is used

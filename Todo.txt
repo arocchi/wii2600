@@ -31,8 +31,6 @@ Stephen Anthony at stephena@users.sourceforge.net.
   * Improve debugger support for remaining cartridges with dedicated RAM,
     and add source-level debugging
 
-  * Make the prompt tab in the debugger accept case-insensitive commands.
-
   * Fix bank going over 255 (when accessing RAM) for 3E in the debugger
     RomWidget view.
 
@@ -69,6 +67,9 @@ Stephen Anthony at stephena@users.sourceforge.net.
      (4) Add tabs to snapshot view; add cartridge snapshots as well.
 
   * More support for copy and paste.
+
+  * Fix Props.cxx (or GameInfoDialog) to properly deal with quotes and
+    backslashes in strings meant to be saved to the properties file.
 
   * Add support for uncommon controllers (KidVid, Lightgun, etc)
 

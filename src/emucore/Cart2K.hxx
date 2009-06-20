@@ -41,9 +41,8 @@ class Cartridge2K : public Cartridge
       Create a new cartridge using the specified image
 
       @param image Pointer to the ROM image
-      @param size  The size of the ROM image (<= 2048 bytes)
     */
-    Cartridge2K(const uInt8* image, uInt32 size);
+    Cartridge2K(const uInt8* image);
  
     /**
       Destructor
@@ -140,14 +139,8 @@ class Cartridge2K : public Cartridge
     virtual void poke(uInt16 address, uInt8 value);
 
   private:
-    // Pointer to a dynamically allocated ROM image of the cartridge
-    uInt8* myImage;
-
-    // Size of the ROM image
-    uInt32 mySize;
-
-    // Mask to use for mirroring
-    uInt32 myMask;
+    // The 2k ROM image for the cartridge
+    uInt8 myImage[2048];
 };
 
 #endif

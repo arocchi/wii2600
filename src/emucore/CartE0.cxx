@@ -192,14 +192,12 @@ void CartridgeE0::segmentTwo(uInt16 slice)
 void CartridgeE0::bank(uInt16)
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int CartridgeE0::bank()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 0;
 }
 
@@ -207,7 +205,6 @@ int CartridgeE0::bank()
 int CartridgeE0::bankCount()
 {
   // Doesn't support bankswitching in the normal sense
-  // TODO - add support for debugger
   return 1;
 }
 

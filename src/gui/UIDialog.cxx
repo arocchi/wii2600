@@ -119,10 +119,10 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   wid.push_back(myRomViewerPopup);
   ypos += lineHeight + 4;
 
-  // Should we use the built-in ROM launcher
-  myUseLauncherBox = new CheckboxWidget(myTab, font, xpos+20, ypos+10,
-                                        "Use ROM launcher");
-  wid.push_back(myUseLauncherBox);
+  // Should exiting a game go back to launcher
+  myExitLauncherBox = new CheckboxWidget(myTab, font, xpos+20, ypos+10,
+                                         "Enter launcher after exiting ROM");
+  wid.push_back(myExitLauncherBox);
 
   // Add message concerning usage
   xpos = vBorder; ypos += 2*(lineHeight + 4);
@@ -284,8 +284,8 @@ void UIDialog::loadConfig()
   const string& viewer = instance().settings().getString("romviewer");
   myRomViewerPopup->setSelected(viewer, "0");
 
-  // Use ROM launcher
-  myUseLauncherBox->setState(instance().settings().getBool("uselauncher"));
+  // Exit launcher after a game
+  myExitLauncherBox->setState(!instance().settings().getBool("exitlauncher"));
 
   // Debugger size
   instance().settings().getSize("debuggerres", w, h);
@@ -333,8 +333,8 @@ void UIDialog::saveConfig()
   instance().settings().setString("romviewer",
     myRomViewerPopup->getSelectedTag());
 
-  // Use ROM launcher
-  instance().settings().setBool("uselauncher", myUseLauncherBox->getState());
+  // Exit launcher after a game
+  instance().settings().setBool("exitlauncher", !myExitLauncherBox->getState());
 
   // Debugger size
   instance().settings().setSize("debuggerres", 
@@ -370,7 +370,7 @@ void UIDialog::setDefaults()
       myLauncherHeightLabel->setValue(h);
       myLauncherFontPopup->setSelected("medium", "");
       myRomViewerPopup->setSelected("0", "");
-      myUseLauncherBox->setState(true);
+      myExitLauncherBox->setState(true);
       break;
     }
 
