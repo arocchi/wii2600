@@ -8,152 +8,75 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2002 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Sound.hxx,v 1.4 2002-11-13 16:19:20 stephena Exp $
 //============================================================================
 
 #ifndef SOUND_HXX
 #define SOUND_HXX
 
-class OSystem;
-class Serializer;
-class Deserializer;
-
 #include "bspf.hxx"
+#include "MediaSrc.hxx"
 
 /**
-  This class is an abstract base class for the various sound objects.
-  It has no functionality whatsoever.
+  This class is a base class for the various sound objects.
+  It has almost no functionality, but is useful if one wishes
+  to compile Stella with no sound support whatsoever.
 
-  @author Stephen Anthony
-  @version $Id$
+  @author  Stephen Anthony
+  @version $Id: Sound.hxx,v 1.4 2002-11-13 16:19:20 stephena Exp $
 */
 class Sound
 {
   public:
     /**
-      Create a new sound object.  The init method must be invoked before
-      using the object.
+      Create a new sound object
     */
-    Sound(OSystem* osystem) { myOSystem = osystem; }
-
+    Sound();
+ 
     /**
       Destructor
     */
-    virtual ~Sound() { };
+    virtual ~Sound();
 
   public: 
     /**
-      Enables/disables the sound subsystem.
-
-      @param enable  Either true or false, to enable or disable the sound system
+      Closes the sound device
     */
-    virtual void setEnabled(bool enable) = 0;
+    virtual void closeDevice();
 
     /**
-      The system cycle counter is being adjusting by the specified amount.  Any
-      members using the system cycle counter should be adjusted as needed.
-
-      @param amount The amount the cycle counter is being adjusted by
+      Return the playback sample rate for the sound device.
+    
+      @return The playback sample rate
     */
-    virtual void adjustCycleCounter(Int32 amount) = 0;
-
-    /**
-      Sets the number of channels (mono or stereo sound).
-
-      @param channels The number of channels
-    */
-    virtual void setChannels(uInt32 channels) = 0;
-
-    /**
-      Sets the display framerate.  Sound generation for NTSC and PAL games
-      depends on the framerate, so we need to set it here.
-
-      @param framerate The base framerate depending on NTSC or PAL ROM
-    */
-    virtual void setFrameRate(float framerate) = 0;
-
-    /**
-      Start the sound system, initializing it if necessary.  This must be
-      called before any calls are made to derived methods.
-    */
-    virtual void open() = 0;
-
-    /**
-      Should be called to stop the sound system.  Once called the sound
-      device can be started again using the ::open() method.
-    */
-    virtual void close() = 0;
+    virtual uInt32 getSampleRate() const;
 
     /**
       Return true iff the sound device was successfully initialized.
 
       @return true iff the sound device was successfully initialized.
     */
-    virtual bool isSuccessfullyInitialized() const = 0;
-
-    /**
-      Set the mute state of the sound object.  While muted no sound is played.
-
-      @param state Mutes sound if true, unmute if false
-    */
-    virtual void mute(bool state) = 0;
-
-    /**
-      Reset the sound device.
-    */
-    virtual void reset() = 0;
-
-    /**
-      Sets the sound register to a given value.
-
-      @param addr  The register address
-      @param value The value to save into the register
-      @param cycle The system cycle at which the register is being updated
-    */
-    virtual void set(uInt16 addr, uInt8 value, Int32 cycle) = 0;
+    virtual bool isSuccessfullyInitialized() const;
 
     /**
       Sets the volume of the sound device to the specified level.  The
-      volume is given as a percentage from 0 to 100.  Values outside
-      this range indicate that the volume shouldn't be changed at all.
+      volume is given as a precentage from 0 to 100.
 
-      @param percent The new volume percentage level for the sound device
+      @param volume The new volume for the sound device
     */
-    virtual void setVolume(Int32 percent) = 0;
+    virtual void setSoundVolume(uInt32 volume);
 
     /**
-      Adjusts the volume of the sound device based on the given direction.
+      Update the sound device using the audio sample from the specified
+      media source.
 
-      @param direction  Increase or decrease the current volume by a predefined
-                        amount based on the direction (1 = increase, -1 =decrease)
+      @param mediaSource The media source to get audio samples from.
     */
-    virtual void adjustVolume(Int8 direction) = 0;
-
-  public:
-    /**
-      Loads the current state of this device from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    virtual bool load(Deserializer& in) = 0;
-
-    /**
-      Saves the current state of this device to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    virtual bool save(Serializer& out) = 0;
-
-  protected:
-    // The OSystem for this sound object
-    OSystem* myOSystem;
+    virtual void updateSound(MediaSource& mediaSource);
 };
-
 #endif

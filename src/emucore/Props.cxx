@@ -8,25 +8,23 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-1998 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Props.cxx,v 1.4 2002-11-11 02:49:02 stephena Exp $
 //============================================================================
 
-#include <cctype>
-#include <algorithm>
-#include <sstream>
-
-#include "bspf.hxx"
 #include "Props.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Properties::Properties()
+Properties::Properties(const Properties* defaults)
 {
-  setDefaults();
+  myDefaults = defaults;
+  myCapacity = 16;
+  myProperties = new Property[myCapacity];
+  mySize = 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -38,66 +36,80 @@ Properties::Properties(const Properties& properties)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Properties::~Properties()
 {
+  // Free the properties array
+  delete[] myProperties;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const string& Properties::get(PropertyType key) const
+string Properties::get(const string& key) const
 {
-  if(key >= 0 && key < LastPropType)
-    return myProperties[key];
-  else
-    return EmptyString;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::set(PropertyType key, const string& value)
-{
-  if(key >= 0 && key < LastPropType)
+  // Try to find the named property and answer its value
+  for(uInt32 i = 0; i < mySize; ++i)
   {
-    myProperties[key] = value;
-
-    switch(key)
+    if(key == myProperties[i].key)
     {
-      case Cartridge_Sound:
-      case Cartridge_Type:
-      case Console_LeftDifficulty:
-      case Console_RightDifficulty:
-      case Console_TelevisionType:
-      case Console_SwapPorts:
-      case Controller_Left:
-      case Controller_Right:
-      case Controller_SwapPaddles:
-      case Display_Format:
-      case Display_Phosphor:
-      {
-        transform(myProperties[key].begin(), myProperties[key].end(),
-                  myProperties[key].begin(), (int(*)(int)) toupper);
-        break;
-      }
-
-      case Display_PPBlend:
-      {
-        int blend = atoi(myProperties[key].c_str());
-        if(blend < 0 || blend > 100) blend = 77;
-        ostringstream buf;
-        buf << blend;
-        myProperties[key] = buf.str();
-        break;
-      }
-
-      default:
-        break;
+      return myProperties[i].value;
     }
   }
+
+  // Oops, property wasn't found so ask defaults if we have one
+  if(myDefaults != 0)
+  {
+    // Ask the default properties object to find the key
+    return myDefaults->get(key);
+  } 
+  else
+  {
+    // No default properties object so just return the empty string
+    return "";
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Properties::set(const string& key, const string& value)
+{
+  // See if the property already exists
+  for(uInt32 i = 0; i < mySize; ++i)
+  {
+    if(key == myProperties[i].key)
+    {
+      myProperties[i].value = value;
+      return;
+    }
+  }
+
+  // See if the array needs to be resized
+  if(mySize == myCapacity)
+  {
+    // Yes, so we'll make the array twice as large
+    Property* newProperties = new Property[myCapacity * 2];
+
+    for(uInt32 i = 0; i < mySize; ++i)
+    {
+      newProperties[i] = myProperties[i];
+    }
+
+    delete[] myProperties;
+
+    myProperties = newProperties;
+    myCapacity *= 2;
+  } 
+
+  // Add new property to the array
+  myProperties[mySize].key = key;
+  myProperties[mySize].value = value;
+
+  ++mySize;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Properties::load(istream& in)
 {
-  setDefaults();
+  // Empty my property array
+  mySize = 0;
 
   string line, key, value;
-  string::size_type one, two, three, four, garbage;
+  uInt32 one, two, three, four, garbage;
 
   // Loop reading properties
   while(getline(in, line))
@@ -129,36 +141,26 @@ void Properties::load(istream& in)
     value = line.substr(three + 1, four - three - 1);
 
     // Set the property 
-    PropertyType type = getPropertyType(key);
-    set(type, value);
+    set(key, value);
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::save(ostream& out) const
+void Properties::save(ostream& out)
 {
   // Write out each of the key and value pairs
-  bool changed = false;
-  for(int i = 0; i < LastPropType; ++i)
+  for(uInt32 i = 0; i < mySize; ++i)
   {
-    // Try to save some space by only saving the items that differ from default
-    if(myProperties[i] != ourDefaultProperties[i])
-    {
-      writeQuotedString(out, ourPropertyNames[i]);
-      out.put(' ');
-      writeQuotedString(out, myProperties[i]);
-      out.put('\n');
-      changed = true;
-    }
+    writeQuotedString(out, myProperties[i].key);
+    out.put(' ');
+    writeQuotedString(out, myProperties[i].value);
+    out.put('\n');
   }
 
-  if(changed)
-  {
-    // Put a trailing null string so we know when to stop reading
-    writeQuotedString(out, "");
-    out.put('\n');
-    out.put('\n');
-  }
+  // Put a trailing null string so we know when to stop reading
+  writeQuotedString(out, "");
+  out.put('\n');
+  out.put('\n');
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -232,6 +234,9 @@ Properties& Properties::operator = (const Properties& properties)
   // Do the assignment only if this isn't a self assignment
   if(this != &properties)
   {
+    // Free the properties array
+    delete[] myProperties;
+
     // Now, make myself a copy of the given object
     copy(properties);
   }
@@ -242,84 +247,34 @@ Properties& Properties::operator = (const Properties& properties)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Properties::copy(const Properties& properties)
 {
+  // Remember the defaults to use
+  myDefaults = properties.myDefaults;
+
+  // Create an array of the same size as properties
+  myCapacity = properties.myCapacity;
+  myProperties = new Property[myCapacity];
+
   // Now, copy each property from properties
-  for(int i = 0; i < LastPropType; ++i)
+  mySize = properties.mySize;
+  for(uInt32 i = 0; i < mySize; ++i)
+  {
     myProperties[i] = properties.myProperties[i];
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::print() const
+void Properties::merge(const Properties& properties)
 {
-  cout << get(Cartridge_MD5) << "|"
-       << get(Cartridge_Name) << "|"
-       << get(Cartridge_Rarity) << "|"
-       << get(Cartridge_Manufacturer) << "|"
-       << get(Cartridge_Note)
-       << endl;
+  // Merge each property from properties if it isn't -1
+  for(uInt32 i = 0; i < properties.mySize; ++i)
+  {
+    if(properties.myProperties[i].value != "-1")
+    {
+      cerr << "Properties::merge ==> changing " << properties.myProperties[i].key
+           << " from value " << get(properties.myProperties[i].key) << " to "
+           << properties.myProperties[i].value << endl;
+
+      set(properties.myProperties[i].key, properties.myProperties[i].value);
+    }
+  }
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Properties::setDefaults()
-{
-  for(int i = 0; i < LastPropType; ++i)
-    myProperties[i] = ourDefaultProperties[i];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PropertyType Properties::getPropertyType(const string& name)
-{
-  for(int i = 0; i < LastPropType; ++i)
-    if(ourPropertyNames[i] == name)
-      return (PropertyType)i;
-
-  // Otherwise, indicate that the item wasn't found
-  return LastPropType;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const char* Properties::ourDefaultProperties[LastPropType] = {
-  "",            // Cartridge.MD5
-  "",            // Cartridge.Manufacturer
-  "",            // Cartridge.ModelNo
-  "Untitled",    // Cartridge.Name
-  "",            // Cartridge.Note
-  "",            // Cartridge.Rarity
-  "MONO",        // Cartridge.Sound
-  "AUTO-DETECT", // Cartridge.Type
-  "B",           // Console.LeftDifficulty
-  "B",           // Console.RightDifficulty
-  "COLOR",       // Console.TelevisionType
-  "NO",          // Console.SwapPorts
-  "JOYSTICK",    // Controller.Left
-  "JOYSTICK",    // Controller.Right
-  "NO",          // Controller.SwapPaddles
-  "AUTO-DETECT", // Display.Format
-  "34",          // Display.YStart
-  "210",         // Display.Height
-  "NO",          // Display.Phosphor
-  "77"           // Display.PPBlend
-};
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const char* Properties::ourPropertyNames[LastPropType] = {
-  "Cartridge.MD5",
-  "Cartridge.Manufacturer",
-  "Cartridge.ModelNo",
-  "Cartridge.Name",
-  "Cartridge.Note",
-  "Cartridge.Rarity",
-  "Cartridge.Sound",
-  "Cartridge.Type",
-  "Console.LeftDifficulty",
-  "Console.RightDifficulty",
-  "Console.TelevisionType",
-  "Console.SwapPorts",
-  "Controller.Left",
-  "Controller.Right",
-  "Controller.SwapPaddles",
-  "Display.Format",
-  "Display.YStart",
-  "Display.Height",
-  "Display.Phosphor",
-  "Display.PPBlend"
-};

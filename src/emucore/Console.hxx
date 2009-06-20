@@ -8,12 +8,12 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2009 by Bradford W. Mott and the Stella team
+// Copyright (c) 1995-2002 by Bradford W. Mott
 //
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Console.hxx,v 1.6 2002-11-11 02:46:34 stephena Exp $
 //============================================================================
 
 #ifndef CONSOLE_HXX
@@ -22,51 +22,40 @@
 class Console;
 class Controller;
 class Event;
+class MediaSource;
+class PropertiesSet;
+class Sound;
 class Switches;
 class System;
-class TIA;
 
 #include "bspf.hxx"
 #include "Control.hxx"
 #include "Props.hxx"
-#include "TIA.hxx"
-#include "Cart.hxx"
-#include "M6532.hxx"
-#include "AtariVox.hxx"
-#include "Serializable.hxx"
-
-/**
-  Contains detailed info about a console.
-*/
-struct ConsoleInfo
-{
-  string BankSwitch;
-  string CartName;
-  string CartMD5;
-  string Control0;
-  string Control1;
-  string DisplayFormat;
-  string InitialFrameRate;
-};
 
 /**
   This class represents the entire game console.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Console.hxx,v 1.6 2002-11-11 02:46:34 stephena Exp $
 */
-class Console : public Serializable
+class Console
 {
   public:
     /**
       Create a new console for emulating the specified game using the
-      given game image and operating system.
+      given event object and game profiles.
 
-      @param osystem  The OSystem object to use
-      @param cart     The cartridge to use with this console
-      @param props    The properties for the cartridge  
+      @param image The ROM image of the game to emulate
+      @param size The size of the ROM image  
+      @param filename The name of the file that contained the ROM image
+      @param event The event object to use
+      @param profiles The game profiles object to use
+      @param sampleRate The rate to create audio samples at
+      @param userDefinedProperties User properties that should override the defaults
     */
-    Console(OSystem* osystem, Cartridge* cart, const Properties& props);
+    Console(const uInt8* image, uInt32 size, const char* filename,
+        const Event& event, PropertiesSet& propertiesSet, uInt32 sampleRate,
+        const Properties* userDefinedProperties = 0);
 
     /**
       Create a new console object by copying another one
@@ -92,81 +81,41 @@ class Console : public Serializable
     }
 
     /**
-      Get the TIA for this console
+      Get the media source of the console
 
-      @return The TIA
+      @return The media source
     */
-    TIA& tia() const { return *myTIA; }
+    MediaSource& mediaSource() const
+    {
+      return *myMediaSource;
+    }
 
     /**
       Get the properties being used by the game
 
       @return The properties being used by the game
     */
-    const Properties& properties() const { return myProperties; }
+    const Properties& properties() const;
 
     /**
       Get the console switches
 
       @return The console switches
     */
-    Switches& switches() const { return *mySwitches; }
+    Switches& switches() const
+    {
+      return *mySwitches;
+    }
 
     /**
       Get the 6502 based system used by the console to emulate the game
 
       @return The 6502 based system
     */
-    System& system() const { return *mySystem; }
-
-    /**
-      Get the cartridge used by the console which contains the ROM code
-
-      @return The cartridge for this console
-    */
-    Cartridge& cartridge() const { return *myCart; }
-
-    /**
-      Get the 6532 used by the console
-
-      @return The 6532 for this console
-    */
-    M6532& riot() const { return *myRiot; }
-
-    /**
-      Saves the current state of this console class to the given Serializer.
-
-      @param out The serializer device to save to.
-      @return The result of the save.  True on success, false on failure.
-    */
-    bool save(Serializer& out) const;
-
-    /**
-      Loads the current state of this console class from the given Deserializer.
-
-      @param in The deserializer device to load from.
-      @return The result of the load.  True on success, false on failure.
-    */
-    bool load(Deserializer& in);
-
-    /**
-      Get a descriptor for this console class (used in error checking).
-
-      @return The name of the object
-    */
-    string name() const { return "Console"; }
-
-    /**
-      Set the properties to those given
-
-      @param The properties to use for the current game
-    */
-    void setProperties(const Properties& props);
-
-    /**
-      Query detailed information about this console.
-    */
-    inline const ConsoleInfo& about() const { return myConsoleInfo; }
+    System& system() const
+    {
+      return *mySystem;
+    }
 
   public:
     /**
@@ -179,132 +128,71 @@ class Console : public Serializable
 
   public:
     /**
-      Toggle between NTSC/PAL/SECAM (and variants) display format.
+      Get the default properties object to use for other properties objects
+
+      @return The default properties object
+    */
+    static const Properties& defaultProperties();
+
+  public:
+    /**
+      Toggle between NTSC and PAL mode.  The GUI's may need to reload their palette.
     */
     void toggleFormat();
 
     /**
-      Toggle between the available palettes.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.  GUI's may need to resize their viewports.
+
+      @param direction A 1 indicates increase, 0 indicates decrease.
     */
-    void togglePalette();
+    void changeXStart(const uInt32 direction);
 
     /**
-      Sets the palette according to the given palette name.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.  GUI's may need to resize their viewports.
 
-      @param palette  The palette to switch to.
+      @param direction A 1 indicates increase, 0 indicates decrease.
     */
-    void setPalette(const string& palette);
+    void changeYStart(const uInt32 direction);
 
     /**
-      Toggles phosphor effect.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.  GUI's may need to resize their viewports.
+
+      @param direction A 1 indicates increase, 0 indicates decrease.
     */
-    void togglePhosphor();
+    void changeWidth(const uInt32 direction);
 
     /**
-      Toggles the PAL color-loss effect.
+      Change the "Display.XStart" variable.  Currently, a system reset is issued
+      after the change.  GUI's may need to resize their viewports.
+
+      @param direction A 1 indicates increase, 0 indicates decrease.
     */
-    void toggleColorLoss();
+    void changeHeight(const uInt32 direction);
 
     /**
-      Initialize the video subsystem wrt this class.
-      This is required for changing window size, title, etc.
+      Save a copy of the current properties after any changes.
 
-      @param full  Whether we want a full initialization,
-                   or only reset certain attributes.
-
-      @return  False on any errors, else true
+      @param filename Filename to save the properties into.
+      @param merge Whether or not to merge the changes into the
+                   main properties file.
     */
-    bool initializeVideo(bool full = true);
-
-    /**
-      Initialize the audio subsystem wrt this class.
-      This is required any time the sound settings change.
-    */
-    void initializeAudio();
-
-    /**
-      "Fry" the Atari (mangle memory/TIA contents)
-    */
-    void fry() const;
-
-    /**
-      Change the "Display.YStart" variable.
-
-      @param direction +1 indicates increase, -1 indicates decrease.
-    */
-    void changeYStart(int direction);
-
-    /**
-      Change the "Display.Height" variable.
-
-      @param direction +1 indicates increase, -1 indicates decrease.
-    */
-    void changeHeight(int direction);
-
-    /**
-      Sets the framerate of the console, which in turn communicates
-      this to all applicable subsystems.
-    */
-    void setFramerate(float framerate);
-
-    /**
-      Returns the framerate based on a number of factors
-      (whether 'framerate' is set, what display format is in use, etc)
-    */
-    float getFramerate() const { return myFramerate; }
-
-    /**
-      Toggles the TIA bit specified in the method name.
-    */
-    void toggleP0Bit() const { toggleTIABit(TIA::P0, "P0"); }
-    void toggleP1Bit() const { toggleTIABit(TIA::P1, "P1"); }
-    void toggleM0Bit() const { toggleTIABit(TIA::M0, "M0"); }
-    void toggleM1Bit() const { toggleTIABit(TIA::M1, "M1"); }
-    void toggleBLBit() const { toggleTIABit(TIA::BL, "BL"); }
-    void togglePFBit() const { toggleTIABit(TIA::PF, "PF"); }
-    void enableBits(bool enable) const;
+    void saveProperties(string& filename, bool merge = false);
 
   private:
-    /**
-      Adds the left and right controllers to the console
-    */
-    void setControllers(const string& rommd5);
-
-    void toggleTIABit(TIA::TIABit bit, const string& bitname, bool show = true) const;
-
-    /**
-      Loads a user-defined palette file (from OSystem::paletteFile), filling the
-      appropriate user-defined palette arrays.
-    */
-    void loadUserPalette();
-
-    /**
-      Loads all defined palettes with PAL color-loss data depending
-      on 'state'.
-    */
-    void setColorLossPalette(bool state);
-
-    /**
-      Returns a pointer to the palette data for the palette currently defined
-      by the ROM properties.
-    */
-    const uInt32* getPalette(int direction) const;
-
-  private:
-    // Pointer to the osystem object
-    OSystem* myOSystem;
-
     // Pointers to the left and right controllers
     Controller* myControllers[2];
 
-    // Pointer to the event object to use
-    Event* myEvent;
+    // Reference to the event object to use
+    const Event& myEvent;
 
-    // Pointer to the TIA object 
-    TIA* myTIA;
+    // Pointer to the media source object 
+    MediaSource* myMediaSource;
 
     // Properties for the game
-    Properties myProperties;
+    Properties myProperties; 
 
     // Pointer to the switches on the front of the console
     Switches* mySwitches;
@@ -312,40 +200,11 @@ class Console : public Serializable
     // Pointer to the 6502 based system being emulated 
     System* mySystem;
 
-    // Pointer to the Cartridge (the debugger needs it)
-    Cartridge *myCart;
+    // Reference to the PropertiesSet object
+    PropertiesSet& myPropSet;
 
-    // Pointer to the 6532 (aka RIOT) (the debugger needs it)
-    // A RIOT of my own! (...with apologies to The Clash...)
-    M6532 *myRiot;
-
-    // The currently defined display format (NTSC/PAL/SECAM)
-    string myDisplayFormat;
-
-    // The currently defined display framerate
-    float myFramerate;
-
-    // Indicates whether an external palette was found and
-    // successfully loaded
-    bool myUserPaletteDefined;
-
-    // Contains detailed info about this console
-    ConsoleInfo myConsoleInfo;
-
-    // Table of RGB values for NTSC, PAL and SECAM
-    static uInt32 ourNTSCPalette[256];
-    static uInt32 ourPALPalette[256];
-    static uInt32 ourSECAMPalette[256];
-
-    // Table of RGB values for NTSC, PAL and SECAM - Z26 version
-    static uInt32 ourNTSCPaletteZ26[256];
-    static uInt32 ourPALPaletteZ26[256];
-    static uInt32 ourSECAMPaletteZ26[256];
-
-    // Table of RGB values for NTSC, PAL and SECAM - user-defined
-    static uInt32 ourUserNTSCPalette[256];
-    static uInt32 ourUserPALPalette[256];
-    static uInt32 ourUserSECAMPalette[256];
+  private:
+    // Default properties to use for properties objects
+    static Properties ourDefaultProperties;
 };
-
 #endif
