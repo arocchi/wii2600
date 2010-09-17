@@ -53,7 +53,7 @@ Settings::Settings(OSystem* osystem)
   setInternal("tia_filter", "zoom2x");
   setInternal("fullscreen", "0");
   setInternal("fullres", "auto");
-  setInternal("center", "false");
+  setInternal("center", "true");
   setInternal("grabmouse", "false");
   setInternal("palette", "standard");
   setInternal("colorloss", "false");
@@ -102,7 +102,6 @@ Settings::Settings(OSystem* osystem)
   setInternal("palettefile", "");
   setInternal("propsfile", "");
   setInternal("eepromdir", "");
-  setInternal("cfgdir", "");
 
   // ROM browser options
   setInternal("uselauncher", "true");
@@ -132,7 +131,6 @@ Settings::Settings(OSystem* osystem)
 
   // Debugger options
   setInternal("resolvedata", "auto");
-  setInternal("gfxformat", "2");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -419,7 +417,6 @@ void Settings::usage()
     << "  -palettefile  <file>         Full pathname of user-defined palette file\n"
     << "  -propsfile    <file>         Full pathname of ROM properties file\n"
     << "  -eepromdir    <dir>          Directory in which to save EEPROM files\n"
-    << "  -cfgdir       <dir>          Directory in which to save Distella config files\n"
     << "  -avoxport     <name>         The name of the serial port where an AtariVox is connected\n"
     << "  -maxres       <WxH>          Used by developers to force the maximum size of the application window\n"
     << "  -holdreset                   Start the emulator with the Game Reset switch held down\n"
@@ -435,7 +432,6 @@ void Settings::usage()
     << endl
     << "   -resolvedata  <never|       Set automatic code vs. data determination in the disassembler\n"
     << "                  always|auto>\n"
-    << "   -gfxformat    <2|16>        Set base to use for displaying GFX sections in the disassembler\n"
     << "   -debuggerres  <WxH>         The resolution to use in debugger mode\n"
     << "   -break        <address>     Set a breakpoint at 'address'\n"
     << "   -debug                      Start in debugger mode\n"

@@ -311,28 +311,44 @@ void OSystem::setConfigPaths()
   FilesystemNode node;
   string s;
 
-  validatePath("statedir", "state", myStateDir);
+  s = mySettings->getString("statedir");
+  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "state";
+  node = FilesystemNode(s);
+  myStateDir = node.getPath();
+  mySettings->setString("statedir", node.getRelativePath());
+  if(!node.isDirectory())
+    AbstractFilesystemNode::makeDir(myStateDir);
 
-  validatePath("ssdir", "snapshots", mySnapshotDir);
+  s = mySettings->getString("ssdir");
+  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "snapshots";
+  node = FilesystemNode(s);
+  mySnapshotDir = node.getPath();
+  mySettings->setString("ssdir", node.getRelativePath());
+  if(!node.isDirectory())
+    AbstractFilesystemNode::makeDir(mySnapshotDir);
 
-  validatePath("eepromdir", "", myEEPROMDir);
-
-  validatePath("cfgdir", "cfg", myCfgDir);
+  s = mySettings->getString("eepromdir");
+  if(s == "") s = myBaseDir;
+  node = FilesystemNode(s);
+  myEEPROMDir = node.getPath();
+  mySettings->setString("eepromdir", node.getRelativePath());
+  if(!node.isDirectory())
+    AbstractFilesystemNode::makeDir(myEEPROMDir);
 
   s = mySettings->getString("cheatfile");
-  if(s == "") s = myBaseDir + "stella.cht";
+  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.cht";
   node = FilesystemNode(s);
   myCheatFile = node.getPath();
   mySettings->setString("cheatfile", node.getRelativePath());
 
   s = mySettings->getString("palettefile");
-  if(s == "") s = myBaseDir + "stella.pal";
+  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pal";
   node = FilesystemNode(s);
   myPaletteFile = node.getPath();
   mySettings->setString("palettefile", node.getRelativePath());
 
   s = mySettings->getString("propsfile");
-  if(s == "") s = myBaseDir + "stella.pro";
+  if(s == "") s = myBaseDir + BSPF_PATH_SEPARATOR + "stella.pro";
   node = FilesystemNode(s);
   myPropertiesFile = node.getPath();
   mySettings->setString("propsfile", node.getRelativePath());
@@ -353,10 +369,7 @@ void OSystem::setBaseDir(const string& basedir)
   FilesystemNode node(basedir);
   myBaseDir = node.getPath();
   if(!node.isDirectory())
-  {
     AbstractFilesystemNode::makeDir(myBaseDir);
-    myBaseDir = FilesystemNode(node.getPath()).getPath();
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -817,12 +830,8 @@ uInt8* OSystem::openROM(string file, string& md5, uInt32& size)
   if(!myPropSet->getMD5(md5, props))
   {
     // Get the filename from the rom pathname
-    FilesystemNode node(file);
-    file = node.getDisplayName();
-
-    // Remove extension
-    string::size_type pos = file.find_last_of(".");
-    if(pos != string::npos)  file = file.substr(0, pos);
+    string::size_type pos = file.find_last_of("/\\");
+    if(pos != string::npos)  file = file.substr(pos+1);
 
     props.set(Cartridge_MD5, md5);
     props.set(Cartridge_Name, file);
@@ -855,22 +864,6 @@ void OSystem::resetLoopTiming()
   myTimingInfo.current = 0;
   myTimingInfo.totalTime = 0;
   myTimingInfo.totalFrames = 0;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void OSystem::validatePath(const string& setting, const string& partialpath,
-                           string& fullpath)
-{
-  const string& s = mySettings->getString(setting) != "" ?
-    mySettings->getString(setting) : myBaseDir + partialpath;
-  FilesystemNode node = FilesystemNode(s);
-  if(!node.isDirectory())
-  {
-    AbstractFilesystemNode::makeDir(s);
-    node = FilesystemNode(node.getPath());
-  }
-  fullpath = node.getPath();
-  mySettings->setString(setting, node.getRelativePath());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

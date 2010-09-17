@@ -25,7 +25,6 @@
 #include "Debugger.hxx"
 #include "DebuggerParser.hxx"
 #include "CartDebug.hxx"
-#include "DiStella.hxx"
 #include "CpuDebug.hxx"
 #include "GuiObject.hxx"
 #include "InputTextDialog.hxx"
@@ -129,9 +128,9 @@ void RomWidget::loadConfig()
     myListIsDirty = false;
   }
 
-  // Update romlist to point to current PC (if it has changed)
+  // Update romlist to point to current PC
   int pcline = cart.addressToLine(dbg.cpuDebug().pc());
-  if(pcline >= 0 && pcline != myRomList->getHighlighted())
+  if(pcline >= 0)
     myRomList->setHighlighted(pcline);
 
   // Set current bank and number of banks
@@ -173,20 +172,7 @@ void RomWidget::handleCommand(CommandSender* sender, int cmd, int data, int id)
         setPC(myRomList->getSelected());
       else if(rmb == "runtopc")
         runtoPC(myRomList->getSelected());
-      else if(rmb == "disasm")
-        invalidate();
-      else if(rmb == "gfxbin")
-      {
-        DiStella::settings.gfx_format = kBASE_2;
-        instance().settings().setString("gfxformat", "2");
-        invalidate();
-      }
-      else if(rmb == "gfxhex")
-      {
-        DiStella::settings.gfx_format = kBASE_16;
-        instance().settings().setString("gfxformat", "16");
-        invalidate();
-      }
+
       break;
     }
 
@@ -275,13 +261,11 @@ void RomWidget::patchROM(int disasm_line, const string& bytes)
   {
     ostringstream command;
 
-    // Temporarily set to correct base, so we don't have to prefix each byte
-    // with the type of data
+    // Temporarily set to base 16, since that's the format the disassembled
+    // byte string is in.  This eliminates the need to prefix each byte with
+    // a '$' character
     BaseFormat oldbase = instance().debugger().parser().base();
-    if(list[disasm_line].type == CartDebug::GFX)
-      instance().debugger().parser().setBase(DiStella::settings.gfx_format);
-    else
-      instance().debugger().parser().setBase(kBASE_16);
+    instance().debugger().parser().setBase(kBASE_16);
 
     command << "rom #" << list[disasm_line].address << " " << bytes;
     instance().debugger().run(command.str());

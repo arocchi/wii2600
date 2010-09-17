@@ -22,13 +22,11 @@
 #include "System.hxx"
 #include "DiStella.hxx"
 #include "CpuDebug.hxx"
-#include "Settings.hxx"
 #include "CartDebug.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-CartDebug::CartDebug(Debugger& dbg, Console& console, const OSystem& osystem)
+CartDebug::CartDebug(Debugger& dbg, Console& console, const RamAreaList& areas)
   : DebuggerSystem(dbg, console),
-    myOSystem(osystem),
     myRWPortAddress(0),
     myLabelLength(5)   // longest pre-defined label
 {
@@ -36,24 +34,18 @@ CartDebug::CartDebug(Debugger& dbg, Console& console, const OSystem& osystem)
   addRamArea(0x80, 128, 0, 0);
 
   // Add extended RAM
-  const RamAreaList& areas = console.cartridge().ramAreas();
   for(RamAreaList::const_iterator i = areas.begin(); i != areas.end(); ++i)
     addRamArea(i->start, i->size, i->roffset, i->woffset);
 
-  // Create bank information for each potential bank, and an extra one for ZP RAM
-  uInt16 banksize =
-    !BSPF_equalsIgnoreCase(myConsole.cartridge().name(), "Cartridge2K") ? 4096 : 2048;
-  BankInfo info;
-  for(int i = 0; i < myConsole.cartridge().bankCount(); ++i)
+  // Create an addresslist for each potential bank, and an extra one for ZP RAM
+  for(int i = 0; i < myConsole.cartridge().bankCount()+1; ++i)
   {
-    info.size = banksize;   // TODO - get this from Cart class
-    myBankInfo.push_back(info);
+    AddressList l;
+    myEntryAddresses.push_back(l);
   }
-  info.size = 128;  // ZP RAM
-  myBankInfo.push_back(info);
 
   // We know the address for the startup bank right now
-  myBankInfo[myConsole.cartridge().startBank()].addressList.push_back(myDebugger.dpeek(0xfffc));
+  myEntryAddresses[myConsole.cartridge().startBank()].push_back(myDebugger.dpeek(0xfffc));
   addLabel("START", myDebugger.dpeek(0xfffc));
 
   // Add system equates
@@ -63,10 +55,6 @@ CartDebug::CartDebug(Debugger& dbg, Console& console, const OSystem& osystem)
     mySystemAddresses.insert(make_pair(ourTIAMnemonicW[addr], addr));
   for(uInt16 addr = 0x280; addr <= 0x297; ++addr)
     mySystemAddresses.insert(make_pair(ourIOMnemonic[addr-0x280], addr));
-
-  // Add settings for Distella
-  DiStella::settings.gfx_format =
-    myOSystem.settings().getInt("gfxformat") == 16 ? kBASE_16 : kBASE_2;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -76,12 +64,9 @@ CartDebug::~CartDebug()
   myUserAddresses.clear();
   mySystemAddresses.clear();
 
-  for(uInt32 i = 0; i < myBankInfo.size(); ++i)
-  {
-    myBankInfo[i].addressList.clear();
-    myBankInfo[i].directiveList.clear();
-  }
-  myBankInfo.clear();
+  for(uInt32 i = 0; i < myEntryAddresses.size(); ++i)
+    myEntryAddresses[i].clear();
+  myEntryAddresses.clear();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -221,15 +206,14 @@ bool CartDebug::disassemble(const string& resolvedata, bool force)
   if(changed)
   {
     // Are we disassembling from ROM or ZP RAM?
-    BankInfo& info = (PC & 0x1000) ? myBankInfo[getBank()] :
-        myBankInfo[myBankInfo.size()-1];
+    AddressList& addresses = (PC & 0x1000) ? myEntryAddresses[getBank()] :
+        myEntryAddresses[myEntryAddresses.size()-1];
 
     // If the offset has changed, all old addresses must be 'converted'
     // For example, if the list contains any $fxxx and the address space is now
     // $bxxx, it must be changed
     uInt16 offset = (PC - (PC % 0x1000));
-    AddressList& addresses = info.addressList;
-    for(list<uInt16>::iterator i = addresses.begin(); i != addresses.end(); ++i)
+    for(AddressList::iterator i = addresses.begin(); i != addresses.end(); ++i)
       *i = (*i & 0xFFF) + offset;
 
     // Only add addresses when absolutely necessary, to cut down on the
@@ -255,14 +239,14 @@ bool CartDebug::disassemble(const string& resolvedata, bool force)
 
     // Check whether to use the 'resolvedata' functionality from Distella
     if(resolvedata == "never")
-      fillDisassemblyList(info, false, PC);
+      fillDisassemblyList(addresses, false, PC);
     else if(resolvedata == "always")
-      fillDisassemblyList(info, true, PC);
+      fillDisassemblyList(addresses, true, PC);
     else  // 'auto'
     {
       // First try with resolvedata on, then turn off if PC isn't found
-      if(!fillDisassemblyList(info, true, PC))
-        fillDisassemblyList(info, false, PC);
+      if(!fillDisassemblyList(addresses, true, PC))
+        fillDisassemblyList(addresses, false, PC);
     }
   }
 
@@ -270,13 +254,14 @@ bool CartDebug::disassemble(const string& resolvedata, bool force)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartDebug::fillDisassemblyList(BankInfo& info, bool resolvedata, uInt16 search)
+bool CartDebug::fillDisassemblyList(AddressList& addresses,
+                                    bool resolvedata, uInt16 search)
 {
   bool found = false;
 
   myDisassembly.list.clear();
   myDisassembly.fieldwidth = 10 + myLabelLength;
-  DiStella distella(*this, myDisassembly.list, info, resolvedata);
+  DiStella distella(*this, myDisassembly.list, addresses, resolvedata);
 
   // Parts of the disassembly will be accessed later in different ways
   // We place those parts in separate maps, to speed up access
@@ -285,8 +270,8 @@ bool CartDebug::fillDisassemblyList(BankInfo& info, bool resolvedata, uInt16 sea
   {
     const DisassemblyTag& tag = myDisassembly.list[i];
 
-    // Only addresses marked as 'CODE' can possibly be in the program counter
-    if(tag.type == CODE)
+    // Only non-zero addresses are valid
+    if(tag.address != 0)
     {
       // Create a mapping from addresses to line numbers
       myAddrToLineList.insert(make_pair(tag.address, i));
@@ -310,9 +295,9 @@ int CartDebug::addressToLine(uInt16 address) const
 string CartDebug::disassemble(uInt16 start, uInt16 lines) const
 {
   Disassembly disasm;
-  BankInfo info;
-  info.addressList.push_back(start);
-  DiStella distella(*this, disasm.list, info, false);
+  AddressList addresses;
+  addresses.push_back(start);
+  DiStella distella(*this, disasm.list, addresses, false);
 
   // Fill the string with disassembled data
   start &= 0xFFF;
@@ -344,147 +329,6 @@ string CartDebug::disassemble(uInt16 start, uInt16 lines) const
   }
 
   return buffer.str();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool CartDebug::addDirective(CartDebug::DisasmType type,
-                             uInt16 start, uInt16 end, int bank)
-{
-#define PRINT_TAG(d) \
-  cerr << (d.type == CartDebug::CODE ? "CODE" : \
-           d.type == CartDebug::DATA ? "DATA" : \
-           "GFX") \
-       << " " << hex << d.start << " - " << hex << d.end << endl;
-
-#define PRINT_LIST(header) \
-  cerr << header << endl; \
-  for(DirectiveList::const_iterator d = list.begin(); d != list.end(); ++d) \
-    PRINT_TAG((*d)); \
-  cerr << endl;
-
-  if(end < start || start == 0 || end == 0)
-    return false;
-
-  if(bank < 0)  // Do we want the current bank or ZP RAM?
-    bank = (myDebugger.cpuDebug().pc() & 0x1000) ? getBank() : myBankInfo.size()-1;
-
-  bank = BSPF_min(bank, bankCount());
-  BankInfo& info = myBankInfo[bank];
-  DirectiveList& list = info.directiveList;
-
-  DirectiveTag tag;
-  tag.type = type;
-  tag.start = start;
-  tag.end = end;
-
-  DirectiveList::iterator i;
-
-  // If the same directive and range is added, consider it a removal instead
-  for(i = list.begin(); i != list.end(); ++i)
-  {
-    if(i->type == tag.type && i->start == tag.start && i->end == tag.end)
-    {
-      list.erase(i);
-      return false;
-    }
-  }
-
-  // Otherwise, scan the list and make space for a 'smart' merge
-  // Note that there are 4 possibilities:
-  //  1: a range is completely inside the new range
-  //  2: a range is completely outside the new range
-  //  3: a range overlaps at the beginning of the new range
-  //  4: a range overlaps at the end of the new range
-  for(i = list.begin(); i != list.end(); ++i)
-  {
-    // Case 1: remove range that is completely inside new range
-    if(tag.start <= i->start && tag.end >= i->end)
-    {
-      list.erase(i);
-    }
-    // Case 2: split the old range
-    else if(tag.start >= i->start && tag.end <= i->end)
-    {
-      // Only split when necessary
-      if(tag.type == i->type)
-        return true;  // node is fine as-is
-
-      // Create new endpoint
-      DirectiveTag tag2;
-      tag2.type = i->type;
-      tag2.start = tag.end + 1;
-      tag2.end = i->end;
-
-      // Modify startpoint
-      i->end = tag.start - 1;
-
-      // Insert new endpoint
-      i++;
-      list.insert(i, tag2);
-      break;  // no need to go further; this is the insertion point
-    }
-    // Case 3: truncate end of old range
-    else if(tag.start >= i->start && tag.start <= i->end)
-    {
-      i->end = tag.start - 1;
-    }
-    // Case 4: truncate start of old range
-    else if(tag.end >= i->start && tag.end <= i->end)
-    {
-      i->start = tag.end + 1;
-    }
-  }
-
-  // We now know that the new range can be inserted without overlap
-  // Where possible, consecutive ranges should be merged rather than
-  // new nodes created
-  for(i = list.begin(); i != list.end(); ++i)
-  {
-    if(tag.end < i->start)  // node should be inserted *before* this one
-    {
-      bool createNode = true;
-
-      // Is the new range ending consecutive with the old range beginning?
-      // If so, a merge will suffice
-      if(i->type == tag.type && tag.end + 1 == i->start)
-      {
-        i->start = tag.start;
-        createNode = false;  // a merge was done, so a new node isn't needed
-      }
-
-      // Can we also merge with the previous range (if any)?
-      if(i != list.begin())
-      {
-        DirectiveList::iterator p = i;
-        --p;
-        if(p->type == tag.type && p->end + 1 == tag.start)
-        {
-          if(createNode)  // a merge with right-hand range didn't previously occur
-          {
-            p->end = tag.end;
-            createNode = false;  // a merge was done, so a new node isn't needed
-          }
-          else  // merge all three ranges
-          {
-            i->start = p->start;
-            i = list.erase(p);
-            createNode = false;  // a merge was done, so a new node isn't needed
-          }
-        }
-      }
-
-      // Create the node only when necessary
-      if(createNode)
-        i = list.insert(i, tag);
-
-      break;
-    }
-  }
-  // Otherwise, add the tag at the end
-  if(i == list.end())
-    list.push_back(tag);
-
-  return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -598,19 +442,14 @@ int CartDebug::getAddress(const string& label) const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string CartDebug::loadSymbolFile(string file)
+string CartDebug::loadSymbolFile(const string& f)
 {
-  // TODO - use similar load logic as loadconfig command
-  if(file == "")
-    file = myOSystem.romFile();
-
+  string file = f;
   string::size_type spos;
   if( (spos = file.find_last_of('.')) != string::npos )
     file.replace(spos, file.size(), ".sym");
   else
     file += ".sym";
-
-  // TODO - rewrite this to use C++ streams
 
   int pos = 0, lines = 0, curVal;
   string curLabel;
@@ -655,247 +494,17 @@ string CartDebug::loadSymbolFile(string file)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string CartDebug::loadConfigFile(string file)
-{
-  FilesystemNode node(file);
-
-  if(file == "")
-  {
-    // There are three possible locations for loading config files
-    //   (in order of decreasing relevance):
-    // 1) ROM dir based on properties entry name
-    // 2) ROM dir based on actual ROM name
-    // 3) CFG dir based on properties entry name
-
-    const string& propsname =
-      myConsole.properties().get(Cartridge_Name) + ".cfg";
-
-    // Case 1
-    FilesystemNode case1(FilesystemNode(myOSystem.romFile()).getParent().getPath() +
-                         propsname);
-    if(case1.exists())
-    {
-      node = case1;
-    }
-    else
-    {
-      file = myOSystem.romFile();
-      string::size_type spos;
-      if((spos = file.find_last_of('.')) != string::npos )
-        file.replace(spos, file.size(), ".cfg");
-      else
-        file += ".cfg";
-      FilesystemNode case2(file);
-      if(case2.exists())
-      {
-        node = case2;
-      }
-      else  // Use global config file based on properties cart name
-      {
-        FilesystemNode case3(myOSystem.cfgDir() + propsname);
-        if(case3.exists())
-          node = case3;
-      }
-    }
-  }
-
-  if(node.exists() && !node.isDirectory())
-  {
-    ifstream in(node.getPath().c_str());
-    if(!in.is_open())
-      return "Unable to load directives from " + node.getPath();
-
-    // Erase all previous directives
-    for(Common::Array<BankInfo>::iterator bi = myBankInfo.begin();
-        bi != myBankInfo.end(); ++bi)
-    {
-      bi->directiveList.clear();
-    }
-
-    int currentbank = 0;
-    while(!in.eof())
-    {
-      // Skip leading space
-      int c = in.peek();
-      while(c == ' ' && c == '\t')
-      {
-        in.get();
-        c = in.peek();
-      }
-
-      string line;
-      c = in.peek();
-      if(c == '/')  // Comment, swallow line and continue
-      {
-        getline(in, line);
-        continue;
-      }
-      else if(c == '[')
-      {
-        in.get();
-        getline(in, line, ']');
-        stringstream buf(line);
-        buf >> currentbank;
-      }
-      else  // Should be commands from this point on
-      {
-        getline(in, line);
-        stringstream buf;
-        buf << line;
-
-        string directive;
-        uInt16 start = 0, end = 0;
-        buf >> directive;
-        if(BSPF_startsWithIgnoreCase(directive, "ORG"))
-        {
-          buf >> hex >> start;
-// TODO - figure out what to do with this
-        }
-        else if(BSPF_startsWithIgnoreCase(directive, "BLOCK"))
-        {
-          buf >> hex >> start;
-          buf >> hex >> end;
-//          addDirective(CartDebug::BLOCK, start, end, currentbank);
-        }
-        else if(BSPF_startsWithIgnoreCase(directive, "CODE"))
-        {
-          buf >> hex >> start >> hex >> end;
-          addDirective(CartDebug::CODE, start, end, currentbank);
-        }
-        else if(BSPF_startsWithIgnoreCase(directive, "DATA"))
-        {
-          buf >> hex >> start >> hex >> end;
-          addDirective(CartDebug::DATA, start, end, currentbank);
-        }
-        else if(BSPF_startsWithIgnoreCase(directive, "GFX"))
-        {
-          buf >> hex >> start >> hex >> end;
-          addDirective(CartDebug::GFX, start, end, currentbank);
-        }
-      }
-    }
-    in.close();
-
-    return "loaded " + node.getRelativePath() + " OK";
-  }
-  else
-    return DebuggerParser::red("config file not found");
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string CartDebug::saveConfigFile(string file)
-{
-  FilesystemNode node(file);
-
-  const string& name = myConsole.properties().get(Cartridge_Name);
-  const string& md5 = myConsole.properties().get(Cartridge_MD5);
-
-  if(file == "")
-  {
-    // There are two possible locations for saving config files
-    //   (in order of decreasing relevance):
-    // 1) ROM dir based on properties entry name
-    // 2) ROM dir based on actual ROM name
-    //
-    // In either case, we're using the properties entry, since even ROMs that
-    // don't have a proper entry have a temporary one inserted by OSystem
-    node = FilesystemNode(FilesystemNode(
-        myOSystem.romFile()).getParent().getPath() + name + ".cfg");
-  }
-
-  if(!node.isDirectory())
-  {
-    ofstream out(node.getPath().c_str());
-    if(!out.is_open())
-      return "Unable to save directives to " + node.getPath();
-
-    // Store all bank information
-    out << "//Stella.pro: \"" << name << "\"" << endl
-        << "//MD5: " << md5 << endl
-        << endl;
-    for(uInt32 b = 0; b < myConsole.cartridge().bankCount(); ++b)
-    {
-      out << "[" << b << "]" << endl;
-      getBankDirectives(out, myBankInfo[b]);
-    }
-    out.close();
-
-    return "saved " + node.getRelativePath() + " OK";
-  }
-  else
-    return DebuggerParser::red("config file not found");
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string CartDebug::listConfig(int bank)
-{
-  uInt32 startbank = 0, endbank = bankCount();
-  if(bank >= 0 && bank < bankCount())
-  {
-    startbank = bank;
-    endbank = startbank + 1;
-  }
-
-  ostringstream buf;
-  buf << "(items marked '*' are user-defined)" << endl;
-  for(uInt32 b = startbank; b < endbank; ++b)
-  {
-    BankInfo& info = myBankInfo[b];
-    buf << "[" << b << "]" << endl;
-    for(DirectiveList::const_iterator i = info.directiveList.begin();
-        i != info.directiveList.end(); ++i)
-    {
-      if(i->type != CartDebug::NONE)
-      {
-        buf << "(*) ";
-        disasmTypeAsString(buf, i->type);
-        buf << " " << HEX4 << i->start << " " << HEX4 << i->end << endl;
-      }
-    }
-    getBankDirectives(buf, info);
-  }
-
-  return buf.str();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string CartDebug::clearConfig(int bank)
-{
-  uInt32 startbank = 0, endbank = bankCount();
-  if(bank >= 0 && bank < bankCount())
-  {
-    startbank = bank;
-    endbank = startbank + 1;
-  }
-
-  uInt32 count = 0;
-  for(uInt32 b = startbank; b < endbank; ++b)
-  {
-    count += myBankInfo[b].directiveList.size();
-    myBankInfo[b].directiveList.clear();
-  }
-
-  ostringstream buf;
-  if(count > 0)
-    buf << "removed " << dec << count << " directives from "
-        << dec << (endbank - startbank) << " banks";
-  else
-    buf << "no directives present";
-  return buf.str();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartDebug::getCompletions(const char* in, StringList& completions) const
 {
   // First scan system equates
   for(uInt16 addr = 0x00; addr <= 0x0F; ++addr)
-    if(BSPF_startsWithIgnoreCase(ourTIAMnemonicR[addr], in))
+    if(BSPF_strncasecmp(ourTIAMnemonicR[addr], in, strlen(in)) == 0)
       completions.push_back(ourTIAMnemonicR[addr]);
   for(uInt16 addr = 0x00; addr <= 0x3F; ++addr)
-    if(BSPF_startsWithIgnoreCase(ourTIAMnemonicW[addr], in))
+    if(BSPF_strncasecmp(ourTIAMnemonicW[addr], in, strlen(in)) == 0)
       completions.push_back(ourTIAMnemonicW[addr]);
   for(uInt16 addr = 0; addr <= 0x297-0x280; ++addr)
-    if(BSPF_startsWithIgnoreCase(ourIOMnemonic[addr], in))
+    if(BSPF_strncasecmp(ourIOMnemonic[addr], in, strlen(in)) == 0)
       completions.push_back(ourIOMnemonic[addr]);
 
   // Now scan user-defined labels
@@ -903,7 +512,7 @@ void CartDebug::getCompletions(const char* in, StringList& completions) const
   for(iter = myUserAddresses.begin(); iter != myUserAddresses.end(); ++iter)
   {
     const char* l = iter->first.c_str();
-    if(BSPF_startsWithIgnoreCase(l, in))
+    if(BSPF_strncasecmp(l, in, strlen(in)) == 0)
       completions.push_back(l);
   }
 }
@@ -948,71 +557,6 @@ CartDebug::AddrType CartDebug::addressType(uInt16 addr) const
     }
   }
   return type;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartDebug::getBankDirectives(ostream& buf, BankInfo& info) const
-{
-  // Disassemble the bank, then scan it for an up-to-date description
-  DisassemblyList list;
-  DiStella distella(*this, list, info, true);
-
-  if(list.size() == 0)
-    return;
-
-  // Start with the offset for this bank
-  buf << "ORG " << HEX4 << info.offset << endl;
-
-  DisasmType type = list[0].type;
-  uInt16 start = list[0].address, last = list[1].address;
-  if(start == 0) start = info.offset;
-  for(uInt32 i = 1; i < list.size(); ++i)
-  {
-    const DisassemblyTag& tag = list[i];
-
-    if(tag.type == CartDebug::NONE)
-      continue;
-    else if(tag.type != type)  // new range has started
-    {
-      // If switching data ranges, make sure the endpoint is valid
-      // This is necessary because DATA sections don't always generate
-      // consecutive numbers/addresses for the range
-      last = tag.address - 1;
-
-      disasmTypeAsString(buf, type);
-      buf << " " << HEX4 << start << " " << HEX4 << last << endl;
-
-      type = tag.type;
-      start = last = tag.address;
-    }
-    else
-      last = tag.address;
-  }
-  // Grab the last directive, making sure it accounts for all remaining space
-  disasmTypeAsString(buf, type);
-  buf << " " << HEX4 << start << " " << HEX4 << (info.offset+info.end) << endl;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void CartDebug::disasmTypeAsString(ostream& buf, DisasmType type) const
-{
-  switch(type)
-  {
-    case CartDebug::BLOCK:
-      buf << "BLOCK";
-      break;
-    case CartDebug::CODE:
-      buf << "CODE";
-      break;
-    case CartDebug::DATA:
-      buf << "DATA";
-      break;
-    case CartDebug::GFX:
-      buf << "GFX";
-      break;
-    default:
-      break;
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -15,6 +15,9 @@
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
 // $Id$
+//
+//   Based on code from ScummVM - Scumm Interpreter
+//   Copyright (C) 2002-2004 The ScummVM project
 //============================================================================
 
 //#include "YaccParser.hxx"
@@ -78,27 +81,23 @@ int parse(const char *in)
 }
 
 /* hand-rolled lexer. Hopefully faster than flex... */
-inline bool is_base_prefix(char x)
-{
-  return ( (x=='\\' || x=='$' || x=='#') );
-}
+inline bool is_base_prefix(char x) { return ( (x=='\\' || x=='$' || x=='#') ); }
 
-inline bool is_identifier(char x)
-{
+inline bool is_identifier(char x) {
   return ( (x>='0' && x<='9') || 
-           (x>='a' && x<='z') ||
-           (x>='A' && x<='Z') ||
-            x=='.' || x=='_'  );
+          (x>='a' && x<='z') ||
+          (x>='A' && x<='Z') ||
+           x=='.' || x=='_'  );
 }
 
-inline bool is_operator(char x)
-{
+
+inline bool is_operator(char x) {
   return ( (x=='+' || x=='-' || x=='*' ||
-            x=='/' || x=='<' || x=='>' ||
-            x=='|' || x=='&' || x=='^' ||
-            x=='!' || x=='~' || x=='(' ||
-            x==')' || x=='=' || x=='%' ||
-            x=='[' || x==']' ) );
+             x=='/' || x=='<' || x=='>' ||
+             x=='|' || x=='&' || x=='^' ||
+             x=='!' || x=='~' || x=='(' ||
+             x==')' || x=='=' || x=='%' ||
+         x=='[' || x==']' ) );
 }
 
 // const_to_int converts a string into a number, in either the
@@ -172,29 +171,29 @@ int const_to_int(char *c) {
 // special methods that get e.g. CPU registers
 CPUDEBUG_INT_METHOD getCpuSpecial(char *c)
 {
-  if(BSPF_equalsIgnoreCase(c, "a"))
+  if(strcmp(c, "a") == 0)
     return &CpuDebug::a;
-  else if(BSPF_equalsIgnoreCase(c, "x"))
+  else if(strcmp(c, "x") == 0)
     return &CpuDebug::x;
-  else if(BSPF_equalsIgnoreCase(c, "y"))
+  else if(strcmp(c, "y") == 0)
     return &CpuDebug::y;
-  else if(BSPF_equalsIgnoreCase(c, "pc"))
+  else if(strcmp(c, "pc") == 0)
     return &CpuDebug::pc;
-  else if(BSPF_equalsIgnoreCase(c, "sp"))
+  else if(strcmp(c, "sp") == 0)
     return &CpuDebug::sp;
-  else if(BSPF_equalsIgnoreCase(c, "c"))
+  else if(strcmp(c, "c") == 0)
     return &CpuDebug::c;
-  else if(BSPF_equalsIgnoreCase(c, "z"))
+  else if(strcmp(c, "z") == 0)
     return &CpuDebug::z;
-  else if(BSPF_equalsIgnoreCase(c, "n"))
+  else if(strcmp(c, "n") == 0)
     return &CpuDebug::n;
-  else if(BSPF_equalsIgnoreCase(c, "v"))
+  else if(strcmp(c, "v") == 0)
     return &CpuDebug::v;
-  else if(BSPF_equalsIgnoreCase(c, "d"))
+  else if(strcmp(c, "d") == 0)
     return &CpuDebug::d;
-  else if(BSPF_equalsIgnoreCase(c, "i"))
+  else if(strcmp(c, "i") == 0)
     return &CpuDebug::i;
-  else if(BSPF_equalsIgnoreCase(c, "b"))
+  else if(strcmp(c, "b") == 0)
     return &CpuDebug::b;
   else
     return 0;
@@ -203,9 +202,9 @@ CPUDEBUG_INT_METHOD getCpuSpecial(char *c)
 // special methods that get Cart RAM/ROM internal state
 CARTDEBUG_INT_METHOD getCartSpecial(char *c)
 {
-  if(BSPF_equalsIgnoreCase(c, "_bank"))
+  if(strcmp(c, "_bank") == 0)
     return &CartDebug::getBank;
-  else if(BSPF_equalsIgnoreCase(c, "_rwport"))
+  else if(strcmp(c, "_rwport") == 0)
     return &CartDebug::readFromWritePort;
   else
     return 0;
@@ -214,15 +213,15 @@ CARTDEBUG_INT_METHOD getCartSpecial(char *c)
 // special methods that get TIA internal state
 TIADEBUG_INT_METHOD getTiaSpecial(char *c)
 {
-  if(BSPF_equalsIgnoreCase(c, "_scan"))
+  if(strcmp(c, "_scan") == 0)
     return &TIADebug::scanlines;
-  else if(BSPF_equalsIgnoreCase(c, "_fcount"))
+  else if(strcmp(c, "_fcount") == 0)
     return &TIADebug::frameCount;
-  else if(BSPF_equalsIgnoreCase(c, "_cclocks"))
+  else if(strcmp(c, "_cclocks") == 0)
     return &TIADebug::clocksThisLine;
-  else if(BSPF_equalsIgnoreCase(c, "_vsync"))
+  else if(strcmp(c, "_vsync") == 0)
     return &TIADebug::vsyncAsInt;
-  else if(BSPF_equalsIgnoreCase(c, "_vblank"))
+  else if(strcmp(c, "_vblank") == 0)
     return &TIADebug::vblankAsInt;
   else
     return 0;

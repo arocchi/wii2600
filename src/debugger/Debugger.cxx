@@ -209,7 +209,10 @@ void Debugger::setConsole(Console* console)
   myCpuDebug = new CpuDebug(*this, *myConsole);
 
   delete myCartDebug;
-  myCartDebug = new CartDebug(*this, *myConsole, *myOSystem);
+  // Register any RAM areas in the Cartridge
+  // Zero-page RAM is automatically recognized by CartDebug
+  myCartDebug = new CartDebug(*this, *myConsole, myConsole->cartridge().ramAreas());
+  myCartDebug->loadSymbolFile(myOSystem->romFile());
 
   delete myRiotDebug;
   myRiotDebug = new RiotDebug(*this, *myConsole);
@@ -251,7 +254,8 @@ string Debugger::autoExec()
   ostringstream buf;
 
   // autoexec.stella is always run
-  FilesystemNode autoexec(myOSystem->baseDir() + "autoexec.stella");
+  FilesystemNode autoexec(myOSystem->baseDir() + BSPF_PATH_SEPARATOR +
+                          "autoexec.stella");
   buf << "autoExec():" << endl
       << myParser->exec(autoexec) << endl;
 
@@ -766,7 +770,7 @@ string Debugger::builtinHelp() const
     if(len > i_maxlen)  i_maxlen = len;
   }
 
-  buf << setfill(' ') << endl << "Built-in functions:" << endl;
+  buf << endl << "Built-in functions:" << endl;
   for(int i = 0; builtin_functions[i][0] != 0; ++i)
   {
     buf << setw(c_maxlen) << left << builtin_functions[i][0]

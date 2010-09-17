@@ -67,7 +67,6 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <cstring>
 #include <cctype>
 using namespace std;
 
@@ -115,8 +114,6 @@ template<typename T> inline void BSPF_swap(T& a, T& b) { T tmp = a; a = b; b = t
 template<typename T> inline T BSPF_abs (T x) { return (x>=0) ? x : -x; }
 template<typename T> inline T BSPF_min (T a, T b) { return (a<b) ? a : b; }
 template<typename T> inline T BSPF_max (T a, T b) { return (a>b) ? a : b; }
-
-// Test whether two strings are equal (case insensitive)
 inline bool BSPF_equalsIgnoreCase(const string& s1, const string& s2)
 {
   return BSPF_strcasecmp(s1.c_str(), s2.c_str()) == 0;
@@ -126,22 +123,10 @@ inline bool BSPF_equalsIgnoreCase(const char* s1, const char* s2)
   return BSPF_strcasecmp(s1, s2) == 0;
 }
 
-// Test whether the first string starts with the second one (case insensitive)
-inline bool BSPF_startsWithIgnoreCase(const string& s1, const string& s2)
-{
-  return BSPF_strncasecmp(s1.c_str(), s2.c_str(), s2.length()) == 0;
-}
-inline bool BSPF_startsWithIgnoreCase(const char* s1, const char* s2)
-{
-  return BSPF_strncasecmp(s1, s2, strlen(s2)) == 0;
-}
-
-// Test whether two characters are equal (case insensitive)
 static bool BSPF_equalsIgnoreCaseChar(char ch1, char ch2)
 {
   return toupper((unsigned char)ch1) == toupper((unsigned char)ch2);
 }
-// Find location (if any) of the second string within the first
 inline size_t BSPF_findIgnoreCase(const string& s1, const string& s2)
 {
   string::const_iterator pos = std::search(s1.begin(), s1.end(),

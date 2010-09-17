@@ -147,7 +147,11 @@ void RomAuditDialog::auditRoms()
       // Only rename the file if we found a valid properties entry
       if(name != "" && name != files[idx].getDisplayName())
       {
-        const string& newfile = node.getPath() + name + "." + extension;
+        // Check for terminating separator
+        string newfile = auditPath;
+        if(newfile.find_last_of(BSPF_PATH_SEPARATOR) != newfile.length()-1)
+          newfile += BSPF_PATH_SEPARATOR;
+        newfile += name + "." + extension;
 
         if(files[idx].getPath() != newfile)
           if(AbstractFilesystemNode::renameFile(files[idx].getPath(), newfile))

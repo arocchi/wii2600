@@ -23,70 +23,53 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DiStella::DiStella(const CartDebug& dbg, CartDebug::DisassemblyList& list,
-                   CartDebug::BankInfo& info, bool resolvedata)
+                   AddressList& addresses, bool resolvedata)
   : myDbg(dbg),
     myList(list)
 {
-  CartDebug::AddressList addresses = info.addressList;
   if(addresses.size() == 0)
     return;
 
   while(!myAddressQueue.empty())
     myAddressQueue.pop();
 
-  CartDebug::AddressList::iterator it = addresses.begin();
+  /*============================================
+    The offset is the address where the code segment
+    starts.  For a 4K game, it is usually 0xf000,
+    which would then have the code data end at 0xffff,
+    but that is not necessarily the case.  Because the
+    Atari 2600 only has 13 address lines, it's possible
+    that the "code" can be considered to start in a lot
+    of different places.  So, we use the start
+    address as a reference to determine where the
+    offset is, logically-anded to produce an offset
+    that is a multiple of 4K.
+
+    Example:
+      Start address = $D973, so therefore
+      Offset to code = $D000
+      Code range = $D000-$DFFF
+  =============================================*/
+
+  AddressList::iterator it = addresses.begin();
   uInt16 start = *it++;
 
-  if(start & 0x1000)
+  if(start & 0x1000)  // ROM space
   {
-    if(info.size == 4096)  // 4K ROM space
-    {
-      /*============================================
-        The offset is the address where the code segment
-        starts.  For a 4K game, it is usually 0xf000.
-
-        Example:
-          Start address = $D973, so therefore
-          Offset to code = $D000
-          Code range = $D000-$DFFF
-      =============================================*/
-      myAppData.start  = 0x0000;
-      myAppData.end    = 0x0FFF;
-
-      myOffset = (start - (start % 0x1000));
-    }
-    else  // 2K ROM space
-    {
-      /*============================================
-        The offset is the address where the code segment
-        starts.  For a 2K game, it is usually 0xf800,
-        but can also be 0xf000.
-      =============================================*/
-      myAppData.start  = 0x0000;
-      myAppData.end    = 0x07FF;
-
-      myOffset = (start & 0xF800);
-    }
+    myAppData.start  = 0x0000;
+    myAppData.end    = 0x0FFF;
+    myAppData.length = 4096;
   }
-  else  // ZP RAM
+  else                // ZP RAM
   {
-    // For now, we assume all accesses below $1000 are zero-page 
     myAppData.start  = 0x0080;
     myAppData.end    = 0x00FF;
-
-    myOffset = 0;
+    myAppData.length = 128;
   }
-  myAppData.length = info.size;
-
-  info.start  = myAppData.start;
-  info.end    = myAppData.end;
-  info.offset = myOffset;
-
   memset(labels, 0, 0x1000);
-  myAddressQueue.push(start);
 
-  // Process any directives first, as they override automatic code determination
-  processDirectives(info.directiveList);
+  myOffset = (start - (start % 0x1000));
+  myAddressQueue.push(start);
 
   if(resolvedata)
   {
@@ -150,6 +133,8 @@ DiStella::~DiStella()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DiStella::disasm(uInt32 distart, int pass)
 {
+#define HEX4 uppercase << hex << setw(4) << setfill('0')
+#define HEX2 uppercase << hex << setw(2) << setfill('0')
 #define USER_OR_AUTO_LABEL(pre, address, post)        \
   const string& l = myDbg.getLabel(address, true);    \
   if(l != EmptyString)  nextline << pre << l << post; \
@@ -178,16 +163,10 @@ void DiStella::disasm(uInt32 distart, int pass)
         else
           myDisasmBuf << HEX4 << myPC+myOffset << "'     '";
 
-        uInt8 byte = Debugger::debugger().peek(myPC+myOffset);
-        myDisasmBuf << ".byte $" << HEX2 << (int)byte << "  |";
-        for(uInt8 i = 0, c = byte; i < 8; ++i, c <<= 1)
-          myDisasmBuf << ((c > 127) ? "X" : " ");
-        myDisasmBuf << "|  $" << HEX4 << myPC+myOffset << "'";
-        if(settings.gfx_format == kBASE_2)
-          myDisasmBuf << Debugger::to_bin_8(byte);
-        else
-          myDisasmBuf << HEX2 << (int)byte;
-        addEntry(CartDebug::GFX);
+        myDisasmBuf << ".byte $" << HEX2 << (int)Debugger::debugger().peek(myPC+myOffset) << " ; ";
+        showgfx(Debugger::debugger().peek(myPC+myOffset));
+        myDisasmBuf << " $" << HEX4 << myPC+myOffset;
+        addEntry();
       }
       myPC++;
     }
@@ -211,7 +190,7 @@ void DiStella::disasm(uInt32 distart, int pass)
           bytes++;
           if (bytes == 17)
           {
-            addEntry(CartDebug::DATA);
+            addEntry();
             myDisasmBuf << "    '     '.byte $" << HEX2 << (int)Debugger::debugger().peek(myPC+myOffset);
             bytes = 1;
           }
@@ -223,9 +202,9 @@ void DiStella::disasm(uInt32 distart, int pass)
 
       if (pass == 3)
       {
-        addEntry(CartDebug::DATA);
+        addEntry();
         myDisasmBuf << "    '     ' ";
-        addEntry(CartDebug::NONE);
+        addEntry();
       }
     }
     else
@@ -285,7 +264,7 @@ void DiStella::disasm(uInt32 distart, int pass)
               /* Line information is already printed; append .byte since last instruction will
                  put recompilable object larger that original binary file */
               myDisasmBuf << ".byte $" << HEX2 << (int)op;
-              addEntry(CartDebug::DATA);
+              addEntry();
 
               if (myPC == myAppData.end)
               {
@@ -296,7 +275,7 @@ void DiStella::disasm(uInt32 distart, int pass)
 
                 op = Debugger::debugger().peek(myPC+myOffset);  myPC++;
                 myDisasmBuf << ".byte $" << HEX2 << (int)op;
-                addEntry(CartDebug::DATA);
+                addEntry();
               }
             }
             myPCEnd = myAppData.end + myOffset;
@@ -316,7 +295,7 @@ void DiStella::disasm(uInt32 distart, int pass)
                 /* Line information is already printed, but we can remove the
                    Instruction (i.e. BMI) by simply clearing the buffer to print */
                 myDisasmBuf << ".byte $" << HEX2 << (int)op;
-                addEntry(CartDebug::DATA);
+                addEntry();
                 nextline.str("");
                 nextlinebytes.str("");
               }
@@ -625,11 +604,11 @@ void DiStella::disasm(uInt32 distart, int pass)
         myDisasmBuf << nextline.str() << "'"
                     << ";" << dec << (int)ourLookup[op].cycles << "'"
                     << nextlinebytes.str();
-        addEntry(CartDebug::CODE);
+        addEntry();
         if (op == 0x40 || op == 0x60)
         {
           myDisasmBuf << "    '     ' ";
-          addEntry(CartDebug::NONE);
+          addEntry();
         }
 
         nextline.str("");
@@ -656,8 +635,8 @@ int DiStella::mark(uInt32 address, MarkType bit)
     We sweep for hardware/system equates, which are valid addresses,
     outside the scope of the code/data range.  For these, we mark its
     corresponding hardware/system array element, and return "2" or "3"
-    (depending on which system/hardware element was accessed).
-    If this was not the case...
+    (depending on which system/hardware element was accessed), or "5"
+    for zero-page RAM.  If this was not the case...
 
     Next we check if it is a code "mirror".  For the 2600, address ranges
     are limited with 13 bits, so other addresses can exist outside of the
@@ -716,36 +695,29 @@ int DiStella::mark(uInt32 address, MarkType bit)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool DiStella::check_range(uInt32 beg, uInt32 end)
+void DiStella::showgfx(uInt8 c)
 {
-  if(beg > end)
+#if 0
+  int i;
+
+  myDisasmBuf << "|";
+  for(i = 0;i < 8; i++)
   {
-    cerr << "Beginning of range greater than end: start = " << hex << beg
-         << ", end = " << hex << end << endl;
-    return false;
+    if (c > 127)
+      myDisasmBuf << "X";
+    else
+      myDisasmBuf << " ";
+
+    c = c << 1;
   }
-  else if(beg > myAppData.end + myOffset)
-  {
-    cerr << "Beginning of range out of range: start = " << hex << beg
-         << ", range = " << hex << (myAppData.end + myOffset) << endl;
-    return false;
-  }
-  else if(beg < myOffset)
-  {
-    cerr << "Beginning of range out of range: start = " << hex << beg
-         << ", offset = " << hex << myOffset << endl;
-    return false;
-  }
-  return true;
+  myDisasmBuf << "|";
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DiStella::addEntry(CartDebug::DisasmType type)
+void DiStella::addEntry()
 {
   CartDebug::DisassemblyTag tag;
-
-  // Type
-  tag.type = type;
 
   // Address
   myDisasmBuf.seekg(0, ios::beg);
@@ -783,25 +755,18 @@ void DiStella::addEntry(CartDebug::DisasmType type)
   // Up to this point the field sizes are fixed, until we get to
   // variable length labels, cycle counts, etc
   myDisasmBuf.seekg(11, ios::beg);
-  switch(tag.type)
+  switch(myDisasmBuf.peek())
   {
-    case CartDebug::BLOCK:
-      // TODO - handle this
+    case ' ':
+      tag.disasm = " ";
       break;
-    case CartDebug::CODE:
+    case '.':
+      getline(myDisasmBuf, tag.disasm);
+      break;
+    default:
       getline(myDisasmBuf, tag.disasm, '\'');
       getline(myDisasmBuf, tag.ccount, '\'');
       getline(myDisasmBuf, tag.bytes);
-      break;
-    case CartDebug::DATA:
-      getline(myDisasmBuf, tag.disasm);
-      break;
-    case CartDebug::GFX:
-      getline(myDisasmBuf, tag.disasm, '\'');
-      getline(myDisasmBuf, tag.bytes);
-      break;
-    case CartDebug::NONE:
-      tag.disasm = " ";
       break;
   }
   myList.push_back(tag);
@@ -809,52 +774,7 @@ void DiStella::addEntry(CartDebug::DisasmType type)
 DONE_WITH_ADD:
   myDisasmBuf.clear();
   myDisasmBuf.str("");
-
-#if 0
-  // debugging output
-  cerr << (tag.type == CartDebug::CODE ? "CODE" : (tag.type == CartDebug::DATA ? "DATA" :
-          (tag.type == CartDebug::GFX ? "GFX " : "NONE"))) << "|"
-       << hex << setw(4) << setfill('0') << tag.address << "|"
-       << tag.label << "|" << tag.disasm << "|" << tag.ccount << "|" << "|"
-       << tag.bytes << endl;
-#endif
 }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void DiStella::processDirectives(const CartDebug::DirectiveList& directives)
-{
-
-  for(CartDebug::DirectiveList::const_iterator i = directives.begin();
-      i != directives.end(); ++i)
-  {
-    const CartDebug::DirectiveTag tag = *i;
-    if(check_range(tag.start, tag.end))
-    {
-      MarkType type;
-      switch(tag.type)
-      {
-        case CartDebug::DATA :
-          type = DATA;
-          break;
-        case CartDebug::GFX  :
-          type = GFX;
-          break;
-        case CartDebug::CODE :
-          type = REACHABLE;
-          break;
-        default:
-          continue;  // skip this tag
-      }
-      for(uInt32 k = tag.start; k <= tag.end; ++k)
-        mark(k, type);
-    }
-  }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-DiStella::Settings DiStella::settings = {
-  kBASE_2
-};
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 const DiStella::Instruction_tag DiStella::ourLookup[256] = {

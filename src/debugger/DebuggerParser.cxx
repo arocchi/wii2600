@@ -108,7 +108,7 @@ string DebuggerParser::run(const string& command)
 
   for(int i = 0; i < kNumCommands; ++i)
   {
-    if(BSPF_equalsIgnoreCase(verb, commands[i].cmdString))
+    if(verb == commands[i].cmdString)
     {
       if(validateArgs(i))
         CALL_METHOD(commands[i].executor);
@@ -159,8 +159,9 @@ void DebuggerParser::getCompletions(const char* in, StringList& completions) con
   // cerr << "Attempting to complete \"" << in << "\"" << endl;
   for(int i = 0; i < kNumCommands; ++i)
   {
-    if(BSPF_startsWithIgnoreCase(commands[i].cmdString.c_str(), in))
-      completions.push_back(commands[i].cmdString);
+    const char* l = commands[i].cmdString.c_str();
+    if(BSPF_strncasecmp(l, in, strlen(in)) == 0)
+      completions.push_back(l);
   }
 }
 
@@ -340,7 +341,7 @@ bool DebuggerParser::getArgs(const string& command, string& verb)
           verb += c;
         break;
       case kIN_SPACE:
-        if(c == '\'')
+        if(c == '{')
           state = kIN_BRACE;
         else if(c != ' ') {
           state = kIN_ARG;
@@ -348,7 +349,7 @@ bool DebuggerParser::getArgs(const string& command, string& verb)
         }
         break;
       case kIN_BRACE:
-        if(c == '\'') {
+        if(c == '}') {
           state = kIN_SPACE;
           argStrings.push_back(curArg);
           //  cerr << "{" << curArg << "}" << endl;
@@ -767,16 +768,6 @@ void DebuggerParser::executeClearbreaks()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "clearconfig"
-void DebuggerParser::executeClearconfig()
-{
-  if(argCount == 1)
-    commandResult << debugger->cartDebug().clearConfig(args[0]);
-  else
-    commandResult << debugger->cartDebug().clearConfig();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // "cleartraps"
 void DebuggerParser::executeCleartraps()
 {
@@ -801,28 +792,6 @@ void DebuggerParser::executeCls()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "code"
-void DebuggerParser::executeCode()
-{
-  if(argCount != 2)
-  {
-    commandResult << red("Specify start and end of range only");
-    return;
-  }
-  else if(args[1] < args[0])
-  {
-    commandResult << red("Start address must be <= end address");
-    return;
-  }
-
-  bool result = debugger->cartDebug().addDirective(
-                  CartDebug::CODE, args[0], args[1]);
-  commandResult << (result ? "added" : "removed") << " CODE directive on range $" << hex << args[0]
-                << " $" << hex << args[1];
-  debugger->myRom->invalidate();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // "colortest"
 void DebuggerParser::executeColortest()
 {
@@ -839,28 +808,6 @@ void DebuggerParser::executeD()
     debugger->cpuDebug().toggleD();
   else if(argCount == 1)
     debugger->cpuDebug().setD(args[0]);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "data"
-void DebuggerParser::executeData()
-{
-  if(argCount != 2)
-  {
-    commandResult << red("Specify start and end of range only");
-    return;
-  }
-  else if(args[1] < args[0])
-  {
-    commandResult << red("Start address must be <= end address");
-    return;
-  }
-
-  bool result = debugger->cartDebug().addDirective(
-                  CartDebug::DATA, args[0], args[1]);
-  commandResult << (result ? "added" : "removed") << " DATA directive on range $" << hex << args[0]
-                << " $" << hex << args[1];
-  debugger->myRom->invalidate();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -950,6 +897,25 @@ void DebuggerParser::executeExec()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// "help"
+void DebuggerParser::executeHelp()
+{
+  // Find length of longest command
+  uInt16 clen = 0;
+  for(int i = 0; i < kNumCommands; ++i)
+  {
+    uInt16 len = commands[i].cmdString.length();
+    if(len > clen)  clen = len;
+  }
+
+  for(int i = 0; i < kNumCommands; ++i)
+    commandResult << setw(clen) << right << commands[i].cmdString
+                  << " - " << commands[i].description << endl;
+
+  commandResult << debugger->builtinHelp();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // "frame"
 void DebuggerParser::executeFrame()
 {
@@ -978,69 +944,6 @@ void DebuggerParser::executeFunction()
   }
   else
     commandResult << red("invalid expression");
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "gfx"
-void DebuggerParser::executeGfx()
-{
-  if(argCount != 2)
-  {
-    commandResult << red("Specify start and end of range only");
-    return;
-  }
-  else if(args[1] < args[0])
-  {
-    commandResult << red("Start address must be <= end address");
-    return;
-  }
-
-  bool result = debugger->cartDebug().addDirective(
-                  CartDebug::GFX, args[0], args[1]);
-  commandResult << (result ? "added" : "removed") << " GFX directive on range $" << hex << args[0]
-                << " $" << hex << args[1];
-  debugger->myRom->invalidate();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "help"
-void DebuggerParser::executeHelp()
-{
-  // Find length of longest command
-  uInt16 clen = 0;
-  for(int i = 0; i < kNumCommands; ++i)
-  {
-    uInt16 len = commands[i].cmdString.length();
-    if(len > clen)  clen = len;
-  }
-
-  for(int i = 0; i < kNumCommands; ++i)
-    commandResult << setw(clen) << right << commands[i].cmdString
-                  << " - " << commands[i].description << endl;
-
-  commandResult << debugger->builtinHelp();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "jump"
-void DebuggerParser::executeJump()
-{
-  int line = -1;
-  int address = args[0];
-
-  // The specific address we want may not exist (it may be part of a data section)
-  // If so, scroll backward a little until we find it
-  while(((line = debugger->cartDebug().addressToLine(address)) == -1) &&
-        ((address & 0xFFF) >= 0))
-    address--;
-
-  if(line >= 0 && address >= 0)
-  {
-    debugger->myRom->scrollTo(line);
-    commandResult << "disassembly scrolled to address $" << HEX4 << address;
-  }
-  else
-    commandResult << "address $" << HEX4 << args[0] << " doesn't exist";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1084,16 +987,6 @@ void DebuggerParser::executeListbreaks()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "listconfig"
-void DebuggerParser::executeListconfig()
-{
-  if(argCount == 1)
-    commandResult << debugger->cartDebug().listConfig(args[0]);
-  else
-    commandResult << debugger->cartDebug().listConfig();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // "listfunctions"
 void DebuggerParser::executeListfunctions()
 {
@@ -1126,18 +1019,6 @@ void DebuggerParser::executeListtraps()
 
   if(!count)
     commandResult << "no traps set";
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "loadconfig"
-void DebuggerParser::executeLoadconfig()
-{
-  if(argCount == 1)
-    commandResult << debugger->cartDebug().loadConfigFile(argStrings[0]);
-  else
-    commandResult << debugger->cartDebug().loadConfigFile();
-
-  debugger->myRom->invalidate();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1346,16 +1227,6 @@ void DebuggerParser::executeSave()
     commandResult << "saved script to file " << argStrings[0];
   else
     commandResult << red("I/O error");
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "saveconfig"
-void DebuggerParser::executeSaveconfig()
-{
-  if(argCount == 1)
-    commandResult << debugger->cartDebug().saveConfigFile(argStrings[0]);
-  else
-    commandResult << debugger->cartDebug().saveConfigFile();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1579,15 +1450,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
   },
 
   {
-    "clearconfig",
-    "Clear Distella config directives [bank xx]",
-    false,
-    false,
-    { kARG_WORD, kARG_MULTI_BYTE },
-    &DebuggerParser::executeClearconfig
-  },
-
-  {
     "cleartraps",
     "Clear all traps",
     false,
@@ -1615,15 +1477,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
   },
 
   {
-    "code",
-    "Mark 'CODE' range in disassembly",
-    true,
-    false,
-    { kARG_WORD, kARG_MULTI_BYTE },
-    &DebuggerParser::executeCode
-  },
-
-  {
     "colortest",
     "Show value xx as TIA color",
     true,
@@ -1639,15 +1492,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
     true,
     { kARG_BOOL, kARG_END_ARGS },
     &DebuggerParser::executeD
-  },
-
-  {
-    "data",
-    "Mark 'DATA' range in disassembly",
-    true,
-    false,
-    { kARG_WORD, kARG_MULTI_BYTE },
-    &DebuggerParser::executeData
   },
 
   {
@@ -1732,15 +1576,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
   },
 
   {
-    "gfx",
-    "Mark 'CFX' range in disassembly",
-    true,
-    false,
-    { kARG_WORD, kARG_MULTI_BYTE },
-    &DebuggerParser::executeGfx
-  },
-
-  {
     "help",
     "This cruft",
     false,
@@ -1750,30 +1585,12 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
   },
 
   {
-    "jump",
-    "Scroll disassembly to address xx",
-    true,
-    false,
-    { kARG_WORD, kARG_END_ARGS },
-    &DebuggerParser::executeJump
-  },
-
-  {
     "listbreaks",
     "List breakpoints",
     false,
     false,
     { kARG_END_ARGS },
     &DebuggerParser::executeListbreaks
-  },
-
-  {
-    "listconfig",
-    "List Distella config directives [bank xx]",
-    false,
-    false,
-    { kARG_WORD, kARG_MULTI_BYTE },
-    &DebuggerParser::executeListconfig
   },
 
   {
@@ -1792,15 +1609,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
     false,
     { kARG_END_ARGS },
     &DebuggerParser::executeListtraps
-  },
-
-  {
-    "loadconfig",
-    "Load Distella config file [from file xx]",
-    false,
-    true,
-    { kARG_FILE, kARG_MULTI_BYTE },
-    &DebuggerParser::executeLoadconfig
   },
 
   {
@@ -1936,15 +1744,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
     false,
     { kARG_FILE, kARG_END_ARGS },
     &DebuggerParser::executeSave
-  },
-
-  {
-    "saveconfig",
-    "Save Distella config file [to file xx]",
-    false,
-    false,
-    { kARG_FILE, kARG_MULTI_BYTE },
-    &DebuggerParser::executeSaveconfig
   },
 
   {
