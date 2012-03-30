@@ -202,11 +202,6 @@ class Console : public Serializable
     void togglePhosphor();
 
     /**
-      Toggles NTSC filtering effects.
-    */
-    void toggleNTSC();
-
-    /**
       Toggles the PAL color-loss effect.
     */
     void toggleColorLoss();

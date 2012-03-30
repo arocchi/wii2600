@@ -23,14 +23,12 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 MindLink::MindLink(Jack jack, const Event& event, const System& system)
   : Controller(jack, event, system, Controller::MindLink),
+    myIOPort(0xff),
     myMindlinkPos(0x2800),
+    myMindlinkPos1(0x2800),
+    myMindlinkPos2(0x1000),
     myMindlinkShift(1)
 {
-  myDigitalPinState[One]   = true;
-  myDigitalPinState[Two]   = true;
-  myDigitalPinState[Three] = true;
-  myDigitalPinState[Four]  = true;
-
   // Analog pins are never used by the MindLink
   myAnalogPinValue[Five] = myAnalogPinValue[Nine] = maximumResistance;
 }
@@ -43,35 +41,61 @@ MindLink::~MindLink()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MindLink::update()
 {
-  myDigitalPinState[One]   =
-  myDigitalPinState[Two]   =
-  myDigitalPinState[Three] =
-  myDigitalPinState[Four]  = true;
-
+  myIOPort |= 0xf0;
+  if(0)//MPdirection & 0x01)
+    myMindlinkPos = myMindlinkPos2 + 0x1800;
+  else
+    myMindlinkPos = myMindlinkPos1;
+	
   myMindlinkPos = (myMindlinkPos & 0x3fffffff) +
                   (myEvent.get(Event::MouseAxisXValue) << 3);
   if(myMindlinkPos < 0x2800)
     myMindlinkPos = 0x2800;
   if(myMindlinkPos >= 0x3800)
     myMindlinkPos = 0x3800;
+	
+
+  if(0)//MPdirection & 0x01)
+  {
+    myMindlinkPos2 = myMindlinkPos - 0x1800;
+    myMindlinkPos = myMindlinkPos2;
+  }
+  else
+    myMindlinkPos1 = myMindlinkPos;
 
   myMindlinkShift = 1;
   nextMindlinkBit();
 
   if(myEvent.get(Event::MouseButtonLeftValue) ||
      myEvent.get(Event::MouseButtonRightValue))
-    myMindlinkPos |= 0x4000;  // this bit starts a game
+    myMindlinkPos |= 0x4000; /* this bit starts a game */
+
+//cerr << HEX4 << (int)myMindlinkPos << " : " << HEX2 << (int)myIOPort << endl;
+
+  // Convert IOPort values back to booleans
+  myDigitalPinState[One]   = myIOPort & 0x10;
+  myDigitalPinState[Two]   = myIOPort & 0x20;
+  myDigitalPinState[Three] = myIOPort & 0x40;
+  myDigitalPinState[Four]  = myIOPort & 0x80;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MindLink::nextMindlinkBit()
 {
-  if(myDigitalPinState[One])
+  if(myIOPort & 0x10)
   {
-    myDigitalPinState[Three] = false;
-    myDigitalPinState[Four]  = false;
+    myIOPort &= 0x3f;
     if(myMindlinkPos & myMindlinkShift)
-      myDigitalPinState[Four] = true;
+      myIOPort |= 0x80;
     myMindlinkShift <<= 1;
+
+  myDigitalPinState[One]   = myIOPort & 0x10;
+  myDigitalPinState[Two]   = myIOPort & 0x20;
+  myDigitalPinState[Three] = myIOPort & 0x40;
+  myDigitalPinState[Four]  = myIOPort & 0x80;
+
+
+cerr << dec << (int)myMindlinkShift << " : " << HEX2 << (int)myIOPort << endl;
+
 	}
 }

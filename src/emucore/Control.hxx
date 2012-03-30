@@ -160,10 +160,8 @@ class Controller : public Serializable
     /**
       Called after *all* digital pins have been written on Port A.
       Most controllers don't do anything in this case.
-
-      @param value  The entire contents of the SWCHA register
     */
-    virtual void controlWrite(uInt8 value) { };
+    virtual void controlWrite() { };
 
     /**
       Update the entire digital and analog pin state according to the

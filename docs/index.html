@@ -10,7 +10,7 @@
   <br><br>
   <center><h2><b>A multi-platform Atari 2600 VCS emulator</b></h2></center>
 
-  <center><h4><b>Release 3.7</b></h4></center>
+  <center><h4><b>Release 3.6</b></h4></center>
   <br><br>
 
   <center><h2><b>User's Guide</b></h2></center>
@@ -54,7 +54,7 @@
 
   <br><br><br>
 
-  <center><b>February 1999 - April 2012</b></center>
+  <center><b>February 1999 - March 2012</b></center>
     <center><b>The Stella Team</b></center>
   <center><b><a href="http://stella.sourceforge.net">Stella Homepage</a></b></center>
 
@@ -263,7 +263,6 @@
     <li>Emulates Spectravideo CompuMate system using your computer's keyboard,
       including mapping of CompuMate 'Backspace', 'Space' and 'Enter' functionality to
       to the actual keys on your keyboard.</li>
-    <li>Emulates the Mindlink Controller using your computer's mouse</li>
     <li>Support for real Atari 2600 controllers using the
       <a href="http://www.stelladaptor.com">Stelladaptor</a> and
       <a href="http://2600-daptor.com">2600-adaptor/2600-daptor II</a></li>
@@ -1278,20 +1277,9 @@
     <tr><td>Period </td><td>Period </td></tr>
     <tr><td>Func </td><td>Control (left or right) </td></tr>
     <tr><td>Shift </td><td>Shift (left or right) </td></tr>
-    <tr><td>Enter </td><td>Return/Enter </td></tr>
-    <tr><td>Space </td><td>Space </td></tr>
+    <tr><td>Enter </td><td>; or Return/Enter </td></tr>
+    <tr><td>Space </td><td>/ or Space </td></tr>
     <tr><td>Func-Space </td><td>Backspace </td></tr>
-    <tr><td>+ </td><td>+ or Shift-1 </td></tr>
-    <tr><td>- </td><td>- or Shift-2</td></tr>
-    <tr><td>* </td><td>Shift-3 </td></tr>
-    <tr><td>/ </td><td>/ or Shift-4 </td></tr>
-    <tr><td>= </td><td>= or Shift-5 </td></tr>
-    <tr><td>? </td><td>? (Shift-/) or Shift-6 </td></tr>
-    <tr><td>$ </td><td>Shift-7 </td></tr>
-    <tr><td>[ </td><td>[ or Shift-8 </td></tr>
-    <tr><td>] </td><td>] or Shift-9 </td></tr>
-    <tr><td>&quot; </td><td>" (Shift-') or Shift-0 </td></tr>
-
   </table>
 
   <a name="DeveloperKeys"></a>
@@ -1489,12 +1477,6 @@
     </tr>
 
     <tr>
-      <td>Toggle Blargg NTSC filtering</td>
-      <td>Alt + f</td>
-      <td>Cmd + f</td>
-    </tr>
-
-    <tr>
       <td>Save current properties to a new properties file</td>
       <td>Control + s</td>
       <td>Control + s</td>
@@ -1670,14 +1652,6 @@
       <td> &#x2715;</td>
     </tr>
     <tr>
-      <th> Mindlink</th>
-      <td> &#x2715;</td>
-      <td> &#x2715;</td>
-      <td> &#x2713;</td>
-      <td> &#x2713; (axis ignored)</td>
-      <td> &#x2715;</td>
-    </tr>
-    <tr>
       <th> AtariVox</th>
       <td> N/A</td>
       <td> N/A</td>
@@ -1770,11 +1744,6 @@
       <td><pre>-gl_vsync &lt;1|0&gt;</pre></td>
       <td>OpenGL mode only. Synchronize screen updates to the vertical blank
         period.  This can result in smoother updates, and eliminate tearing.</td>
-    </tr>
-
-    <tr>
-      <td><pre>-ntsc_filter &lt;1|0&gt;</pre></td>
-      <td>OpenGL mode only.  Enables Blargg NTSC filtering.</td>
     </tr>
 
 <!-- FIXME
@@ -3200,7 +3169,6 @@ Ms Pac-Man (Stella extended codes):
         <tr><td><a href="http://www.vectrex.biz/MemCard.htm">SaveKey</a></td><td>A 32K EEPROM for saving high scores, etc (the EEPROM portion of an AtariVox).</td></tr>
         <tr><td>Genesis </td><td>Sega Genesis controller, which can be used similar to a BoosterGrip, giving an extra button.</td></tr>
         <tr><td>CompuMate </td><td>Spectravideo CompuMate (if either left or right is set, CompuMate is used for both).</td></tr>
-        <tr><td>Mindlink </td><td>Mindlink controller.</td></tr>
       </table></td>
     </tr>
 

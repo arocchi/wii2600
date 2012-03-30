@@ -25,27 +25,22 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeFA2::CartridgeFA2(const uInt8* image, uInt32 size, const Settings& settings)
-  : Cartridge(settings),
-    mySize(size)
+  : Cartridge(settings)
 {
-  // Allocate array for the ROM image
-  myImage = new uInt8[mySize];
-
   // Copy the ROM image into my buffer
-  memcpy(myImage, image, mySize);
-  createCodeAccessBase(mySize);
+  memcpy(myImage, image, BSPF_min(24576u, size));
+  createCodeAccessBase(24576);
 
   // This cart contains 256 bytes extended RAM @ 0x1000
   registerRamArea(0x1000, 256, 0x100, 0x00);
 
   // Remember startup bank
-  myStartBank = 0;
+  myStartBank = 5;
 }
  
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CartridgeFA2::~CartridgeFA2()
 {
-  delete[] myImage;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -136,12 +131,6 @@ uInt8 CartridgeFA2::peek(uInt16 address)
       bank(5);
       break;
 
-    case 0x0FFB:
-      // Set the current bank to the seventh 4k bank
-      // This is only available on 28K ROMs
-      if(mySize == 28*1024)  bank(6);
-      break;
-
     default:
       break;
   }
@@ -201,12 +190,6 @@ bool CartridgeFA2::poke(uInt16 address, uInt8)
       bank(5);
       break;
 
-    case 0x0FFB:
-      // Set the current bank to the seventh 4k bank
-      // This is only available on 28K ROMs
-      if(mySize == 28*1024)  bank(6);
-      break;
-
     default:
       break;
   }
@@ -257,7 +240,7 @@ uInt16 CartridgeFA2::bank() const
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt16 CartridgeFA2::bankCount() const
 {
-  return (mySize / 4096);
+  return 6;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -281,7 +264,7 @@ bool CartridgeFA2::patch(uInt16 address, uInt8 value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 const uInt8* CartridgeFA2::getImage(int& size) const
 {
-  size = mySize;
+  size = 24576;
   return myImage;
 }
 

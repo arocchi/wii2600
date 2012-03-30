@@ -22,7 +22,6 @@
 #include "Font.hxx"
 #include "FrameBufferGL.hxx"
 #include "TIA.hxx"
-#include "NTSCFilter.hxx"
 
 #include "FBSurfaceTIA.hxx"
 
@@ -98,46 +97,35 @@ void FBSurfaceTIA::update()
   uInt32 height        = myTIA->height();
   uInt16* buffer       = (uInt16*) myTexture->pixels;
 
-  switch(myFB.myFilterType)
+  if(!myFB.myUsePhosphor)
   {
-    case FrameBufferGL::kNone:
+    uInt32 bufofsY    = 0;
+    uInt32 screenofsY = 0;
+    for(uInt32 y = 0; y < height; ++y )
     {
-      uInt32 bufofsY    = 0;
-      uInt32 screenofsY = 0;
-      for(uInt32 y = 0; y < height; ++y)
-      {
-        uInt32 pos = screenofsY;
-        for(uInt32 x = 0; x < width; ++x)
-          buffer[pos++] = (uInt16) myFB.myDefPalette[currentFrame[bufofsY + x]];
+      uInt32 pos = screenofsY;
+      for(uInt32 x = 0; x < width; ++x )
+        buffer[pos++] = (uInt16) myFB.myDefPalette[currentFrame[bufofsY + x]];
 
-        bufofsY    += width;
-        screenofsY += myPitch;
-      }
-      break;
+      bufofsY    += width;
+      screenofsY += myPitch;
     }
-
-    case FrameBufferGL::kPhosphor:
+  }
+  else
+  {
+    uInt32 bufofsY    = 0;
+    uInt32 screenofsY = 0;
+    for(uInt32 y = 0; y < height; ++y )
     {
-      uInt32 bufofsY    = 0;
-      uInt32 screenofsY = 0;
-      for(uInt32 y = 0; y < height; ++y)
+      uInt32 pos = screenofsY;
+      for(uInt32 x = 0; x < width; ++x )
       {
-        uInt32 pos = screenofsY;
-        for(uInt32 x = 0; x < width; ++x)
-        {
-          const uInt32 bufofs = bufofsY + x;
-          buffer[pos++] = (uInt16)
-            myFB.myAvgPalette[currentFrame[bufofs]][previousFrame[bufofs]];
-        }
-        bufofsY    += width;
-        screenofsY += myPitch;
+        const uInt32 bufofs = bufofsY + x;
+        buffer[pos++] = (uInt16)
+          myFB.myAvgPalette[currentFrame[bufofs]][previousFrame[bufofs]];
       }
-      break;
-    }
-
-    case FrameBufferGL::kBlarggNTSC:
-    {
-      break;
+      bufofsY    += width;
+      screenofsY += myPitch;
     }
   }
 
@@ -355,12 +343,6 @@ void FBSurfaceTIA::updateCoords()
     myGL.BindBuffer(GL_ARRAY_BUFFER, myVBOID);
     myGL.BufferData(GL_ARRAY_BUFFER, 32*sizeof(GLfloat), myCoord, GL_STATIC_DRAW);
   }
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FBSurfaceTIA::setTIAPalette(const uInt32* palette)
-{
-  myNTSCFilter.setTIAPalette(palette);
 }
 
 #endif

@@ -40,7 +40,6 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBufferGL::FrameBufferGL(OSystem* osystem)
   : FrameBuffer(osystem),
-    myFilterType(kNone),
     myTiaSurface(NULL),
     myFilterParamName("GL_NEAREST"),
     myDirtyFlag(true)
@@ -132,6 +131,10 @@ bool FrameBufferGL::loadFuncs(GLFunctionality functionality)
         OGL_INIT(BufferData,void,glBufferData,(GLenum,GLsizei,const void*,GLenum));
         OGL_INIT(DeleteBuffers,void,glDeleteBuffers,(GLsizei, const GLuint*));
         break;  // kGL_VBO
+
+      case kGL_FBO:
+        return false;  // TODO - implement this
+        break;  // kGL_FBO
     }
   }
   else
@@ -193,6 +196,7 @@ string FrameBufferGL::about() const
       << "  Filter:     " << myFilterParamName << endl
       << "  Extensions: ";
   if(myVBOAvailable) out << "VBO ";
+  if(myFBOAvailable) out << "FBO ";
   out << endl;
   return out.str();
 }
@@ -276,6 +280,7 @@ bool FrameBufferGL::setVidMode(VideoMode& mode)
     myGLVersion = atof(version.substr(0, 3).c_str());
 
     myVBOAvailable = myOSystem->settings().getBool("gl_vbo") && loadFuncs(kGL_VBO);
+    myFBOAvailable = false;
   }
   else
     return false;
@@ -384,27 +389,8 @@ void FrameBufferGL::enablePhosphor(bool enable, int blend)
 {
   myUsePhosphor   = enable;
   myPhosphorBlend = blend;
-  myFilterType = enable ? kPhosphor : kNone;
 
   myRedrawEntireFrame = true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGL::enableNTSC(bool enable)
-{
-  if(enable)
-    myFilterType = kBlarggNTSC;
-  else
-    myFilterType = myUsePhosphor ? kPhosphor : kNone;
-
-  myRedrawEntireFrame = true;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferGL::setTIAPalette(const uInt32* palette)
-{
-  myTiaSurface->setTIAPalette(palette);
-  FrameBuffer::setTIAPalette(palette);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -436,5 +422,8 @@ float FrameBufferGL::myGLVersion = 0.0;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FrameBufferGL::myVBOAvailable = false;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool FrameBufferGL::myFBOAvailable = false;
 
 #endif  // DISPLAY_OPENGL
