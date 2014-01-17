@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,17 +17,19 @@
 // $Id$
 //============================================================================
 
+#ifdef DISPLAY_OPENGL
+
 #include <cmath>
 
 #include "Font.hxx"
-#include "FrameBufferSDL2.hxx"
+#include "FrameBufferGL.hxx"
 #include "TIA.hxx"
 #include "NTSCFilter.hxx"
 
 #include "FBSurfaceTIA.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FBSurfaceTIA::FBSurfaceTIA(FrameBufferSDL2& buffer)
+FBSurfaceTIA::FBSurfaceTIA(FrameBufferGL& buffer)
   : myFB(buffer),
     myGL(myFB.p_gl),
     myTexture(NULL),
@@ -42,8 +44,8 @@ FBSurfaceTIA::FBSurfaceTIA(FrameBufferSDL2& buffer)
 
   // Texture width is set to contain all possible sizes for a TIA image,
   // including Blargg filtering
-  myTexWidth  = FrameBufferSDL2::power_of_two(ATARI_NTSC_OUT_WIDTH(160));
-  myTexHeight = FrameBufferSDL2::power_of_two(320);
+  myTexWidth  = FrameBufferGL::power_of_two(ATARI_NTSC_OUT_WIDTH(160));
+  myTexHeight = FrameBufferGL::power_of_two(320);
 
   // Create a surface in the same format as the parent GL class
   const SDL_PixelFormat& pf = myFB.myPixelFormat;
@@ -93,7 +95,7 @@ void FBSurfaceTIA::update()
   //        a post-processing filter by blending several frames.
   switch(myFB.myFilterType)
   {
-    case FrameBufferSDL2::kNormal:
+    case FrameBufferGL::kNormal:
     {
       uInt32 bufofsY    = 0;
       uInt32 screenofsY = 0;
@@ -108,7 +110,7 @@ void FBSurfaceTIA::update()
       }
       break;
     }
-    case FrameBufferSDL2::kPhosphor:
+    case FrameBufferGL::kPhosphor:
     {
       uInt32 bufofsY    = 0;
       uInt32 screenofsY = 0;
@@ -126,13 +128,13 @@ void FBSurfaceTIA::update()
       }
       break;
     }
-    case FrameBufferSDL2::kBlarggNormal:
+    case FrameBufferGL::kBlarggNormal:
     {
       myFB.myNTSCFilter.blit_single(currentFrame, width, height,
                                     buffer, myTexture->pitch);
       break;
     }
-    case FrameBufferSDL2::kBlarggPhosphor:
+    case FrameBufferGL::kBlarggPhosphor:
     {
       myFB.myNTSCFilter.blit_double(currentFrame, previousFrame, width, height,
                                     buffer, myTexture->pitch);
@@ -389,3 +391,5 @@ void FBSurfaceTIA::setTIAPalette(const uInt32* palette)
 {
   myFB.myNTSCFilter.setTIAPalette(myFB, palette);
 }
+
+#endif

@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -24,12 +24,9 @@
 
 #include "bspf.hxx"
 
+#include "DebuggerDialog.hxx"
 #include "OSystem.hxx"
 #include "Version.hxx"
-
-#ifdef DEBUGGER_SUPPORT
-  #include "DebuggerDialog.hxx"
-#endif
 
 #include "Settings.hxx"
 
@@ -123,11 +120,8 @@ Settings::Settings(OSystem* osystem)
   setInternal("lastrom", "");
 
   // UI-related options
-#ifdef DEBUGGER_SUPPORT
   setInternal("dbg.res",
-    GUI::Size(DebuggerDialog::kMediumFontMinW,
-              DebuggerDialog::kMediumFontMinH));
-#endif
+    GUI::Size(DebuggerDialog::kMediumFontMinW, DebuggerDialog::kMediumFontMinH));
   setInternal("uipalette", "0");
   setInternal("listdelay", "300");
   setInternal("mwheel", "4");
@@ -145,7 +139,6 @@ Settings::Settings(OSystem* osystem)
   setExternal("romloadcount", "0");
   setExternal("maxres", "");
 
-#ifdef DEBUGGER_SUPPORT
   // Debugger/disassembly options
   setInternal("dbg.fontstyle", "0");
   setInternal("dbg.uhex", "true");
@@ -153,12 +146,9 @@ Settings::Settings(OSystem* osystem)
   setInternal("dis.gfxformat", "2");
   setInternal("dis.showaddr", "true");
   setInternal("dis.relocate", "false");
-#endif
 
-#ifdef DTHUMB_SUPPORT
   // Thumb ARM emulation options
   setInternal("thumb.trapfatal", "true");
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -287,7 +277,7 @@ void Settings::validate()
   s = getString("timing");
   if(s != "sleep" && s != "busy")  setInternal("timing", "sleep");
 
-//FIXSDL
+#ifdef DISPLAY_OPENGL
   i = getInt("gl_aspectn");
   if(i < 80 || i > 120)  setInternal("gl_aspectn", "100");
   i = getInt("gl_aspectp");
@@ -295,7 +285,8 @@ void Settings::validate()
 
   i = getInt("tv_filter");
   if(i < 0 || i > 5)  setInternal("tv_filter", "0");
-//////////////////
+
+#endif
 
 #ifdef SOUND_SUPPORT
   i = getInt("volume");
@@ -355,7 +346,7 @@ void Settings::usage()
     << endl
     << "  -video        <type>         Type is one of the following:\n"
     << "                 soft            SDL software mode\n"
-// FIXSDL
+  #ifdef DISPLAY_OPENGL
     << "                 gl              SDL OpenGL mode\n"
     << endl
     << "  -gl_lib       <name>         Specify the OpenGL library\n"
@@ -380,6 +371,7 @@ void Settings::usage()
     << "  -tv_fringing    <value>      Set TV effects custom fringing to value 1.0 - 1.0\n"
     << "  -tv_bleed       <value>      Set TV effects custom bleed to value 1.0 - 1.0\n"
     << endl
+  #endif
     << "  -tia_filter   <filter>       Use the specified filter in emulation mode\n"
     << "  -fullscreen   <1|0|-1>       Use fullscreen mode (1 or 0), or disable switching to fullscreen entirely\n"
     << "  -fullres      <auto|WxH>     The resolution to use in fullscreen mode\n"

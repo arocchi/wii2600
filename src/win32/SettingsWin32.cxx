@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -19,10 +19,10 @@
 
 #include "bspf.hxx"
 #include "Settings.hxx"
-#include "SettingsWINDOWS.hxx"
+#include "SettingsWin32.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SettingsWINDOWS::SettingsWINDOWS(OSystem* osystem)
+SettingsWin32::SettingsWin32(OSystem* osystem)
   : Settings(osystem)
 {
   setInternal("gl_lib", "opengl32.dll");
@@ -30,6 +30,6 @@ SettingsWINDOWS::SettingsWINDOWS(OSystem* osystem)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SettingsWINDOWS::~SettingsWINDOWS()
+SettingsWin32::~SettingsWin32()
 {
 }

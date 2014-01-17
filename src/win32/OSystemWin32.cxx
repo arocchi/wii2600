@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,13 +17,14 @@
 // $Id$
 //============================================================================
 
+#include <SDL_syswm.h>
 #include <fstream>
 
 #include "bspf.hxx"
 #include "FSNode.hxx"
 #include "HomeFinder.hxx"
-
-#include "OSystemWINDOWS.hxx"
+#include "OSystem.hxx"
+#include "OSystemWin32.hxx"
 
 /**
   Each derived class is responsible for calling the following methods
@@ -36,7 +37,7 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemWINDOWS::OSystemWINDOWS()
+OSystemWin32::OSystemWin32()
   : OSystem()
 {
   string basedir = "";
@@ -85,12 +86,12 @@ OSystemWINDOWS::OSystemWINDOWS()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-OSystemWINDOWS::~OSystemWINDOWS()
+OSystemWin32::~OSystemWin32()
 {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string OSystemWINDOWS::defaultSnapSaveDir()
+string OSystemWin32::defaultSnapSaveDir()
 {
   HomeFinder homefinder;
   FilesystemNode desktop(homefinder.getDesktopPath());
@@ -98,7 +99,30 @@ string OSystemWINDOWS::defaultSnapSaveDir()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string OSystemWINDOWS::defaultSnapLoadDir()
+string OSystemWin32::defaultSnapLoadDir()
 {
   return defaultSnapSaveDir();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void OSystemWin32::setAppWindowPos(int x, int y, int w, int h)
+{
+  SDL_SysWMinfo sdl_info;
+  memset(&sdl_info, 0, sizeof(sdl_info));
+  SDL_VERSION (&sdl_info.version);
+  if(SDL_GetWMInfo(&sdl_info) <= 0)
+    return;
+
+  // The following mostly comes from SDL_dx5video.c
+  HWND window = sdl_info.window;
+  RECT bounds;
+
+  bounds.left   = x;
+  bounds.top    = y;
+  bounds.right  = x + w;
+  bounds.bottom = y + h;
+  AdjustWindowRectEx(&bounds, GetWindowLong(window, GWL_STYLE), (GetMenu(window) != NULL), 0);
+
+  SetWindowPos(window, HWND_NOTOPMOST, x, y, bounds.right-bounds.left,
+    bounds.bottom-bounds.top, SWP_NOCOPYBITS | SWP_SHOWWINDOW);
 }

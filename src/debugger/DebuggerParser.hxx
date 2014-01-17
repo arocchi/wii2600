@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -72,7 +72,7 @@ class DebuggerParser
 
   private:
     enum {
-      kNumCommands   = 71,
+      kNumCommands   = 70,
       kMAX_ARG_TYPES = 10
     };
 
@@ -179,7 +179,6 @@ class DebuggerParser
     void executeSavedisassembly();
     void executeSaverom();
     void executeSaveses();
-    void executeSavesnap();
     void executeSavestate();
     void executeScanline();
     void executeStep();

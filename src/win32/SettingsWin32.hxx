@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,25 +17,25 @@
 // $Id$
 //============================================================================
 
-#ifndef SETTINGS_WINDOWS_HXX
-#define SETTINGS_WINDOWS_HXX
+#ifndef SETTINGS_WIN32_HXX
+#define SETTINGS_WIN32_HXX
 
 class OSystem;
 
 #include "bspf.hxx"
 
-class SettingsWINDOWS : public Settings
+class SettingsWin32 : public Settings
 {
   public:
     /**
       Create a new UNIX settings object
     */
-    SettingsWINDOWS(OSystem* osystem);
+    SettingsWin32(OSystem* osystem);
 
     /**
       Destructor
     */
-    virtual ~SettingsWINDOWS();
+    virtual ~SettingsWin32();
 };
 
 #endif

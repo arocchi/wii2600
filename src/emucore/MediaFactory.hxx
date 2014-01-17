@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -23,10 +23,15 @@
 #include "OSystem.hxx"
 #include "Settings.hxx"
 
-#include "FrameBufferSDL2.hxx"
+#include "FrameBuffer.hxx"
+#include "FrameBufferSoft.hxx"
+#ifdef DISPLAY_OPENGL
+  #include "FrameBufferGL.hxx"
+#endif
 
+#include "Sound.hxx"
 #ifdef SOUND_SUPPORT
-  #include "SoundSDL2.hxx"
+  #include "SoundSDL.hxx"
 #else
   #include "SoundNull.hxx"
 #endif
@@ -36,9 +41,7 @@
   for the various ports of Stella, and always returns a valid media object
   based on the specific port and restrictions on that port.
 
-  As of SDL2, this code is greatly simplified.  However, it remains here
-  in case we ever have multiple backend implementations again (should
-  not be necessary since SDL2 covers this nicely).
+  I think you can see why this mess was put into a factory class :)
 
   @author  Stephen Anthony
   @version $Id$
@@ -48,16 +51,40 @@ class MediaFactory
   public:
     static FrameBuffer* createVideo(OSystem* osystem)
     {
-      return new FrameBufferSDL2(osystem);
+      FrameBuffer* fb = (FrameBuffer*) NULL;
+
+      // OpenGL mode *may* fail, so we check for it first
+    #ifdef DISPLAY_OPENGL
+      if(osystem->settings().getString("video") == "gl")
+      {
+        const string& gl_lib = osystem->settings().getString("gl_lib");
+        if(FrameBufferGL::loadLibrary(gl_lib))
+          fb = new FrameBufferGL(osystem);
+      }
+    #endif
+
+      // If OpenGL failed, or if it wasn't requested, create the appropriate
+      // software framebuffer
+      if(!fb)
+        fb = new FrameBufferSoft(osystem);
+
+      // This should never happen
+      assert(fb != NULL);
+
+      return fb;
     }
 
     static Sound* createAudio(OSystem* osystem)
     {
+      Sound* sound = (Sound*) NULL;
+
     #ifdef SOUND_SUPPORT
-      return new SoundSDL2(osystem);
+      sound = new SoundSDL(osystem);
     #else
-      return new SoundNull(osystem);
+      sound = new SoundNull(osystem);
     #endif
+
+      return sound;
     }
 };
 

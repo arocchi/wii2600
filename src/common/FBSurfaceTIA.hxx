@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -20,9 +20,11 @@
 #ifndef FB_SURFACE_TIA_HXX
 #define FB_SURFACE_TIA_HXX
 
+#ifdef DISPLAY_OPENGL
+
 #include "bspf.hxx"
 #include "FrameBuffer.hxx"
-#include "FrameBufferSDL2.hxx"
+#include "FrameBufferGL.hxx"
 
 /**
   A surface suitable for OpenGL rendering mode, but specifically for
@@ -34,10 +36,10 @@
 */
 class FBSurfaceTIA : public FBSurface
 {
-  friend class FrameBufferSDL2;
+  friend class FrameBufferGL;
 
   public:
-    FBSurfaceTIA(FrameBufferSDL2& buffer);
+    FBSurfaceTIA(FrameBufferGL& buffer);
     virtual ~FBSurfaceTIA();
 
     // TIA surfaces don't implement most of the drawing primitives,
@@ -63,8 +65,8 @@ class FBSurfaceTIA : public FBSurface
     void updateCoords();
 
   private:
-    FrameBufferSDL2& myFB;
-    const FrameBufferSDL2::GLpointers& myGL;
+    FrameBufferGL& myFB;
+    const FrameBufferGL::GLpointers& myGL;
     const TIA* myTIA;
     SDL_Surface* myTexture;
     uInt32 myPitch;
@@ -82,5 +84,7 @@ class FBSurfaceTIA : public FBSurface
     GLuint  myScanlineIntensityI;
     GLfloat myScanlineIntensityF;
 };
+
+#endif  // DISPLAY_OPENGL
 
 #endif

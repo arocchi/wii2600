@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -16,6 +16,8 @@
 //
 // $Id$
 //============================================================================
+
+#ifdef DISPLAY_OPENGL
 
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -31,26 +33,19 @@
 #include "Settings.hxx"
 #include "TIA.hxx"
 
-#include "FBSurfaceUI.hxx"
+#include "FBSurfaceGL.hxx"
 #include "FBSurfaceTIA.hxx"
-#include "FrameBufferSDL2.hxx"
+#include "FrameBufferGL.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBufferSDL2::FrameBufferSDL2(OSystem* osystem)
+FrameBufferGL::FrameBufferGL(OSystem* osystem)
   : FrameBuffer(osystem),
     myFilterType(kNormal),
-    myScreen(0),
-    mySDLFlags(0),
     myTiaSurface(NULL),
     myDirtyFlag(true)
 {
-  // Added from MediaFactory /////////////////////////
-  const string& gl_lib = osystem->settings().getString("gl_lib");
-  loadLibrary(gl_lib);
-  ////////////////////////////////////////////////////
-
   // We need a pixel format for palette value calculations
-  // It's done this way (vs directly accessing a FBSurfaceUI object)
+  // It's done this way (vs directly accessing a FBSurfaceGL object)
   // since the structure may be needed before any FBSurface's have
   // been created
   // Note: alpha disabled for now, since it's not used
@@ -62,14 +57,14 @@ FrameBufferSDL2::FrameBufferSDL2(OSystem* osystem)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FrameBufferSDL2::~FrameBufferSDL2()
+FrameBufferGL::~FrameBufferGL()
 {
   // We're taking responsibility for this surface
   delete myTiaSurface;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::loadLibrary(const string& library)
+bool FrameBufferGL::loadLibrary(const string& library)
 {
   if(myLibraryLoaded)
     return true;
@@ -85,7 +80,7 @@ bool FrameBufferSDL2::loadLibrary(const string& library)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::loadFuncs(GLFunctionality functionality)
+bool FrameBufferGL::loadFuncs(GLFunctionality functionality)
 {
 #define OGL_INIT(NAME,RET,FUNC,PARAMS) \
   p_gl.NAME = (RET(APIENTRY*)PARAMS) SDL_GL_GetProcAddress(#FUNC); if(!p_gl.NAME) return false
@@ -144,23 +139,9 @@ bool FrameBufferSDL2::loadFuncs(GLFunctionality functionality)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::initSubsystem(VideoMode& mode, bool full)
+bool FrameBufferGL::initSubsystem(VideoMode& mode)
 {
-  // Now (re)initialize the SDL video system
-  // These things only have to be done one per FrameBuffer creation
-  if(SDL_WasInit(SDL_INIT_VIDEO) == 0)
-  {
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
-    {
-      ostringstream buf;
-      buf << "ERROR: Couldn't initialize SDL: " << SDL_GetError() << endl;
-      myOSystem->logMessage(buf.str(), 0);
-      return false;
-    }
-  }
-
   mySDLFlags |= SDL_OPENGL;
-  setHint(kFullScreen, full);
 
   // Set up the OpenGL attributes
   myDepth = SDL_GetVideoInfo()->vfmt->BitsPerPixel;
@@ -193,7 +174,7 @@ bool FrameBufferSDL2::initSubsystem(VideoMode& mode, bool full)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string FrameBufferSDL2::about() const
+string FrameBufferGL::about() const
 {
   ostringstream out;
   out << "Video rendering: OpenGL mode" << endl
@@ -209,7 +190,7 @@ string FrameBufferSDL2::about() const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::setVidMode(VideoMode& mode)
+bool FrameBufferGL::setVidMode(VideoMode& mode)
 {
   bool inTIAMode =
     myOSystem->eventHandler().state() != EventHandler::S_LAUNCHER &&
@@ -348,23 +329,7 @@ bool FrameBufferSDL2::setVidMode(VideoMode& mode)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::setHint(FBHint hint, bool enabled)
-{
-  int flag = 0;
-  switch(hint)
-  {
-    case kFullScreen:
-      flag = SDL_FULLSCREEN;
-      break;
-  }
-  if(enabled)
-    mySDLFlags |= flag;
-  else
-    mySDLFlags &= ~flag;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::invalidate()
+void FrameBufferGL::invalidate()
 {
   p_gl.Clear(GL_COLOR_BUFFER_BIT);
   if(myTiaSurface)
@@ -372,103 +337,14 @@ void FrameBufferSDL2::invalidate()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::showCursor(bool show)
-{
-  SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::grabMouse(bool grab)
-{
-  SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::fullScreen() const
-{
-#ifdef WINDOWED_SUPPORT
-  return mySDLFlags & SDL_FULLSCREEN;
-#else
-  return true;
-#endif
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::setWindowTitle(const string& title)
-{
-  SDL_WM_SetCaption(title.c_str(), "stella");
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::setWindowIcon()
-{
-#if !defined(BSPF_MAC_OSX) && !defined(BSPF_UNIX)
-  #include "stella.xpm"   // The Stella icon
-
-  // Set the window icon
-  uInt32 w, h, ncols, nbytes;
-  uInt32 rgba[256], icon[32 * 32];
-  uInt8  mask[32][4];
-
-  sscanf(stella_icon[0], "%u %u %u %u", &w, &h, &ncols, &nbytes);
-  if((w != 32) || (h != 32) || (ncols > 255) || (nbytes > 1))
-  {
-    myOSystem->logMessage("ERROR: Couldn't load the application icon.", 0);
-    return;
-  }
-
-  for(uInt32 i = 0; i < ncols; i++)
-  {
-    unsigned char code;
-    char color[32];
-    uInt32 col;
-
-    sscanf(stella_icon[1 + i], "%c c %s", &code, color);
-    if(!strcmp(color, "None"))
-      col = 0x00000000;
-    else if(!strcmp(color, "black"))
-      col = 0xFF000000;
-    else if (color[0] == '#')
-    {
-      sscanf(color + 1, "%06x", &col);
-      col |= 0xFF000000;
-    }
-    else
-    {
-      myOSystem->logMessage("ERROR: Couldn't load the application icon.", 0);
-      return;
-    }
-    rgba[code] = col;
-  }
-
-  memset(mask, 0, sizeof(mask));
-  for(h = 0; h < 32; h++)
-  {
-    const char* line = stella_icon[1 + ncols + h];
-    for(w = 0; w < 32; w++)
-    {
-      icon[w + 32 * h] = rgba[(int)line[w]];
-      if(rgba[(int)line[w]] & 0xFF000000)
-        mask[h][w >> 3] |= 1 << (7 - (w & 0x07));
-    }
-  }
-
-  SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(icon, 32, 32, 32,
-                         32 * 4, 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000);
-  SDL_WM_SetIcon(surface, (unsigned char *) mask);
-  SDL_FreeSurface(surface);
-#endif
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::drawTIA(bool fullRedraw)
+void FrameBufferGL::drawTIA(bool fullRedraw)
 {
   // The TIA surface takes all responsibility for drawing
   myTiaSurface->update();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::postFrameUpdate()
+void FrameBufferGL::postFrameUpdate()
 {
   if(myDirtyFlag)
   {
@@ -479,7 +355,7 @@ void FrameBufferSDL2::postFrameUpdate()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::enablePhosphor(bool enable, int blend)
+void FrameBufferGL::enablePhosphor(bool enable, int blend)
 {
   if(myTiaSurface)
   {
@@ -491,7 +367,7 @@ void FrameBufferSDL2::enablePhosphor(bool enable, int blend)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::enableNTSC(bool enable)
+void FrameBufferGL::enableNTSC(bool enable)
 {
   if(myTiaSurface)
   {
@@ -508,7 +384,7 @@ void FrameBufferSDL2::enableNTSC(bool enable)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uInt32 FrameBufferSDL2::enableScanlines(int relative, int absolute)
+uInt32 FrameBufferGL::enableScanlines(int relative, int absolute)
 {
   int intensity = myTiaSurface->myScanlineIntensityI;
   if(myTiaSurface)
@@ -525,7 +401,7 @@ uInt32 FrameBufferSDL2::enableScanlines(int relative, int absolute)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::enableScanlineInterpolation(bool enable)
+void FrameBufferGL::enableScanlineInterpolation(bool enable)
 {
   if(myTiaSurface)
   {
@@ -535,23 +411,23 @@ void FrameBufferSDL2::enableScanlineInterpolation(bool enable)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::setTIAPalette(const uInt32* palette)
+void FrameBufferGL::setTIAPalette(const uInt32* palette)
 {
   FrameBuffer::setTIAPalette(palette);
   myTiaSurface->setTIAPalette(palette);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FBSurface* FrameBufferSDL2::createSurface(int w, int h, bool isBase) const
+FBSurface* FrameBufferGL::createSurface(int w, int h, bool isBase) const
 {
   // Ignore 'isBase' argument; all GL surfaces are separate
   // Also, this method will only be called for use in external dialogs.
   // and never used for TIA surfaces
-  return new FBSurfaceUI((FrameBufferSDL2&)*this, w, h);
+  return new FBSurfaceGL((FrameBufferGL&)*this, w, h);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FrameBufferSDL2::scanline(uInt32 row, uInt8* data) const
+void FrameBufferGL::scanline(uInt32 row, uInt8* data) const
 {
   // Invert the row, since OpenGL rows start at the bottom
   // of the framebuffer
@@ -563,7 +439,7 @@ void FrameBufferSDL2::scanline(uInt32 row, uInt8* data) const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string FrameBufferSDL2::effectsInfo() const
+string FrameBufferGL::effectsInfo() const
 {
   ostringstream buf;
   switch(myFilterType)
@@ -589,7 +465,9 @@ string FrameBufferSDL2::effectsInfo() const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::myLibraryLoaded = false;
+bool FrameBufferGL::myLibraryLoaded = false;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FrameBufferSDL2::myVBOAvailable = false;
+bool FrameBufferGL::myVBOAvailable = false;
+
+#endif  // DISPLAY_OPENGL

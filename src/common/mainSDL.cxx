@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -32,13 +32,13 @@
 #include "OSystem.hxx"
 #include "System.hxx"
 
-#if defined(BSPF_UNIX)
+#if defined(UNIX)
   #include "SettingsUNIX.hxx"
   #include "OSystemUNIX.hxx"
-#elif defined(BSPF_WINDOWS)
-  #include "SettingsWINDOWS.hxx"
-  #include "OSystemWINDOWS.hxx"
-#elif defined(BSPF_MAC_OSX)
+#elif defined(WIN32)
+  #include "SettingsWin32.hxx"
+  #include "OSystemWin32.hxx"
+#elif defined(MAC_OSX)
   #include "SettingsMACOSX.hxx"
   #include "OSystemMACOSX.hxx"
   extern "C" {
@@ -85,12 +85,12 @@ int main(int argc, char* argv[])
   ios_base::sync_with_stdio(false);
 
   // Create the parent OSystem object and settings
-#if defined(BSPF_UNIX)
+#if defined(UNIX)
   theOSystem = new OSystemUNIX();
   SettingsUNIX settings(theOSystem);
-#elif defined(BSPF_WINDOWS)
-  theOSystem = new OSystemWINDOWS();
-  SettingsWINDOWS settings(theOSystem);
+#elif defined(WIN32)
+  theOSystem = new OSystemWin32();
+  SettingsWin32 settings(theOSystem);
 #elif defined(MAC_OSX)
   theOSystem = new OSystemMACOSX();
   SettingsMACOSX settings(theOSystem);

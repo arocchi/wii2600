@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -23,12 +23,20 @@
 #ifdef ARRAYSIZE
   #undef ARRAYSIZE
 #endif
+#ifdef _WIN32_WCE
+  #include <windows.h>
+  // winnt.h defines ARRAYSIZE, but we want our own one...
+  #undef ARRAYSIZE
+  #undef GetCurrentDirectory
+#endif
 
 #include <io.h>
 #include <stdio.h>
-#include <windows.h>
-// winnt.h defines ARRAYSIZE, but we want our own one...
-#undef ARRAYSIZE
+#ifndef _WIN32_WCE
+  #include <windows.h>
+  // winnt.h defines ARRAYSIZE, but we want our own one...
+  #undef ARRAYSIZE
+#endif
 
 // F_OK, R_OK and W_OK are not defined under MSVC, so we define them here
 // For more information on the modes used by MSVC, check:
@@ -45,7 +53,7 @@
   #define W_OK 2
 #endif
 
-#include "FSNodeWINDOWS.hxx"
+#include "FSNodeWin32.hxx"
 
 /**
  * Returns the last component of a given path.
@@ -73,25 +81,25 @@ const char* lastPathComponent(const string& str)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::exists() const
+bool FilesystemNodeWin32::exists() const
 {
   return _access(_path.c_str(), F_OK) == 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::isReadable() const
+bool FilesystemNodeWin32::isReadable() const
 {
   return _access(_path.c_str(), R_OK) == 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::isWritable() const
+bool FilesystemNodeWin32::isWritable() const
 {
   return _access(_path.c_str(), W_OK) == 0;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FilesystemNodeWINDOWS::setFlags()
+void FilesystemNodeWin32::setFlags()
 {
   // Get absolute path
   TCHAR buf[4096];
@@ -121,10 +129,10 @@ void FilesystemNodeWINDOWS::setFlags()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FilesystemNodeWINDOWS::addFile(AbstractFSList& list, ListMode mode,
+void FilesystemNodeWin32::addFile(AbstractFSList& list, ListMode mode,
                                     const char* base, WIN32_FIND_DATA* find_data)
 {
-  FilesystemNodeWINDOWS entry;
+  FilesystemNodeWin32 entry;
   char* asciiName = toAscii(find_data->cFileName);
   bool isDirectory, isFile;
 
@@ -149,11 +157,11 @@ void FilesystemNodeWINDOWS::addFile(AbstractFSList& list, ListMode mode,
   entry._isValid = true;
   entry._isPseudoRoot = false;
 
-  list.push_back(new FilesystemNodeWINDOWS(entry));
+  list.push_back(new FilesystemNodeWin32(entry));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-char* FilesystemNodeWINDOWS::toAscii(TCHAR* str)
+char* FilesystemNodeWin32::toAscii(TCHAR* str)
 {
 #ifndef UNICODE
   return (char*)str;
@@ -165,7 +173,7 @@ char* FilesystemNodeWINDOWS::toAscii(TCHAR* str)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-const TCHAR* FilesystemNodeWINDOWS::toUnicode(const char* str)
+const TCHAR* FilesystemNodeWin32::toUnicode(const char* str)
 {
 #ifndef UNICODE
   return (const TCHAR *)str;
@@ -177,7 +185,7 @@ const TCHAR* FilesystemNodeWINDOWS::toUnicode(const char* str)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FilesystemNodeWINDOWS::FilesystemNodeWINDOWS()
+FilesystemNodeWin32::FilesystemNodeWin32()
 {
   // Create a virtual root directory for standard Windows system
   _isDirectory = true;
@@ -188,7 +196,7 @@ FilesystemNodeWINDOWS::FilesystemNodeWINDOWS()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FilesystemNodeWINDOWS::FilesystemNodeWINDOWS(const string& p)
+FilesystemNodeWin32::FilesystemNodeWin32(const string& p)
 {
   // Default to home directory
   _path = p.length() > 0 ? p : "~";
@@ -201,7 +209,7 @@ FilesystemNodeWINDOWS::FilesystemNodeWINDOWS(const string& p)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-string FilesystemNodeWINDOWS::getShortPath() const
+string FilesystemNodeWin32::getShortPath() const
 {
   // If the path starts with the home directory, replace it with '~'
   const string& home = myHomeFinder.getHomePath();
@@ -217,7 +225,7 @@ string FilesystemNodeWINDOWS::getShortPath() const
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::
+bool FilesystemNodeWin32::
     getChildren(AbstractFSList& myList, ListMode mode, bool hidden) const
 {
   assert(_isDirectory);
@@ -233,7 +241,7 @@ bool FilesystemNodeWINDOWS::
     for (TCHAR *current_drive = drive_buffer; *current_drive;
          current_drive += _tcslen(current_drive) + 1)
     {
-      FilesystemNodeWINDOWS entry;
+      FilesystemNodeWin32 entry;
       char drive_name[2];
 
       drive_name[0] = toAscii(current_drive)[0];
@@ -244,7 +252,7 @@ bool FilesystemNodeWINDOWS::
       entry._isValid = true;
       entry._isPseudoRoot = false;
       entry._path = toAscii(current_drive);
-      myList.push_back(new FilesystemNodeWINDOWS(entry));
+      myList.push_back(new FilesystemNodeWin32(entry));
     }
   }
   else
@@ -273,7 +281,7 @@ bool FilesystemNodeWINDOWS::
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::makeDir()
+bool FilesystemNodeWin32::makeDir()
 {
   if(!_isPseudoRoot && CreateDirectory(_path.c_str(), NULL) != 0)
   {
@@ -285,7 +293,7 @@ bool FilesystemNodeWINDOWS::makeDir()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FilesystemNodeWINDOWS::rename(const string& newfile)
+bool FilesystemNodeWin32::rename(const string& newfile)
 {
   if(!_isPseudoRoot && MoveFile(_path.c_str(), newfile.c_str()) != 0)
   {
@@ -297,12 +305,12 @@ bool FilesystemNodeWINDOWS::rename(const string& newfile)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AbstractFSNode* FilesystemNodeWINDOWS::getParent() const
+AbstractFSNode* FilesystemNodeWin32::getParent() const
 {
   if (!_isValid || _isPseudoRoot)
     return 0;
 
-  FilesystemNodeWINDOWS* p = new FilesystemNodeWINDOWS();
+  FilesystemNodeWin32* p = new FilesystemNodeWin32();
   if (_path.size() > 3)
   {
     const char *start = _path.c_str();

@@ -51,31 +51,37 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\FrameBufferSDL2.cxx">
+    <ClCompile Include="..\common\FrameBufferGL.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FSNodeWINDOWS.cxx">
+    <ClCompile Include="..\common\FrameBufferSoft.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FSNodeWin32.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\mainSDL.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OSystemWINDOWS.cxx">
+    <ClCompile Include="OSystemWin32.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\PNGLibrary.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\RectList.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="SDL_win32_main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SerialPortWINDOWS.cxx">
+    <ClCompile Include="SerialPortWin32.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SettingsWINDOWS.cxx">
+    <ClCompile Include="SettingsWin32.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\SoundSDL2.cxx">
+    <ClCompile Include="..\common\SoundSDL.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\emucore\AtariVox.cxx">
@@ -567,7 +573,7 @@
     <ClCompile Include="..\gui\LoggerDialog.cxx">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\FBSurfaceUI.cxx">
+    <ClCompile Include="..\common\FBSurfaceGL.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\FBSurfaceTIA.cxx">
@@ -731,28 +737,34 @@
     <ClInclude Include="..\common\bspf.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\FrameBufferSDL2.hxx">
+    <ClInclude Include="..\common\FrameBufferGL.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\FrameBufferSoft.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HomeFinder.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OSystemWINDOWS.hxx">
+    <ClInclude Include="OSystemWin32.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\PNGLibrary.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SerialPortWINDOWS.hxx">
+    <ClInclude Include="..\common\RectList.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SettingsWINDOWS.hxx">
+    <ClInclude Include="SerialPortWin32.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingsWin32.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\SharedPtr.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\SoundSDL2.hxx">
+    <ClInclude Include="..\common\SoundSDL.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\Stack.hxx">
@@ -1265,7 +1277,7 @@
     <ClInclude Include="..\gui\LoggerDialog.hxx">
       <Filter>Header Files\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\FBSurfaceUI.hxx">
+    <ClInclude Include="..\common\FBSurfaceGL.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\FBSurfaceTIA.hxx">
@@ -1334,7 +1346,7 @@
     <ClInclude Include="..\common\FSNodeZIP.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FSNodeWINDOWS.hxx">
+    <ClInclude Include="FSNodeWin32.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\ZipHandler.hxx">

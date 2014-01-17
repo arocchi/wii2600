@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,8 +17,8 @@
 // $Id$
 //============================================================================
 
-#ifndef FS_NODE_WINDOWS_HXX
-#define FS_NODE_WINDOWS_HXX
+#ifndef FS_NODE_WIN32_HXX
+#define FS_NODE_WIN32_HXX
 
 #include <tchar.h>
 
@@ -36,19 +36,19 @@ static HomeFinder myHomeFinder;
  * Parts of this class are documented in the base interface class,
  * AbstractFSNode.
  */
-class FilesystemNodeWINDOWS : public AbstractFSNode
+class FilesystemNodeWin32 : public AbstractFSNode
 {
   public:
     /**
-     * Creates a FilesystemNodeWINDOWS with the root node as path.
+     * Creates a FilesystemNodeWin32 with the root node as path.
      *
      * In regular windows systems, a virtual root path is used "".
      * In windows CE, the "\" root is used instead.
      */
-    FilesystemNodeWINDOWS();
+    FilesystemNodeWin32();
 
     /**
-     * Creates a FilesystemNodeWINDOWS for a given path.
+     * Creates a FilesystemNodeWin32 for a given path.
      *
      * Examples:
      *   path=c:\foo\bar.txt, currentDir=false -> c:\foo\bar.txt
@@ -57,7 +57,7 @@ class FilesystemNodeWINDOWS : public AbstractFSNode
      *
      * @param path String with the path the new node should point to.
      */
-    FilesystemNodeWINDOWS(const string& path);
+    FilesystemNodeWin32(const string& path);
 
     bool exists() const;
     const string& getName() const   { return _displayName; }
@@ -89,7 +89,7 @@ class FilesystemNodeWINDOWS : public AbstractFSNode
     virtual void setFlags();
 
     /**
-     * Adds a single FilesystemNodeWINDOWS to a given list.
+     * Adds a single FilesystemNodeWin32 to a given list.
      * This method is used by getChildren() to populate the directory entries list.
      *
      * @param list       List to put the file entry node in.

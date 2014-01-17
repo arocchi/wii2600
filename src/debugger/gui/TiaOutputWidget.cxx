@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -45,7 +45,6 @@ TiaOutputWidget::TiaOutputWidget(GuiObject* boss, const GUI::Font& font,
   l.push_back("Fill to scanline", "scanline");
   l.push_back("Set breakpoint", "bp");
   l.push_back("Set zoom position", "zoom");
-  l.push_back("Save snapshot", "snap");
   l.push_back("Toggle fixed debug colors (from beam pos)", "fixed");
   myMenu = new ContextMenu(this, font, l);
 }
@@ -111,10 +110,6 @@ void TiaOutputWidget::handleCommand(CommandSender* sender, int cmd, int data, in
         if(myZoom)
           myZoom->setPos(myClickX, myClickY);
       }
-      else if(rmb == "snap")
-      {
-        instance().debugger().parser().run("savesnap");
-      }
       else if(rmb == "fixed")
       {
         instance().console().tia().toggleFixedColors();
@@ -128,12 +123,8 @@ void TiaOutputWidget::handleCommand(CommandSender* sender, int cmd, int data, in
 void TiaOutputWidget::drawWidget(bool hilite)
 {
 //cerr << "TiaOutputWidget::drawWidget\n";
-  renderToSurface(dialog().surface());
-}
+  FBSurface& s = dialog().surface();
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void TiaOutputWidget::renderToSurface(FBSurface& s)
-{
   const uInt32 width  = instance().console().tia().width(),
                height = instance().console().tia().height();
 

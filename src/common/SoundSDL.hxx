@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -19,8 +19,8 @@
 
 #ifdef SOUND_SUPPORT
 
-#ifndef SOUND_SDL2_HXX
-#define SOUND_SDL2_HXX
+#ifndef SOUND_SDL_HXX
+#define SOUND_SDL_HXX
 
 class OSystem;
 
@@ -36,19 +36,19 @@ class OSystem;
   @author Stephen Anthony and Bradford W. Mott
   @version $Id$
 */
-class SoundSDL2 : public Sound
+class SoundSDL : public Sound
 {
   public:
     /**
       Create a new sound object.  The init method must be invoked before
       using the object.
     */
-    SoundSDL2(OSystem* osystem);
+    SoundSDL(OSystem* osystem);
  
     /**
       Destructor
     */
-    virtual ~SoundSDL2();
+    virtual ~SoundSDL();
 
   public:
     /**

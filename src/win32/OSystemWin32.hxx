@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,10 +17,11 @@
 // $Id$
 //============================================================================
 
-#ifndef OSYSTEM_WINDOWS_HXX
-#define OSYSTEM_WINDOWS_HXX
+#ifndef OSYSTEM_WIN32_HXX
+#define OSYSTEM_WIN32_HXX
 
 #include "OSystem.hxx"
+#include "bspf.hxx"
 
 /**
   This class defines Windows system specific settings.
@@ -28,18 +29,18 @@
   @author  Stephen Anthony
   @version $Id$
 */
-class OSystemWINDOWS : public OSystem
+class OSystemWin32 : public OSystem
 {
   public:
     /**
-      Create a new WINDOWS operating system object
+      Create a new Win32 operating system object
     */
-    OSystemWINDOWS();
+    OSystemWin32();
 
     /**
       Destructor
     */
-    virtual ~OSystemWINDOWS();
+    virtual ~OSystemWin32();
 
   public:
     /**
@@ -47,6 +48,13 @@ class OSystemWINDOWS : public OSystem
     */
     string defaultSnapSaveDir();
     string defaultSnapLoadDir();
+
+    /**
+      Move window to given position.  The width and height are also
+      required for the underlying function, but the window size itself
+      absolutely must not be changed.
+    */
+    void setAppWindowPos(int x, int y, int w, int h);
 };
 
 #endif

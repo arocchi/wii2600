@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,11 +17,14 @@
 // $Id$
 //============================================================================
 
-#ifndef FB_SURFACE_UI_HXX
-#define FB_SURFACE_UI_HXX
+#ifndef FB_SURFACE_GL_HXX
+#define FB_SURFACE_GL_HXX
+
+#ifdef DISPLAY_OPENGL
 
 #include "bspf.hxx"
-#include "FrameBufferSDL2.hxx"
+#include "FrameBuffer.hxx"
+#include "FrameBufferGL.hxx"
 
 /**
   A surface suitable for OpenGL rendering mode, used for various UI dialogs.
@@ -29,13 +32,13 @@
 
   @author  Stephen Anthony
 */
-class FBSurfaceUI : public FBSurface
+class FBSurfaceGL : public FBSurface
 {
-  friend class FrameBufferSDL2;
+  friend class FrameBufferGL;
 
   public:
-    FBSurfaceUI(FrameBufferSDL2& buffer, uInt32 width, uInt32 height);
-    virtual ~FBSurfaceUI();
+    FBSurfaceGL(FrameBufferGL& buffer, uInt32 width, uInt32 height);
+    virtual ~FBSurfaceGL();
 
     // Normal surfaces need all drawing primitives
     void hLine(uInt32 x, uInt32 y, uInt32 x2, uInt32 color);
@@ -61,8 +64,8 @@ class FBSurfaceUI : public FBSurface
     void updateCoords();
 
   private:
-    FrameBufferSDL2& myFB;
-    const FrameBufferSDL2::GLpointers& myGL;
+    FrameBufferGL& myFB;
+    const FrameBufferGL::GLpointers& myGL;
     SDL_Surface* myTexture;
 
     GLuint  myTexID, myVBOID;
@@ -75,5 +78,7 @@ class FBSurfaceUI : public FBSurface
     bool mySurfaceIsDirty;
     uInt32 myPitch;
 };
+
+#endif  // DISPLAY_OPENGL
 
 #endif

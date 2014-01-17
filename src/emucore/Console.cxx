@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -348,11 +348,17 @@ void Console::setPalette(const string& type)
 {
   // Look at all the palettes, since we don't know which one is
   // currently active
-  static uInt32* palettes[3][3] = {
-    { &ourNTSCPalette[0],     &ourPALPalette[0],     &ourSECAMPalette[0]     },
-    { &ourNTSCPaletteZ26[0],  &ourPALPaletteZ26[0],  &ourSECAMPaletteZ26[0]  },
-    { &ourUserNTSCPalette[0], &ourUserPALPalette[0], &ourUserSECAMPalette[0] }
+  uInt32* palettes[3][3] = {
+    { &ourNTSCPalette[0],    &ourPALPalette[0],    &ourSECAMPalette[0]    },
+    { &ourNTSCPaletteZ26[0], &ourPALPaletteZ26[0], &ourSECAMPaletteZ26[0] },
+    { 0, 0, 0 }
   };
+  if(myUserPaletteDefined)
+  {
+    palettes[2][0] = &ourUserNTSCPalette[0];
+    palettes[2][1] = &ourUserPALPalette[0];
+    palettes[2][2] = &ourUserSECAMPalette[0];
+  }
 
   // See which format we should be using
   int paletteNum = 0;

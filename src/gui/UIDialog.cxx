@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -22,6 +22,7 @@
 #include "bspf.hxx"
 
 #include "Dialog.hxx"
+#include "DebuggerDialog.hxx"
 #include "OSystem.hxx"
 #include "ListWidget.hxx"
 #include "PopUpWidget.hxx"
@@ -30,9 +31,6 @@
 #include "StringList.hxx"
 #include "TabWidget.hxx"
 #include "Widget.hxx"
-#ifdef DEBUGGER_SUPPORT
-  #include "DebuggerDialog.hxx"
-#endif
 
 #include "UIDialog.hxx"
 
@@ -162,7 +160,6 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
   // 2) Debugger options
   wid.clear();
   tabID = myTab->addTab(" Debugger ");
-#ifdef DEBUGGER_SUPPORT
   lwidth = font.getStringWidth("Debugger Height: ");
   xpos = ypos = vBorder;
 
@@ -242,10 +239,6 @@ UIDialog::UIDialog(OSystem* osystem, DialogContainer* parent,
 
   // Add items for tab 1
   addToFocusList(wid, myTab, tabID);
-#else
-  new StaticTextWidget(myTab, font, 0, 20, _w-20, fontHeight,
-                       "Debugger support not included", kTextAlignCenter);
-#endif
 
   //////////////////////////////////////////////////////////
   // 3) Misc. options
@@ -445,7 +438,6 @@ void UIDialog::setDefaults()
 
     case 1:  // Debugger options
     {
-#ifdef DEBUGGER_SUPPORT
       int w = BSPF_min(instance().desktopWidth(), (uInt32)DebuggerDialog::kMediumFontMinW);
       int h = BSPF_min(instance().desktopHeight(), (uInt32)DebuggerDialog::kMediumFontMinH);
       myDebuggerWidthSlider->setValue(w);
@@ -453,7 +445,6 @@ void UIDialog::setDefaults()
       myDebuggerHeightSlider->setValue(h);
       myDebuggerHeightLabel->setValue(h);
       myDebuggerFontStyle->setSelected("0");
-#endif
       break;
     }
 
@@ -483,7 +474,6 @@ void UIDialog::handleCommand(CommandSender* sender, int cmd, int data, int id)
       myLauncherHeightLabel->setValue(myLauncherHeightSlider->getValue());
       break;
 
-#ifdef DEBUGGER_SUPPORT
     case kDWidthChanged:
       myDebuggerWidthLabel->setValue(myDebuggerWidthSlider->getValue());
       break;
@@ -512,7 +502,6 @@ void UIDialog::handleCommand(CommandSender* sender, int cmd, int data, int id)
       myDebuggerHeightSlider->setValue(DebuggerDialog::kLargeFontMinH);
       myDebuggerHeightLabel->setValue(DebuggerDialog::kLargeFontMinH);
       break;
-#endif
 
     case kOKCmd:
       saveConfig();

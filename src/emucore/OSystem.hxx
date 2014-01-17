@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -511,6 +511,14 @@ class OSystem
     */
     virtual string defaultSnapSaveDir() { return "~" BSPF_PATH_SEPARATOR; }
     virtual string defaultSnapLoadDir() { return "~" BSPF_PATH_SEPARATOR; }
+
+    /**
+      Set the position of the application window, generally using
+      platform-specific code.  Note that this method is only ever
+      called for windowed mode, so no provisions need be made
+      for fullscreen mode.
+    */
+    virtual void setAppWindowPos(int x, int y, int w, int h) { };
 
   protected:
     /**

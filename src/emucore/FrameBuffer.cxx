@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -42,6 +42,8 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBuffer::FrameBuffer(OSystem* osystem)
   : myOSystem(osystem),
+    myScreen(0),
+    mySDLFlags(0),
     myRedrawEntireFrame(true),
     myUsePhosphor(false),
     myPhosphorBlend(77),
@@ -70,6 +72,19 @@ FrameBuffer::~FrameBuffer(void)
 FBInitStatus FrameBuffer::initialize(const string& title,
                                      uInt32 width, uInt32 height)
 {
+  ostringstream buf;
+
+  // Now (re)initialize the SDL video system
+  // These things only have to be done one per FrameBuffer creation
+  if(SDL_WasInit(SDL_INIT_VIDEO) == 0)
+  {
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+    {
+      buf << "ERROR: Couldn't initialize SDL: " << SDL_GetError() << endl;
+      myOSystem->logMessage(buf.str(), 0);
+      return kFailComplete;
+    }
+  }
   myInitializedCount++;
 
   // A 'windowed' system is defined as one where the window size can be
@@ -82,7 +97,7 @@ FBInitStatus FrameBuffer::initialize(const string& title,
   // If the WINDOWED_SUPPORT macro is defined, we treat the system as the
   // former type; if not, as the latter type
 
-  bool useFullscreen = false;
+  uInt32 flags = mySDLFlags;
 #ifdef WINDOWED_SUPPORT
   // We assume that a desktop size of at least 640x480 means that we're
   // running on a 'large' system, and the window size requirements can
@@ -97,10 +112,10 @@ FBInitStatus FrameBuffer::initialize(const string& title,
     if(myOSystem->desktopWidth() < width || myOSystem->desktopHeight() < height)
       return kFailTooLarge;
 
-    useFullscreen = true;
+    flags |= SDL_FULLSCREEN;
   }
   else
-    useFullscreen = false;
+    flags &= ~SDL_FULLSCREEN;
 #else
   // Make sure this mode is even possible
   // We only really need to worry about it in non-windowed environments,
@@ -108,6 +123,9 @@ FBInitStatus FrameBuffer::initialize(const string& title,
   if(myOSystem->desktopWidth() < width || myOSystem->desktopHeight() < height)
     return kFailTooLarge;
 #endif
+
+  // Only update the actual flags if no errors were detected
+  mySDLFlags = flags;
 
   // Set the available video modes for this framebuffer
   setAvailableVidModes(width, height);
@@ -120,7 +138,7 @@ FBInitStatus FrameBuffer::initialize(const string& title,
     setWindowTitle(title);
     if(myInitializedCount == 1) setWindowIcon();
 
-    if(initSubsystem(mode, useFullscreen))
+    if(initSubsystem(mode))
     {
       centerAppWindow(mode);
 
@@ -628,6 +646,18 @@ void FrameBuffer::setTIAPalette(const uInt32* palette)
     Uint8 b = palette[i] & 0xff;
 
     myDefPalette[i] = mapRGB(r, g, b);
+    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
+    {
+      myDefPalette24[i][0] = b;
+      myDefPalette24[i][1] = g;
+      myDefPalette24[i][2] = r;
+    }
+    else
+    {
+      myDefPalette24[i][0] = r;
+      myDefPalette24[i][1] = g;
+      myDefPalette24[i][2] = b;
+    }
   }
 
   // Set palette for phosphor effect
@@ -664,6 +694,18 @@ void FrameBuffer::setUIPalette(const uInt32* palette)
     Uint8 b = palette[i] & 0xff;
 
     myDefPalette[j] = mapRGB(r, g, b);
+    if(SDL_BYTEORDER == SDL_LIL_ENDIAN)
+    {
+      myDefPalette24[j][0] = b;
+      myDefPalette24[j][1] = g;
+      myDefPalette24[j][2] = r;
+    }
+    else
+    {
+      myDefPalette24[j][0] = r;
+      myDefPalette24[j][1] = g;
+      myDefPalette24[j][2] = b;
+    }
   }
 }
 
@@ -688,8 +730,10 @@ void FrameBuffer::setFullscreen(bool enable)
 {
 #ifdef WINDOWED_SUPPORT
   // '-1' means fullscreen mode is completely disabled
-  bool full = enable && myOSystem->settings().getString("fullscreen") != "-1";
-  setHint(kFullScreen, full);
+  if(enable && myOSystem->settings().getString("fullscreen") != "-1" )
+    mySDLFlags |= SDL_FULLSCREEN;
+  else
+    mySDLFlags &= ~SDL_FULLSCREEN;
 
   // Do a dummy call to getSavedVidMode to set up the modelists
   // and have it point to the correct 'current' mode
@@ -784,6 +828,95 @@ void FrameBuffer::toggleGrabMouse()
   bool state = myOSystem->settings().getBool("grabmouse");
   myOSystem->settings().setValue("grabmouse", !state);
   setCursorState();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FrameBuffer::showCursor(bool show)
+{
+  SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FrameBuffer::grabMouse(bool grab)
+{
+  SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool FrameBuffer::fullScreen() const
+{
+#ifdef WINDOWED_SUPPORT
+  return mySDLFlags & SDL_FULLSCREEN;
+#else
+  return true;
+#endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FrameBuffer::setWindowTitle(const string& title)
+{
+  SDL_WM_SetCaption(title.c_str(), "stella");
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FrameBuffer::setWindowIcon()
+{
+#if !defined(BSPF_MAC_OSX) && !defined(BSPF_UNIX)
+  #include "stella.xpm"   // The Stella icon
+
+  // Set the window icon
+  uInt32 w, h, ncols, nbytes;
+  uInt32 rgba[256], icon[32 * 32];
+  uInt8  mask[32][4];
+
+  sscanf(stella_icon[0], "%u %u %u %u", &w, &h, &ncols, &nbytes);
+  if((w != 32) || (h != 32) || (ncols > 255) || (nbytes > 1))
+  {
+    myOSystem->logMessage("ERROR: Couldn't load the application icon.", 0);
+    return;
+  }
+
+  for(uInt32 i = 0; i < ncols; i++)
+  {
+    unsigned char code;
+    char color[32];
+    uInt32 col;
+
+    sscanf(stella_icon[1 + i], "%c c %s", &code, color);
+    if(!strcmp(color, "None"))
+      col = 0x00000000;
+    else if(!strcmp(color, "black"))
+      col = 0xFF000000;
+    else if (color[0] == '#')
+    {
+      sscanf(color + 1, "%06x", &col);
+      col |= 0xFF000000;
+    }
+    else
+    {
+      myOSystem->logMessage("ERROR: Couldn't load the application icon.", 0);
+      return;
+    }
+    rgba[code] = col;
+  }
+
+  memset(mask, 0, sizeof(mask));
+  for(h = 0; h < 32; h++)
+  {
+    const char* line = stella_icon[1 + ncols + h];
+    for(w = 0; w < 32; w++)
+    {
+      icon[w + 32 * h] = rgba[(int)line[w]];
+      if(rgba[(int)line[w]] & 0xFF000000)
+        mask[h][w >> 3] |= 1 << (7 - (w & 0x07));
+    }
+  }
+
+  SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(icon, 32, 32, 32,
+                         32 * 4, 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000);
+  SDL_WM_SetIcon(surface, (unsigned char *) mask);
+  SDL_FreeSurface(surface);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -958,8 +1091,6 @@ FrameBuffer::VideoMode FrameBuffer::getSavedVidMode()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::centerAppWindow(const VideoMode& mode)
 {
-  // FIXSDL
-#if 0
   // Attempt to center the application window in non-fullscreen mode
   if(!fullScreen() && myOSystem->settings().getBool("center"))
   {
@@ -967,8 +1098,8 @@ void FrameBuffer::centerAppWindow(const VideoMode& mode)
       ((myOSystem->desktopWidth() - mode.screen_w) >> 1);
     int y = mode.screen_h >= myOSystem->desktopHeight() ? 0 : 
       ((myOSystem->desktopHeight() - mode.screen_h) >> 1);
+    myOSystem->setAppWindowPos(x, y, mode.screen_w, mode.screen_h);
   }
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

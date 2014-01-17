@@ -14,10 +14,12 @@
 CXXFLAGS="$CXXFLAGS $CPPFLAGS"
 
 # default lib behaviour yes/no/auto
+_opengl=auto
 _libpng=auto
 _zlib=auto
 
 # default option behaviour yes/no
+_build_gl=yes
 _build_windowed=yes
 _build_sound=yes
 _build_debugger=yes
@@ -40,7 +42,7 @@ _rm="rm -f"
 _rm_rec="$_rm -r"
 _zip="zip -q"
 _cp=cp
-_windowspath=""
+_win32path=""
 _windres=windres
 _sdlconfig=sdl-config
 _sdlpath="$PATH"
@@ -199,6 +201,10 @@ Installation directories:
   --datadir=DIR          directory to install icons/data files  [PREFIX/share]
 
 Optional Features:
+  --enable-gl            enable/disable OpenGL rendering support [enabled]
+  --disable-gl
+  --enable-windowed      enable/disable windowed rendering modes [enabled]
+  --disable-windowed
   --enable-sound         enable/disable sound support [enabled]
   --disable-sound
   --enable-debugger      enable/disable all debugger options [enabled]
@@ -209,8 +215,6 @@ Optional Features:
   --disable-cheats
   --enable-thumb         enable/disable Thumb ARM support [enabled]
   --disable-thumb
-  --enable-windowed      enable/disable windowed rendering modes [enabled]
-  --disable-windowed
   --enable-shared        build shared binary [enabled]
   --enable-static        build static binary (if possible) [disabled]
   --disable-static
@@ -240,6 +244,10 @@ done # for parm in ...
 
 for ac_option in $@; do
     case "$ac_option" in
+      --enable-gl)              _build_gl=yes        ;;
+      --disable-gl)             _build_gl=no         ;;
+      --enable-windowed)        _build_windowed=yes  ;;
+      --disable-windowed)       _build_windowed=no   ;;
       --enable-sound)           _build_sound=yes     ;;
       --disable-sound)          _build_sound=no      ;;
       --enable-debugger)        _build_debugger=yes  ;;
@@ -248,8 +256,6 @@ for ac_option in $@; do
       --disable-joystick)       _build_joystick=no   ;;
       --enable-cheats)          _build_cheats=yes    ;;
       --disable-cheats)         _build_cheats=no     ;;
-      --enable-windowed)        _build_windowed=yes  ;;
-      --disable-windowed)       _build_windowed=no   ;;
       --enable-thumb)           _build_thumb=yes     ;;
       --disable-thumb)          _build_thumb=no      ;;
       --enable-shared)          _build_static=no     ;;
@@ -511,8 +517,14 @@ if test -n "$_host"; then
 #			CXXFLAGS="$CFLAGS -newlib -mstrict-align -mcpu=750 -mtune=7400"
 #			LDFLAGS="$LDFLAGS -newlib"
 #			;;
+		gp2x)
+			echo "Cross-compiling to $_host, forcing static build, and disabling OpenGL."
+			_build_static=yes
+			_build_gl=no
+			_build_windowed=no
+			;;
 		mingw32-cross)
-			echo "Cross-compiling for Windows using MinGW."
+			echo "Cross-compiling for Win32 using MinGW."
 			DEFINES="$DEFINES -DWIN32"
 			_host_os=win32
 			;;
@@ -605,6 +617,22 @@ else
 fi
 
 #
+# Check for GL
+#
+echocheck "opengl"
+if test "$_opengl" = auto ; then
+	_opengl=no
+	cat > $TMPC << EOF
+#include <string.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+int main(void) { return 0; }
+EOF
+	cc_check $LDFLAGS $CXXFLAGS && _opengl=yes
+fi
+echo "$_opengl"
+
+#
 # figure out installation directories
 #
 test -z "$_bindir" && _bindir="$_prefix/bin"
@@ -614,6 +642,28 @@ test -z "$_datadir" && _datadir="$_prefix/share"
 echo
 echo_n "Summary:"
 echo
+
+if test "$_build_gl" = "yes" ; then
+	if test "$_opengl" = "yes" ; then
+		echo_n "   OpenGL rendering enabled"
+		echo
+	else
+		echo_n "   OpenGL rendering disabled (missing OpenGL headers)"
+		echo
+		_build_gl=no
+	fi
+else
+	echo_n "   OpenGL rendering disabled"
+	echo
+fi
+
+if test "$_build_windowed" = "yes" ; then
+	echo_n "   Windowed rendering modes enabled"
+	echo
+else
+	echo_n "   Windowed rendering modes disabled"
+	echo
+fi
 
 if test "$_build_sound" = "yes" ; then
 	echo_n "   Sound support enabled"
@@ -652,14 +702,6 @@ if test "$_build_cheats" = yes ; then
 	echo
 else
 	echo_n "   Cheatcode support disabled"
-	echo
-fi
-
-if test "$_build_windowed" = "yes" ; then
-	echo_n "   Windowed rendering modes enabled"
-	echo
-else
-	echo_n "   Windowed rendering modes disabled"
 	echo
 fi
 
@@ -723,15 +765,39 @@ case $_host_os in
 			DEFINES="$DEFINES -DBSPF_UNIX -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
 			MODULES="$MODULES $SRC/unix"
 			INCLUDES="$INCLUDES -I$SRC/unix"
+
+			#
+			# Check for X11
+			#
+			_x11=no
+			cat > $TMPC << EOF
+			#include <X11/Xutil.h>
+			int main(void) { return 0; }
+EOF
+			cc_check $LDFLAGS $CXXFLAGS -lX11 && _x11=yes
+			if test "$_x11" = yes ; then
+				DEFINES="$DEFINES -DHAVE_X11"
+				LIBS="$LIBS -lX11"
+			fi
 			;;
 		win32)
-			DEFINES="$DEFINES -DBSPF_WINDOWS -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
-			MODULES="$MODULES $SRC/windows"
-			INCLUDES="$INCLUDES -I$SRC/windows"
+			DEFINES="$DEFINES -DBSPF_WIN32 -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
+			MODULES="$MODULES $SRC/win32"
+			INCLUDES="$INCLUDES -I$SRC/win32"
 			LIBS="$LIBS -lmingw32 -lwinmm"
 			;;
+		gp2x)
+			# -O3 hangs the GP2X, do not use.
+			CXXFLAGS="-O2 -finline-functions -mtune=arm920t"
+			DEFINES="$DEFINES -DBSPF_GP2X -DGP2X -DHAVE_GETTIMEOFDAY -DHAVE_INTTYPES"
+			MODULES="$MODULES $SRC/gp2x"
+			INCLUDES="$INCLUDES -I$SRC/gp2x $ZLIB_CFLAGS"
+			
+			_ranlib="arm-linux-ranlib"
+			_ar="arm-linux-ar cru"
+			;;
 		*)
-			echo "WARNING: host system not currently supported"
+			echo "WARNING: host system not currenty supported"
 			exit
 			;;
 esac
@@ -748,6 +814,10 @@ if test "$_zlib" = yes ; then
 else
 	MODULES="$MODULES $ZLIB"
 	INCLUDES="$INCLUDES -I$ZLIB"
+fi
+
+if test "$_build_gl" = yes ; then
+	DEFINES="$DEFINES -DDISPLAY_OPENGL"
 fi
 
 if test "$_build_windowed" = yes ; then
@@ -805,7 +875,7 @@ RM := $_rm
 RM_REC := $_rm_rec
 ZIP := $_zip
 CP := $_cp
-WINDOWSPATH=$_windowspath
+WIN32PATH=$_win32path
 STRIP := $_strip
 WINDRES := $_windres
 

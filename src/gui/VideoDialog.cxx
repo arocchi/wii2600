@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -33,6 +33,7 @@
 #include "StringList.hxx"
 #include "Widget.hxx"
 #include "TabWidget.hxx"
+#include "FrameBufferGL.hxx"
 #include "NTSCFilter.hxx"
 
 #include "VideoDialog.hxx"
@@ -77,9 +78,9 @@ VideoDialog::VideoDialog(OSystem* osystem, DialogContainer* parent,
 
   items.clear();
   items.push_back("Software", "soft");
-//FIXSDL
+#ifdef DISPLAY_OPENGL
   items.push_back("OpenGL", "gl");
-/////////////
+#endif
   myRendererPopup = new PopUpWidget(myTab, font, xpos, ypos, pwidth, lineHeight,
                                     items, "(*) ", lwidth);
   wid.push_back(myRendererPopup);
@@ -336,7 +337,7 @@ VideoDialog::VideoDialog(OSystem* osystem, DialogContainer* parent,
   addBGroupToFocusList(wid);
 
   // Disable certain functions when we know they aren't present
-//FIXSDL
+#ifndef DISPLAY_OPENGL
   myGLFilterPopup->clearFlags(WIDGET_ENABLED);
   myNAspectRatioSlider->clearFlags(WIDGET_ENABLED);
   myNAspectRatioLabel->clearFlags(WIDGET_ENABLED);
@@ -377,12 +378,12 @@ VideoDialog::VideoDialog(OSystem* osystem, DialogContainer* parent,
   myCloneRGB->clearFlags(WIDGET_ENABLED);
   myCloneBad->clearFlags(WIDGET_ENABLED);
   myCloneCustom->clearFlags(WIDGET_ENABLED);
-//////////////////////////
+#endif
 #ifndef WINDOWED_SUPPORT
   myFullscreenCheckbox->clearFlags(WIDGET_ENABLED);
   myCenterCheckbox->clearFlags(WIDGET_ENABLED);
 #endif
-#if !(defined(BSPF_WINDOWS) || defined(BSPF_UNIX))
+#if !(defined(BSPF_WIN32) || (defined(BSPF_UNIX) && defined(HAVE_X11)))
   myCenterCheckbox->clearFlags(WIDGET_ENABLED);
 #endif
 }

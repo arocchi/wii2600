@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -17,8 +17,8 @@
 // $Id$
 //============================================================================
 
-#ifndef SERIALPORT_WINDOWS_HXX
-#define SERIALPORT_WINDOWS_HXX
+#ifndef SERIALPORT_WIN32_HXX
+#define SERIALPORT_WIN32_HXX
 
 #include <windows.h>
 
@@ -30,11 +30,11 @@
   @author  Stephen Anthony
   @version $Id$
 */
-class SerialPortWINDOWS : public SerialPort
+class SerialPortWin32 : public SerialPort
 {
   public:
-    SerialPortWINDOWS();
-    virtual ~SerialPortWINDOWS();
+    SerialPortWin32();
+    virtual ~SerialPortWin32();
 
     /**
       Open the given serial port with the specified attributes.

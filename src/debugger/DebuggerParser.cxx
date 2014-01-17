@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -1429,18 +1429,6 @@ void DebuggerParser::executeSaveses()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// "savesnap"
-void DebuggerParser::executeSavesnap()
-{
-  // FIXME - for now, temporarily enable 1x snapshot mode, and reset it
-  //         afterwards; this will change once we move to FBSurfaces
-  bool ss1x = settings.getBool("ss1x");
-  settings.setValue("ss1x", true);
-  debugger.myOSystem->eventHandler().takeSnapshot();
-  settings.setValue("ss1x", ss1x);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // "savestate"
 void DebuggerParser::executeSavestate()
 {
@@ -2100,15 +2088,6 @@ DebuggerParser::Command DebuggerParser::commands[kNumCommands] = {
     false,
     { kARG_FILE, kARG_END_ARGS },
     &DebuggerParser::executeSaveses
-  },
-
-  {
-    "savesnap",
-    "Save current TIA image to PNG file",
-    false,
-    false,
-    { kARG_END_ARGS },
-    &DebuggerParser::executeSavesnap
   },
 
   {

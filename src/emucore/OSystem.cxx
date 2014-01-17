@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -40,11 +40,11 @@
 #endif
 
 #include "SerialPort.hxx"
-#if defined(BSPF_UNIX)
+#if defined(UNIX)
   #include "SerialPortUNIX.hxx"
-#elif defined(BSPF_WINDOWS)
-  #include "SerialPortWINDOWS.hxx"
-#elif defined(BSPF_MAC_OSX)
+#elif defined(WIN32)
+  #include "SerialPortWin32.hxx"
+#elif defined(MAC_OSX)
   #include "SerialPortMACOSX.hxx"
 #endif
 
@@ -98,6 +98,9 @@ OSystem::OSystem()
   myMillisAtStart = (uInt32)(time(NULL) * 1000);
 
   // Get built-in features
+  #ifdef DISPLAY_OPENGL
+    myFeatures += "OpenGL ";
+  #endif
   #ifdef SOUND_SUPPORT
     myFeatures += "Sound ";
   #endif
@@ -248,11 +251,11 @@ bool OSystem::create()
   // Create the serial port object
   // This is used by any controller that wants to directly access
   // a real serial port on the system
-#if defined(BSPF_UNIX)
+#if defined(UNIX)
   mySerialPort = new SerialPortUNIX();
-#elif defined(BSPF_WINDOWS)
-  mySerialPort = new SerialPortWINDOWS();
-#elif defined(BSPF_MAC_OSX)
+#elif defined(WIN32)
+  mySerialPort = new SerialPortWin32();
+#elif defined(MAC_OSX)
   mySerialPort = new SerialPortMACOSX();
 #else
   // Create an 'empty' serial port
@@ -390,19 +393,22 @@ FBInitStatus OSystem::createFrameBuffer()
     case EventHandler::S_PAUSE:
     case EventHandler::S_MENU:
     case EventHandler::S_CMDMENU:
-      if((fbstatus = myConsole->initializeVideo()) != kSuccess)
-        return fbstatus;
+      fbstatus = myConsole->initializeVideo();
+      if(fbstatus != kSuccess)
+        goto fallback;
       break;  // S_EMULATE, S_PAUSE, S_MENU, S_CMDMENU
 
     case EventHandler::S_LAUNCHER:
-      if((fbstatus = myLauncher->initializeVideo()) != kSuccess)
-        return fbstatus;
+      fbstatus = myLauncher->initializeVideo();
+      if(fbstatus != kSuccess)
+        goto fallback;
       break;  // S_LAUNCHER
 
 #ifdef DEBUGGER_SUPPORT
     case EventHandler::S_DEBUGGER:
-      if((fbstatus = myDebugger->initializeVideo()) != kSuccess)
-        return fbstatus;
+      fbstatus = myDebugger->initializeVideo();
+      if(fbstatus != kSuccess)
+        goto fallback;
       break;  // S_DEBUGGER
 #endif
 
@@ -422,6 +428,29 @@ FBInitStatus OSystem::createFrameBuffer()
   }
 
   return fbstatus;
+
+  // GOTO are normally considered evil, unless well documented :)
+  // If initialization of video system fails while in OpenGL mode
+  // because OpenGL is unavailable, attempt to fallback to software mode
+  // Otherwise, pass the error to the parent
+fallback:
+  if(fbstatus == kFailNotSupported && myFrameBuffer &&
+     myFrameBuffer->type() == kDoubleBuffer)
+  {
+    logMessage("ERROR: OpenGL mode failed, fallback to software", 0);
+    delete myFrameBuffer; myFrameBuffer = NULL;
+    mySettings->setValue("video", "soft");
+    FBInitStatus newstatus = createFrameBuffer();
+    if(newstatus == kSuccess)
+    {
+      setFramerate(60);
+      myFrameBuffer->showMessage("OpenGL mode failed, fallback to software",
+                                 kMiddleCenter, true);
+    }
+    return newstatus;
+  }
+  else
+    return fbstatus;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -482,6 +511,16 @@ string OSystem::createConsole(const FilesystemNode& rom, const string& md5sum,
   #ifdef CHEATCODE_SUPPORT
     myCheatManager->loadCheats(myRomMD5);
   #endif
+    //////////////////////////////////////////////////////////////////////////
+    // For some reason, ATI video drivers for OpenGL in Win32 cause problems
+    // if the sound isn't initialized before the video
+    // According to the SDL documentation, it shouldn't matter what order the
+    // systems are initialized, but apparently it *does* matter
+    // For now, I'll just reverse the ordering, as suggested by 'zagon' at
+    // http://www.atariage.com/forums/index.php?showtopic=126090&view=findpost&p=1648693
+    // Hopefully it won't break anything else
+    //////////////////////////////////////////////////////////////////////////
+    myConsole->initializeAudio();
     myEventHandler->reset(EventHandler::S_EMULATE);
     myEventHandler->setMouseControllerMode(mySettings->getString("usemouse"));
     if(createFrameBuffer() != kSuccess)  // Takes care of initializeVideo()
@@ -490,7 +529,6 @@ string OSystem::createConsole(const FilesystemNode& rom, const string& md5sum,
       myEventHandler->reset(EventHandler::S_LAUNCHER);
       return "ERROR: Couldn't create framebuffer for console";
     }
-    myConsole->initializeAudio();
 
     if(showmessage)
     {

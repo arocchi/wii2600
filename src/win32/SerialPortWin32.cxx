@@ -8,7 +8,7 @@
 //  SS  SS   tt   ee      ll   ll  aa  aa
 //   SSSS     ttt  eeeee llll llll  aaaaa
 //
-// Copyright (c) 1995-2014 by Bradford W. Mott, Stephen Anthony
+// Copyright (c) 1995-2013 by Bradford W. Mott, Stephen Anthony
 // and the Stella Team
 //
 // See the file "License.txt" for information on usage and redistribution of
@@ -19,23 +19,23 @@
 
 #include <windows.h>
 
-#include "SerialPortWINDOWS.hxx"
+#include "SerialPortWin32.hxx"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SerialPortWINDOWS::SerialPortWINDOWS()
+SerialPortWin32::SerialPortWin32()
   : SerialPort(),
     myHandle(NULL)
 {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SerialPortWINDOWS::~SerialPortWINDOWS()
+SerialPortWin32::~SerialPortWin32()
 {
   closePort();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool SerialPortWINDOWS::openPort(const string& device)
+bool SerialPortWin32::openPort(const string& device)
 {
   if(!myHandle)
   {
@@ -68,7 +68,7 @@ bool SerialPortWINDOWS::openPort(const string& device)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void SerialPortWINDOWS::closePort()
+void SerialPortWin32::closePort()
 {
   if(myHandle)
   {
@@ -78,7 +78,7 @@ void SerialPortWINDOWS::closePort()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool SerialPortWINDOWS::writeByte(const uInt8* data)
+bool SerialPortWin32::writeByte(const uInt8* data)
 {
   if(myHandle)
   {
