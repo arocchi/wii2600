@@ -189,7 +189,11 @@ void RomInfoWidget::drawWidget(bool hilite)
 {
   FBSurface& s = dialog().surface();
 
+#ifndef WII
   const int yoff = myZoomLevel > 1 ? 260*2 + 10 : 275;
+#else 
+  const int yoff = myZoomLevel > 1 ? 260*2 + 10 : 270;
+#endif
 
   s.fillRect(_x+2, _y+2, _w-4, _h-4, kWidColor);
   s.box(_x, _y, _w, _h, kColor, kShadowColor);

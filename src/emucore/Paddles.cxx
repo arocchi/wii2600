@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Paddles.cxx,v 1.16 2009-01-01 18:13:36 stephena Exp $
+// $Id: Paddles.cxx,v 1.16 2009/01/01 18:13:36 stephena Exp $
 //============================================================================
 
 #define TRIGMAX 240
@@ -21,11 +21,21 @@
 
 #include "Event.hxx"
 #include "Paddles.hxx"
+#ifdef WII
+#include <wiiuse/wpad.h>
+#include "wii_main.hxx"
+#include "wii_input.hxx"
+#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Paddles::Paddles(Jack jack, const Event& event, const System& system, bool swap)
   : Controller(jack, event, system, Controller::Paddles)
 {
+
+#ifdef WII
+    initWiiSettings( swap );
+#endif
+
   // Swap the paddle events, from paddle 0 <=> 1 and paddle 2 <=> 3
   // Also consider whether this is the left or right port
   if(myJack == Left)
@@ -133,11 +143,208 @@ Paddles::~Paddles()
 {
 }
 
+//#ifdef WII
+
+void Paddles::setRightPaddleOffset( const int offset )
+{
+    wiiRightPaddleOffset = offset;
+}
+
+/**
+ * Initializes the settings for Wii paddle support
+ *
+ * swap - Whether we are swapping controllers
+ */
+void Paddles::initWiiSettings( const bool swap )
+{
+    wiiRightPaddleOffset = 2;
+
+    wiiSwap = swap;
+    wiiPrevp0 = -1;
+    wiiPrevp1 = -1;
+
+    wiiPaddleRange = ((float)TRIGMAX) - TRIGMIN;
+
+    //
+    // Wiimote - IR mode
+    //
+
+    float wiiIrAdjust = 
+        ( WIIMOTE_IR_SENSITIVITY_LEVELS - wii_paddle_ir_sensitivity + 1 ) *
+            WIIMOTE_IR_SENSITIVITY_INCREMENT;
+
+    wiiIrMin = WIIMOTE_IR_CENTER - wiiIrAdjust;
+    wiiIrMax = WIIMOTE_IR_CENTER + wiiIrAdjust;
+    wiiIrRange = wiiIrMax - wiiIrMin;
+
+    //
+    // Wiimote - Roll mode
+    //
+
+    float rollIncrement = 
+        ( WIIMOTE_ROLL_MAX - WIIMOTE_ROLL_MIN ) / WIIMOTE_ROLL_SENSITIVITY_LEVELS;
+
+    wiiRollMax = WIIMOTE_ROLL_MIN + 
+        ( ( WIIMOTE_ROLL_SENSITIVITY_LEVELS - wii_paddle_roll_sensitivity ) * rollIncrement );
+
+    wiiRollMin = -wiiRollMax;
+    wiiRollRange = wiiRollMax - wiiRollMin;
+    wiiRollCenter = 
+        wiiRollRange / 
+        ( WIIMOTE_ROLL_CENTER_ADJ_MID - 
+            ( WIIMOTE_ROLL_CENTER_ADJ_INCREMENT * ( abs( wii_paddle_roll_center ) ) ) );
+
+    if( wii_paddle_roll_center < 0 ) 
+        wiiRollCenter = -wiiRollCenter;
+
+    wiiRollMax -= wiiRollCenter;
+    wiiRollMin -= wiiRollCenter;
+    wiiRollRatio = wiiPaddleRange / wiiRollRange;
+
+    // Wii analog controls    
+    wiiAnalogMax =
+        ( ( PADDLE_ANALOG_SENSITIVITY_LEVELS - wii_paddle_analog_sensitivity + 1 )
+            * WII_ANALOG_SENSITIVITY_INCREMENT );
+    wiiAnalogMin =  -wiiAnalogMax;
+    wiiAnalogRange = wiiAnalogMax - wiiAnalogMin;
+    wiiAnalogRatio = ( wiiPaddleRange / wiiAnalogRange );
+
+    // Gamecube analog controls
+    gcAnalogMax = 
+        ( ( PADDLE_ANALOG_SENSITIVITY_LEVELS - wii_paddle_analog_sensitivity + 1 )
+            * GC_ANALOG_SENSITIVITY_INCREMENT );
+    gcAnalogMin = -gcAnalogMax;
+    gcAnalogRange = gcAnalogMax - gcAnalogMin;
+    gcAnalogRatio = ( gcAnalogRange / gcAnalogRange );
+}
+
+/**
+ * Returns the position of the paddle for the specified 
+ * controller
+ *
+ * prev - The last position for the controller
+ * mote - The index of the controller
+ */
+int Paddles::getWiiPaddlePosition( const int prev, const int mote )
+{    
+    WPADData *wd = WPAD_Data( mote );	
+
+    if( wii_paddle_mode == WII_PADDLE_MODE_ANALOG )
+    {
+        if( wd->exp.type == WPAD_EXP_CLASSIC || wd->exp.type == WPAD_EXP_NUNCHUK )
+        {
+            float x = wii_exp_analog_val( &(wd->exp), wii_paddle_analog_xaxis );
+
+            if( x > wiiAnalogMin && x < wiiAnalogMax )
+            {    
+                x = ( x - wiiAnalogMin );
+
+                int value = (int)( x * wiiAnalogRatio );
+                int retVal = ( TRIGMAX - ( TRIGMIN + value ) ) - WII_ANALOG_CENTER_ADJUST;
+
+                if( retVal < TRIGMIN ) retVal = TRIGMIN;
+                else if( retVal > TRIGMAX ) retVal = TRIGMAX;
+                return retVal;    
+            }
+            else
+            {
+                return prev;
+            }
+        }
+        else
+        {
+            float x = 
+                ( wii_paddle_analog_xaxis  ? PAD_StickX( mote ) : PAD_StickY( mote ) );
+
+            if( x > gcAnalogMin && x < gcAnalogMax )
+            {    
+                x = ( x - gcAnalogMin );
+
+                int value = (int)( x * gcAnalogRatio );
+                int retVal = ( TRIGMAX - ( TRIGMIN + value ) ) - GC_ANALOG_CENTER_ADJUST;
+
+                if( retVal < TRIGMIN ) retVal = TRIGMIN;
+                else if( retVal > TRIGMAX ) retVal = TRIGMAX;
+                return retVal;    
+            }
+            else
+            {
+                return prev;
+            }
+        }
+    }
+    else if( wii_paddle_mode == WII_PADDLE_MODE_MOTE_IR )
+    {
+        if( wd->ir.ax > wiiIrMin && wd->ir.ax < wiiIrMax )
+        {    
+	        int retVal = 
+                TRIGMAX - ( ( ( ( ( float)wd->ir.ax - wiiIrMin ) / wiiIrRange ) * TRIGMAX ) )
+                    - WIIMOTE_IR_CENTER_ADJUST;
+
+            if( retVal < TRIGMIN  ) retVal = TRIGMIN;
+            else if( retVal > TRIGMAX  ) retVal = TRIGMAX;
+            return retVal;
+        }
+        else
+        {
+            return 
+                ( ( prev < ( ( TRIGMAX / 2 ) - WIIMOTE_IR_CENTER_ADJUST ) ) ? 
+                    TRIGMIN : TRIGMAX );
+        }
+    }
+    else if( wii_paddle_mode == WII_PADDLE_MODE_MOTE_ROLL )
+    {
+        orient_t orient;
+        WPAD_Orientation( mote, &orient );
+
+        float roll = orient.roll;
+        if( roll > wiiRollMin && roll < wiiRollMax )
+        {
+            int value = ((int)( ( roll - wiiRollMin ) * wiiRollRatio ));
+            int retVal = ( TRIGMAX - ( TRIGMIN + value ) );
+            if( retVal < TRIGMIN  ) retVal = TRIGMIN;
+            else if( retVal > TRIGMAX  ) retVal = TRIGMAX;
+
+            return retVal;
+        }
+        else
+        {        
+            return ( orient.roll > ( -wiiRollCenter ) ) ? TRIGMIN : TRIGMAX ;
+        }
+    }
+}
+//#endif
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Paddles::update()
 {
-  myDigitalPinState[Three] = myDigitalPinState[Four] = true;
+    myDigitalPinState[Three] = myDigitalPinState[Four] = true;
 
+#ifdef WII
+    int base = ( ( myJack == Left  ) ? 0 : wiiRightPaddleOffset );
+    int p0 = wiiSwap ? base + 1 : base;
+    int p1 = wiiSwap ? base : base + 1;
+
+    wiiPrevp0 = getWiiPaddlePosition( wiiPrevp0, p0 );
+    wiiPrevp1 = getWiiPaddlePosition( wiiPrevp1, p1 );
+
+    myCharge[0] = wiiPrevp0;
+    myCharge[1] = wiiPrevp1;	 
+
+    u32 held = WPAD_ButtonsHeld( p0 );
+    u32 gcHeld = PAD_ButtonsHeld( p0 );
+    if( held & WII_BUTTON_ATARI_PADDLE_FIRE || gcHeld & GC_BUTTON_ATARI_PADDLE_FIRE )
+    {
+        myDigitalPinState[Four] = false;
+    }
+
+    held = WPAD_ButtonsHeld( p1 );
+    gcHeld = PAD_ButtonsHeld( p1 );
+    if( held & WII_BUTTON_ATARI_PADDLE_FIRE || gcHeld & GC_BUTTON_ATARI_PADDLE_FIRE )
+    {
+        myDigitalPinState[Three] = false;
+    }
+#else
   // Digital events (from keyboard or joystick hats & buttons)
   myDigitalPinState[Three] =
     (myEvent.get(myP1FireEvent1) == 0 && myEvent.get(myP1FireEvent2) == 0);
@@ -298,6 +505,7 @@ void Paddles::update()
       myLastCharge[1] = charge1;
     }
   }
+#endif
  
   myAnalogPinValue[Five] = (Int32)(1000000 * (myCharge[1] / 255.0));
   myAnalogPinValue[Nine] = (Int32)(1000000 * (myCharge[0] / 255.0));

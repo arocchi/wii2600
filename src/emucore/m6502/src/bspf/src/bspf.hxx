@@ -39,6 +39,13 @@ typedef unsigned short uInt16;
 typedef signed int Int32;
 typedef unsigned int uInt32;
 
+#ifdef WII
+// Necessary for game loop that was overflowing the 32 bit length
+// after an hour and 11 minutes.
+typedef signed long long Int64;
+typedef unsigned long long uInt64;
+#endif
+
 // The following code should provide access to the standard C++ objects and
 // types: cout, cerr, string, ostream, istream, etc.
 #ifdef BSPF_OLD_STYLE_CXX_HEADERS
@@ -77,7 +84,12 @@ typedef unsigned int uInt32;
   #define BSPF_snprintf _snprintf
   #define BSPF_vsnprintf _vsnprintf
 #else
-  #include <strings.h>
+#ifdef WII
+  // No strings for WII... odd.
+  #include <string.h> 
+#else
+  #include <strings.h> 
+#endif
   #define BSPF_strcasecmp strcasecmp
   #define BSPF_strncasecmp strncasecmp
   #define BSPF_isblank(c) isblank(c)

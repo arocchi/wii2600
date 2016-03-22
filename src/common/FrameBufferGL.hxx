@@ -187,7 +187,7 @@ class FrameBufferGL : public FrameBuffer
   A surface suitable for OpenGL rendering mode.
 
   @author  Stephen Anthony
-  @version $Id: FrameBufferGL.hxx,v 1.72 2009-01-19 16:52:32 stephena Exp $
+  @version $Id: FrameBufferGL.hxx,v 1.72 2009/01/19 16:52:32 stephena Exp $
 */
 class FBSurfaceGL : public FBSurface
 {

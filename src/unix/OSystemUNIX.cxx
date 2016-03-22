@@ -28,6 +28,10 @@
   #include <sys/time.h>
 #endif
 
+#ifdef WII
+#include "wii_app.hxx"
+#endif
+
 /**
   Each derived class is responsible for calling the following methods
   in its constructor:
@@ -38,12 +42,24 @@
   See OSystem.hxx for a further explanation
 */
 
+#ifdef WII
+static char basedir[WII_MAX_PATH];
+static char configfile[WII_MAX_PATH];
+#endif
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OSystemUNIX::OSystemUNIX()
   : OSystem()
 {
+#ifdef WII
+    wii_get_app_relative( "", basedir );
+    wii_get_app_relative( "stellarc", configfile );    
+    setBaseDir(basedir);
+    setConfigFile(configfile);
+#else
   setBaseDir("~/.stella");
   setConfigFile("~/.stella/stellarc");
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
