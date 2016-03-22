@@ -38,6 +38,11 @@
   #include "Debugger.hxx"
 #endif
 
+#ifdef WII
+#include "wii_app.hxx"
+#include "wii_main.hxx"
+#endif
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FrameBuffer::FrameBuffer(OSystem* osystem)
   : myOSystem(osystem),
@@ -92,7 +97,8 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
   setAvailableVidModes(width, height);
 
   // Initialize video subsystem (make sure we get a valid mode)
-  VideoMode mode = getSavedVidMode();
+  VideoMode mode = getSavedVidMode();  
+
   if(width <= mode.screen_w && height <= mode.screen_h)
   {
     // Set window title and icon
@@ -155,6 +161,8 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
   return true;
 }
 
+extern double current_fps;
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::update()
 {
@@ -179,20 +187,31 @@ void FrameBuffer::update()
       drawTIA(myRedrawEntireFrame);
 
       // Show frame statistics
+#ifdef WII
+      // If in debug mode, show stats
+      if(wii_debug)
+#else
       if(myStatsMsg.enabled)
+#endif
       {
         const ConsoleInfo& info = myOSystem->console().about();
         char msg[30];
         sprintf(msg, "%u LINES  %2.2f FPS",
                 myOSystem->console().tia().scanlines(),
-                myOSystem->console().getFramerate());
+#ifndef WII
+                myOSystem->console().getFramerate(),
+#else
+                // Show current FPS versus desired frame rate
+                current_fps  
+#endif
+        );
         myStatsMsg.surface->fillRect(0, 0, myStatsMsg.w, myStatsMsg.h, kBGColor);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          msg, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+          info.BankSwitch, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
           info.DisplayFormat, 1, 15, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          info.BankSwitch, 1, 30, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+          msg, 1, 30, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->addDirtyRect(0, 0, 0, 0);  // force a full draw
         myStatsMsg.surface->setPos(myImageRect.x() + 3, myImageRect.y() + 3);
         myStatsMsg.surface->update();
@@ -262,7 +281,15 @@ void FrameBuffer::update()
   postFrameUpdate();
 
   // The frame doesn't need to be completely redrawn anymore
-  myRedrawEntireFrame = false;
+#ifdef WII
+  // Force full redraw if we are double buffering
+  if( wii_vsync != VSYNC_DOUBLE_BUFF )
+  {
+#endif
+    myRedrawEntireFrame = false;
+#ifdef WII
+  }
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -524,9 +551,20 @@ void FrameBuffer::setTIAPalette(const uInt32* palette)
     Uint8 r = (palette[i] >> 16) & 0xff;
     Uint8 g = (palette[i] >> 8) & 0xff;
     Uint8 b = palette[i] & 0xff;
+    myDefPalette[i] = mapRGB(r, g, b);    
 
-    myDefPalette[i] = mapRGB(r, g, b);
+#ifdef WII
+    // Map to palette (necessary for 8bpp mode)
+    colors[i].r = r;
+    colors[i].g = g;
+    colors[i].b = b;
+#endif
   }
+
+#ifdef WII
+  // Map logical palette (necessary for 8pp mode)
+  SDL_SetPalette( myScreen, SDL_LOGPAL | SDL_PHYSPAL, colors, 0, 256 );
+#endif
 
   // Set palette for phosphor effect
   for(i = 0; i < 256; ++i)
@@ -683,8 +721,13 @@ void FrameBuffer::setCursorState()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::showCursor(bool show)
 {
+#ifdef WII
+  // Never display the cursor
+  SDL_ShowCursor(SDL_DISABLE);
+#else
   SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
-}
+#endif
+} 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::grabMouse(bool grab)
@@ -853,10 +896,22 @@ void FrameBuffer::setAvailableVidModes(uInt32 baseWidth, uInt32 baseHeight)
     uInt32 max_zoom = maxWindowSizeForScreen(baseWidth, baseHeight,
                       myOSystem->desktopWidth(), myOSystem->desktopHeight());
 
+#if 0
+fprintf( stderr, "\n\n\nmax_zoom: %d", max_zoom );
+fprintf( stderr, "\n\n\nbase: %d, %d", baseWidth, baseHeight );
+fprintf( stderr, "\n\n\ndesk: %d, %d", myOSystem->desktopWidth(), myOSystem->desktopHeight() );
+wii_pause();
+#endif
+
     // Figure our the smallest zoom level we can use
+#ifndef WII
     uInt32 firstmode = 1;
     if(myOSystem->desktopWidth() < 640 || myOSystem->desktopHeight() < 480)
       firstmode = 0;
+#else
+    // Allow for 1x and 2x zoom modes
+    uInt32 firstmode = 0;
+#endif
 
     for(uInt32 i = firstmode; i < GFX_NumModes; ++i)
     {
@@ -922,8 +977,13 @@ FrameBuffer::VideoMode FrameBuffer::getSavedVidMode()
   }
   else
   {
+#ifndef WII
     const string& name = myOSystem->settings().getString("tia_filter");
     myCurrentModeList->setByGfxMode(name);
+#else 
+    // Force 1x or 2x zoom modes
+    myCurrentModeList->setByGfxMode( wii_scale ? GFX_Zoom2x : GFX_Zoom1x );       
+#endif
   }
 
   return myCurrentModeList->current(myOSystem->settings());

@@ -68,6 +68,10 @@ class Paddles : public Controller
     */
     static void setMouseIsPaddle(int number, int dir = 0);
 
+#ifdef WII
+    void setRightPaddleOffset( const int offset );
+#endif
+
   private:
     // Pre-compute the events we care about based on given port
     // This will eliminate test for left or right port in update()
@@ -85,6 +89,59 @@ class Paddles : public Controller
     int myLastCharge[2];
     int myLeftMotion[2];
 
+#ifdef WII
+    /**
+     * Initializes the settings for Wii paddle support
+     *
+     * swap - Whether we are swapping controllers
+     */
+    void initWiiSettings( const bool swap );
+
+    /**
+     * Returns the position of the paddle for the specified 
+     * controller
+     *
+     * prev - The last position for the controller
+     * mote - The index of the controller
+     */
+    int getWiiPaddlePosition( const int prev, const int mote );    
+
+    /** Are we swapping paddles */
+    bool wiiSwap;
+    /** The previous paddle position (paddle 0) */
+    int wiiPrevp0;
+    /** The previous paddle position (paddle 1) */
+    int wiiPrevp1;
+    /** The paddle range */
+    float wiiPaddleRange;
+
+    // Wii - IR mode
+    float wiiIrMax;
+    float wiiIrMin;
+    float wiiIrRange;
+
+    // Wii - Roll mode
+    float wiiRollMax;
+    float wiiRollMin;
+    float wiiRollRange;
+    float wiiRollCenter;
+    float wiiRollRatio;
+
+    // Wii - analog 
+    float wiiAnalogRatio;
+    float wiiAnalogMin;
+    float wiiAnalogMax;
+    float wiiAnalogRange;
+
+    // Gamecube - analog 
+    float gcAnalogRatio;
+    float gcAnalogMin;
+    float gcAnalogMax;
+    float gcAnalogRange;
+
+    int wiiRightPaddleOffset;
+#endif
+
     static int _PADDLE_SPEED;
     static int _MOUSEX_PADDLE;
     static int _MOUSEY_PADDLE;
@@ -95,3 +152,4 @@ class Paddles : public Controller
 };
 
 #endif
+

@@ -149,9 +149,11 @@ class FrameBufferSoft : public FrameBuffer
     SDL_PixelFormat* myFormat;
 
     enum RenderType {
+      kSoftZoom_8, 
       kSoftZoom_16,
       kSoftZoom_24,
       kSoftZoom_32,
+      kPhosphor_8,
       kPhosphor_16,
       kPhosphor_24,
       kPhosphor_32

@@ -136,8 +136,14 @@ void BrowserDialog::show(const string& title, const string& startpath,
   // If no node has been set, or the last used one is now invalid,
   // go back to the users home dir.
   _node = FilesystemNode(startpath);
+
+#ifdef WII
+  if(!_node.exists())
+    _node = FilesystemNode("");
+#else
   if(!_node.exists())
     _node = FilesystemNode("~");
+#endif
 
   // Generally, we always want a directory listing 
   if(!_node.isDirectory() && _node.hasParent())

@@ -76,6 +76,16 @@ class EventHandler
     */
     virtual ~EventHandler();
 
+#ifdef WII
+    enum JoyHat {
+      kJHatUp,
+      kJHatDown,
+      kJHatLeft,
+      kJHatRight,
+      kJHatCentered
+    };
+#endif
+
     // Enumeration representing the different states of operation
     enum State {
       S_NONE,
@@ -311,6 +321,12 @@ class EventHandler
     void allowAllDirections(bool allow) { myAllowAllDirectionsFlag = allow; }
 
   private:
+#ifdef WII
+    bool handleWiiEvents();
+    void handleWiiJoyHatEvents( const int joyIndex );
+    void handleWiiJoyAxisEvents( const int joyIndex, const int wiiJoyIndex );
+#endif
+
     /**
       Send a mouse motion event to the handler.
 
@@ -430,6 +446,7 @@ class EventHandler
       JoyType       type;
       string        name;
     };
+#ifndef WII
     enum JoyHat {
       kJHatUp,
       kJHatDown,
@@ -437,6 +454,7 @@ class EventHandler
       kJHatRight,
       kJHatCentered
     };
+#endif
     struct JoyMouse {   // Used for joystick to mouse emulation
       bool active;
       int x, y, x_amt, y_amt, amt, val, old_val;

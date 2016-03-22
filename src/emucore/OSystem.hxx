@@ -56,7 +56,7 @@ typedef Common::Array<Resolution> ResolutionList;
   other objects belong.
 
   @author  Stephen Anthony
-  @version $Id: OSystem.hxx,v 1.79 2009-01-24 17:32:29 stephena Exp $
+  @version $Id: OSystem.hxx,v 1.79 2009/01/24 17:32:29 stephena Exp $
 */
 class OSystem
 {
@@ -520,6 +520,7 @@ class OSystem
     GUI::Font* myConsoleFont;
 
     // Indicates whether the main processing loop should proceed
+#ifndef WII
     struct TimingInfo {
       uInt32 start;
       uInt32 current;
@@ -527,6 +528,16 @@ class OSystem
       uInt32 totalTime;
       uInt32 totalFrames;
     };
+#else
+    // 64-bit values to due to event loop overflow bug
+    struct TimingInfo {
+      uInt64 start;
+      uInt64 current;
+      uInt64 virt;
+      uInt64 totalTime;
+      uInt64 totalFrames;
+    };
+#endif
     TimingInfo myTimingInfo;
 
     // Table of RGB values for GUI elements

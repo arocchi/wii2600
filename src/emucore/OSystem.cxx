@@ -35,11 +35,20 @@
 
 #include "SerialPort.hxx"
 #if defined(UNIX)
+#ifndef WII
   #include "SerialPortUNIX.hxx"
+#endif
 #elif defined(WIN32)
   #include "SerialPortWin32.hxx"
 #elif defined(MAC_OSX)
   #include "SerialPortMACOSX.hxx"
+#endif
+
+#ifdef WII
+#include <wiiuse/wpad.h>
+#include "SoundWii.hxx"
+#include "wii_main.hxx"
+#include "wii_app.hxx"
 #endif
 
 #include "FSNode.hxx"
@@ -64,6 +73,19 @@
 #include "OSystem.hxx"
 
 #define MAX_ROM_SIZE  512 * 1024
+
+
+#ifdef WII
+// Returns a 64-bit based tick value. An overflow occurs when using a 32-bit
+// value in the event loop which was causing many strange issues for the Wii
+// port.
+//
+// return   The 64-bit based tick value
+static uInt64 getTicksAsLong()
+{
+    return ((uInt64)SDL_GetTicks()) * 1000;
+}
+#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 OSystem::OSystem()
@@ -252,7 +274,11 @@ bool OSystem::create()
   // This is used by any controller that wants to directly access
   // a real serial port on the system
 #if defined(UNIX)
+#if defined(WII)
+  mySerialPort = new SerialPort();
+#else
   mySerialPort = new SerialPortUNIX();
+#endif
 #elif defined(WIN32)
   mySerialPort = new SerialPortWin32();
 #elif defined(MAC_OSX)
@@ -404,6 +430,11 @@ bool OSystem::createFrameBuffer()
     // Update the UI palette
     setUIPalette();
   }
+
+#ifdef WII
+  // Necessary for 8bpp mode
+  setUIPalette();
+#endif
 
   return true;
 }
@@ -753,8 +784,13 @@ string OSystem::getROMInfo(const Console* console)
 void OSystem::resetLoopTiming()
 {
   memset(&myTimingInfo, 0, sizeof(TimingInfo));
+#ifndef WII
   myTimingInfo.start = getTicks();
   myTimingInfo.virt = getTicks();
+#else
+  myTimingInfo.start = getTicksAsLong();
+  myTimingInfo.virt = getTicksAsLong();
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -799,6 +835,15 @@ void OSystem::setDefaultJoyAxisMap()
 void OSystem::setDefaultJoyHatMap()
 {
 // FIXME - add emul and UI events
+#if 0
+  EventMode mode;
+  mode = kEmulationMode;  
+
+  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroLeft, mode, 0, 0, EventHandler::kJHatLeft);
+  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroRight, mode, 0, 0, EventHandler::kJHatRight);
+  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroUp, mode, 0, 0, EventHandler::kJHatUp);
+  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroDown, mode, 0, 0, EventHandler::kJHatDown);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -819,27 +864,91 @@ void OSystem::stateChanged(EventHandler::State state)
 {
 }
 
+#ifdef WII
+// Whether to update FPS
+static int update = 0;
+// Our current FPS
+double current_fps = 0;
+// Whether to swap the frame buffer (double buffering)
+bool os_swap_fb;
+
+// TODO: This class has been heavily modified to support the Wii port. All of 
+// these changes need to be pulled out and a Wii-sepecific system class should
+// be created.
+#endif
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void OSystem::mainLoop()
 {
+#ifndef WII
   if(mySettings->getString("timing") == "sleep")
   {
+#endif
     // Sleep-based wait: good for CPU, bad for graphical sync
     for(;;)
     {
+#ifndef WII
       myTimingInfo.start = getTicks();
+#else
+      myTimingInfo.start = getTicksAsLong();
+#endif
+
+#ifdef WII
+      WPAD_ScanPads();
+      PAD_ScanPads();
+#endif      
       myEventHandler->poll(myTimingInfo.start);
       if(myQuitLoop) break;  // Exit if the user wants to quit
+#ifdef WII
+      os_swap_fb = ( myEventHandler->state() == EventHandler::S_EMULATE );      
+      if( os_swap_fb )
+      {
+        wii_swap_frame_buffers();                
+      }
+      ((SoundWii*)mySound)->update();
+#endif
       myFrameBuffer->update();
+
+#ifndef WII
       myTimingInfo.current = getTicks();
+#else      
+      myTimingInfo.current = getTicksAsLong();
+#endif
+
+#ifndef WII
       myTimingInfo.virt += myTimePerFrame;
+#else      
+      if( wii_force_fps != -1 )
+      {
+          myTimingInfo.virt += (1000000.0/wii_force_fps);
+      }
+      else
+      {
+          myTimingInfo.virt += myTimePerFrame;
+      }
+#endif
 
       if(myTimingInfo.current < myTimingInfo.virt)
-        SDL_Delay((myTimingInfo.virt - myTimingInfo.current) / 1000);
+      {
+        SDL_Delay((myTimingInfo.virt - myTimingInfo.current)/1000);        
+      }
 
+#ifndef WII
       myTimingInfo.totalTime += (getTicks() - myTimingInfo.start);
+#else
+      myTimingInfo.totalTime += (getTicksAsLong() - myTimingInfo.start);
+#endif
       myTimingInfo.totalFrames++;
+
+#ifdef WII
+      if( ( update++ % 100 ) == 0 )
+      {
+        double executionTime = (double)myTimingInfo.totalTime / 1000000.0;
+        current_fps = (double) myTimingInfo.totalFrames / executionTime;        
+      }
+#endif
     }
+#ifndef WII
   }
   else
   {
@@ -859,6 +968,7 @@ void OSystem::mainLoop()
       myTimingInfo.totalFrames++;
     }
   }
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -871,8 +981,15 @@ bool OSystem::queryVideoHardware()
 
   // First get the maximum windowed desktop resolution
   const SDL_VideoInfo* info = SDL_GetVideoInfo();
+#ifdef WII
+  // Force the Wii desktop size 
+  // TODO: Support larger height for PAL displays
+  myDesktopWidth  = 640;
+  myDesktopHeight = 480;
+#else
   myDesktopWidth  = info->current_w;
   myDesktopHeight = info->current_h;
+#endif
 
   // Various parts of the codebase assume a minimum screen size of 320x240
   assert(myDesktopWidth >= 320 && myDesktopHeight >= 240);
@@ -886,9 +1003,10 @@ bool OSystem::queryVideoHardware()
     Resolution r;
     r.width  = myDesktopWidth;
     r.height = myDesktopHeight;
+    buf.str("");
     buf << r.width << "x" << r.height;
     r.name = buf.str();
-    myResolutions.push_back(r);
+    myResolutions.push_back( r );
   }
   else
   {
@@ -941,7 +1059,7 @@ bool OSystem::queryVideoHardware()
     kDbgChangedTextColor  Text color for changed cells
     kDbgColorHi           Highlighted color in debugger data cells
 */
-uInt32 OSystem::ourGUIColors[kNumUIPalettes][kNumColors-256] = {
+uInt32 OSystem::ourGUIColors[kNumUIPalettes][kNumColors-256] = { 
   // Standard
   { 0x686868, 0x000000, 0x404040, 0x000000, 0x62a108, 0x9f0000,
     0xc9af7c, 0xf0f0cf, 0xc80000,

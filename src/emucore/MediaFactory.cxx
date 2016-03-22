@@ -41,10 +41,12 @@
 #include "Sound.hxx"
 #include "SoundNull.hxx"
 #ifdef SOUND_SUPPORT
-  #ifndef _WIN32_WCE
-    #include "SoundSDL.hxx"
+  #ifdef _WIN32_WCE
+    #include "SoundWinCE.hxx"    
+  #elif WII
+    #include "SoundWii.hxx"    
   #else
-    #include "SoundWinCE.hxx"
+    #include "SoundSDL.hxx"
   #endif
 #endif
 
@@ -102,6 +104,8 @@ Sound* MediaFactory::createAudio(OSystem* osystem)
 #ifdef SOUND_SUPPORT
   #if defined (_WIN32_WCE)
     sound = new SoundWinCE(osystem);
+  #elif defined (WII)
+    sound = new SoundWii(osystem);
   #else
     sound = new SoundSDL(osystem);
   #endif

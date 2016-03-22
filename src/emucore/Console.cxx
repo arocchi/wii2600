@@ -59,6 +59,10 @@
   #include "CheatManager.hxx"
 #endif
 
+#ifdef WII
+#include "wii_util.hxx"
+#endif
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   : myOSystem(osystem),
@@ -160,9 +164,25 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
     myFramerate = 50.0;
     myConsoleInfo.InitialFrameRate = "50";
 
+#ifndef WII
     if(myProperties.get(Display_Height) == "210")
-      myProperties.set(Display_Height, "250");
+      myProperties.set(Display_Height, "250");    
+#else
+    // Workaround for PAL ROMs that cause 2x display to be exceeded
+    // (Should support 1x, but appears to be a Stella bug). 
+    // TODO: Fix this to support full height on PAL-based displays
+    if(myProperties.get(Display_Height) == "210")
+      myProperties.set(Display_Height, "240");
+#endif
   }
+
+#ifdef WII
+    int height = Util_sscandec( myProperties.get(Display_Height).c_str() );
+    if( height > 240 )
+    {
+        myProperties.set(Display_Height, "240");
+    }
+#endif
 
   // Add the real controllers for this system
   setControllers();
@@ -651,7 +671,14 @@ void Console::setControllers()
   }
   else if(right == "PADDLES")
   {
-    myControllers[rightPort] = new Paddles(Controller::Right, *myEvent, *mySystem, swapPaddles);
+    Paddles *paddles = new Paddles(Controller::Right, *myEvent, *mySystem, swapPaddles);
+    myControllers[rightPort] = paddles;
+#ifdef WII
+    if( !( left == "PADDLES" ) )
+    {
+        paddles->setRightPaddleOffset( 1 );
+    }
+#endif
   }
   else if(right == "TRACKBALL22")
   {

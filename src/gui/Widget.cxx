@@ -85,7 +85,7 @@ void Widget::draw()
   _y = getAbsY();
 
   // Clear background (unless alpha blending is enabled)
-  if(_flags & WIDGET_CLEARBG)
+  if(_flags & WIDGET_CLEARBG ) 
   {
     int x = _x, y = _y, w = _w, h = _h;
     if(hasBorder)
@@ -138,6 +138,10 @@ void Widget::receivedFocus()
 
   _hasFocus = true;
   receivedFocusWidget();
+
+#ifdef WII
+    setFlags(WIDGET_HILITED);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -148,6 +152,10 @@ void Widget::lostFocus()
 
   _hasFocus = false;
   lostFocusWidget();
+
+#ifdef WII
+    clearFlags(WIDGET_HILITED);
+#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -449,9 +457,14 @@ CheckboxWidget::CheckboxWidget(GuiObject *boss, const GUI::Font& font,
     _boxY(0),
     _textY(0)
 {
-  _flags = WIDGET_ENABLED;
+  _flags = WIDGET_ENABLED | WIDGET_CLEARBG;
   _type = kCheckboxWidget;
+#ifdef WII
+  _bgcolor = kDlgColor;
+  _bgcolorhi = kWidColor;
+#else
   _bgcolor = _bgcolorhi = kWidColor;
+#endif
 
   _editable = true;
 
@@ -541,7 +554,11 @@ SliderWidget::SliderWidget(GuiObject *boss, const GUI::Font& font,
   _flags = WIDGET_ENABLED | WIDGET_TRACK_MOUSE | WIDGET_CLEARBG;
   _type = kSliderWidget;
   _bgcolor = kDlgColor;
+#ifdef WII
+  _bgcolorhi = kWidColor;    
+#else
   _bgcolorhi = kDlgColor;
+#endif
 
   if(!_label.empty() && _labelWidth == 0)
     _labelWidth = _font->getStringWidth(_label);
