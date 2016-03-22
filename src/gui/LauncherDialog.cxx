@@ -45,6 +45,10 @@
 
 #include "LauncherDialog.hxx"
 
+#ifdef WII
+#include "wii_main.hxx"
+#endif
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
@@ -99,6 +103,13 @@ LauncherDialog::LauncherDialog(OSystem* osystem, DialogContainer* parent,
     romWidth = 660;
   else if(romSize > 0 && w >= 640 && h >= 480)
     romWidth = 365;
+
+#ifdef WII
+  if( wii_display_rom_info )
+  {
+    romWidth = 365;
+  }
+#endif
 
   int listWidth = _w - (romWidth > 0 ? romWidth+5 : 0) - 20;
   myList = new StringListWidget(this, font, xpos, ypos,
@@ -232,8 +243,13 @@ void LauncherDialog::loadConfig()
   {
     myPrevDirButton->setEnabled(false);
     myCurrentNode = FilesystemNode(instance().settings().getString("romdir"));
+#ifdef WII   
+    if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
+      myCurrentNode = FilesystemNode("");
+#else
     if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
       myCurrentNode = FilesystemNode("~");
+#endif
 
     updateListing();
   }
@@ -537,8 +553,13 @@ void LauncherDialog::handleCommand(CommandSender* sender, int cmd,
 
     case kRomDirChosenCmd:
       myCurrentNode = FilesystemNode(instance().settings().getString("romdir"));
+#ifdef WII
+      if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
+        myCurrentNode = FilesystemNode("");
+#else
       if(!(myCurrentNode.exists() && myCurrentNode.isDirectory()))
         myCurrentNode = FilesystemNode("~");
+#endif
       updateListing();
       break;
 

@@ -198,7 +198,11 @@ void FileSnapDialog::saveConfig()
 void FileSnapDialog::setDefaults()
 {
   const string& basedir = instance().baseDir(false);  // get relative basedir
+#ifdef WII
+  const string& romdir = "";      
+#else
   const string& romdir = "~";
+#endif
   const string& statedir = basedir + BSPF_PATH_SEPARATOR + "state";
   const string& cheatfile = basedir + BSPF_PATH_SEPARATOR + "stella.cht";
   const string& palettefile = basedir + BSPF_PATH_SEPARATOR + "stella.pal";

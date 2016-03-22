@@ -34,6 +34,10 @@
 #if defined(UNIX)
   #include "SettingsUNIX.hxx"
   #include "OSystemUNIX.hxx"
+#if defined(WII)
+    #include <fat.h>
+    #include <wiiuse/wpad.h>
+#endif
 #elif defined(WIN32)
   #include "SettingsWin32.hxx"
   #include "OSystemWin32.hxx"
@@ -66,17 +70,17 @@ int Cleanup()
 {
   if(theOSystem)
     delete theOSystem;
-
+ 
   if(SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
-    SDL_Quit();
+    SDL_Quit(); 
 
   return 0;
 }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#if defined(MAC_OSX)
-int stellaMain(int argc, char* argv[])
+#if defined(MAC_OSX) || defined(WII)
+int stellaMain(int argc, char* argv[])   
 #else
 int main(int argc, char* argv[])
 #endif
@@ -85,6 +89,11 @@ int main(int argc, char* argv[])
 #if defined(UNIX)
   theOSystem = new OSystemUNIX();
   SettingsUNIX settings(theOSystem);
+#if defined(WII)
+  fatInitDefault();
+  WPAD_Init();
+  PAD_Init();
+#endif
 #elif defined(WIN32)
   theOSystem = new OSystemWin32();
   SettingsWin32 settings(theOSystem);

@@ -38,6 +38,12 @@ Launcher::Launcher(OSystem* osystem)
   myWidth  = BSPF_min(myWidth, osystem->desktopWidth());
   myHeight = BSPF_min(myHeight, osystem->desktopHeight());
 
+#ifdef WII
+  // Force the launcher size
+  myWidth = 640;
+  myHeight = 440;
+#endif
+
   myOSystem->settings().setSize("launcherres", myWidth, myHeight);
 
   myBaseDialog = new LauncherDialog(myOSystem, this, 0, 0, myWidth, myHeight);

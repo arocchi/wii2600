@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Settings.cxx,v 1.163 2009-01-24 17:32:29 stephena Exp $
+// $Id: Settings.cxx,v 1.163 2009/01/24 17:32:29 stephena Exp $
 //============================================================================
 
 #include <cassert>
@@ -47,11 +47,15 @@ Settings::Settings(OSystem* osystem)
   setInternal("gl_vsync", "false");
   setInternal("gl_texrect", "false");
 
-  // Framebuffer-related options
-  setInternal("tia_filter", "zoom2x");
+  // Framebuffer-related options  
+#ifdef WII
+  setInternal("fullscreen", "true");
+#else
   setInternal("fullscreen", "false");
-  setInternal("fullres", "auto");
+#endif
+  setInternal("tia_filter", "zoom2x");
   setInternal("center", "true");
+  setInternal("fullres", "auto");  
   setInternal("grabmouse", "false");
   setInternal("palette", "standard");
   setInternal("colorloss", "false");
@@ -60,8 +64,13 @@ Settings::Settings(OSystem* osystem)
   // Sound options
   setInternal("sound", "true");
   setInternal("fragsize", "512");
+#ifdef WII
+  setInternal("freq", "32000");
+  setInternal("tiafreq", "32000");
+#else
   setInternal("freq", "31400");
   setInternal("tiafreq", "31400");
+#endif  
   setInternal("volume", "100");
   setInternal("clipvol", "true");
 
@@ -81,7 +90,11 @@ Settings::Settings(OSystem* osystem)
   setInternal("ss1x", "false");
 
   // Config files and paths
+#ifdef WII
+  setInternal("romdir", "");
+#else
   setInternal("romdir", "~");
+#endif
   setInternal("statedir", "");
   setInternal("cheatfile", "");
   setInternal("palettefile", "");
