@@ -17,7 +17,7 @@
     MA 02111-1307, USA
 
 */
-/* $Id: trie.h,v 1.1 2006-06-11 07:13:27 urchlay Exp $
+/* $Id$
 */
 #ifndef TRIE_H
 #define TRIE_H

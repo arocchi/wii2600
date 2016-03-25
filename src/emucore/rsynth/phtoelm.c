@@ -19,9 +19,9 @@
 */
 #include "config.h"
 
-/* $Id: phtoelm.c,v 1.2 2006-06-12 14:12:52 stephena Exp $
+/* $Id$
  */
-char *phtoelm_id = "$Id: phtoelm.c,v 1.2 2006-06-12 14:12:52 stephena Exp $";
+char *phtoelm_id = "$Id$";
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

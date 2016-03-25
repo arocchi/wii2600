@@ -3,7 +3,7 @@
    Macintosh OS X SDL port of Stella
    Mark Grebe <atarimac@cox.net>
 */
-/* $Id: AboutBox.m,v 1.2 2005-06-04 02:04:06 markgrebe Exp $ */
+/* $Id$ */
 
 #import "AboutBox.h";
 

@@ -18,9 +18,9 @@
 
 */
 #include "config.h"
-/* $Id: holmes.c,v 1.2 2006-06-12 14:12:52 stephena Exp $
+/* $Id$
  */
-char *holmes_id = "$Id: holmes.c,v 1.2 2006-06-12 14:12:52 stephena Exp $";
+char *holmes_id = "$Id$";
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>

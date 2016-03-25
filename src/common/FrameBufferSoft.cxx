@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: FrameBufferSoft.cxx,v 1.94 2009/01/19 16:52:32 stephena Exp $
+// $Id$
 //============================================================================
 
 #include <sstream>

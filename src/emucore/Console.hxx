@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Console.hxx,v 1.73 2009-01-24 18:11:47 stephena Exp $
+// $Id$
 //============================================================================
 
 #ifndef CONSOLE_HXX
@@ -53,7 +53,7 @@ struct ConsoleInfo
   This class represents the entire game console.
 
   @author  Bradford W. Mott
-  @version $Id: Console.hxx,v 1.73 2009-01-24 18:11:47 stephena Exp $
+  @version $Id$
 */
 class Console : public Serializable
 {

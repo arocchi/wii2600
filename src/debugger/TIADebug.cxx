@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: TIADebug.cxx,v 1.30 2009-01-19 16:52:32 stephena Exp $
+// $Id$
 //============================================================================
 
 #include "System.hxx"

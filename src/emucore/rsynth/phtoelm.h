@@ -1,4 +1,4 @@
-/* $Id: phtoelm.h,v 1.2 2006-06-11 21:49:09 stephena Exp $
+/* $Id$
 */
 #ifndef __PHTOELM_H
 #define __PHTOELM_H
