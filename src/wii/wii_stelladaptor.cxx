@@ -14,6 +14,7 @@
 
 int wii_stelladaptor_open()
 {
+#if 0
     s32 fd = 0;	
 #if 0
     return USB_OpenDevice( "oh0", 0x4d8, 0xbeef, &fd );
@@ -63,5 +64,6 @@ int wii_stelladaptor_open()
         }
     }
 
+#endif
     return -1;
 }
