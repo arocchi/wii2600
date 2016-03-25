@@ -7,7 +7,7 @@
    TextEdit application.
 
 */
-/* $Id: Preferences.m,v 1.3 2006-02-28 02:17:26 markgrebe Exp $ */
+/* $Id$ */
 
 #import <Cocoa/Cocoa.h>
 #import "Preferences.h"

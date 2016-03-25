@@ -17,7 +17,7 @@
     MA 02111-1307, USA
 
 */
-/* $Id: darray.h,v 1.2 2006-06-11 21:49:07 stephena Exp $
+/* $Id$
 */
 #if !defined(DARRAY_H)
 #define DARRAY_H

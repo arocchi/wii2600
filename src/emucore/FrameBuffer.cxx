@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: FrameBuffer.cxx,v 1.163 2009-01-20 21:01:28 stephena Exp $
+// $Id$
 //============================================================================
 
 #include <algorithm>

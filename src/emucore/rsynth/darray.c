@@ -18,9 +18,9 @@
 
 */
 #include "config.h"
-/* $Id: darray.c,v 1.1 2006-06-11 07:13:23 urchlay Exp $
+/* $Id$
  */
-char *darray_id = "$Id: darray.c,v 1.1 2006-06-11 07:13:23 urchlay Exp $";
+char *darray_id = "$Id$";
 #include "useconfig.h"
 #include "darray.h"
 

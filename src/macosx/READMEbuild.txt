@@ -15,4 +15,4 @@ the project include and copy framework settings  would need to be changed.
 
 Mark Grebe
 
-$Id: READMEbuild.txt,v 1.4 2006-12-22 23:14:39 stephena Exp $
+$Id$

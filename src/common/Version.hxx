@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: Version.hxx,v 1.49 2009-01-26 21:16:05 stephena Exp $
+// $Id$
 //============================================================================
 
 #ifndef VERSION_HXX

@@ -13,7 +13,7 @@
 ;; See the file "license" for information on usage and redistribution of
 ;; this file, and for a DISCLAIMER OF ALL WARRANTIES.
 ;;
-;; $Id: scrom.asm,v 1.3 2005-06-16 01:11:29 stephena Exp $
+;; $Id$
 ;;============================================================================
 ;; 
 ;; This file contains a "dummy" Supercharger BIOS for Stella.  It is based
