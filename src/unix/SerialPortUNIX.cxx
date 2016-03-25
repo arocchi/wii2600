@@ -16,6 +16,8 @@
 // $Id: SerialPortUNIX.cxx,v 1.7 2009-01-26 21:08:07 stephena Exp $
 //============================================================================
 
+#if !defined(WII)
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -79,3 +81,6 @@ bool SerialPortUNIX::writeByte(const uInt8* data)
   }
   return false;
 }
+
+#endif
+
