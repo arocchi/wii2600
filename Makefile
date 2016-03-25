@@ -44,7 +44,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
 #LIBS	:=	-logc -lm 
-LIBS	:=	-lSDL -lfat -lwiiuse -lbte -logc -lm -lpng -lz
+LIBS	:=	-lSDL -lfat -lwiiuse -lbte -logc -lm -lpng -lz -lwiikeyboard
 
 #LIBS	:=	-lSDL_mixer -lSDL_image -lSDL -lfat -lwiiuse -lbte -logc -lm
 
