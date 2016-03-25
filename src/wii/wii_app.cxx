@@ -121,6 +121,8 @@ void wii_write_vt( char *buffer )
  */
 void wii_console_init( void *fb )
 {
+    GXRModeObj *display_mode;
+    display_mode = VIDEO_GetPreferredMode(NULL);
     console_init(
         fb, 20, 20,
         display_mode->fbWidth,
