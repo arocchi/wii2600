@@ -19,9 +19,9 @@
 */
 
 #include "config.h"
-/* $Id: trie.c,v 1.1 2006-06-11 07:13:27 urchlay Exp $
+/* $Id$
  */
-char *trie_id = "$Id: trie.c,v 1.1 2006-06-11 07:13:27 urchlay Exp $";
+char *trie_id = "$Id$";
 #include "useconfig.h"
 #include <stdio.h>
 #include "trie.h"

@@ -13,14 +13,14 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: M6502.m4,v 1.7 2008-04-27 11:53:22 stephena Exp $
+// $Id$
 //============================================================================
 
 /** 
   Code and cases to emulate each of the 6502 instruction 
 
   @author  Bradford W. Mott
-  @version $Id: M6502.m4,v 1.7 2008-04-27 11:53:22 stephena Exp $
+  @version $Id$
 */
 
 #ifndef NOTSAMEPAGE

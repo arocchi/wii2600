@@ -18,9 +18,9 @@
 
 */
 #include <config.h>
-/* $Id: elements.c,v 1.1 2006-06-11 07:13:24 urchlay Exp $
+/* $Id$
  */
-char *elements_id = "$Id: elements.c,v 1.1 2006-06-11 07:13:24 urchlay Exp $";
+char *elements_id = "$Id$";
 #include <stdio.h>
 #include <math.h>
 #include "rsynth.h"

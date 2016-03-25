@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: FrameBufferGL.cxx,v 1.138 2009-01-26 15:05:25 stephena Exp $
+// $Id$
 //============================================================================
 
 #ifdef DISPLAY_OPENGL

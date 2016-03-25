@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: TIA.cxx,v 1.103 2009-01-24 18:17:34 stephena Exp $
+// $Id$
 //============================================================================
 
 //#define DEBUG_HMOVE
