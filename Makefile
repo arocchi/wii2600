@@ -103,7 +103,8 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 # build a list of library paths
 #---------------------------------------------------------------------------------
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					-L$(LIBOGC_LIB) -I$(LIBOGC_LIB)/sdl
+					-L$(LIBOGC_LIB) -I$(LIBOGC_LIB)/sdl \
+					-L$(DEVKITPRO)/portlibs/ppc/lib
 
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
