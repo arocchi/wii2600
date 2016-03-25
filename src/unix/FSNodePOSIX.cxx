@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id: FSNodePOSIX.cxx,v 1.21 2009/01/16 19:37:29 stephena Exp $
+// $Id: FSNodePOSIX.cxx,v 1.21 2009-01-16 19:37:29 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -36,12 +36,6 @@
 
 #include <sstream>
 
-#include <unistd.h>
-
-#ifdef WII
-#include "wii_app.hxx"
-#endif
-
 /*
  * Implementation of the Stella file system API based on POSIX (for Linux and OSX)
  *
@@ -63,27 +57,13 @@ class POSIXFilesystemNode : public AbstractFilesystemNode
      */
     POSIXFilesystemNode(const string& path, bool verify);
 
-#ifndef WII
-    virtual bool exists() const { return access(_path.c_str(), F_OK) == 0; }
-    virtual string getDisplayName() const { return _displayName; }
-    virtual string getName() const   { return _displayName; }
-    virtual string getPath() const   { return _path; }
-    virtual bool isDirectory() const { return _isDirectory; }
-    virtual bool isReadable() const  { return access(_path.c_str(), R_OK) == 0; }
-    virtual bool isWritable() const  { return access(_path.c_str(), W_OK) == 0; }
-#else 
-    virtual bool exists() const 
-    { 
-        struct stat st;
-        return (stat(_path.c_str(), &st) == 0);
-    }
+    virtual bool exists() const { return true; }
     virtual string getDisplayName() const { return _displayName; }
     virtual string getName() const   { return _displayName; }
     virtual string getPath() const   { return _path; }
     virtual bool isDirectory() const { return _isDirectory; }
     virtual bool isReadable() const  { return true; }
     virtual bool isWritable() const  { return true; }
-#endif
 
     virtual bool getChildren(AbstractFSList& list, ListMode mode, bool hidden) const;
     virtual AbstractFilesystemNode* getParent() const;
@@ -93,6 +73,8 @@ class POSIXFilesystemNode : public AbstractFilesystemNode
     string _path;
     bool _isDirectory;
     bool _isValid;
+    bool _isReadable;
+    bool _isWritable;
 
   private:
     /**
@@ -186,75 +168,6 @@ POSIXFilesystemNode::POSIXFilesystemNode(const string& p, bool verify)
 bool POSIXFilesystemNode::getChildren(AbstractFSList& myList, ListMode mode,
                                       bool hidden) const
 {
-#ifdef WII
-  assert(_isDirectory);
-
-#if 0
-fprintf( stderr, "\n\nreading files...\n" );
-#endif
-
-  DIR_ITER *dirp = diropen( _path.c_str() );
-
-  if (dirp == NULL)
-    return false;
-
-#if 0
-int i = 0;
-#endif
-
-  char filepath[WII_MAX_PATH];
-  struct stat statbuf;
-
-  while( dirnext( dirp, filepath, &statbuf ) == 0 ) 
-  {
-#if 0
-if( ( i++ % 10 ) == 0 )
-{
-    fprintf( stderr, "read file %d\n", i++ );
-}
-#endif
-    // Skip 'invisible' files if necessary
-    if (filepath[0] == '.' && !hidden)
-      continue;
-
-    // Skip '.' and '..' to avoid cycles
-    if ((filepath[0] == '.' && filepath[1] == 0) || (filepath[0] == '.' && filepath[1] == '.'))
-      continue;
-
-    string newPath(_path);
-    if (newPath.length() > 0 && newPath[newPath.length()-1] != '/')
-      newPath += '/';
-    newPath += filepath;
-
-    POSIXFilesystemNode entry(newPath, false);
-    entry._isValid = true;
-    entry._isDirectory = S_ISDIR( statbuf.st_mode );
-
-    
-    // Skip files that are invalid for some reason (e.g. because we couldn't
-    // properly stat them).
-    if (!entry._isValid)
-      continue;
-
-    // Honor the chosen mode
-    if ((mode == FilesystemNode::kListFilesOnly && entry._isDirectory) ||
-        (mode == FilesystemNode::kListDirectoriesOnly && !entry._isDirectory))
-      continue;
-
-    if (entry._isDirectory)
-      entry._path += "/";
-
-    myList.push_back(new POSIXFilesystemNode(entry));
-  }
-
-  dirclose(dirp);
-
-#if 0
-fprintf( stderr, "finished reading files...\n" );
-#endif
-
-  return true;
-#else
   assert(_isDirectory);
 
   DIR *dirp = opendir(_path.c_str());
@@ -330,7 +243,6 @@ fprintf( stderr, "finished reading files...\n" );
   closedir(dirp);
 
   return true;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -357,19 +269,10 @@ AbstractFilesystemNode* AbstractFilesystemNode::makeCurrentDirectoryFileNode()
   return new POSIXFilesystemNode("./", true);
 }
 
-#ifdef WII
-static char rootdir[WII_MAX_PATH];
-#endif
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 AbstractFilesystemNode* AbstractFilesystemNode::makeHomeDirectoryFileNode()
 {
-#ifdef WII  
-  wii_get_app_relative( "", rootdir );  
-  return new POSIXFilesystemNode(rootdir, true);
-#else
   return new POSIXFilesystemNode("~/", true);
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -381,13 +284,7 @@ AbstractFilesystemNode* AbstractFilesystemNode::makeFileNodePath(const string& p
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool AbstractFilesystemNode::makeDir(const string& path)
 {
-#ifdef WII      
-  // TODO: Fix this...
-  return false;
-  //return mkdir(path.c_str(), 0777) == 0;
-#else
   return mkdir(path.c_str(), 0777) == 0;
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
