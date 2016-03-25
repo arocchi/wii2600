@@ -111,9 +111,9 @@ extern BOOL wii_display_rom_info;
 extern BOOL wii_first_run;
 
 // The frame buffer (from SDL)
-extern u32 *frame_buffer;
+//extern u32 *frame_buffer;
 // The display mode (from SDL)
-extern GXRModeObj *display_mode;	
+//extern GXRModeObj *display_mode;	
 
 /*
  * Resets the menu indexes when an underlying menu in change (push/pop)
