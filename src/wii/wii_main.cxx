@@ -97,6 +97,9 @@ static s16 menu_cur_idx = -1;
 // The first item to display in the menu (paging, etc.)
 static s16 menu_start_idx = 0;
 
+static u32* frame_buffer;
+static GXRModeObj * _display_mode;
+
 // The main args
 static int main_argc;
 static char **main_argv;
@@ -473,8 +476,8 @@ static void wii_menu_select_node( TREENODE *node )
             // Bind the debug console based on the "debug" setting
             wii_console_init( wii_debug ? fb : wii_xfb[1] );
 
-            VIDEO_ClearFrameBuffer( display_mode, wii_xfb[0], COLOR_BLACK );
-            VIDEO_ClearFrameBuffer( display_mode, wii_xfb[1], COLOR_BLACK );			
+            VIDEO_ClearFrameBuffer( _display_mode, wii_xfb[0], COLOR_BLACK );
+            VIDEO_ClearFrameBuffer( _display_mode, wii_xfb[1], COLOR_BLACK );
             VIDEO_SetNextFramebuffer( fb );
             VIDEO_Flush();
             VIDEO_WaitVSync();		
@@ -484,7 +487,19 @@ fprintf( stderr, "\n\n" );
 fprintf( stderr, "found stelladaptor: %d", wii_stelladaptor_open() );
 wii_pause();
 #endif
-            WII_UpdateGamma( wii_gamma );
+            //WII_UpdateGamma( wii_gamma );
+
+            // I'll free the framebuffers; I guess it's OK to write other stuff
+            // to them while one is being used...
+            free(wii_xfb[0]);
+            free(wii_xfb[1]);
+
+            // Startup the SDL
+            if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) 
+            {
+                fprintf( stderr, "FAILED : Unable to init SDL: %s\n", SDL_GetError() );
+                exit(EXIT_FAILURE);
+            }
 
             stellaMain( main_argc, main_argv );
 
@@ -691,7 +706,7 @@ static void wii_menu_render( TREENODE *menu )
     cur_xfb ^= 1;
     u32 *fb = wii_xfb[cur_xfb];
 
-    VIDEO_ClearFrameBuffer( display_mode, fb, COLOR_BLACK );
+    VIDEO_ClearFrameBuffer( _display_mode, fb, COLOR_BLACK );
 
     // Bind the console to the appropriate frame buffer
     wii_console_init( fb );
@@ -703,7 +718,7 @@ static void wii_menu_render( TREENODE *menu )
             &about_props, 
             about_buff, 
             fb, 
-            ( display_mode->fbWidth - about_props.imgWidth ) >> 1,  
+            ( _display_mode->fbWidth - about_props.imgWidth ) >> 1,  
             ABOUT_Y );
     }
 
@@ -1208,6 +1223,8 @@ int main( int argc, char *argv[] )
     // Set the hardware callbacks
     wii_register_hw_buttons();
 
+    _display_mode = VIDEO_GetPreferredMode(NULL);
+
     // Clear the stack
     memset( &wii_menu_stack, 0, sizeof(wii_menu_stack) );
 
@@ -1215,17 +1232,10 @@ int main( int argc, char *argv[] )
     wii_load_resources();
     wii_read_config();
 
-    // Startup the SDL
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) 
-    {
-        fprintf( stderr, "FAILED : Unable to init SDL: %s\n", SDL_GetError() );
-        exit(EXIT_FAILURE);
-    }
-
     // Add a new frame buffer to the existing SDL frame buffer so we can double 
     // buffer out menu display
-    wii_xfb[0] = frame_buffer;
-    wii_xfb[1] = (u32*)MEM_K0_TO_K1(SYS_AllocateFramebuffer(display_mode));	
+    wii_xfb[0] = (u32*)MEM_K0_TO_K1(SYS_AllocateFramebuffer(_display_mode));	
+    wii_xfb[1] = (u32*)MEM_K0_TO_K1(SYS_AllocateFramebuffer(_display_mode));	
 
     // Test for PAL/NTSC
     wii_test_pal();
