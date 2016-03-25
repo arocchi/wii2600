@@ -491,8 +491,8 @@ wii_pause();
 
             // I'll free the framebuffers; I guess it's OK to write other stuff
             // to them while one is being used...
-            free(wii_xfb[0]);
-            free(wii_xfb[1]);
+            free(MEM_K1_TO_K0(wii_xfb[0]));
+            free(MEM_K1_TO_K0(wii_xfb[1]));
 
             // Startup the SDL
             if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) 
