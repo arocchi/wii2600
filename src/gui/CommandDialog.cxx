@@ -51,36 +51,36 @@ CommandDialog::CommandDialog(OSystem* osystem, DialogContainer* parent)
   // Row 1
   int xoffset = 10, yoffset = 10;
   b[0] = addCDButton("Select", kSelectCmd);
-  b[5] = addCDButton("Left Diff A", kLeftDiffACmd);
-  b[11] = addCDButton("Save State", kSaveStateCmd);
+  b[4] = addCDButton("Left Diff A", kLeftDiffACmd);
+  b[8] = addCDButton("Save State", kSaveStateCmd);
 
   // Row 2
   xoffset = 10;  yoffset += buttonHeight + 3;
   b[1] = addCDButton("Reset", kResetCmd);
-  b[6] = addCDButton("Left Diff B", kLeftDiffBCmd);
-  b[12] = addCDButton("State Slot", kStateSlotCmd);
+  b[5] = addCDButton("Left Diff B", kLeftDiffBCmd);
+  b[9] = addCDButton("State Slot", kStateSlotCmd);
 
   // Row 3
   xoffset = 10;  yoffset += buttonHeight + 3;
   b[2]  = addCDButton("Color TV", kColorCmd);
-  b[7]  = addCDButton("Right Diff A", kRightDiffACmd);
-  b[13] = addCDButton("Load State", kLoadStateCmd);
+  b[6]  = addCDButton("Right Diff A", kRightDiffACmd);
+  b[10] = addCDButton("Load State", kLoadStateCmd);
 
   // Row 4
   xoffset = 10;  yoffset += buttonHeight + 3;
   b[3]  = addCDButton("B/W TV", kBWCmd);
-  b[8]  = addCDButton("Right Diff B", kRightDiffBCmd);
-  b[14] = addCDButton("Snapshot", kSnapshotCmd);
+  b[7]  = addCDButton("Right Diff B", kRightDiffBCmd);
+  b[11] = addCDButton("Snapshot", kSnapshotCmd);
 
   // Row 5
   xoffset = 10;  yoffset += buttonHeight + 3;
-  b[4] = addCDButton("NTSC/PAL", kFormatCmd);
-  b[9] = addCDButton("Palette", kPaletteCmd);
-  b[15] = addCDButton("Reload ROM", kReloadRomCmd);
+  b[12] = addCDButton("NTSC/PAL", kFormatCmd);
+  b[13] = addCDButton("Palette", kPaletteCmd);
+  b[14] = addCDButton("Reload ROM", kReloadRomCmd);
 
   // Row 6
   xoffset = 10 + buttonWidth + 6;  yoffset += buttonHeight + 3;
-  b[10] = addCDButton("Exit Game", kExitCmd);
+  b[15] = addCDButton("Exit Game", kExitCmd);
 
   for(uInt8 i = 0; i < 16; ++i)
     wid.push_back(b[i]);

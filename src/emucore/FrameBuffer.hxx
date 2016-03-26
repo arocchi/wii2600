@@ -405,11 +405,6 @@ class FrameBuffer
     void resetSurfaces();
 
   protected:
-#ifdef WII
-    // Our logical palette (for 8bpp mode)
-    SDL_Color colors[256];
-#endif
-
     // The parent system for the framebuffer
     OSystem* myOSystem;
 

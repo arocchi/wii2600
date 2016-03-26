@@ -88,7 +88,7 @@ typedef unsigned long long uInt64;
   // No strings for WII... odd.
   #include <string.h> 
 #else
-  #include <strings.h> 
+  #include <strings.h>
 #endif
   #define BSPF_strcasecmp strcasecmp
   #define BSPF_strncasecmp strncasecmp

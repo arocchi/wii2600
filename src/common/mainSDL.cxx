@@ -70,9 +70,9 @@ int Cleanup()
 {
   if(theOSystem)
     delete theOSystem;
- 
+
   if(SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
-    SDL_Quit(); 
+    SDL_Quit();
 
   return 0;
 }
@@ -80,7 +80,7 @@ int Cleanup()
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #if defined(MAC_OSX) || defined(WII)
-int stellaMain(int argc, char* argv[])   
+int stellaMain(int argc, char* argv[])
 #else
 int main(int argc, char* argv[])
 #endif
