@@ -675,7 +675,7 @@ void Console::setControllers()
 #ifdef WII
     if( !( left == "PADDLES" ) )
     {
-        paddles->setRightPaddleOffset( 1 );
+        static_cast<Paddles*>(myControllers[rightPort])->setRightPaddleOffset( 1 );
     }
 #endif
   }
