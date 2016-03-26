@@ -87,7 +87,7 @@ RomAuditDialog::RomAuditDialog(OSystem* osystem, DialogContainer* parent,
   // Add OK and Cancel buttons
   wid.clear();
   addOKCancelBGroup(wid, font, "Audit", "Done");
-  addToFocusList(wid);
+  addToFocusList(wid); // Added for Wii?
   addBGroupToFocusList(wid);
 
   // Create file browser dialog

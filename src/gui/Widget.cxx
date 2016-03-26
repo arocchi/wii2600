@@ -85,7 +85,7 @@ void Widget::draw()
   _y = getAbsY();
 
   // Clear background (unless alpha blending is enabled)
-  if(_flags & WIDGET_CLEARBG ) 
+  if(_flags & WIDGET_CLEARBG)
   {
     int x = _x, y = _y, w = _w, h = _h;
     if(hasBorder)
@@ -457,12 +457,14 @@ CheckboxWidget::CheckboxWidget(GuiObject *boss, const GUI::Font& font,
     _boxY(0),
     _textY(0)
 {
+#ifdef WII
   _flags = WIDGET_ENABLED | WIDGET_CLEARBG;
   _type = kCheckboxWidget;
-#ifdef WII
   _bgcolor = kDlgColor;
   _bgcolorhi = kWidColor;
 #else
+  _flags = WIDGET_ENABLED;
+  _type = kCheckboxWidget;
   _bgcolor = _bgcolorhi = kWidColor;
 #endif
 

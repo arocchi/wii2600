@@ -143,7 +143,7 @@ Paddles::~Paddles()
 {
 }
 
-//#ifdef WII
+#ifdef WII
 
 void Paddles::setRightPaddleOffset( const int offset )
 {
@@ -313,12 +313,12 @@ int Paddles::getWiiPaddlePosition( const int prev, const int mote )
         }
     }
 }
-//#endif
+#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Paddles::update()
 {
-    myDigitalPinState[Three] = myDigitalPinState[Four] = true;
+  myDigitalPinState[Three] = myDigitalPinState[Four] = true;
 
 #ifdef WII
     int base = ( ( myJack == Left  ) ? 0 : wiiRightPaddleOffset );

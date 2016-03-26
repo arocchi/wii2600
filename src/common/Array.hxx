@@ -189,6 +189,7 @@ class Array
       }
     }
 };
+
 }  // Namespace GUI
 
 typedef Common::Array<int>   IntArray;

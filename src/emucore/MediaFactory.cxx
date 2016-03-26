@@ -41,12 +41,12 @@
 #include "Sound.hxx"
 #include "SoundNull.hxx"
 #ifdef SOUND_SUPPORT
-  #ifdef _WIN32_WCE
-    #include "SoundWinCE.hxx"    
-  #elif WII
-    #include "SoundWii.hxx"    
-  #else
+  #ifdef WII
+    #include "SoundWii.hxx"
+  #elif !defined(_WIN32_WCE)
     #include "SoundSDL.hxx"
+  #else
+    #include "SoundWinCE.hxx"
   #endif
 #endif
 

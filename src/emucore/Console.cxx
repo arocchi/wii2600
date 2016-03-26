@@ -166,7 +166,7 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
 
 #ifndef WII
     if(myProperties.get(Display_Height) == "210")
-      myProperties.set(Display_Height, "250");    
+      myProperties.set(Display_Height, "250");
 #else
     // Workaround for PAL ROMs that cause 2x display to be exceeded
     // (Should support 1x, but appears to be a Stella bug). 
@@ -671,12 +671,11 @@ void Console::setControllers()
   }
   else if(right == "PADDLES")
   {
-    Paddles *paddles = new Paddles(Controller::Right, *myEvent, *mySystem, swapPaddles);
-    myControllers[rightPort] = paddles;
+    myControllers[rightPort] = new Paddles(Controller::Right, *myEvent, *mySystem, swapPaddles);
 #ifdef WII
     if( !( left == "PADDLES" ) )
     {
-        paddles->setRightPaddleOffset( 1 );
+        static_cast<Paddles*>(myControllers[rightPort])->setRightPaddleOffset( 1 );
     }
 #endif
   }
