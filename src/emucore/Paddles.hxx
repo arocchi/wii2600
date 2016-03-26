@@ -152,4 +152,3 @@ class Paddles : public Controller
 };
 
 #endif
-

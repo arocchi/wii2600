@@ -97,8 +97,7 @@ bool FrameBuffer::initialize(const string& title, uInt32 width, uInt32 height)
   setAvailableVidModes(width, height);
 
   // Initialize video subsystem (make sure we get a valid mode)
-  VideoMode mode = getSavedVidMode();  
-
+  VideoMode mode = getSavedVidMode();
   if(width <= mode.screen_w && height <= mode.screen_h)
   {
     // Set window title and icon
@@ -196,22 +195,22 @@ void FrameBuffer::update()
       {
         const ConsoleInfo& info = myOSystem->console().about();
         char msg[30];
+#ifndef WII
         sprintf(msg, "%u LINES  %2.2f FPS",
                 myOSystem->console().tia().scanlines(),
-#ifndef WII
-                myOSystem->console().getFramerate(),
+                myOSystem->console().getFramerate());
 #else
-                // Show current FPS versus desired frame rate
-                current_fps  
+        sprintf(msg, "%u LINES  %2.2f FPS",
+                myOSystem->console().tia().scanlines(),
+                current_fps);
 #endif
-        );
         myStatsMsg.surface->fillRect(0, 0, myStatsMsg.w, myStatsMsg.h, kBGColor);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          info.BankSwitch, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+          msg, 1, 1, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
           info.DisplayFormat, 1, 15, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->drawString(&myOSystem->consoleFont(),
-          msg, 1, 30, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
+          info.BankSwitch, 1, 30, myStatsMsg.w, myStatsMsg.color, kTextAlignLeft);
         myStatsMsg.surface->addDirtyRect(0, 0, 0, 0);  // force a full draw
         myStatsMsg.surface->setPos(myImageRect.x() + 3, myImageRect.y() + 3);
         myStatsMsg.surface->update();
@@ -286,7 +285,7 @@ void FrameBuffer::update()
   if( wii_vsync != VSYNC_DOUBLE_BUFF )
   {
 #endif
-    myRedrawEntireFrame = false;
+  myRedrawEntireFrame = false;
 #ifdef WII
   }
 #endif
@@ -551,7 +550,8 @@ void FrameBuffer::setTIAPalette(const uInt32* palette)
     Uint8 r = (palette[i] >> 16) & 0xff;
     Uint8 g = (palette[i] >> 8) & 0xff;
     Uint8 b = palette[i] & 0xff;
-    myDefPalette[i] = mapRGB(r, g, b);    
+
+    myDefPalette[i] = mapRGB(r, g, b);
 
 #ifdef WII
     // Map to palette (necessary for 8bpp mode)
@@ -727,7 +727,7 @@ void FrameBuffer::showCursor(bool show)
 #else
   SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
 #endif
-} 
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FrameBuffer::grabMouse(bool grab)
@@ -895,13 +895,6 @@ void FrameBuffer::setAvailableVidModes(uInt32 baseWidth, uInt32 baseHeight)
     // for the given dimensions
     uInt32 max_zoom = maxWindowSizeForScreen(baseWidth, baseHeight,
                       myOSystem->desktopWidth(), myOSystem->desktopHeight());
-
-#if 0
-fprintf( stderr, "\n\n\nmax_zoom: %d", max_zoom );
-fprintf( stderr, "\n\n\nbase: %d, %d", baseWidth, baseHeight );
-fprintf( stderr, "\n\n\ndesk: %d, %d", myOSystem->desktopWidth(), myOSystem->desktopHeight() );
-wii_pause();
-#endif
 
     // Figure our the smallest zoom level we can use
 #ifndef WII

@@ -47,15 +47,15 @@ Settings::Settings(OSystem* osystem)
   setInternal("gl_vsync", "false");
   setInternal("gl_texrect", "false");
 
-  // Framebuffer-related options  
+  // Framebuffer-related options
+  setInternal("tia_filter", "zoom2x");
 #ifdef WII
   setInternal("fullscreen", "true");
 #else
   setInternal("fullscreen", "false");
 #endif
-  setInternal("tia_filter", "zoom2x");
+  setInternal("fullres", "auto");
   setInternal("center", "true");
-  setInternal("fullres", "auto");  
   setInternal("grabmouse", "false");
   setInternal("palette", "standard");
   setInternal("colorloss", "false");

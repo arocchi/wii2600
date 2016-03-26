@@ -835,15 +835,6 @@ void OSystem::setDefaultJoyAxisMap()
 void OSystem::setDefaultJoyHatMap()
 {
 // FIXME - add emul and UI events
-#if 0
-  EventMode mode;
-  mode = kEmulationMode;  
-
-  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroLeft, mode, 0, 0, EventHandler::kJHatLeft);
-  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroRight, mode, 0, 0, EventHandler::kJHatRight);
-  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroUp, mode, 0, 0, EventHandler::kJHatUp);
-  myEventHandler->setDefaultJoyHatMapping(Event::JoystickZeroDown, mode, 0, 0, EventHandler::kJHatDown);
-#endif
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -929,9 +920,7 @@ void OSystem::mainLoop()
 #endif
 
       if(myTimingInfo.current < myTimingInfo.virt)
-      {
-        SDL_Delay((myTimingInfo.virt - myTimingInfo.current)/1000);        
-      }
+        SDL_Delay((myTimingInfo.virt - myTimingInfo.current) / 1000);
 
 #ifndef WII
       myTimingInfo.totalTime += (getTicks() - myTimingInfo.start);
@@ -1006,7 +995,7 @@ bool OSystem::queryVideoHardware()
     buf.str("");
     buf << r.width << "x" << r.height;
     r.name = buf.str();
-    myResolutions.push_back( r );
+    myResolutions.push_back(r);
   }
   else
   {
@@ -1059,7 +1048,7 @@ bool OSystem::queryVideoHardware()
     kDbgChangedTextColor  Text color for changed cells
     kDbgColorHi           Highlighted color in debugger data cells
 */
-uInt32 OSystem::ourGUIColors[kNumUIPalettes][kNumColors-256] = { 
+uInt32 OSystem::ourGUIColors[kNumUIPalettes][kNumColors-256] = {
   // Standard
   { 0x686868, 0x000000, 0x404040, 0x000000, 0x62a108, 0x9f0000,
     0xc9af7c, 0xf0f0cf, 0xc80000,
