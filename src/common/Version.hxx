@@ -19,7 +19,11 @@
 #ifndef VERSION_HXX
 #define VERSION_HXX
 
-#define STELLA_BASE_VERSION "2.7.7"
+#ifdef WII
+  #define STELLA_BASE_VERSION "2.7.7-wii-0.1"
+#else
+  #define STELLA_BASE_VERSION "2.7.7"
+#endif
 
 #ifdef NIGHTLY_BUILD
   #define STELLA_VERSION STELLA_BASE_VERSION "pre-" NIGHTLY_BUILD

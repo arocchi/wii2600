@@ -34,6 +34,8 @@ distribution.
 
 //#include "../util.h"
 
+#include "Version.hxx"
+
 #include "wii_main.hxx"
 #include "wii_config.hxx"
 #include "wii_file_io.hxx"
@@ -46,7 +48,7 @@ distribution.
 #include <sys/dir.h>
 
 #define ABOUT_Y 20
-#define MENU_HEAD_X 3
+#define MENU_HEAD_X 5
 #define MENU_HEAD_Y 9
 #define MENU_FOOT_Y 27
 #define MENU_START_Y 12
@@ -732,7 +734,12 @@ static void wii_menu_render( TREENODE *menu )
         wii_menu_get_header( menu, buffer );
 
         snprintf( buffer2, sizeof(buffer2), "\x1b[%d;%dH %s", 
-            MENU_HEAD_Y, MENU_HEAD_X, buffer );		
+            MENU_HEAD_Y, MENU_HEAD_X, "Wii2600 " STELLA_VERSION );		
+
+        wii_write_vt( buffer2 );
+
+        snprintf( buffer2, sizeof(buffer2), "\x1b[%d;%dH %s", 
+            MENU_HEAD_Y + 1, MENU_HEAD_X, buffer );		
 
         wii_write_vt( buffer2 );
 
