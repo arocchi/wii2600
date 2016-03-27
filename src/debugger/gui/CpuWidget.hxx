@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: CpuWidget.hxx,v 1.6 2009-04-13 15:17:07 stephena Exp $
 //
 //   Based on code from ScummVM - Scumm Interpreter
 //   Copyright (C) 2002-2004 The ScummVM project
@@ -52,6 +52,8 @@ class CpuWidget : public Widget, public CommandSender
     DataGridWidget*  myCpuGrid;
     ToggleBitWidget* myPSRegister;
     EditTextWidget*  myPCLabel;
+    EditTextWidget*  myBinValue;
+    EditTextWidget*  myDecValue;
 };
 
 #endif

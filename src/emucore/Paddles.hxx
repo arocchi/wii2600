@@ -13,7 +13,7 @@
 // See the file "license" for information on usage and redistribution of
 // this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// $Id$
+// $Id: Paddles.hxx,v 1.15 2009-01-01 18:13:36 stephena Exp $
 //============================================================================
 
 #ifndef PADDLES_HXX
@@ -27,7 +27,7 @@
   The standard Atari 2600 pair of paddle controllers.
 
   @author  Bradford W. Mott
-  @version $Id$
+  @version $Id: Paddles.hxx,v 1.15 2009-01-01 18:13:36 stephena Exp $
 */
 class Paddles : public Controller
 {

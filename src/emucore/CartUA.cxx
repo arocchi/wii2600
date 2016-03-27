@@ -72,7 +72,7 @@ void CartridgeUA::install(System& system)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 uInt8 CartridgeUA::peek(uInt16 address)
 {
-  address = address & 0x1FFF;
+  address &= 0x1FFF;
 
   // Switch banks if necessary
   switch(address)
@@ -104,7 +104,7 @@ uInt8 CartridgeUA::peek(uInt16 address)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void CartridgeUA::poke(uInt16 address, uInt8 value)
 {
-  address = address & 0x1FFF;
+  address &= 0x1FFF;
 
   // Switch banks if necessary
   switch(address)

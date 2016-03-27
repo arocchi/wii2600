@@ -462,6 +462,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\emucore\CartEF.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\CartEFSC.cxx"
+					>
+				</File>
+				<File
 					RelativePath="..\emucore\CartF4.cxx"
 					>
 				</File>
@@ -555,6 +563,10 @@
 				</File>
 				<File
 					RelativePath="..\emucore\Keyboard.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\KidVid.cxx"
 					>
 				</File>
 				<File
@@ -1068,6 +1080,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\emucore\CartEF.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\CartEFSC.hxx"
+					>
+				</File>
+				<File
 					RelativePath="..\emucore\CartF4.hxx"
 					>
 				</File>
@@ -1165,6 +1185,10 @@
 				</File>
 				<File
 					RelativePath="..\emucore\Keyboard.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\emucore\KidVid.hxx"
 					>
 				</File>
 				<File

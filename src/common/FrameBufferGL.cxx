@@ -74,7 +74,7 @@ FrameBufferGL::FrameBufferGL(OSystem* osystem)
   // We need a pixel format for palette value calculations
   // It's done this way (vs directly accessing a FBSurfaceGL object)
   // since the structure may be needed before any FBSurface's have
-  // be created
+  // been created
   SDL_Surface* s = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 16,
                      0x00007c00, 0x000003e0, 0x0000001f, 0x00000000);
   myPixelFormat = *(s->format);
@@ -252,7 +252,8 @@ bool FrameBufferGL::setVidMode(VideoMode& mode)
   SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE,  myRGB[2] );
   SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, myRGB[3] );
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-  SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+//  if(myOSystem->settings().getBool("gl_accel"))
+//    SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
 
   // There's no guarantee this is supported on all hardware
   // We leave it to the user to test and decide
@@ -507,21 +508,7 @@ FBSurfaceGL::FBSurfaceGL(FrameBufferGL& buffer,
   myTexture = SDL_CreateRGBSurface(SDL_SWSURFACE,
                   myTexWidth, myTexHeight, 16,
                   0x00007c00, 0x000003e0, 0x0000001f, 0x00000000);
-
-  switch(myTexture->format->BytesPerPixel)
-  {
-    case 2:  // 16-bit
-      myPitch = myTexture->pitch/2;
-      break;
-    case 3:  // 24-bit
-      myPitch = myTexture->pitch;
-      break;
-    case 4:  // 32-bit
-      myPitch = myTexture->pitch/4;
-      break;
-    default:
-      break;
-  }
+  myPitch = myTexture->pitch >> 1;
 
   // Associate the SDL surface with a GL texture object
   reload();

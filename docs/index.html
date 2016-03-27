@@ -10,7 +10,7 @@
 	<br><br>
 	<center><h2><b>A multi-platform Atari 2600 VCS emulator</b></h2></center>
 
-	<center><h4><b>Release 2.7.2</b></h4></center>
+	<center><h4><b>Release 2.7.7</b></h4></center>
 	<br><br>
 
 	<center><h2><b>User's Guide</b></h2></center>
@@ -40,7 +40,7 @@
 
 	<br><br><br>
 
-	<center><b>February 1999 - January 2009</b></center>
+	<center><b>February 1999 - May 2009</b></center>
 	<center><b>The Stella Team</b></center>
 	<center><b><a href="http://stella.sourceforge.net">Stella Homepage</a></b></center>
 
@@ -246,7 +246,7 @@
 			<a href="http://www.richard.hutchinson.dsl.pipex.com/new_page_5.htm">
 			AtariVox</a> device connected to your PC using a USB adaptor</li>
 		<li>Supports EEPROM emulation for AtariVox and SaveKey controllers</li>
-		<li>Supports almost all known bankswitching schemes (let us know if there's one we missed)</li>
+		<li>Supports all known bankswitching schemes (let us know if there's one we missed)</li>
 		<li>Supports cartridge autodetection for almost all bankswitching schemes</li>
 		<li>Supports Supercharger single-load and multi-load games</li>
 		<li>Supports property file for setting the properties associated with games</li>
@@ -631,7 +631,14 @@
 			<td>OpenGL mode only. Enable GL_TEXTURE_RECTANGLE extension.  This causes
 				problems for some people using ATI video cards.</td>
 		</tr>
-
+<!--
+		<tr>
+			<td><pre>-gl_accel &lt;1|0&gt;</pre></td>
+			<td>OpenGL mode only. Use SDL_GL_ACCELERATED_VISUAL hint when creating
+				the SDL window.  This causes problems for some people using ATI
+				video cards, in which case it should be set to false.</td>
+		</tr>
+-->
 		<tr>
 			<td><pre>-tia_filter &lt;filter&gt;</pre></td>
 			<td>Use the specified filter while in TIA/emulation mode.  Currently,
@@ -2214,7 +2221,13 @@
 		<tr>
 			<td><b>Windows</b></td>
 			<td><i>%MY_DOCUMENTS%\Stella\atarivox_eeprom.dat<br>
-				%MY_DOCUMENTS%\Stella\savekey_eeprom.dat</i></td>
+				%MY_DOCUMENTS%\Stella\savekey_eeprom.dat</i>&nbsp;&nbsp;&nbsp;
+				<b>OR</b><br>
+				<i>_BASEDIR_\atarivox_eeprom.dat<br>
+					_BASEDIR_\savekey_eeprom.dat<br></i>
+					(if a file named 'basedir.txt' exists in the application
+					directory containing the full pathname for _BASEDIR_)
+			</td>
 		</tr>
 	</table>
 
@@ -2249,15 +2262,15 @@
 		frames per second, bankswitch and display formats, etc.  The following shows
 		an example of this information:
 		<p><img src="graphics/developer_stats.png"></p>
-		<p>The three lines of output describe the following:
+		<p>The two lines of output describe the following:
 		<ol>
-			<li>Number of scanlines in current frame, and associated framerate.  Note
-				that the framerate shown is the <i>internal</i>, virtual  framerate
-				(it's calculated from the number of scanlines).</li>
-			<li>Display format.  If the characters 'AUTO =&gt;' are present, it means
+			<li>Number of scanlines in current frame, associated framerate, and
+				resulting display format.  Note that the framerate shown is the
+				<i>internal</i>, virtual framerate (it's calculated from the
+				number of scanlines).  If the '*' character is present, it means
 				the display format was auto-detected as shown.  For the given example,
 				the format was auto-detected as 'NTSC'.</li>
-			<li>Cartridge information.  If the characters 'AUTO =&gt;' are present,
+			<li>Cartridge information.  If the '*' character is present,
 				it means the bankswitch format was auto-detected as shown.  The item
 				in round brackets indicates ROM size.  For the given example,
 				the bankswitch type was auto-detected as 4K, and the file size was
@@ -2328,7 +2341,12 @@
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%MY_DOCUMENTS%\Stella\stella.ini</i></td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.ini</i>&nbsp;&nbsp;&nbsp;
+				<b>OR</b><br>
+				<i>_BASEDIR_\stella.ini</i>&nbsp;&nbsp;&nbsp;
+					(if a file named 'basedir.txt' exists in the application
+					directory containing the full pathname for _BASEDIR_)
+			</td>
 		</tr>
 	</table>
 
@@ -2425,7 +2443,12 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%MY_DOCUMENTS%\Stella\stella.cht</i></td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.cht</i>&nbsp;&nbsp;&nbsp;
+				<b>OR</b><br>
+				<i>_BASEDIR_\stella.cht</i>&nbsp;&nbsp;&nbsp;
+					(if a file named 'basedir.txt' exists in the application
+					directory containing the full pathname for _BASEDIR_)
+			</td>
 		</tr>
 	</table>
 	<p>Stella will require a restart for changes to this file to take effect.</p>
@@ -2536,7 +2559,7 @@ Ms Pac-Man (Stella extended codes):
 			supported in the debugger:
 			<table cellpadding="2" border="1">
 				<tr><th>&nbsp;Type&nbsp;</th><th>Description</th></tr>
-				<tr><td>0840 (*)</td><td>8K ECONObanking </td></tr>
+				<tr><td>0840 </td><td>8K ECONObanking </td></tr>
 				<tr><td>2K </td><td>2K Atari </td></tr>
 				<tr><td>3E </td><td>32K Tigervision </td></tr>
 				<tr><td>3F </td><td>512K Tigervision </td></tr>
@@ -2547,6 +2570,8 @@ Ms Pac-Man (Stella extended codes):
 				<tr><td>DPC </td><td>Pitfall II </td></tr>
 				<tr><td>E0 </td><td>8K Parker Bros </td></tr>
 				<tr><td>E7 </td><td>16K M-network </td></tr>
+				<tr><td>EF </td><td>64K Homestar Runner </td></tr>
+				<tr><td>EFSC </td><td>64K Homestar Runner + ram</td></tr>
 				<tr><td>F4 </td><td>32K Atari </td></tr>
 				<tr><td>F4SC </td><td>32K Atari + ram </td></tr>
 				<tr><td>F6 </td><td>16K Atari </td></tr>
@@ -2557,7 +2582,7 @@ Ms Pac-Man (Stella extended codes):
 				<tr><td>FE </td><td>8K Decathlon </td></tr>
 				<tr><td>MB </td><td>Dynacom Megaboy </td></tr>
 				<tr><td>MC </td><td>C. Wilkson Megacart </td></tr>
-				<tr><td>SB (*)</td><td>128-256k SUPERbanking </td></tr>
+				<tr><td>SB </td><td>128-256k SUPERbanking </td></tr>
 				<tr><td>UA </td><td>8K UA Ltd. </td></tr>
 				<tr><td>X07 (*)</td><td>64K AtariAge </td></tr>
 			</table></td>
@@ -2670,7 +2695,13 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%MY_DOCUMENTS%\Stella\stella.pro</i></td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.pro</i>&nbsp;&nbsp;&nbsp;
+				<b>OR</b><br>
+				<i>_BASEDIR_\stella.pro</i>&nbsp;&nbsp;&nbsp;
+					(if a file named 'basedir.txt' exists in the application
+					directory containing the full pathname for _BASEDIR_)
+			</td>
+
 		</tr>
 	</table>
 	<p>Stella will require a restart for changes to this file to take effect.</p>
@@ -2733,7 +2764,12 @@ Ms Pac-Man (Stella extended codes):
 		</tr>
 		<tr>
 			<td><b>Windows</b></td>
-			<td><i>%MY_DOCUMENTS%\Stella\stella.pal</i></td>
+			<td><i>%MY_DOCUMENTS%\Stella\stella.pal</i>&nbsp;&nbsp;&nbsp;
+				<b>OR</b><br>
+				<i>_BASEDIR_\stella.pal</i>&nbsp;&nbsp;&nbsp;
+					(if a file named 'basedir.txt' exists in the application
+					directory containing the full pathname for _BASEDIR_)
+			</td>
 		</tr>
 	</table>
 	<p>Note that to actually use the external palette, the palette file must

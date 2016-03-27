@@ -31,6 +31,7 @@
 #include "EventHandler.hxx"
 #include "Joystick.hxx"
 #include "Keyboard.hxx"
+#include "KidVid.hxx"
 #include "M6502Hi.hxx"
 #include "M6502Low.hxx"
 #include "M6532.hxx"
@@ -119,10 +120,8 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
   mySystem->attach(myTIA);
   mySystem->attach(myCart);
 
-  // Query some info about this console
-  ostringstream about, vidinfo;
-
   // Auto-detect NTSC/PAL mode if it's requested
+  string autodetected = "";
   myDisplayFormat = myProperties.get(Display_Format);
   if(myDisplayFormat == "AUTO-DETECT" ||
      myOSystem->settings().getBool("rominfo"))
@@ -142,9 +141,9 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
     }
     myDisplayFormat = (palCount >= 15) ? "PAL" : "NTSC";
     if(myProperties.get(Display_Format) == "AUTO-DETECT")
-      myConsoleInfo.DisplayFormat = "AUTO => ";
+      autodetected = "*";
   }
-  myConsoleInfo.DisplayFormat += myDisplayFormat;
+  myConsoleInfo.DisplayFormat = myDisplayFormat + autodetected;
 
   // Set up the correct properties used when toggling format
   // Note that this can be overridden if a format is forced
@@ -184,11 +183,12 @@ Console::Console(OSystem* osystem, Cartridge* cart, const Properties& props)
     }
 #endif
 
+  const string& md5 = myProperties.get(Cartridge_MD5);
+
   // Add the real controllers for this system
-  setControllers();
+  setControllers(md5);
 
   // Bumper Bash requires all 4 directions
-  const string& md5 = myProperties.get(Cartridge_MD5);
   bool allow = (md5 == "aa1c41f86ec44c0a44eb64c332ce08af" ||
                 md5 == "1bf503c724001b09be79c515ecfcbd03");
   myOSystem->eventHandler().allowAllDirections(allow);
@@ -595,7 +595,7 @@ void Console::changeHeight(int direction)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Console::setControllers()
+void Console::setControllers(const string& rommd5)
 {
   delete myControllers[0];
   delete myControllers[1];
@@ -708,6 +708,10 @@ void Console::setControllers()
                         "savekey_eeprom.dat";
     myControllers[rightPort] = new SaveKey(Controller::Right, *myEvent, *mySystem,
                                            eepromfile);
+  }
+  else if(right == "KIDVID")
+  {
+    myControllers[rightPort] = new KidVid(Controller::Right, *myEvent, *mySystem, rommd5);
   }
   else
   {

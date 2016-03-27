@@ -271,7 +271,7 @@ class Console : public Serializable
     /**
       Adds the left and right controllers to the console
     */
-    void setControllers();
+    void setControllers(const string& rommd5);
 
     void toggleTIABit(TIA::TIABit bit, const string& bitname, bool show = true) const;
 

@@ -317,6 +317,7 @@ void Settings::usage()
     << "  -gl_fsmax     <1|0>          Stretch GL image in fullscreen emulation mode\n"
     << "  -gl_vsync     <1|0>          Enable synchronize to vertical blank interrupt\n"
     << "  -gl_texrect   <1|0>          Enable GL_TEXTURE_RECTANGLE extension\n"
+//    << "  -gl_accel     <1|0>          Enable SDL_GL_ACCELERATED_VISUAL\n"
     << endl
   #endif
     << "  -tia_filter   <filter>       Use the specified filter in emulation mode\n"

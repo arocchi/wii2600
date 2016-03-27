@@ -41,7 +41,6 @@ typedef Common::Array<Expression*> ExpressionList;
   has a 64K addressing space.
 
   @author  Bradford W. Mott
-  @version $Id$ 
 */
 class M6502
 {
@@ -324,9 +323,6 @@ class M6502
     /// Access mode for each of the 256 opcodes
     /// This specifies how the opcode will access its argument
     static AccessMode ourAccessModeTable[256];
-
-    /// Lookup table used for binary-code-decimal math
-    static uInt8 ourBCDTable[2][256];
 
     /**
       Table of instruction processor cycle times.  In some cases additional 
