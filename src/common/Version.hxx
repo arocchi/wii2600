@@ -20,7 +20,7 @@
 #define VERSION_HXX
 
 #ifdef WII
-  #define STELLA_BASE_VERSION "2.7.7-wii-0.1"
+  #define STELLA_BASE_VERSION "2.7.7-wii-0.2pre"
 #else
   #define STELLA_BASE_VERSION "2.7.7"
 #endif

@@ -31,13 +31,13 @@
 #include "OSystem.hxx"
 #include "System.hxx"
 
-#if defined(UNIX)
-  #include "SettingsUNIX.hxx"
-  #include "OSystemUNIX.hxx"
 #if defined(WII)
     #include <fat.h>
     #include <wiiuse/wpad.h>
-#endif
+    #include "OSystemWii.hxx"
+#elif defined(UNIX)
+  #include "SettingsUNIX.hxx"
+  #include "OSystemUNIX.hxx"
 #elif defined(WIN32)
   #include "SettingsWin32.hxx"
   #include "OSystemWin32.hxx"
@@ -86,14 +86,15 @@ int main(int argc, char* argv[])
 #endif
 {
   // Create the parent OSystem object and settings
-#if defined(UNIX)
-  theOSystem = new OSystemUNIX();
-  SettingsUNIX settings(theOSystem);
 #if defined(WII)
-  fatInitDefault();
   WPAD_Init();
   PAD_Init();
-#endif
+  fatInitDefault();
+  theOSystem = new OSystemWii();
+  Settings settings(theOSystem);
+#elif defined(UNIX)
+  theOSystem = new OSystemUNIX();
+  SettingsUNIX settings(theOSystem);
 #elif defined(WIN32)
   theOSystem = new OSystemWin32();
   SettingsWin32 settings(theOSystem);

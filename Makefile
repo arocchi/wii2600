@@ -25,9 +25,9 @@ TARGET      :=  boot
 BUILD		:=	build
 # src/debugger src/debugger/gui src/unix src/cheat
 
-SOURCES		:=	src/unix src/emucore src/emucore/m6502 src/emucore/m6502/src src/gui src/common src/wii src/wii/pngu src/cheat
+SOURCES		:=	src/emucore src/emucore/m6502 src/emucore/m6502/src src/gui src/common src/wii src/wii/pngu src/cheat
 DATA		:=	data  
-INCLUDES	:=	include src/emucore src/emucore/m6502/src src/emucore/m6502/src/bspf/src src/common src/gui src/unix src/cheat src/wii src/wii/pngu src/cheat
+INCLUDES	:=	include src/emucore src/emucore/m6502/src src/emucore/m6502/src/bspf/src src/common src/gui src/cheat src/wii src/wii/pngu src/cheat
 
 #---------------------------------------------------------------------------------
 # options for code generation
